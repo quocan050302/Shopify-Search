@@ -42,6 +42,7 @@ import {
   tryAcquireDurableLedgerLockSync,
   acquireDurableLedgerLockAsync,
   releaseDurableLedgerLock,
+  registerTestControlledInvocationProof,
   type ProviderInvocationReceipt,
 } from "@/services/kh02/demand/temporalDemandEngine";
 import { GoogleTrendsLegacySerpApiProvider } from "@/services/kh02/demand/demandProviderRegistry";
@@ -614,7 +615,12 @@ describe("KH-02 V12.4.3.7.11 — Atomic Receipt Commit & Verified Demand Readbac
         artifactPath: stored.artifactPath,
       };
 
-      const persistRes = await persistCollectorReceiptAtomically(receipt);
+      const proof = registerTestControlledInvocationProof({
+        attemptId: "att_a23",
+        receiptId: "req_a23_test",
+        rawResponseSha256: stored.rawResponseSha256,
+      });
+      const persistRes = await persistCollectorReceiptAtomically(receipt, proof);
       expect(persistRes.state).toBe("EVIDENCE_ELIGIBLE");
       expect(persistRes.eligible).toBe(true);
       expect(persistRes.dbCommitted).toBe(true);
@@ -646,7 +652,12 @@ describe("KH-02 V12.4.3.7.11 — Atomic Receipt Commit & Verified Demand Readbac
         rawByteCount: stored.byteCount,
         artifactPath: stored.artifactPath,
       };
-      const persistRes = await persistCollectorReceiptAtomically(receipt);
+      const proof = registerTestControlledInvocationProof({
+        attemptId: "att_a24",
+        receiptId: "req_a24",
+        rawResponseSha256: stored.rawResponseSha256,
+      });
+      const persistRes = await persistCollectorReceiptAtomically(receipt, proof);
       expect(persistRes.state).toBe("EVIDENCE_ELIGIBLE");
 
       const obs = [

@@ -18,6 +18,7 @@ import {
   KNOWN_UNIT_FIXTURE_SHAS,
   setProviderReceiptStorageDirForTest,
   createCollectorCapabilityToken,
+  registerTestControlledInvocationProof,
 } from "@/services/kh02/demand/temporalDemandEngine";
 import fs from "fs";
 import path from "path";
@@ -1346,6 +1347,11 @@ describe("KH-02 Post-Review Hardening Audit Suite (2026-11-03)", () => {
         interest_over_time: { timeline_data: [{ date: "2026-07-01", values: [80] }] },
       });
       const stored = saveRawProviderPayloadFile(raw);
+      const proof = registerTestControlledInvocationProof({
+        attemptId: "att_e13",
+        receiptId: "req_live_e13",
+        rawResponseSha256: stored.rawResponseSha256,
+      });
       await persistCollectorReceiptAtomically({
         receiptId: "req_live_e13",
         provider: "google_trends_serpapi",
@@ -1357,7 +1363,7 @@ describe("KH-02 Post-Review Hardening Audit Suite (2026-11-03)", () => {
         rawResponseSha256: stored.rawResponseSha256,
         rawByteCount: stored.byteCount,
         artifactPath: stored.artifactPath,
-      });
+      }, proof);
 
       const res = isAuthenticProviderReceiptDescriptor({
         verified: true,
@@ -1684,6 +1690,11 @@ describe("KH-02 Post-Review Hardening Audit Suite (2026-11-03)", () => {
         interest_over_time: { timeline_data: [{ date: "2026-07-01", values: [75] }] },
       });
       const stored = saveRawProviderPayloadFile(raw);
+      const proof = registerTestControlledInvocationProof({
+        attemptId: "att_e36",
+        receiptId: "req_live_e36",
+        rawResponseSha256: stored.rawResponseSha256,
+      });
       await persistCollectorReceiptAtomically({
         receiptId: "req_live_e36",
         provider: "google_trends_serpapi",
@@ -1695,7 +1706,7 @@ describe("KH-02 Post-Review Hardening Audit Suite (2026-11-03)", () => {
         rawResponseSha256: stored.rawResponseSha256,
         rawByteCount: stored.byteCount,
         artifactPath: stored.artifactPath,
-      });
+      }, proof);
 
       const multiObs = [
         {

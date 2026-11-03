@@ -1,0 +1,236 @@
+==========================================================================================
+KH-02 V12.4.3.7.13 — UNFORGEABLE COLLECTOR PROVENANCE & UNIFIED ELIGIBILITY VERIFICATION AUDIT
+Date: 2026-11-03 | Repository: quocan050302/Shopify-Search
+Locked Branch: feature/kh02-walmart-us-jina-reader-v12.4.3.5.1
+==========================================================================================
+
+1. GIT BASELINE, BRANCH LOCK & COMMIT PARITY
+------------------------------------------------------------------------------------------
+- Repository: quocan050302/Shopify-Search
+- Working Root: /Users/macbook/Documents/Project_Github/Meta-Ads/Shopify-Search
+- Locked Branch: feature/kh02-walmart-us-jina-reader-v12.4.3.5.1
+- Baseline Review HEAD (Before): 44b290cef5c377292f0805430f5a41d8b8125225
+- Prior Tested Code Commit: d7f1df63f52d7af7bbc6f85575e698025f1ae483
+- Tested Code Commit (V12.4.3.7.13): PENDING_COMMIT_SHA
+- Ancestry Verification: git merge-base --is-ancestor 44b290cef5c377292f0805430f5a41d8b8125225 HEAD => 0 (VERIFIED)
+- Divergence from origin/feature/kh02-walmart-us-jina-reader-v12.4.3.5.1 before commit: 0 behind / 0 ahead
+- Uncommitted Runtime Artifacts Staged: 0 (.provider_receipt_ledger.json, *.lock, *.tmp* excluded via .gitignore)
+
+2. ROOT CAUSE & CODE FIXES FOR ALL VULNERABILITIES & INVARIANTS
+------------------------------------------------------------------------------------------
+[P0-A] Unforgeable Collector Origin Minting
+- File & Lines: src/services/kh02/demand/temporalDemandEngine.ts:365-475, 1420-1490, 1850-2050
+- Root Cause:
+  Previously, callers could synthesize or pass `originKind: "ACTUAL_PROVIDER_INVOCATION"` directly into
+  `persistCollectorReceiptAtomically()`, or invoke `recordTrustedProviderInvocation()` with simulated
+  payloads and gain unverified live origin credit.
+- Code Fix:
+  1) Introduced private `TrustedInvocationProof` minting mechanism that is strictly bound to
+     `(attemptId, receiptId, rawResponseSha256, provider, targetProductOrKeyword, region)`.
+  2) Real `executeTrustedSerpApiDemandRequest()` only mints proof when executing real native network transport
+     against official endpoint `https://serpapi.com/search.json` with HTTP 200, valid search_metadata.id,
+     and redirect: "error".
+  3) Calls to `persistCollectorReceiptAtomically()` lacking a valid proof have `originKind` demoted to
+     `LOCAL_INTEGRITY_ONLY`, `originVerified` set to `false`, and are evicted from in-memory trusted registries.
+  4) Controlled tests use `registerTestControlledInvocationProof()` in isolated test harnesses to verify
+     positive readback paths without polluting production state.
+
+[P0-B] Mandatory Database Lock in Atomic Receipt Persistence
+- File & Lines: src/services/kh02/demand/temporalDemandEngine.ts:1550-1580
+- Root Cause:
+  Stage 3 of `persistCollectorReceiptAtomically()` previously treated database lock acquisition as optional
+  or logged a warning if `acquireDurableLedgerLockAsync(dbLockPath)` failed, risking concurrent uncoordinated
+  Prisma writes and race conditions during database schema updates.
+- Code Fix:
+  Enforced mandatory DB lock acquisition. If `dbLockRes.acquired === false`, `persistCollectorReceiptAtomically()`
+  aborts immediately with `state: "LOCK_TIMEOUT"`, `errorCode: "DB_LOCK_TIMEOUT"`, `eligible: false`, and
+  `dbCommitted: false`, performing exactly 0 Prisma database writes and leaving the ledger staged as
+  `LEDGER_PENDING_DB` (fail closed).
+
+[P0-C] Unified Receipt Verification & Decision Proof Issuance
+- File & Lines: src/services/kh02/demand/temporalDemandEngine.ts:2580-2645, 2980-3050
+- Root Cause:
+  Downstream components historically implemented fragmented eligibility checks, sometimes trusting the ledger
+  file alone, sometimes trusting the SQLite table alone, and omitting verifiable decision proofs.
+- Code Fix:
+  1) Canonicalized `verifyReceiptEligibility = resolveVerifiedDemandEvidence`.
+  2) On successful dual-store verification (both ledger `commitState === "EVIDENCE_ELIGIBLE"` and SQLite
+     `ResearchEvidence` matching SHA-256 and byte counts), mints an immutable `VerifiedEligibilityProof`
+     recorded in `verifiedDecisionProofs`.
+  3) When `strictLiveOrigin === true`, strictly requires receipt presence in `trustedInvocationsRegistry`.
+
+[P1-D] Test Count & Glob Discrepancy Resolution
+- File & Lines: tests/unit/kh02/v12_4_3_7_13_UnforgeableCollectorUnifiedEligibility.test.ts (A46)
+- Root Cause:
+  Prior audit reports noted discrepancy between 1,929 and 1,993 tests due to overlapping glob patterns
+  (`tests/unit/kh02` directory glob vs `tests/unit/*.test.ts` root name glob).
+- Code Fix:
+  1) Discovered and audited exact repository counts across all test files: exactly 120 files, 2,086 tests
+     in `tests/unit` (baseline before V12.4.3.7.13 was 119 files, 2,059 tests).
+  2) Directory glob `tests/unit/kh02` matches 65 files (1,469 tests).
+  3) Root file glob `tests/unit/*.test.ts` matches 82 files (960 tests).
+  4) The overlap consists of exactly 27 test files named `kh02*.test.ts` residing directly in `tests/unit/`
+     which were previously double-counted or selectively excluded depending on the runner glob.
+
+[P1-E] Lock Reclaim Inode Verification
+- File & Lines: src/services/kh02/demand/temporalDemandEngine.ts:980-1035
+- Root Cause:
+  During dead lock reclamation, renaming an expired lock file to a claim path could race with another process
+  re-creating or replacing the lock file.
+- Code Fix:
+  1) Verifies `statBefore.ino === statAfter.ino` and `statBefore.dev === statAfter.dev` across the rename.
+  2) Verifies `reclaimedLock.ownerId === expectedOwnerId` after atomic rename.
+  3) If an inode or owner replacement race is detected, safely restores the file and aborts with `LOCK_TIMEOUT`.
+
+[P1-F] Native Fetch Check & Target Host Validation
+- File & Lines: src/services/kh02/demand/temporalDemandEngine.ts:1820-1875
+- Root Cause:
+  Global fetch could be monkeypatched or redirected to unverified localhost / proxy endpoints without detection.
+- Code Fix:
+  1) Evaluates `Function.prototype.toString.call(fetch).includes("[native code]")` to verify un-monkeypatched fetch.
+  2) Strictly validates `urlObj.protocol === "https:"` and `(urlObj.port === "" || urlObj.port === "443")`.
+  3) Strictly validates target hostname against official allowlist (`serpapi.com`), rejecting non-conforming
+     targets fail-closed with `ORIGIN_UNVERIFIED`.
+
+3. RECEIPT COMMIT STATE MACHINE & CROSS-STORE COORDINATION
+------------------------------------------------------------------------------------------
+State Transitions:
+  NEW_ATTEMPT
+    -> TRANSPORT_RESPONSE_200 (HTTP 200 + native fetch + serpapi.com + search_metadata.id)
+    -> RAW_ARTIFACT_VERIFIED (64-hex SHA-256 content-addressed JSON artifact on disk)
+    -> PROOF_MINTED (Private module TrustedInvocationProof minted for attempt+receipt+SHA)
+    -> LEDGER_PENDING_DB (Staged under .lock via temp+fsync+rename; eligible=false)
+    -> DB_LOCK_ACQUIRED (Mandatory .db.lock acquisition; fails to LOCK_TIMEOUT if busy)
+    -> DB_COMMITTED (Prisma ResearchEvidence upsert awaited)
+    -> DB_READBACK_VERIFIED (Prisma findUnique verified for id, sourceContentRef, observedValue)
+    -> EVIDENCE_ELIGIBLE (CAS transition under .lock; eligible=true, dbCommitted=true, verifiedAt!=null)
+    -> DECISION_PROOF_MINTED (VerifiedEligibilityProof issued upon canonical verification)
+
+4. TEST MATRIX: A01-A48 (ADVERSARIAL INTEGRITY) & C01-C08 (MULTI-PROCESS CONCURRENCY)
+------------------------------------------------------------------------------------------
+Suite: tests/unit/kh02/v12_4_3_7_13_UnforgeableCollectorUnifiedEligibility.test.ts (56/56 PASS)
+- A01: Local manually created raw JSON + SHA + ACTUAL_PROVIDER_INVOCATION cannot become verified [PASS]
+- A02: Direct persistCollectorReceiptAtomically without proof demotes originKind to LOCAL_INTEGRITY_ONLY [PASS]
+- A03: Direct recordTrustedProviderInvocation with forged capability token cannot mint trusted origin [PASS]
+- A04: Explicit createCollectorCapabilityToken public use only returns TEST_SIMULATION         [PASS]
+- A05: Synthetic ProviderInvocationReceipt originKind LIVE with fake request ID is rejected     [PASS]
+- A06: NODE_ENV=test, fake raw body and legit metadata cannot promote business LIVE             [PASS]
+- A07: fetchFn returns valid-looking SerpApi JSON -> originKind is SIMULATED_TRANSPORT          [PASS]
+- A08: Non-native monkeypatch on global fetch is detected via isNativeFetch heuristic           [PASS]
+- A09: Wrong endpoint/host/port/protocol or redirect target -> origin unverified                [PASS]
+- A10: Missing engine/data_type or contradictory query/geo params in URL are rejected           [PASS]
+- A11: Missing upstream search_metadata.id or non-Success status is rejected                    [PASS]
+- A12: Reused proof token, wrong attempt, wrong SHA, or wrong receiptId is rejected             [PASS]
+- A13: Valid network collector-shaped positive path in isolated test verifies with proof        [PASS]
+- A14: Ledger-only eligible flag + valid SHA but NO DB row fails DB_RECORD_MISSING              [PASS]
+- A15: DB-only classification=VERIFIED without eligible ledger entry fails resolveVerifiedDemand [PASS]
+- A16: DB row deleted AFTER initial verification -> subsequent check detects missing DB row    [PASS]
+- A17: DB observedValue mutated with same sourceContentRef rejected as metadata conflict        [PASS]
+- A18: Ledger metadata changed with same SHA returns CONFLICT on atomic commit                  [PASS]
+- A19: Artifact bytes tampered on disk or replaced by symlink is rejected fail-closed           [PASS]
+- A20: Revoked eligibility on disk causes downstream checks to immediately fail closed          [PASS]
+- A21: Observation with future timestamp under strict asOf cutoff is rejected                   [PASS]
+- A22: Cross-tenant isolation: receipt committed under workspaceA rejected under workspaceB     [PASS]
+- A23: Cross-run isolation: receipt committed under runA rejected under runB                    [PASS]
+- A24: Cross-product scope isolation: receipt committed for prodA rejected for prodB            [PASS]
+- A25: Wrong US geo/query in payload is rejected with REGION_MISMATCH / PRODUCT_MISMATCH        [PASS]
+- A26: Observation value check: demandValue not in raw timeline_data is rejected                [PASS]
+- A27: Broad keyword or promotional ad copy is classified ESTIMATED_OR_PROXY / CACHED_UNVERIFIED [PASS]
+- A28: Official CSV with valid SHA-256 classified HISTORICAL_SOURCE_VERIFIED, never network LIVE [PASS]
+- A29: Fixture SHA classified FIXTURE_ONLY, never AUTHORITATIVE_VERIFIED under strictLiveOrigin  [PASS]
+- A30: persistDurableReceipt alone stages LEDGER_PENDING_DB and eligible=false                  [PASS]
+- A31: DB lock held by competing worker causes persistCollectorReceiptAtomically DB_LOCK_TIMEOUT [PASS]
+- A32: DB lock timeout leaves ledger staged as LEDGER_PENDING_DB, eligible=false                [PASS]
+- A33: DB upsert throw leaves ledger NOT eligible and returns DB_WRITE_FAILED                   [PASS]
+- A34: Compare-and-swap generation mismatch fails staged ledger commit                          [PASS]
+- A35: Crash before DB write leaves LEDGER_PENDING_DB; recovery reconciles safely               [PASS]
+- A36: Crash after DB write before ledger promotion fails closed until reconciled               [PASS]
+- A37: Lock release by different owner or invalid JSON returns false & does not unlink lock     [PASS]
+- A38: Stale expired lock held by a live PID is NOT stolen by another worker (returns LOCK_TIMEOUT) [PASS]
+- A39: Expired lock with dead PID is safely and atomically reclaimed with inode verification     [PASS]
+- A40: Same receiptId with identical SHA and metadata succeeds idempotently                     [PASS]
+- A41: Full restart/reload (clearTrustedProviderInvocationsForTest) clears in-memory maps       [PASS]
+- A42: Provider HTTP 403/429/500 fails closed with RESPONSE_STATUS_INVALID                      [PASS]
+- A43: Canonical verifyReceiptEligibility exported and issues VerifiedEligibilityProof           [PASS]
+- A44: Point-in-time zero-lookahead: observations after asOf cutoff are excluded                [PASS]
+- A45: Exact 60D cadence/gap/density checks; 3 sparse samples over 60D not verified evergreen   [PASS]
+- A46: Discrepancy analysis test: test counts discovery across repository files reconciled       [PASS]
+- A47: Negative fixture corpus / baseline sentinel SHA unchanged after tests                    [PASS]
+- A48: Corrupted ledger JSON file fails closed with clear error                                 [PASS]
+- C01: 2 real OS child processes behind barrier commit disjoint receipts with 0 lost updates    [PASS]
+- C02: 4 real OS child processes x 5 iterations (20 receipts) commit with 0 lost updates        [PASS]
+- C03: 2 real OS child processes committing identical receiptId + payload succeed idempotently  [PASS]
+- C04: 2 real OS child processes committing same receiptId + different SHA -> 1 ELIGIBLE, 1 CONFLICT [PASS]
+- C05: Child process holding DB lock causes second child process to return DB_LOCK_TIMEOUT cleanly [PASS]
+- C06: Dead child process expired lock is reclaimed by subsequent child process & committed     [PASS]
+- C07: Mid-flight crash: Worker 1 stages LEDGER_PENDING_DB & exits; Reader sees false; Worker 2 recovers [PASS]
+- C08: Concurrent reader + writer: 0 JSON parse errors, 0 premature eligible reads              [PASS]
+
+5. FULL VERIFICATION & REGRESSION EXECUTION MATRIX
+------------------------------------------------------------------------------------------
+- TypeScript Check (npx tsc --noEmit):
+  Exit Code 0 (0 compilation errors).
+- V12.4.3.7.13 Suite (tests/unit/kh02/v12_4_3_7_13_UnforgeableCollectorUnifiedEligibility.test.ts):
+  1/1 file, 56/56 tests PASS (36.01s).
+- V12.4.3.7.12 Suite (tests/unit/kh02/v12_4_3_7_12_EvidenceEligibilityFencing.test.ts):
+  1/1 file, 40/40 tests PASS (6.69s).
+- V12.4.3.7.11 Suite (tests/unit/kh02/v12_4_3_7_11_AtomicReceiptCommitReadback.test.ts):
+  1/1 file, 36/36 tests PASS (4.05s).
+- V12.4.3.7.10 Suite (tests/unit/kh02/v12_4_3_7_10_RealCollectorAtomicLedger.test.ts):
+  1/1 file, 28/28 tests PASS (0.28s).
+- V12.4.3.7.9 Suite (tests/unit/kh02/v12_4_3_7_9_TrustedCollectorSafeTest.test.ts):
+  1/1 file, 35/35 tests PASS (0.12s).
+- Post-Review Hardening Suite (tests/unit/kh02/v12_4_3_PostReviewHardening_2026_11_03.test.ts):
+  1/1 file, 82/82 tests PASS (0.22s).
+- Primary Hardened Suites Combined (5 test files, 242 tests):
+  5/5 files, 242/242 tests PASS (48.18s).
+- All KH-02 Unit Suites (tests/unit/kh02):
+  65/65 files, 1,469/1,469 tests PASS (91.33s).
+- KH-01 Verification Gate (npm run kh01:verify):
+  5/5 files, 69/69 tests PASS (1.53s).
+- KH-02 Integration Suites (kh02WalmartUsJinaIntegrationV12_4_3_5_1 + kh02V12_1_3_Acceptance):
+  2/2 files, 10/10 tests PASS (2.93s).
+- Chromium Browser E2E Acceptance (tests/integration/kh02BrowserAcceptance.test.ts):
+  1/1 file, 1/1 test PASS (38.01s).
+- Historical Point-in-Time Backtest (npx tsx scripts/kh02/runBacktestV12_4_3_4_2.ts):
+  * Policy Scenario Verdict: PASS (21/21 scenarios)
+  * Point-in-Time Integrity Verdict: PASS (zero future leakage verified)
+  * Historical DEV Verdict: INSUFFICIENT_HISTORICAL_EVIDENCE (shortlist=0/0)
+  * Historical HOLDOUT Verdict: INSUFFICIENT_HISTORICAL_EVIDENCE (shortlist=3/3)
+  * Overall Historical Backtest Verdict: INSUFFICIENT_HISTORICAL_EVIDENCE
+
+6. GATE STATUS CLASSIFICATION (FAIL-CLOSED TRUTHFULNESS)
+------------------------------------------------------------------------------------------
+- Engineering Implementation & Proof Gate: PASS
+  All provenance invariants (P0-A, P0-B, P0-C, P1-D, P1-E, P1-F) and multi-process OS concurrency
+  proofs are verified PASS.
+- Business Release Gate Classifications:
+  * G06 (Google Ads Transparency): TRANSPORT_READY_NOT_VERIFIED
+    (Local Python FastMCP transport operational; does not prove storefront PDP identity or demand.)
+  * G07 (TikTok Ads US): BLOCKED
+    (Blocked by absence of commercial TikTok US credentials; organic fallback disabled.)
+  * G15 (US Longitudinal Demand >= 60 Days): INSUFFICIENT_EVIDENCE
+    (Fail-closed: requires live authorized SerpApi/Google Trends network captures or official Explore CSVs.)
+  * G16 (Shopify Top 3 Winning Products): INSUFFICIENT_EVIDENCE
+    (Fail-closed: 0/3 candidate products currently possess live verified >=60D US longitudinal demand
+     plus independent merchant proof.)
+
+7. SENTINEL & WORKTREE HYGIENE VERIFICATION
+------------------------------------------------------------------------------------------
+- Production Sentinel Directory (data/provider_receipts) SHA-256 Hashes (Unchanged):
+  * 04f4d039cdd4a884134914fdb9d2ed86ebbfa353991d714b78df545a96fd4b14  data/provider_receipts/04f4d039cdd4a884134914fdb9d2ed86ebbfa353991d714b78df545a96fd4b14.json
+  * 3440f19057ac7d1ac535150d1bbcc9a3078e0b7a5d46ad3f4bbd2c46235f61c8  data/provider_receipts/3440f19057ac7d1ac535150d1bbcc9a3078e0b7a5d46ad3f4bbd2c46235f61c8.json
+  * 366cfeb156347d783c227be3fd7e10e397c8cd00c49c909673fc5208f36b841f  data/provider_receipts/366cfeb156347d783c227be3fd7e10e397c8cd00c49c909673fc5208f36b841f.json
+  * 982cfdb5f6d15e391fc14d994b1e70c9a840b6974343c20e316da70bfad39c04  data/provider_receipts/.fixture_manifest.json
+- .gitignore Verification:
+  data/provider_receipts/.provider_receipt_ledger.json*, *.lock, *.tmp*, and data/.test_tmp/ are
+  untracked and absent from git status.
+
+8. TOP 3 NEXT PRACTICAL ACTIONS WHEN LIVE CREDENTIALS ARE PROVIDED
+------------------------------------------------------------------------------------------
+1) Provide live SERPAPI_API_KEY (or authenticated Google Trends US Explore CSV exports) to execute
+   executeTrustedSerpApiDemandRequest() and commit live EVIDENCE_ELIGIBLE receipts (unlocking G15).
+2) Provide authorized live Meta Ad Library token to execute live US discovery + storefront PDP
+   verification for at least 3 distinct non-funnel Shopify stores (unlocking G16).
+3) Provision authorized commercial TikTok Creative Center US credentials (or maintain G07 as BLOCKED).
+==========================================================================================

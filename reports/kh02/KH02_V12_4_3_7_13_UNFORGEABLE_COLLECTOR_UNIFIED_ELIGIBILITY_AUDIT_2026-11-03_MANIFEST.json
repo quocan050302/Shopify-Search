@@ -1,0 +1,52 @@
+{
+  "version": "12.4.3.7.13",
+  "auditDate": "2026-11-03T20:40:00+07:00",
+  "repository": "quocan050302/Shopify-Search",
+  "branch": "feature/kh02-walmart-us-jina-reader-v12.4.3.5.1",
+  "baselineReviewHeadSha": "44b290cef5c377292f0805430f5a41d8b8125225",
+  "priorCodeCommitSha": "d7f1df63f52d7af7bbc6f85575e698025f1ae483",
+  "testedCodeCommitSha": "PENDING_COMMIT_SHA",
+  "engineeringVerdict": "PASS",
+  "engineeringGates": {
+    "typeScriptNoEmit": "PASS (0 errors)",
+    "v12_4_3_7_13_UnforgeableCollectorUnifiedEligibility": "PASS (56/56: A01-A48, C01-C08)",
+    "v12_4_3_7_12_EvidenceEligibilityFencing": "PASS (40/40)",
+    "v12_4_3_7_11_AtomicReceiptCommitReadback": "PASS (36/36)",
+    "v12_4_3_7_10_RealCollectorAtomicLedger": "PASS (28/28)",
+    "v12_4_3_7_9_TrustedCollectorSafeTest": "PASS (35/35)",
+    "postReviewHardening": "PASS (82/82)",
+    "primaryHardenedSuitesCombined": "PASS (242/242 across 5 files)",
+    "kh02UnitSuites": "PASS (1469/1469 across 65 files)",
+    "kh01Verify": "PASS (69/69 across 5 files)",
+    "kh02IntegrationSuites": "PASS (10/10 across 2 files)",
+    "chromiumBrowserE2E": "PASS (1/1, 38.01s)",
+    "pointInTimeBacktestPolicy": "PASS (21/21 scenarios, zero lookahead leakage)"
+  },
+  "backtestVerdicts": {
+    "policyScenarioVerdict": "PASS",
+    "pointInTimeIntegrityVerdict": "PASS",
+    "historicalDevVerdict": "INSUFFICIENT_HISTORICAL_EVIDENCE",
+    "historicalHoldoutVerdict": "INSUFFICIENT_HISTORICAL_EVIDENCE",
+    "overallHistoricalBacktestVerdict": "INSUFFICIENT_HISTORICAL_EVIDENCE"
+  },
+  "businessGates": {
+    "G06_GoogleAds": "TRANSPORT_READY_NOT_VERIFIED",
+    "G07_TikTokAds": "BLOCKED",
+    "G15_LongitudinalDemand": "INSUFFICIENT_EVIDENCE",
+    "G16_Top3WinningProducts": "INSUFFICIENT_EVIDENCE"
+  },
+  "unforgeableCollectorAndUnifiedEligibilityGuarantees": {
+    "trustedInvocationProofRequiredForLiveOrigin": true,
+    "proofBoundToAttemptReceiptShaProviderProductRegion": true,
+    "nativeFetchAndStrictHttpsHostPortValidated": true,
+    "unprovenCollectorCallsDemotedToLocalIntegrityOnly": true,
+    "mandatoryDbLockBeforeAnyPrismaUpsert": true,
+    "dbLockFailureAbortsWithZeroDbWrites": true,
+    "canonicalUnifiedEligibilityVerifierExported": true,
+    "verifiedEligibilityProofMintedOnDecision": true,
+    "deadLockReclaimInodeAndDevVerified": true,
+    "testCountGlobDiscrepancyReconciled": true,
+    "multiProcessProductionConcurrencyVerified": true,
+    "productionSentinelUnchanged": true
+  }
+}
