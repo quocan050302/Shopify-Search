@@ -75,8 +75,8 @@ describe("KH-02 V12.4.3.7.10 — Real Collector Integration & Durable Ledger Ato
 
       const authorizedToken = getAuthorizedCollectorCapabilityToken("google_trends_serpapi_collector");
       expect(isValidCollectorCapabilityToken(authorizedToken)).toBe(true);
-      expect(authorizedToken.classification).toBe("TRUSTED_COLLECTOR");
-      expect(authorizedToken.isTestSimulation).toBe(false);
+      expect(authorizedToken.classification).toBe("TEST_SIMULATION");
+      expect(authorizedToken.isTestSimulation).toBe(true);
     });
 
     it("P02: recordProviderInvocationAttempt sets status ATTEMPTED, never TRANSPORT_OBSERVED before network", () => {
@@ -247,7 +247,8 @@ describe("KH-02 V12.4.3.7.10 — Real Collector Integration & Durable Ledger Ato
       };
 
       const res = persistDurableReceipt(receipt);
-      expect(res.state).toBe("VERIFIED_COMMITTED");
+      expect(res.state).toBe("LEDGER_PENDING_DB");
+      expect(res.eligible).toBe(false);
       expect(res.ledgerReadbackVerified).toBe(true);
       expect(res.artifactVerified).toBe(true);
 
@@ -294,8 +295,8 @@ describe("KH-02 V12.4.3.7.10 — Real Collector Integration & Durable Ledger Ato
       const res1 = persistDurableReceipt(rec1);
       const res2 = persistDurableReceipt(rec2);
 
-      expect(res1.state).toBe("VERIFIED_COMMITTED");
-      expect(res2.state).toBe("VERIFIED_COMMITTED");
+      expect(res1.state).toBe("LEDGER_PENDING_DB");
+      expect(res2.state).toBe("LEDGER_PENDING_DB");
 
       clearTrustedProviderInvocationsForTest();
       expect(getTrustedProviderReceipt("p09_r1")).not.toBeNull();
@@ -335,7 +336,7 @@ describe("KH-02 V12.4.3.7.10 — Real Collector Integration & Durable Ledger Ato
       };
 
       const res1 = persistDurableReceipt(rec1);
-      expect(res1.state).toBe("VERIFIED_COMMITTED");
+      expect(res1.state).toBe("LEDGER_PENDING_DB");
 
       const res2 = persistDurableReceipt(rec2);
       expect(res2.state).toBe("CONFLICT");
@@ -365,10 +366,10 @@ describe("KH-02 V12.4.3.7.10 — Real Collector Integration & Durable Ledger Ato
       };
 
       const res1 = persistDurableReceipt(rec);
-      expect(res1.state).toBe("VERIFIED_COMMITTED");
+      expect(res1.state).toBe("LEDGER_PENDING_DB");
 
       const res2 = persistDurableReceipt(rec);
-      expect(res2.state).toBe("VERIFIED_COMMITTED");
+      expect(res2.state).toBe("LEDGER_PENDING_DB");
     });
 
     it("P12: persistCollectorReceiptAtomically executes full staged workflow asynchronously", async () => {
@@ -389,7 +390,9 @@ describe("KH-02 V12.4.3.7.10 — Real Collector Integration & Durable Ledger Ato
       };
 
       const res = await persistCollectorReceiptAtomically(rec);
-      expect(res.state).toBe("VERIFIED_COMMITTED");
+      expect(res.state).toBe("EVIDENCE_ELIGIBLE");
+      expect(res.eligible).toBe(true);
+      expect(res.dbCommitted).toBe(true);
       expect(res.ledgerReadbackVerified).toBe(true);
       expect(res.artifactVerified).toBe(true);
       expect(res.receiptId).toBe("p12_async");

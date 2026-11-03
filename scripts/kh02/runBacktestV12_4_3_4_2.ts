@@ -235,6 +235,9 @@ export interface HistoricalReplayResult {
   split: "DEV" | "HOLDOUT";
   niche: string;
   sourceSha?: string;
+  evaluatedCodeSha?: string;
+  evaluatedTreeSha?: string;
+  inputBaselineCommitSha?: string;
   datasetFingerprintSha256?: string;
   windowStart: string;
   windowEnd: string;
@@ -318,6 +321,9 @@ export interface HistoricalReplayResult {
 export interface FullBacktestOutput {
   version: "12.4.3.4.3" | "12.4.3.4.6" | "12.4.3.5.1";
   sourceSha?: string;
+  evaluatedCodeSha?: string;
+  evaluatedTreeSha?: string;
+  inputBaselineCommitSha?: string;
   evaluatedAt: string;
   policyScenarioVerdict: "PASS" | "FAIL";
   historicalDevVerdict: "PASS" | "INSUFFICIENT_HISTORICAL_EVIDENCE";
@@ -2704,12 +2710,19 @@ export async function runRealHistoricalProductReplay(
     const wmtPit = filterWalmartEvidencePointInTime(parsedWmtForPit as any, asOf);
 
     let currentSourceSha = "unknown";
+    let currentTreeSha = "unknown";
     try {
       currentSourceSha = execSync("git rev-parse HEAD", {
         cwd: process.cwd(),
         encoding: "utf8",
       }).trim();
+      currentTreeSha = execSync("git rev-parse HEAD^{tree}", {
+        cwd: process.cwd(),
+        encoding: "utf8",
+      }).trim();
     } catch {}
+    const evaluatedCodeSha = process.env.SWAI_EVALUATED_CODE_SHA?.trim() || currentSourceSha;
+    const inputBaselineCommitSha = process.env.SWAI_BASELINE_COMMIT_SHA?.trim() || currentSourceSha;
 
     const datasetFingerprintSha256 = crypto
       .createHash("sha256")
@@ -2796,7 +2809,10 @@ export async function runRealHistoricalProductReplay(
     return {
       split,
       niche,
-      sourceSha: currentSourceSha,
+      sourceSha: evaluatedCodeSha,
+      evaluatedCodeSha,
+      evaluatedTreeSha: currentTreeSha,
+      inputBaselineCommitSha,
       datasetFingerprintSha256,
       windowStart: split === "DEV" ? "2026-06-01T00:00:00.000Z" : DEV_CUTOFF.toISOString(),
       windowEnd: split === "DEV" ? DEV_CUTOFF.toISOString() : HOLDOUT_CUTOFF.toISOString(),
@@ -2901,7 +2917,10 @@ export async function runBacktestV12_4_3_4_2(
 
   const output: FullBacktestOutput = {
     version: "12.4.3.5.1",
-    sourceSha: devReplay.sourceSha,
+    sourceSha: devReplay.evaluatedCodeSha || devReplay.sourceSha,
+    evaluatedCodeSha: devReplay.evaluatedCodeSha || devReplay.sourceSha,
+    evaluatedTreeSha: devReplay.evaluatedTreeSha,
+    inputBaselineCommitSha: devReplay.inputBaselineCommitSha,
     evaluatedAt: new Date().toISOString(),
     policyScenarioVerdict: policyScenarios.verdict,
     historicalDevVerdict: devReplay.verdict,
@@ -2939,7 +2958,10 @@ export async function runBacktestV12_4_3_4_2(
     JSON.stringify(
       {
         version: "12.4.3.5.1",
-        sourceSha: devReplay.sourceSha,
+        sourceSha: devReplay.evaluatedCodeSha || devReplay.sourceSha,
+        evaluatedCodeSha: devReplay.evaluatedCodeSha || devReplay.sourceSha,
+        evaluatedTreeSha: devReplay.evaluatedTreeSha,
+        inputBaselineCommitSha: devReplay.inputBaselineCommitSha,
         evaluatedAt: output.evaluatedAt,
         niche: devReplay.niche || "Pet Gadgets",
         policyScenarioVerdict: output.policyScenarioVerdict,

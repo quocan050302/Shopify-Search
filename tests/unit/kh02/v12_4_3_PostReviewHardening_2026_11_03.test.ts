@@ -9,6 +9,7 @@ import {
   isAuthenticProviderReceiptDescriptor,
   saveRawProviderPayloadFile,
   recordTrustedProviderInvocation,
+  persistCollectorReceiptAtomically,
   registerTestFixtureReceipt,
   getTrustedProviderReceipt,
   findTrustedReceiptByHash,
@@ -1338,15 +1339,14 @@ describe("KH-02 Post-Review Hardening Audit Suite (2026-11-03)", () => {
       expect(assessment.status).toBe("INSUFFICIENT_HISTORY");
     });
 
-    it("E13: trusted provider receipt with correct server ledger, exact raw bytes, response content, query, geo, run and point = ENGINEERING_UNIT_VERIFIED (not LIVE business)", () => {
+    it("E13: trusted provider receipt with correct server ledger, exact raw bytes, response content, query, geo, run and point = ENGINEERING_UNIT_VERIFIED (not LIVE business)", async () => {
       const raw = JSON.stringify({
         search_metadata: { status: "Success", id: "req_live_e13" },
         search_parameters: { q: "smart pet feeder", geo: "US" },
         interest_over_time: { timeline_data: [{ date: "2026-07-01", values: [80] }] },
       });
-      const testToken = createCollectorCapabilityToken("test_collector");
       const stored = saveRawProviderPayloadFile(raw);
-      recordTrustedProviderInvocation({
+      await persistCollectorReceiptAtomically({
         receiptId: "req_live_e13",
         provider: "google_trends_serpapi",
         originKind: "ACTUAL_PROVIDER_INVOCATION",
@@ -1357,7 +1357,7 @@ describe("KH-02 Post-Review Hardening Audit Suite (2026-11-03)", () => {
         rawResponseSha256: stored.rawResponseSha256,
         rawByteCount: stored.byteCount,
         artifactPath: stored.artifactPath,
-      }, testToken);
+      });
 
       const res = isAuthenticProviderReceiptDescriptor({
         verified: true,
@@ -1677,15 +1677,14 @@ describe("KH-02 Post-Review Hardening Audit Suite (2026-11-03)", () => {
       expect(mismatchDate.errorCode).toBe("PRODUCT_MISMATCH");
     });
 
-    it("E36: multiple legitimately attributed observations from one trusted response can pass engineering when every point matches response and context", () => {
-      const testToken = createCollectorCapabilityToken("test_collector");
+    it("E36: multiple legitimately attributed observations from one trusted response can pass engineering when every point matches response and context", async () => {
       const raw = JSON.stringify({
         search_metadata: { status: "Success", id: "req_live_e36" },
         search_parameters: { q: "cat water fountain", geo: "US" },
         interest_over_time: { timeline_data: [{ date: "2026-07-01", values: [75] }] },
       });
       const stored = saveRawProviderPayloadFile(raw);
-      recordTrustedProviderInvocation({
+      await persistCollectorReceiptAtomically({
         receiptId: "req_live_e36",
         provider: "google_trends_serpapi",
         originKind: "ACTUAL_PROVIDER_INVOCATION",
@@ -1696,7 +1695,7 @@ describe("KH-02 Post-Review Hardening Audit Suite (2026-11-03)", () => {
         rawResponseSha256: stored.rawResponseSha256,
         rawByteCount: stored.byteCount,
         artifactPath: stored.artifactPath,
-      }, testToken);
+      });
 
       const multiObs = [
         {

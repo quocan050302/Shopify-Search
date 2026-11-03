@@ -1,0 +1,48 @@
+{
+  "version": "12.4.3.7.12",
+  "auditDate": "2026-11-03T18:56:00+07:00",
+  "repository": "quocan050302/Shopify-Search",
+  "branch": "feature/kh02-walmart-us-jina-reader-v12.4.3.5.1",
+  "baselineReviewHeadSha": "5873a3ee15b83b48de23792e57788cc6b6522240",
+  "priorCodeCommitSha": "360e986d97494017974d678b5026bb224dd505b8",
+  "engineeringVerdict": "PASS",
+  "engineeringGates": {
+    "typeScriptNoEmit": "PASS (0 errors)",
+    "v12_4_3_7_12_FencingAndConcurrency": "PASS (40/40: F01-F32, C01-C08)",
+    "v12_4_3_7_11_AtomicReceiptCommitReadback": "PASS (36/36)",
+    "v12_4_3_7_10_RealCollectorAtomicLedger": "PASS (28/28)",
+    "v12_4_3_7_9_TrustedCollectorSafeTest": "PASS (35/35)",
+    "postReviewHardening": "PASS (82/82)",
+    "kh02UnitSuites": "PASS (1413/1413 across 64 files)",
+    "repoUnitSuites": "PASS (1929/1929 across 119 files)",
+    "kh01Verify": "PASS (69/69 across 5 files)",
+    "kh02IntegrationSuites": "PASS (10/10 across 2 files)",
+    "chromiumBrowserE2E": "PASS (1/1, 38.01s)",
+    "pointInTimeBacktestPolicy": "PASS (21/21 scenarios, zero lookahead leakage)"
+  },
+  "backtestVerdicts": {
+    "policyScenarioVerdict": "PASS",
+    "pointInTimeIntegrityVerdict": "PASS",
+    "historicalDevVerdict": "INSUFFICIENT_HISTORICAL_EVIDENCE",
+    "historicalHoldoutVerdict": "INSUFFICIENT_HISTORICAL_EVIDENCE",
+    "overallHistoricalBacktestVerdict": "INSUFFICIENT_HISTORICAL_EVIDENCE"
+  },
+  "businessGates": {
+    "G06_GoogleAds": "TRANSPORT_READY_NOT_VERIFIED",
+    "G07_TikTokAds": "BLOCKED",
+    "G15_LongitudinalDemand": "INSUFFICIENT_EVIDENCE",
+    "G16_Top3WinningProducts": "INSUFFICIENT_EVIDENCE"
+  },
+  "fencingAndConcurrencyGuarantees": {
+    "pendingReceiptsNeverEligible": true,
+    "dualStoreLedgerAndDbReadbackRequired": true,
+    "externalTrustedTokenMintingBlocked": true,
+    "singleUseCapabilityTokenEnforced": true,
+    "livePidExpiredLockNeverStolen": true,
+    "deadPidExpiredLockAtomicReclaim": true,
+    "corruptLockNeverUnlinkedByNonOwner": true,
+    "full8DimensionMetadataConflictCheck": true,
+    "multiProcessProductionConcurrencyVerified": true,
+    "productionSentinelUnchanged": true
+  }
+}

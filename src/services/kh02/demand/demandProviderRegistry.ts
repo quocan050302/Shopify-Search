@@ -13,8 +13,6 @@ import { prisma } from "@/lib/db";
 import {
   hasVerifiableCsvOrProviderLineage,
   recordProviderInvocationAttempt,
-  finalizeProviderInvocationFromTransport,
-  getAuthorizedCollectorCapabilityToken,
   executeTrustedSerpApiDemandRequest,
 } from "./temporalDemandEngine";
 import { verifyStoredCsvFile } from "./googleTrendsCsvValidator";
@@ -674,11 +672,18 @@ export class GoogleTrendsLegacySerpApiProvider implements HistoricalDemandProvid
         attemptId: attempt.attemptId,
       });
 
-      if (!execRes.success || !execRes.receipt || !execRes.data) {
+      if (
+        !execRes.success ||
+        !execRes.receipt ||
+        !execRes.data ||
+        execRes.persistenceResult?.state !== "EVIDENCE_ELIGIBLE" ||
+        !execRes.persistenceResult?.eligible ||
+        !execRes.persistenceResult?.dbCommitted
+      ) {
         return {
           ...result,
           status: "FAILED",
-          error: execRes.error || "SerpApi request or durable persistence failed.",
+          error: execRes.error || "SerpApi request or atomic durable persistence failed.",
         };
       }
 
@@ -716,14 +721,21 @@ export class GoogleTrendsLegacySerpApiProvider implements HistoricalDemandProvid
           scale: "GOOGLE_TRENDS_INDEX_0_100",
           evidenceReference: `provider-request:serpapi:${receipt.receiptId}`,
           rawResponseSha256: receipt.rawResponseSha256,
+          observedAt: receipt.capturedAt,
+          capturedAt: receipt.capturedAt,
         } as any);
       }
       points.sort((a, b) => a.periodStart.localeCompare(b.periodStart));
+      const isAuthoritative =
+        points.length > 0 &&
+        receipt.originKind === "ACTUAL_PROVIDER_INVOCATION" &&
+        receipt.commitState === "EVIDENCE_ELIGIBLE" &&
+        receipt.eligible === true;
       return {
         ...result,
         points,
         status: points.length ? "SUCCESS" : "INSUFFICIENT_DATA",
-        provenance: points.length ? "AUTHORITATIVE_PROVIDER" : "UNVERIFIED",
+        provenance: isAuthoritative ? "AUTHORITATIVE_PROVIDER" : "UNVERIFIED",
         receiptId: receipt.receiptId,
         rawResponseSha256: receipt.rawResponseSha256,
       } as any;

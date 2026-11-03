@@ -282,6 +282,8 @@ export async function resolveProductDemandHistory(
         productId: r.productId,
         keyword: r.keyword,
         region: r.region,
+        workspaceId: options.workspaceId || null,
+        researchRunId: (options as any).researchRunId || null,
       });
       if (resolved.verified) {
         verifiedDescriptor = resolved;
@@ -384,13 +386,12 @@ export async function resolveProductDemandHistory(
         if (seriesResult.status === "SUCCESS" && seriesResult.points.length > 0) {
           if (targetProductId) {
             for (const pt of seriesResult.points) {
+              const evidenceRef =
+                (pt as any).evidenceReference ||
+                ((seriesResult as any).receiptId
+                  ? `provider-request:serpapi:${(seriesResult as any).receiptId}`
+                  : null);
               try {
-                const evidenceRef =
-                  (pt as any).evidenceReference ||
-                  ((seriesResult as any).receiptId
-                    ? `provider-request:serpapi:${(seriesResult as any).receiptId}`
-                    : null);
-
                 await prisma.productDemandObservation.create({
                   data: {
                     productId: targetProductId,
@@ -406,8 +407,26 @@ export async function resolveProductDemandHistory(
                   },
                 });
               } catch (err: any) {
-                // Swallow only true unique-constraint duplicate violations (P2002)
-                if (err?.code !== "P2002") {
+                if (err?.code === "P2002") {
+                  // Verify existing duplicate observation matches value and reference
+                  const existingObs = await prisma.productDemandObservation.findFirst({
+                    where: {
+                      productId: targetProductId,
+                      keyword: searchTerm,
+                      region: pt.region || region,
+                      periodStart: new Date(pt.periodStart),
+                    },
+                  });
+                  if (
+                    existingObs &&
+                    existingObs.demandValue !== null &&
+                    Math.abs(existingObs.demandValue - pt.demandValue) > 0.001
+                  ) {
+                    throw new Error(
+                      `Conflicting duplicate demand observation for product '${targetProductId}' at '${pt.periodStart}': existing=${existingObs.demandValue}, incoming=${pt.demandValue}`
+                    );
+                  }
+                } else {
                   throw err;
                 }
               }
@@ -427,11 +446,14 @@ export async function resolveProductDemandHistory(
                 productId: targetProductId,
                 keyword: searchTerm,
                 region,
+                workspaceId: options.workspaceId || null,
+                researchRunId: (options as any).researchRunId || null,
               });
               if (resolved.verified) {
                 verifiedDescriptor = resolved;
               }
             }
+            const capturedTs = verifiedDescriptor?.capturedAt || (p as any).capturedAt || (seriesResult as any).acquiredAt || null;
             livePoints.push({
               periodStart: p.periodStart,
               periodEnd: p.periodEnd,
@@ -443,14 +465,20 @@ export async function resolveProductDemandHistory(
               methodologyVersion: isGoogleFreeMode ? "google_free_demand_live" : "serpapi_google_trends_live",
               evidenceReference: evidenceRef,
               verifiedDescriptor,
-              capturedAt: verifiedDescriptor?.capturedAt || (seriesResult as any).acquiredAt || new Date().toISOString(),
+              observedAt: capturedTs || undefined,
+              capturedAt: capturedTs,
             } as any);
           }
 
-          // Merge live points with existing valid (non-fixture, non-synthetic) points
-          const existingValid = currentPoints.filter(
-            (p) => !p.isFixture && p.source !== "CACHED_UNVERIFIED"
-          );
+          // Only merge with existing cache points when existing cache is authoritative and same source type
+          const canMergeCache =
+            cacheClassification === "CACHE_AUTHORITATIVE_STALE" ||
+            cacheClassification === "CACHE_AUTHORITATIVE_FRESH";
+          const existingValid = canMergeCache
+            ? currentPoints.filter(
+                (p) => !p.isFixture && p.source !== "CACHED_UNVERIFIED" && Boolean((p as any).verifiedDescriptor?.verified)
+              )
+            : [];
           const seenDates = new Set(livePoints.map((p) => String(p.periodStart).slice(0, 10)));
           const combined = [...livePoints];
           for (const ep of existingValid) {
@@ -479,12 +507,17 @@ export async function resolveProductDemandHistory(
     searchTermUsed: searchTerm,
   });
 
-  const sourceStatus =
-    assessment.status === "VERIFIED"
-      ? "PRODUCT_HISTORY_VERIFIED"
-      : currentPoints.length > 0
-      ? "INSUFFICIENT_HISTORY"
-      : "ENGINE_READY";
+  const isSourceVerified =
+    assessment.status === "VERIFIED" &&
+    (assessment.sourceAuthority === "AUTHORITATIVE_VERIFIED" ||
+      assessment.sourceAuthority === "HISTORICAL_SOURCE_VERIFIED") &&
+    assessment.productAttributionValid;
+
+  const sourceStatus = isSourceVerified
+    ? "PRODUCT_HISTORY_VERIFIED"
+    : currentPoints.length > 0
+    ? "INSUFFICIENT_HISTORY"
+    : "ENGINE_READY";
 
   return buildResolution(currentPoints, assessment, sourceStatus, {
     cacheClassification,

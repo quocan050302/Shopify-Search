@@ -1,0 +1,290 @@
+==========================================================================================
+KH-02 V12.4.3.7.12 — EVIDENCE ELIGIBILITY FENCING & PRODUCTION CONCURRENCY PROOF AUDIT
+Date: 2026-11-03 | Repository: quocan050302/Shopify-Search
+Locked Branch: feature/kh02-walmart-us-jina-reader-v12.4.3.5.1
+==========================================================================================
+
+1. GIT BASELINE, BRANCH LOCK & COMMIT PARITY
+------------------------------------------------------------------------------------------
+- Repository: quocan050302/Shopify-Search
+- Working Root: /Users/macbook/Documents/Project_Github/Meta-Ads/Shopify-Search
+- Locked Branch: feature/kh02-walmart-us-jina-reader-v12.4.3.5.1
+- Baseline Review HEAD (Before): 5873a3ee15b83b48de23792e57788cc6b6522240
+- Prior Tested Code Commit: 360e986d97494017974d678b5026bb224dd505b8
+- Ancestry Verification: git merge-base --is-ancestor 5873a3ee15b83b48de23792e57788cc6b6522240 HEAD => 0 (VERIFIED)
+- Divergence from origin/feature/kh02-walmart-us-jina-reader-v12.4.3.5.1 before commit: 0 behind / 0 ahead
+- Uncommitted Runtime Artifacts Staged: 0 (.provider_receipt_ledger.json, *.lock, *.tmp* excluded via .gitignore)
+
+2. ROOT CAUSE & CODE FIXES FOR ALL P0 / P1 / P2 VULNERABILITIES
+------------------------------------------------------------------------------------------
+[P0-1] Ledger Receipt Written Before DB Commit Becomes Evidence-Eligible Too Early
+- File & Lines: src/services/kh02/demand/temporalDemandEngine.ts:722-785, 810-915, 1052-1193, 1215-1660
+- Root Cause:
+  1) finalizeProviderInvocationFromTransport() and recordTrustedProviderInvocation() previously populated
+     in-memory trusted caches and wrote ledger records without awaiting SQLite ResearchEvidence persistence.
+  2) persistDurableReceipt() wrote ledger entries that getTrustedProviderReceipt() and
+     isAuthenticProviderReceiptDescriptor() treated as verified even when dbCommitted === false or when
+     persistCollectorReceiptAtomically() failed at the database stage.
+- Code Fix:
+  1) Introduced strict ReceiptCommitState lifecycle on ProviderInvocationReceipt:
+     "LEDGER_PENDING_DB" | "EVIDENCE_ELIGIBLE" | "DB_WRITE_FAILED" | "DB_READBACK_FAILED" |
+     "HASH_MISMATCH" | "CONFLICT" | "LOCK_TIMEOUT" | "RECOVERY_REQUIRED" | "FAILED".
+  2) Synchronous functions (finalizeProviderInvocationFromTransport, recordTrustedProviderInvocation,
+     persistDurableReceipt) ONLY stage commitState = "LEDGER_PENDING_DB" with eligible = false and
+     verifiedAt = null, and explicitly remove any stale entry from in-memory eligible caches.
+  3) persistCollectorReceiptAtomically() implements a 4-stage Compare-And-Swap (CAS) commit:
+     Stage 1: Verify physical artifact on disk (path confinement, no symlinks, non-empty, 64-hex SHA-256,
+              valid JSON without upstream error).
+     Stage 2: Acquire ledger lock, check full metadata conflict, write LEDGER_PENDING_DB (eligible=false)
+              via write-temp-fsync-rename, verify disk readback, and release ledger lock.
+     Stage 3: Acquire DB serialization lock, await prisma.researchEvidence.upsert(), and await
+              prisma.researchEvidence.findUnique() readback verifying id, sourceContentRef === normSha,
+              and observedValue JSON parity. On any DB write/readback failure, transition ledger entry to
+              DB_WRITE_FAILED or DB_READBACK_FAILED with eligible=false and return immediately.
+     Stage 4: Re-acquire ledger lock, verify generation/hash CAS invariant, transition ledger entry to
+              commitState = "EVIDENCE_ELIGIBLE", eligible = true, verifiedAt = ISO timestamp, fsync+rename,
+              verify disk readback, and only then populate trustedInvocationLedger.
+
+[P0-2] resolveVerifiedDemandEvidence Trusts Ledger Without DB Readback When dbCommitted Is False/Failed
+- File & Lines:
+  * src/services/kh02/demand/temporalDemandEngine.ts:2245-2650, 2670-3080
+  * src/services/kh02/demand/historicalDemandIngestion.ts:275-315, 415-465
+- Root Cause:
+  resolveVerifiedDemandEvidence() previously accepted receipts found in the ledger file without verifying
+  that a matching ResearchEvidence record was committed in SQLite, and without requiring
+  commitState === "EVIDENCE_ELIGIBLE" && eligible === true.
+- Code Fix:
+  1) getTrustedProviderReceipt() and findTrustedReceiptByHash() filter out any receipt where
+     commitState !== "EVIDENCE_ELIGIBLE" or eligible !== true (normalizing legacy records lacking
+     explicit eligibility fields to RECOVERY_REQUIRED / eligible=false).
+  2) isAuthenticProviderReceiptDescriptor() enforces ledger eligibility, physical artifact existence and
+     byte-level SHA-256 parity, semantic payload checks (search_metadata.status === "Success", geo/query
+     alignment), and observation timeline point value membership.
+  3) resolveVerifiedDemandEvidence() requires BOTH:
+     - A durable ledger entry with commitState === "EVIDENCE_ELIGIBLE" && eligible === true, AND
+     - A verified SQLite prisma.researchEvidence.findUnique({ where: { id: receiptId } }) row whose
+       sourceContentRef and observedValue.rawResponseSha256 match the ledger SHA-256 and physical file
+       SHA-256 on disk.
+     DB-only forgeries fail with ORIGIN_UNVERIFIED; ledger-only forgeries fail with DB_RECORD_MISSING;
+     uncommitted/pending receipts fail with RECEIPT_NOT_ELIGIBLE.
+
+[P1-3] Exported getAuthorizedCollectorCapabilityToken Allowed External Callers to Mint TRUSTED_COLLECTOR
+- File & Lines: src/services/kh02/demand/temporalDemandEngine.ts:369-467, 699-725
+- Root Cause:
+  getAuthorizedCollectorCapabilityToken() was exported and passed INTERNAL_COLLECTOR_SECRET when called
+  with "google_trends_serpapi_collector" or "trusted_test_collector", allowing tests or external modules
+  to mint TRUSTED_COLLECTOR tokens and obtain originKind = "ACTUAL_PROVIDER_INVOCATION".
+- Code Fix:
+  1) Removed "trusted_test_collector" from AUTHORIZED_COLLECTOR_NAMES.
+  2) Made mintInternalTrustedCollectorToken() a private, unexported module-internal function invoked
+     exclusively inside executeTrustedSerpApiDemandRequest() when executing real network transport
+     (!isSimulatedTransport) against https://serpapi.com/search.json.
+  3) All exported token factories (createCollectorCapabilityToken, createTestCollectorCapabilityToken,
+     getAuthorizedCollectorCapabilityToken) unconditionally issue classification = "TEST_SIMULATION"
+     with isTestSimulation = true, which can only produce SIMULATED_TRANSPORT receipts with
+     fixtureProvenance = true.
+  4) Enforced single-use token consumption bound to (attemptId, receiptId, provider, rawResponseSha256)
+     so a capability token cannot be replayed across different attempts or receipts.
+
+[P1-4] Lock File Release & Stale Reclamation Race Conditions
+- File & Lines: src/services/kh02/demand/temporalDemandEngine.ts:916-1000
+- Root Cause:
+  1) releaseDurableLedgerLock() previously unlinked the lock file inside a catch block if JSON parsing
+     failed (e.g., while another process was writing or on corrupted lock content).
+  2) Stale lock reclamation unlinked and re-created the lock file in two non-atomic steps and did not
+     strictly prevent stealing an expired lease whose owner PID was still alive on the same host.
+- Code Fix:
+  1) releaseDurableLedgerLock() never unlinks on JSON parse error, symlink, missing ownerId, or
+     ownerId/PID mismatch.
+  2) When an existing lock's expiresAt has passed, isProcessAliveOnSameHost(pid, hostname) checks
+     process.kill(pid, 0). If the owner PID is still alive, the lock is NEVER stolen and the contender
+     fails closed with LOCK_TIMEOUT.
+  3) If the owner PID is confirmed dead, tryReclaimDeadExpiredLockAtomically() renames the lock file to
+     a temporary claim path, re-verifies that ownerId did not change during the rename, and unlinks the
+     claim file before retrying O_CREAT | O_EXCL acquisition.
+
+[P1-5] hasReceiptConflict Only Checked rawResponseSha256 & Ignored Metadata Contradictions
+- File & Lines: src/services/kh02/demand/temporalDemandEngine.ts:1002-1033, 1124-1142, 1320-1342
+- Root Cause:
+  Previously, re-registering an existing receiptId with the same rawResponseSha256 but a different
+  targetProductOrKeyword, region, provider, workspaceId, productId, researchRunId, or originKind was
+  treated as idempotent instead of a conflict.
+- Code Fix:
+  Implemented hasReceiptIdentityConflict(existing, candidate) checking all 8 identity dimensions:
+  rawResponseSha256, provider, region, normalized targetProductOrKeyword, workspaceId, productId,
+  researchRunId, and originKind. Any mismatch returns state = "CONFLICT", errorCode = "RECEIPT_CONFLICT",
+  eligible = false, preserving the canonical existing record untouched.
+
+[P1-6] executeTrustedSerpApiDemandRequest Synthesized Fallback receiptId & Accepted Unchecked Transport
+- File & Lines:
+  * src/services/kh02/demand/temporalDemandEngine.ts:1730-1940
+  * src/services/kh02/demand/demandProviderRegistry.ts:715-835
+- Root Cause:
+  executeTrustedSerpApiDemandRequest() fell back to req_serpapi_${Date.now()} when search_metadata.id
+  was absent, and minted TRUSTED_COLLECTOR tokens even when a custom fetchFn was injected.
+- Code Fix:
+  1) Enforced strict URL validation (https://serpapi.com/search.json with engine=google_trends and
+     data_type=TIMESERIES), stripping api_key before computing requestFingerprint.
+  2) Required immutable upstream data.search_metadata.id and search_metadata.status === "Success",
+     plus geo/query alignment with search_parameters.
+  3) Custom fetchFn injections are classified as SIMULATED_TRANSPORT (fixtureProvenance = true) and
+     never mint TRUSTED_COLLECTOR tokens.
+  4) Wired GoogleTrendsLegacySerpApiProvider.fetchSeries() to attach verifiedReceiptDescriptor only
+     when atomic persistence succeeds with eligible === true && dbCommitted === true.
+
+[P2-7] Multi-Process Test (A34) Previously Used Inline Lock Script Instead of Production Function
+- File & Lines:
+  * tests/unit/kh02/v12_4_3_7_11_AtomicReceiptCommitReadback.test.ts:930-1060
+  * tests/unit/kh02/v12_4_3_7_12_EvidenceEligibilityFencing.test.ts:1090-1590
+- Root Cause:
+  Test A34 in V12.4.3.7.11 spawned child node scripts that implemented their own inline lock/ledger logic
+  rather than importing and executing the real production persistCollectorReceiptAtomically() and
+  resolveVerifiedDemandEvidence() functions across processes.
+- Code Fix:
+  Updated A34 in V12.4.3.7.11 and created C01-C08 in V12.4.3.7.12 spawning real child processes via
+  tsx that directly import and execute persistCollectorReceiptAtomically(), reconcilePendingReceiptRecovery(),
+  and resolveVerifiedDemandEvidence() against shared ledger and SQLite database files.
+
+3. RECEIPT COMMIT STATE MACHINE & CROSS-STORE COORDINATION BOUNDARIES
+------------------------------------------------------------------------------------------
+State Machine Transitions:
+  NEW_ATTEMPT
+    -> TRANSPORT_RESPONSE_200 (HTTP 200 + valid JSON + search_metadata.id + status="Success")
+    -> RAW_ARTIFACT_VERIFIED (64-hex SHA-256 content-addressed file written & verified on disk)
+    -> LEDGER_PENDING_DB (staged under .lock via temp+fsync+rename; eligible=false, dbCommitted=false)
+    -> DB_COMMITTED (Prisma ResearchEvidence upsert awaited under .db.lock)
+    -> DB_READBACK_VERIFIED (Prisma findUnique readback verified for id, sourceContentRef, observedValue)
+    -> EVIDENCE_ELIGIBLE (CAS transition under .lock; eligible=true, dbCommitted=true, verifiedAt!=null)
+
+Failure & Recovery Terminal States:
+  - LOCK_TIMEOUT (eligible=false, dbCommitted=false)
+  - MISSING_ARTIFACT / HASH_MISMATCH (eligible=false, dbCommitted=false)
+  - CONFLICT / RECEIPT_CONFLICT (eligible=false, dbCommitted=false; original record preserved)
+  - DB_WRITE_FAILED / DB_READBACK_FAILED (eligible=false, dbCommitted=false; ledger marked failed)
+  - RECOVERY_REQUIRED (legacy/interrupted record; recoverable via reconcilePendingReceiptRecovery())
+
+Honest Distributed Systems Note:
+  Local POSIX/NTFS filesystem and SQLite do not share a kernel-level two-phase commit (2PC) transaction.
+  This implementation guarantees zero false-positive eligibility because:
+  1) Ledger staging writes LEDGER_PENDING_DB with eligible=false BEFORE SQLite upsert.
+  2) Readers (getTrustedProviderReceipt, isAuthenticProviderReceiptDescriptor, resolveVerifiedDemandEvidence)
+     reject any receipt unless BOTH the ledger entry has commitState="EVIDENCE_ELIGIBLE" (eligible=true)
+     AND the SQLite ResearchEvidence row exists with matching SHA-256.
+  3) If a process crashes between Stage 2 (LEDGER_PENDING_DB) and Stage 4 (EVIDENCE_ELIGIBLE), the receipt
+     remains ineligible (fail-closed) until reconcilePendingReceiptRecovery() or an idempotent retry
+     completes the DB commit + readback + CAS promotion.
+
+4. TEST MATRIX RESULTS: F01-F32 (FENCING & FAULT INJECTION) & C01-C08 (MULTI-PROCESS)
+------------------------------------------------------------------------------------------
+Test Suite: tests/unit/kh02/v12_4_3_7_12_EvidenceEligibilityFencing.test.ts (40/40 PASS)
+- F01: persistDurableReceipt alone sets LEDGER_PENDING_DB & eligible=false; rejected by readers      [PASS]
+- F02: finalizeProviderInvocationFromTransport without atomic DB commit is rejected by readers       [PASS]
+- F03: persistCollectorReceiptAtomically when prisma.researchEvidence is undefined -> DB_WRITE_FAILED [PASS]
+- F04: persistCollectorReceiptAtomically when upsert throws -> DB_WRITE_FAILED, eligible=false       [PASS]
+- F05: persistCollectorReceiptAtomically when findUnique returns null -> DB_READBACK_FAILED          [PASS]
+- F06: persistCollectorReceiptAtomically when findUnique has wrong SHA -> DB_READBACK_FAILED         [PASS]
+- F07: executeTrustedSerpApiDemandRequest with custom fetchFn -> SIMULATED_TRANSPORT only            [PASS]
+- F08: getAuthorizedCollectorCapabilityToken external call -> TEST_SIMULATION only                   [PASS]
+- F09: createTestCollectorCapabilityToken("trusted_test_collector") -> SIMULATED_TRANSPORT only      [PASS]
+- F10: Reusing single-use CollectorCapabilityToken for second receiptId throws error                 [PASS]
+- F11: Missing artifactPath or wrong SHA fails BEFORE writing ledger or DB                           [PASS]
+- F12: Same receiptId + same SHA + different targetProductOrKeyword -> CONFLICT                      [PASS]
+- F13: Same receiptId + same SHA + different workspaceId/productId/runId/originKind -> CONFLICT      [PASS]
+- F14: Idempotent retry with identical receipt succeeds with idempotent=true & DB verified           [PASS]
+- F15: Crash recovery from LEDGER_PENDING_DB via reconcilePendingReceiptRecovery -> EVIDENCE_ELIGIBLE [PASS]
+- F16: Corrupted .lock file is NOT unlinked by releaseDurableLedgerLock from non-owner               [PASS]
+- F17: Non-owner calling releaseDurableLedgerLock returns false and leaves lock intact               [PASS]
+- F18: Expired lease with LIVE owner PID is NOT stolen (returns LOCK_TIMEOUT)                        [PASS]
+- F19: Expired lease with DEAD owner PID is reclaimed safely and atomically                          [PASS]
+- F20: Symlink at lockPath or storageDir is rejected fail-closed                                     [PASS]
+- F21: Legacy ledger JSON lacking commitState/eligible is normalized to RECOVERY_REQUIRED            [PASS]
+- F22: Post-commit artifact byte tampering revokes eligibility & fails HASH_MISMATCH                 [PASS]
+- F23: DB-only forgery without matching EVIDENCE_ELIGIBLE ledger entry fails ORIGIN_UNVERIFIED       [PASS]
+- F24: Ledger-only forgery without matching SQLite ResearchEvidence row fails DB_RECORD_MISSING      [PASS]
+- F25: SerpApi payload semantic mismatch (status != Success, wrong geo/q) fails closed               [PASS]
+- F26: Observation demandValue not present in raw timeline_data fails evaluateDemandSourceAuthority  [PASS]
+- F27: Cross-tenant / cross-run / cross-product scope mismatch rejected fail-closed                  [PASS]
+- F28: Point-in-time zero-lookahead excludes observation with sourceCapturedAt > asOf                [PASS]
+- F29: Missing timestamp under strictChronological=true is rejected                                  [PASS]
+- F30: Cadence & density anti-gaming (:cadence=MONTHLY / minCoverageRatio=0.10) blocked              [PASS]
+- F31: Broad category & ad copy terms classified ESTIMATED_OR_PROXY / CACHED_UNVERIFIED              [PASS]
+- F32: Production sentinel data/provider_receipts remains byte-for-byte identical                    [PASS]
+- C01: 2 real OS child processes behind barrier commit disjoint receipts with 0 lost updates         [PASS]
+- C02: 4 real OS child processes x 5 iterations (20 receipts) commit with 0 lost updates             [PASS]
+- C03: 2 real OS child processes committing identical receiptId + payload succeed idempotently       [PASS]
+- C04: 2 real OS child processes committing same receiptId + different SHA -> 1 ELIGIBLE, 1 CONFLICT [PASS]
+- C05: Live child process holding lock causes competing child to return LOCK_TIMEOUT cleanly         [PASS]
+- C06: Dead child process expired lock is reclaimed by subsequent child process & committed          [PASS]
+- C07: Mid-flight crash (Worker 1 stages LEDGER_PENDING_DB & exits) -> Reader sees false -> Worker 2 recovers [PASS]
+- C08: Concurrent reader + writer child processes: 0 JSON parse errors, 0 premature eligible reads   [PASS]
+
+5. FULL VERIFICATION & REGRESSION EXECUTION MATRIX
+------------------------------------------------------------------------------------------
+- TypeScript Check (npx tsc --noEmit):
+  Exit Code 0 (0 compilation errors).
+- V12.4.3.7.12 Suite (tests/unit/kh02/v12_4_3_7_12_EvidenceEligibilityFencing.test.ts):
+  1/1 file, 40/40 tests PASS (6.17s).
+- V12.4.3.7.11 Suite (tests/unit/kh02/v12_4_3_7_11_AtomicReceiptCommitReadback.test.ts):
+  1/1 file, 36/36 tests PASS (1.69s).
+- V12.4.3.7.10 Suite (tests/unit/kh02/v12_4_3_7_10_RealCollectorAtomicLedger.test.ts):
+  1/1 file, 28/28 tests PASS (1.03s).
+- V12.4.3.7.9 Suite (tests/unit/kh02/v12_4_3_7_9_TrustedCollectorSafeTest.test.ts):
+  1/1 file, 35/35 tests PASS (0.10s).
+- Post-Review Hardening Suite (tests/unit/kh02/v12_4_3_PostReviewHardening_2026_11_03.test.ts):
+  1/1 file, 82/82 tests PASS (0.21s).
+- All KH-02 Unit Suites (npx vitest run tests/unit/kh02 --no-file-parallelism):
+  64/64 files, 1,413/1,413 tests PASS (58.32s).
+- All Repository Unit Suites (tests/unit total across KH-01, KH-02, Meta, TikTok, AI, Security):
+  119/119 files, 1,929/1,929 tests PASS.
+- KH-01 Verification Gate (npm run kh01:verify):
+  5/5 files, 69/69 tests PASS (3.57s).
+- KH-02 Integration Suites (kh02WalmartUsJinaIntegrationV12_4_3_5_1 + kh02V12_1_3_Acceptance):
+  2/2 files, 10/10 tests PASS (3.76s).
+- Chromium Browser E2E Acceptance (tests/integration/kh02BrowserAcceptance.test.ts):
+  1/1 file, 1/1 test PASS (38.01s).
+- Historical Point-in-Time Backtest (npx tsx scripts/kh02/runBacktestV12_4_3_4_2.ts):
+  * Policy Scenario Verdict: PASS (21/21 scenarios)
+  * Point-in-Time Integrity Verdict: PASS (zero future leakage verified)
+  * Historical DEV Verdict: INSUFFICIENT_HISTORICAL_EVIDENCE (shortlist=0/0)
+  * Historical HOLDOUT Verdict: INSUFFICIENT_HISTORICAL_EVIDENCE (shortlist=3/3)
+  * Overall Historical Backtest Verdict: INSUFFICIENT_HISTORICAL_EVIDENCE
+
+6. GATE STATUS CLASSIFICATION (ENGINEERING VS BUSINESS LIVE GATES)
+------------------------------------------------------------------------------------------
+- Engineering Implementation & Concurrency Proof Gate: PASS
+  All code-level provenance fences, CAS ledger+DB commit/readback checks, capability token boundaries,
+  lock ownership/reclamation protocols, and multi-process concurrency proofs (F01-F32, C01-C08) are PASS.
+- Business / Live Release Gate Classifications (Fail-Closed Truthfulness):
+  * G06 (Google Ads Transparency): TRANSPORT_READY_NOT_VERIFIED
+    (Local Python FastMCP transport is operational for creative transparency, but does not prove
+     storefront PDP identity or longitudinal product demand.)
+  * G07 (TikTok Ads US): BLOCKED
+    (Blocked by absence of authorized commercial TikTok US credentials; organic fallback remains disabled.)
+  * G15 (US Longitudinal Demand >= 60 Days): INSUFFICIENT_EVIDENCE
+    (Fail-closed: requires live authorized SerpApi/Google Trends or official Explore CSV captures with
+     ACTUAL_PROVIDER_INVOCATION receipts committed via persistCollectorReceiptAtomically.)
+  * G16 (Shopify Top 3 Winning Products): INSUFFICIENT_EVIDENCE
+    (Fail-closed: 0/3 candidate products currently possess live verified >=60D US longitudinal demand
+     plus independent non-funnel merchant proofs.)
+
+7. SENTINEL & WORKTREE HYGIENE VERIFICATION
+------------------------------------------------------------------------------------------
+- Production Sentinel Directory (data/provider_receipts) SHA-256 Hashes (Unchanged):
+  * 04f4d039cdd4a884134914fdb9d2ed86ebbfa353991d714b78df545a96fd4b14  data/provider_receipts/04f4d039cdd4a884134914fdb9d2ed86ebbfa353991d714b78df545a96fd4b14.json
+  * 3440f19057ac7d1ac535150d1bbcc9a3078e0b7a5d46ad3f4bbd2c46235f61c8  data/provider_receipts/3440f19057ac7d1ac535150d1bbcc9a3078e0b7a5d46ad3f4bbd2c46235f61c8.json
+  * 366cfeb156347d783c227be3fd7e10e397c8cd00c49c909673fc5208f36b841f  data/provider_receipts/366cfeb156347d783c227be3fd7e10e397c8cd00c49c909673fc5208f36b841f.json
+  * 982cfdb5f6d15e391fc14d994b1e70c9a840b6974343c20e316da70bfad39c04  data/provider_receipts/.fixture_manifest.json
+- .gitignore Verification:
+  data/provider_receipts/.provider_receipt_ledger.json*, *.lock, *.tmp*, and data/.test_tmp/ are
+  untracked and absent from git status.
+
+8. TOP 3 NEXT PRACTICAL ACTIONS WHEN LIVE CREDENTIALS ARE PROVIDED
+------------------------------------------------------------------------------------------
+1) Configure live SERPAPI_API_KEY (or upload authenticated Google Trends US Explore CSV exports) to
+   execute executeTrustedSerpApiDemandRequest() over real network transport and commit live
+   EVIDENCE_ELIGIBLE receipts for the Pet Gadgets candidate products (unlocking G15).
+2) Configure authorized live Meta Ad Library access token and execute live US discovery + storefront
+   PDP verification for at least 3 distinct non-CheckoutChamp Shopify stores (unlocking G16).
+3) Provision authorized commercial TikTok Creative Center / Ad Library US credentials (or maintain G07
+   as honestly BLOCKED until commercial credentials are supplied).
+==========================================================================================

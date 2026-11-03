@@ -17,7 +17,7 @@ import fs from "fs";
 import path from "path";
 import crypto from "crypto";
 import os from "os";
-import { fork } from "child_process";
+import { fork, spawn } from "child_process";
 import {
   createCollectorCapabilityToken,
   createTestCollectorCapabilityToken,
@@ -185,10 +185,13 @@ describe("KH-02 V12.4.3.7.11 — Atomic Receipt Commit & Verified Demand Readbac
       };
 
       const res1 = await persistCollectorReceiptAtomically(receipt);
-      expect(res1.state).toBe("VERIFIED_COMMITTED");
+      expect(res1.state).toBe("EVIDENCE_ELIGIBLE");
+      expect(res1.eligible).toBe(true);
+      expect(res1.dbCommitted).toBe(true);
 
       const res2 = await persistCollectorReceiptAtomically(receipt);
-      expect(res2.state).toBe("IDEMPOTENT_COMMITTED");
+      expect(res2.state).toBe("EVIDENCE_ELIGIBLE");
+      expect(res2.idempotent).toBe(true);
       expect(res2.errorCode).toBeNull();
     });
 
@@ -218,7 +221,7 @@ describe("KH-02 V12.4.3.7.11 — Atomic Receipt Commit & Verified Demand Readbac
       };
 
       const res1 = await persistCollectorReceiptAtomically(rec1);
-      expect(res1.state).toBe("VERIFIED_COMMITTED");
+      expect(res1.state).toBe("EVIDENCE_ELIGIBLE");
 
       const res2 = await persistCollectorReceiptAtomically(rec2);
       expect(res2.state).toBe("CONFLICT");
@@ -253,7 +256,7 @@ describe("KH-02 V12.4.3.7.11 — Atomic Receipt Commit & Verified Demand Readbac
       };
 
       const res1 = await persistCollectorReceiptAtomically(recUS);
-      expect(res1.state).toBe("VERIFIED_COMMITTED");
+      expect(res1.state).toBe("EVIDENCE_ELIGIBLE");
 
       const res2 = await persistCollectorReceiptAtomically(recUK);
       expect(res2.state).toBe("CONFLICT");
@@ -278,7 +281,8 @@ describe("KH-02 V12.4.3.7.11 — Atomic Receipt Commit & Verified Demand Readbac
       };
 
       const res = persistDurableReceipt(rec);
-      expect(res.state).toBe("VERIFIED_COMMITTED");
+      expect(res.state).toBe("LEDGER_PENDING_DB");
+      expect(res.eligible).toBe(false);
 
       // Mutate artifact on disk after commit
       fs.writeFileSync(s.artifactPath, "tampered content", "utf-8");
@@ -328,7 +332,8 @@ describe("KH-02 V12.4.3.7.11 — Atomic Receipt Commit & Verified Demand Readbac
 
       try {
         const res = await persistCollectorReceiptAtomically(rec);
-        expect(res.state).toBe("FAILED");
+        expect(res.state).toBe("DB_WRITE_FAILED");
+        expect(res.eligible).toBe(false);
         expect(res.dbCommitted).toBe(false);
         expect(res.errorCode).toBe("DB_WRITE_FAILED");
         expect(res.errorReason).toContain("Simulated SQLite write lock timeout");
@@ -359,7 +364,8 @@ describe("KH-02 V12.4.3.7.11 — Atomic Receipt Commit & Verified Demand Readbac
 
       try {
         const res = await persistCollectorReceiptAtomically(rec);
-        expect(res.state).toBe("FAILED");
+        expect(res.state).toBe("DB_READBACK_FAILED");
+        expect(res.eligible).toBe(false);
         expect(res.dbCommitted).toBe(false);
         expect(res.errorCode).toBe("DB_READBACK_FAILED");
       } finally {
@@ -396,7 +402,8 @@ describe("KH-02 V12.4.3.7.11 — Atomic Receipt Commit & Verified Demand Readbac
 
       // First run succeeds
       const res1 = await persistCollectorReceiptAtomically(rec);
-      expect(res1.state).toBe("VERIFIED_COMMITTED");
+      expect(res1.state).toBe("EVIDENCE_ELIGIBLE");
+      expect(res1.eligible).toBe(true);
 
       // Clear memory caches to simulate process restart
       clearTrustedProviderInvocationsForTest();
@@ -405,6 +412,8 @@ describe("KH-02 V12.4.3.7.11 — Atomic Receipt Commit & Verified Demand Readbac
       const diskRec = getTrustedProviderReceipt("a12_recovery");
       expect(diskRec).not.toBeNull();
       expect(diskRec?.rawResponseSha256).toBe(s.rawResponseSha256);
+      expect(diskRec?.commitState).toBe("EVIDENCE_ELIGIBLE");
+      expect(diskRec?.eligible).toBe(true);
     });
   });
 
@@ -430,10 +439,10 @@ describe("KH-02 V12.4.3.7.11 — Atomic Receipt Commit & Verified Demand Readbac
       expect(imposterToken.isTestSimulation).toBe(true);
     });
 
-    it("A16: Authorized collector name gets TRUSTED_COLLECTOR", () => {
+    it("A16: Public getAuthorizedCollectorCapabilityToken helper returns TEST_SIMULATION (no public TRUSTED_COLLECTOR factory)", () => {
       const validToken = getAuthorizedCollectorCapabilityToken("google_trends_serpapi_collector");
-      expect(validToken.classification).toBe("TRUSTED_COLLECTOR");
-      expect(validToken.isTestSimulation).toBe(false);
+      expect(validToken.classification).toBe("TEST_SIMULATION");
+      expect(validToken.isTestSimulation).toBe(true);
     });
 
     it("A17: Attempt without valid token or with mismatched provider throws error", () => {
@@ -486,7 +495,7 @@ describe("KH-02 V12.4.3.7.11 — Atomic Receipt Commit & Verified Demand Readbac
         });
 
       const res = await executeTrustedSerpApiDemandRequest({
-        url: "https://serpapi.com/search.json?q=dog+raincoat",
+        url: "https://serpapi.com/search.json?engine=google_trends&data_type=TIMESERIES&q=dog+raincoat",
         query: { term: "dog raincoat", region: "US" },
         attemptId: attempt.attemptId,
         fetchFn: mockFetch,
@@ -495,7 +504,9 @@ describe("KH-02 V12.4.3.7.11 — Atomic Receipt Commit & Verified Demand Readbac
       expect(res.success).toBe(true);
       expect(res.receipt).toBeDefined();
       expect(res.receipt?.receiptId).toBe("a18_req_success");
-      expect(["VERIFIED_COMMITTED", "IDEMPOTENT_COMMITTED"]).toContain(res.persistenceResult?.state);
+      expect(res.receipt?.originKind).toBe("SIMULATED_TRANSPORT");
+      expect(res.persistenceResult?.state).toBe("EVIDENCE_ELIGIBLE");
+      expect(res.persistenceResult?.eligible).toBe(true);
     });
 
     it("A19: executeTrustedSerpApiDemandRequest fails closed on HTTP 403, 429, 500", async () => {
@@ -604,7 +615,9 @@ describe("KH-02 V12.4.3.7.11 — Atomic Receipt Commit & Verified Demand Readbac
       };
 
       const persistRes = await persistCollectorReceiptAtomically(receipt);
-      expect(persistRes.state).toBe("VERIFIED_COMMITTED");
+      expect(persistRes.state).toBe("EVIDENCE_ELIGIBLE");
+      expect(persistRes.eligible).toBe(true);
+      expect(persistRes.dbCommitted).toBe(true);
 
       const resolved = await resolveVerifiedDemandEvidence("provider-request:serpapi:req_a23_test", {
         keyword: "cat water fountain",
@@ -617,7 +630,7 @@ describe("KH-02 V12.4.3.7.11 — Atomic Receipt Commit & Verified Demand Readbac
       expect(resolved.originKind).toBe("ACTUAL_PROVIDER_INVOCATION");
     });
 
-    it("A24: evaluateDemandSourceAuthority upgrades to AUTHORITATIVE_VERIFIED when verifiedDescriptor is attached", () => {
+    it("A24: evaluateDemandSourceAuthority upgrades to AUTHORITATIVE_VERIFIED when verifiedDescriptor is attached", async () => {
       const raw = JSON.stringify({ search_metadata: { id: "req_a24", status: "Success" } });
       const stored = saveRawProviderPayloadFile(raw);
 
@@ -633,7 +646,8 @@ describe("KH-02 V12.4.3.7.11 — Atomic Receipt Commit & Verified Demand Readbac
         rawByteCount: stored.byteCount,
         artifactPath: stored.artifactPath,
       };
-      persistDurableReceipt(receipt);
+      const persistRes = await persistCollectorReceiptAtomically(receipt);
+      expect(persistRes.state).toBe("EVIDENCE_ELIGIBLE");
 
       const obs = [
         {
@@ -889,103 +903,78 @@ describe("KH-02 V12.4.3.7.11 — Atomic Receipt Commit & Verified Demand Readbac
       fs.mkdirSync(workerDir, { recursive: true });
 
       const barrierFile = path.join(workerDir, "start_barrier.txt");
-      const workerScript = path.join(workerDir, "worker.js");
+      const workerScript = path.join(workerDir, "worker.ts");
 
       // Generate a raw payload for each worker
-      const rawA = JSON.stringify({ worker: "A", id: "rec_worker_a" });
+      const rawA = JSON.stringify({ search_metadata: { id: "rec_worker_a", status: "Success" } });
       const shaA = crypto.createHash("sha256").update(rawA).digest("hex").toLowerCase();
       fs.writeFileSync(path.join(workerDir, `${shaA}.json`), rawA, "utf-8");
 
-      const rawB = JSON.stringify({ worker: "B", id: "rec_worker_b" });
+      const rawB = JSON.stringify({ search_metadata: { id: "rec_worker_b", status: "Success" } });
       const shaB = crypto.createHash("sha256").update(rawB).digest("hex").toLowerCase();
       fs.writeFileSync(path.join(workerDir, `${shaB}.json`), rawB, "utf-8");
 
-      // Write worker script that acquires lock and persists into ledger
+      // Write worker script that imports and executes real production persistCollectorReceiptAtomically
+      const enginePath = path.resolve(process.cwd(), "src/services/kh02/demand/temporalDemandEngine.ts");
       const workerCode = `
-        const fs = require('fs');
-        const path = require('path');
+        import fs from "fs";
+        import path from "path";
+        import {
+          setProviderReceiptStorageDirForTest,
+          persistCollectorReceiptAtomically,
+        } from ${JSON.stringify(enginePath)};
 
-        const workerId = process.argv[2];
-        const storageDir = process.argv[3];
-        const barrierPath = process.argv[4];
-        const receiptId = process.argv[5];
-        const sha = process.argv[6];
+        async function main() {
+          const workerId = process.argv[2];
+          const storageDir = process.argv[3];
+          const barrierPath = process.argv[4];
+          const receiptId = process.argv[5];
+          const sha = process.argv[6];
 
-        // Wait for barrier
-        while (!fs.existsSync(barrierPath)) {
-          const sleep = Date.now() + 5;
-          while (Date.now() < sleep) {}
-        }
+          setProviderReceiptStorageDirForTest(storageDir);
 
-        const ledgerPath = path.join(storageDir, '.provider_receipt_ledger.json');
-        const lockPath = ledgerPath + '.lock';
-
-        let lockAcquired = false;
-        const ownerId = 'worker_' + workerId + '_' + process.pid + '_' + Date.now();
-        const deadline = Date.now() + 5000;
-
-        while (Date.now() < deadline && !lockAcquired) {
-          try {
-            const fd = fs.openSync(lockPath, 'wx');
-            const lockData = {
-              ownerId,
-              pid: process.pid,
-              acquiredAt: Date.now(),
-              expiresAt: Date.now() + 8000,
-            };
-            fs.writeFileSync(fd, JSON.stringify(lockData), 'utf-8');
-            fs.closeSync(fd);
-            lockAcquired = true;
-            break;
-          } catch (e) {
-            if (e.code === 'EEXIST') {
-              const delay = Date.now() + 10 + Math.floor(Math.random() * 15);
-              while (Date.now() < delay) {}
-            } else {
-              break;
-            }
+          // Wait for barrier
+          while (!fs.existsSync(barrierPath)) {
+            await new Promise((r) => setTimeout(r, 5));
           }
-        }
 
-        if (!lockAcquired) {
-          process.stderr.write('Worker ' + workerId + ' failed to acquire lock\\n');
-          process.exit(1);
-        }
-
-        try {
-          let ledger = {};
-          if (fs.existsSync(ledgerPath)) {
-            try {
-              ledger = JSON.parse(fs.readFileSync(ledgerPath, 'utf-8'));
-            } catch {}
-          }
-          ledger[receiptId] = {
+          const artifactPath = path.join(storageDir, sha + ".json");
+          const rawBytes = fs.readFileSync(artifactPath);
+          const res = await persistCollectorReceiptAtomically({
             receiptId,
-            provider: 'google_trends_serpapi',
-            originKind: 'ACTUAL_PROVIDER_INVOCATION',
-            rawResponseSha256: sha,
+            provider: "google_trends_serpapi",
+            originKind: "ACTUAL_PROVIDER_INVOCATION",
+            targetProductOrKeyword: "pet fountain " + workerId,
+            region: "US",
+            transportStatus: 200,
             capturedAt: new Date().toISOString(),
-          };
-          const tmp = ledgerPath + '.tmp_' + process.pid;
-          fs.writeFileSync(tmp, JSON.stringify(ledger, null, 2), 'utf-8');
-          fs.renameSync(tmp, ledgerPath);
-        } finally {
-          try {
-            const rawLock = fs.readFileSync(lockPath, 'utf-8');
-            const parsed = JSON.parse(rawLock);
-            if (parsed.ownerId === ownerId) {
-              fs.unlinkSync(lockPath);
-            }
-          } catch {}
+            rawResponseSha256: sha,
+            rawByteCount: rawBytes.length,
+            artifactPath,
+          });
+
+          if (res.state !== "EVIDENCE_ELIGIBLE" || !res.eligible || !res.dbCommitted) {
+            process.stderr.write("Worker " + workerId + " failed: " + JSON.stringify(res) + "\\n");
+            process.exit(1);
+          }
+          process.exit(0);
         }
-        process.exit(0);
+        main().catch((err) => {
+          process.stderr.write(String(err) + "\\n");
+          process.exit(1);
+        });
       `;
       fs.writeFileSync(workerScript, workerCode, "utf-8");
 
-      // Spawn worker A and worker B
+      const tsxBin = path.resolve(process.cwd(), "node_modules/.bin/tsx");
+      // Spawn worker A and worker B calling real production persistCollectorReceiptAtomically
       const runWorker = (id: string, receiptId: string, sha: string) =>
         new Promise<number>((resolve) => {
-          const child = fork(workerScript, [id, workerDir, barrierFile, receiptId, sha]);
+          const child = spawn(tsxBin, [workerScript, id, workerDir, barrierFile, receiptId, sha], {
+            cwd: process.cwd(),
+            env: { ...process.env },
+            stdio: "pipe",
+          });
           child.on("exit", (code) => resolve(code ?? 1));
         });
 
@@ -999,14 +988,18 @@ describe("KH-02 V12.4.3.7.11 — Atomic Receipt Commit & Verified Demand Readbac
       expect(codeA).toBe(0);
       expect(codeB).toBe(0);
 
-      // Verify ledger has BOTH records
+      // Verify ledger has BOTH records in EVIDENCE_ELIGIBLE state
       const ledgerPath = path.join(workerDir, ".provider_receipt_ledger.json");
       expect(fs.existsSync(ledgerPath)).toBe(true);
       const finalLedger = JSON.parse(fs.readFileSync(ledgerPath, "utf-8"));
       expect(finalLedger.rec_worker_a).toBeDefined();
       expect(finalLedger.rec_worker_a.rawResponseSha256).toBe(shaA);
+      expect(finalLedger.rec_worker_a.commitState).toBe("EVIDENCE_ELIGIBLE");
+      expect(finalLedger.rec_worker_a.eligible).toBe(true);
       expect(finalLedger.rec_worker_b).toBeDefined();
       expect(finalLedger.rec_worker_b.rawResponseSha256).toBe(shaB);
+      expect(finalLedger.rec_worker_b.commitState).toBe("EVIDENCE_ELIGIBLE");
+      expect(finalLedger.rec_worker_b.eligible).toBe(true);
 
       // Clean up temp dir
       try {
@@ -1045,9 +1038,9 @@ describe("KH-02 V12.4.3.7.11 — Atomic Receipt Commit & Verified Demand Readbac
       const results = await Promise.all([p1, p2]);
       const states = results.map((r) => r.state).sort();
 
-      // One should be VERIFIED_COMMITTED and the other CONFLICT
+      // One should be EVIDENCE_ELIGIBLE and the other CONFLICT
       expect(states).toContain("CONFLICT");
-      expect(states).toContain("VERIFIED_COMMITTED");
+      expect(states).toContain("EVIDENCE_ELIGIBLE");
 
       // Verify disk ledger is valid parseable JSON
       const ledgerPath = path.join(TEST_STORAGE_DIR, ".provider_receipt_ledger.json");
@@ -1086,7 +1079,8 @@ describe("KH-02 V12.4.3.7.11 — Atomic Receipt Commit & Verified Demand Readbac
 
       // Persistence must fail closed with LOCK_TIMEOUT
       const res = persistDurableReceipt(rec);
-      expect(res.state).toBe("FAILED");
+      expect(res.state).toBe("LOCK_TIMEOUT");
+      expect(res.eligible).toBe(false);
       expect(res.errorCode).toBe("LOCK_TIMEOUT");
 
       // Release lock
