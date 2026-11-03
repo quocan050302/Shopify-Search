@@ -45,6 +45,7 @@ import {
   registerTestControlledInvocationProof,
   type ProviderInvocationReceipt,
 } from "@/services/kh02/demand/temporalDemandEngine";
+import { createTestSignedLiveTransportAttestation } from "../../support/kh02TestProvenanceHarness";
 import { GoogleTrendsLegacySerpApiProvider } from "@/services/kh02/demand/demandProviderRegistry";
 import { resolveProductDemandHistory } from "@/services/kh02/demand/historicalDemandIngestion";
 import { prisma } from "@/lib/db";
@@ -615,12 +616,15 @@ describe("KH-02 V12.4.3.7.11 — Atomic Receipt Commit & Verified Demand Readbac
         artifactPath: stored.artifactPath,
       };
 
-      const proof = registerTestControlledInvocationProof({
+      const attestation = await createTestSignedLiveTransportAttestation({
         attemptId: "att_a23",
         receiptId: "req_a23_test",
         rawResponseSha256: stored.rawResponseSha256,
+        rawBytes: Buffer.from(raw, "utf8"),
+        term: "cat water fountain",
+        region: "US",
       });
-      const persistRes = await persistCollectorReceiptAtomically(receipt, proof);
+      const persistRes = await persistCollectorReceiptAtomically(receipt, undefined, attestation);
       expect(persistRes.state).toBe("EVIDENCE_ELIGIBLE");
       expect(persistRes.eligible).toBe(true);
       expect(persistRes.dbCommitted).toBe(true);
@@ -652,12 +656,15 @@ describe("KH-02 V12.4.3.7.11 — Atomic Receipt Commit & Verified Demand Readbac
         rawByteCount: stored.byteCount,
         artifactPath: stored.artifactPath,
       };
-      const proof = registerTestControlledInvocationProof({
+      const attestation = await createTestSignedLiveTransportAttestation({
         attemptId: "att_a24",
         receiptId: "req_a24",
         rawResponseSha256: stored.rawResponseSha256,
+        rawBytes: Buffer.from(raw, "utf8"),
+        term: "cat water fountain",
+        region: "US",
       });
-      const persistRes = await persistCollectorReceiptAtomically(receipt, proof);
+      const persistRes = await persistCollectorReceiptAtomically(receipt, undefined, attestation);
       expect(persistRes.state).toBe("EVIDENCE_ELIGIBLE");
 
       const obs = [

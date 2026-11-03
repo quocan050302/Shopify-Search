@@ -359,14 +359,15 @@ describe("KH-02 V12.4.3.7.13 — Unforgeable Collector Provenance & Unified Elig
       };
 
       const res1 = await persistCollectorReceiptAtomically(rec, proof);
-      expect(res1.originVerified).toBe(true);
+      // P0-A: Test proof MUST NEVER yield originVerified=true
+      expect(res1.originVerified).toBe(false);
 
       // Reusing the same single-use proof for a second persist call fails
       const res2 = await persistCollectorReceiptAtomically({ ...rec, receiptId: "a12_rcpt_2" }, proof);
       expect(res2.originVerified).toBe(false);
     });
 
-    it("A13: Valid network collector-shaped positive path in isolated controlled tests verifies readback with registered proof", async () => {
+    it("A13: Test-controlled proof in isolated test cannot grant strictLiveOrigin authority (Negative Inversion)", async () => {
       const stored = saveRawProviderPayloadFile(JSON.stringify({ search_metadata: { id: "a13_rcpt", status: "Success" } }));
       const proof = registerTestControlledInvocationProof({
         attemptId: "att_a13",
@@ -388,16 +389,27 @@ describe("KH-02 V12.4.3.7.13 — Unforgeable Collector Provenance & Unified Elig
       };
 
       const res = await persistCollectorReceiptAtomically(rec, proof);
-      expect(res.originVerified).toBe(true);
+      // P0-A: Test proof must demote origin to SIMULATED_TRANSPORT with originVerified=false
+      expect(res.originVerified).toBe(false);
 
-      const readback = await resolveVerifiedDemandEvidence("provider-request:serpapi:a13_rcpt", {
+      // strictLiveOrigin MUST fail closed against test simulation proof
+      const strictReadback = await resolveVerifiedDemandEvidence("provider-request:serpapi:a13_rcpt", {
         keyword: "dog feeder",
         region: "US",
         strictLiveOrigin: true,
       });
-      expect(readback.verified).toBe(true);
-      expect(readback.providerOriginVerified).toBe(true);
-      expect(readback.originKind).toBe("ACTUAL_PROVIDER_INVOCATION");
+      expect(strictReadback.verified).toBe(false);
+      expect(strictReadback.providerOriginVerified).toBe(false);
+      expect(strictReadback.errorCode).toBe("ORIGIN_UNVERIFIED");
+
+      // Non-strict readback succeeds for local content integrity only
+      const relaxedReadback = await resolveVerifiedDemandEvidence("provider-request:serpapi:a13_rcpt", {
+        keyword: "dog feeder",
+        region: "US",
+      });
+      expect(relaxedReadback.verified).toBe(true);
+      expect(relaxedReadback.providerOriginVerified).toBe(false);
+      expect(relaxedReadback.originKind).toBe("SIMULATED_TRANSPORT");
     });
 
     it("A14: Ledger-only eligible flag + valid SHA but NO DB row fails resolveVerifiedDemandEvidence with DB_RECORD_MISSING", async () => {
@@ -1158,13 +1170,25 @@ describe("KH-02 V12.4.3.7.13 — Unforgeable Collector Provenance & Unified Elig
       expect(res.status).toBe("INSUFFICIENT_HISTORY");
     });
 
-    it("A46: Discrepancy analysis test: test counts discovery across repository files matches exact 119 files, 2,059 tests", () => {
-      // P1-D root cause discovery:
-      // tests/unit contains 119 files with 2,059 tests total.
-      // tests/unit/kh02 pattern matches 64 files (1,432 tests).
-      // tests/unit/*.test.ts pattern matches 82 files (960 tests).
-      // Exactly 27 files named kh02*.test.ts are at tests/unit root and matched by both patterns.
-      expect(119).toBe(119);
+    it("A46: Discrepancy analysis test: dynamic test file discovery across repository files", () => {
+      function findTestFiles(dir: string): string[] {
+        let results: string[] = [];
+        for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+          const fullPath = path.join(dir, entry.name);
+          if (entry.isDirectory() && entry.name !== "node_modules" && entry.name !== ".git") {
+            results = results.concat(findTestFiles(fullPath));
+          } else if (entry.isFile() && (entry.name.endsWith(".test.ts") || entry.name.endsWith(".spec.ts"))) {
+            results.push(path.resolve(fullPath));
+          }
+        }
+        return results;
+      }
+      const unitFiles = findTestFiles(path.resolve(process.cwd(), "tests/unit"));
+      const uniqueUnitFiles = Array.from(new Set(unitFiles));
+      expect(uniqueUnitFiles.length).toBeGreaterThanOrEqual(119);
+      const rootUnitFiles = uniqueUnitFiles.filter((f) => path.dirname(f) === path.resolve(process.cwd(), "tests/unit"));
+      const overlapFiles = rootUnitFiles.filter((f) => path.basename(f).startsWith("kh02"));
+      expect(overlapFiles.length).toBe(27);
     });
 
     it("A47: Negative fixture corpus / baseline sentinel SHA unchanged after tests", () => {

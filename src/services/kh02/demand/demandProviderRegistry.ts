@@ -728,6 +728,7 @@ export class GoogleTrendsLegacySerpApiProvider implements HistoricalDemandProvid
       points.sort((a, b) => a.periodStart.localeCompare(b.periodStart));
       const isAuthoritative =
         points.length > 0 &&
+        execRes.persistenceResult?.originVerified === true &&
         receipt.originKind === "ACTUAL_PROVIDER_INVOCATION" &&
         receipt.commitState === "EVIDENCE_ELIGIBLE" &&
         receipt.eligible === true;

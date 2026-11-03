@@ -20,6 +20,7 @@ import {
   createCollectorCapabilityToken,
   registerTestControlledInvocationProof,
 } from "@/services/kh02/demand/temporalDemandEngine";
+import { createTestSignedLiveTransportAttestation } from "../../support/kh02TestProvenanceHarness";
 import fs from "fs";
 import path from "path";
 import crypto from "crypto";
@@ -1347,10 +1348,13 @@ describe("KH-02 Post-Review Hardening Audit Suite (2026-11-03)", () => {
         interest_over_time: { timeline_data: [{ date: "2026-07-01", values: [80] }] },
       });
       const stored = saveRawProviderPayloadFile(raw);
-      const proof = registerTestControlledInvocationProof({
+      const attestation = await createTestSignedLiveTransportAttestation({
         attemptId: "att_e13",
         receiptId: "req_live_e13",
         rawResponseSha256: stored.rawResponseSha256,
+        rawBytes: Buffer.from(raw, "utf8"),
+        term: "smart pet feeder",
+        region: "US",
       });
       await persistCollectorReceiptAtomically({
         receiptId: "req_live_e13",
@@ -1363,7 +1367,7 @@ describe("KH-02 Post-Review Hardening Audit Suite (2026-11-03)", () => {
         rawResponseSha256: stored.rawResponseSha256,
         rawByteCount: stored.byteCount,
         artifactPath: stored.artifactPath,
-      }, proof);
+      }, undefined, attestation);
 
       const res = isAuthenticProviderReceiptDescriptor({
         verified: true,
@@ -1690,10 +1694,13 @@ describe("KH-02 Post-Review Hardening Audit Suite (2026-11-03)", () => {
         interest_over_time: { timeline_data: [{ date: "2026-07-01", values: [75] }] },
       });
       const stored = saveRawProviderPayloadFile(raw);
-      const proof = registerTestControlledInvocationProof({
+      const attestation = await createTestSignedLiveTransportAttestation({
         attemptId: "att_e36",
         receiptId: "req_live_e36",
         rawResponseSha256: stored.rawResponseSha256,
+        rawBytes: Buffer.from(raw, "utf8"),
+        term: "cat water fountain",
+        region: "US",
       });
       await persistCollectorReceiptAtomically({
         receiptId: "req_live_e36",
@@ -1706,7 +1713,7 @@ describe("KH-02 Post-Review Hardening Audit Suite (2026-11-03)", () => {
         rawResponseSha256: stored.rawResponseSha256,
         rawByteCount: stored.byteCount,
         artifactPath: stored.artifactPath,
-      }, proof);
+      }, undefined, attestation);
 
       const multiObs = [
         {
