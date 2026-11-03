@@ -1,0 +1,68 @@
+{
+  "version": "12.4.3.7.9",
+  "auditDate": "2026-11-03",
+  "repository": "quocan050302/Shopify-Search",
+  "lockedBranch": "feature/kh02-walmart-us-jina-reader-v12.4.3.5.1",
+  "baselineRemoteHead": "3347e0d43a08825d3da35bc2ecbca330bfafeb85",
+  "engineeringPass": true,
+  "providerLiveVerified": false,
+  "businessVerified": false,
+  "verdict": "ENGINEERING_PASS_WITH_INSUFFICIENT_EXTERNAL_EVIDENCE",
+  "gates": {
+    "G06_GOOGLE_ADS_TRANSPARENCY": "TRANSPORT_READY",
+    "G07_TIKTOK_ADS_US": "BLOCKED",
+    "G15_LONGITUDINAL_DEMAND_60D": "INSUFFICIENT_EVIDENCE",
+    "G16_TOP3_WINNING_PRODUCTS": "INSUFFICIENT_EVIDENCE"
+  },
+  "tests": {
+    "trustedCollectorSafeTest": {
+      "file": "tests/unit/kh02/v12_4_3_7_9_TrustedCollectorSafeTest.test.ts",
+      "total": 35,
+      "passed": 35,
+      "failed": 0
+    },
+    "postReviewHardening": {
+      "file": "tests/unit/kh02/v12_4_3_PostReviewHardening_2026_11_03.test.ts",
+      "total": 82,
+      "passed": 82,
+      "failed": 0
+    },
+    "kh02UnitTotal": {
+      "files": 61,
+      "passed": 1309,
+      "failed": 0
+    },
+    "allUnitTotal": {
+      "files": 116,
+      "passed": 1929,
+      "failed": 0
+    },
+    "kh01Verify": {
+      "files": 5,
+      "passed": 69,
+      "failed": 0
+    },
+    "chromiumE2E": {
+      "file": "tests/integration/kh02BrowserAcceptance.test.ts",
+      "passed": 1,
+      "failed": 0,
+      "durationSeconds": 39.14
+    },
+    "typeScriptNoEmit": {
+      "exitCode": 0,
+      "errors": 0
+    }
+  },
+  "backtest": {
+    "script": "scripts/kh02/runBacktestV12_4_3_4_2.ts",
+    "policyScenarios": { "passed": 21, "failed": 0 },
+    "historicalDev": { "cutoff": "2026-10-24T00:00:00Z", "shortlist": 0, "verified": 0, "status": "INSUFFICIENT_HISTORICAL_EVIDENCE" },
+    "historicalHoldout": { "cutoff": "2026-10-30T12:00:00Z", "shortlist": 3, "verified": 0, "status": "INSUFFICIENT_HISTORICAL_EVIDENCE" },
+    "overall": "INSUFFICIENT_HISTORICAL_EVIDENCE"
+  },
+  "safetySentinels": {
+    "providerReceiptStorageDir": "data/provider_receipts",
+    "fixtureManifestSha": "982cfdb5f6d15e391fc14d994b1e70c9a840b6974343c20e316da70bfad39c04",
+    "byteForByteProductionPreserved": true
+  }
+}

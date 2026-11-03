@@ -1,6 +1,6 @@
 {
   "version": "12.4.3.4.3",
-  "evaluatedAt": "2026-11-03T05:36:36.755Z",
+  "evaluatedAt": "2026-11-03T07:27:50.678Z",
   "verdict": "PASS",
   "totalScenarios": 21,
   "devScenariosCount": 9,
@@ -56,7 +56,12 @@
         "verificationReason": "Lineage verified.",
         "originKind": "LOCAL_INTEGRITY_ONLY",
         "contentIntegrityVerified": true,
-        "providerOriginVerified": false
+        "providerOriginVerified": false,
+        "rawContentIntegrityValid": true,
+        "csvOriginalIntegrityValid": true,
+        "fixtureOnly": false,
+        "businessLineageEligible": false,
+        "sourceAuthority": "HISTORICAL_SOURCE_VERIFIED"
       },
       "detail": "rawCsvFileExists=true, hasValidFileChecksum=true"
     },
@@ -78,7 +83,12 @@
         "verificationReason": "Referenced CSV file with checksum 'ffffffffffff...' not found in storage.",
         "originKind": "UNVERIFIED",
         "contentIntegrityVerified": false,
-        "providerOriginVerified": false
+        "providerOriginVerified": false,
+        "rawContentIntegrityValid": false,
+        "csvOriginalIntegrityValid": false,
+        "fixtureOnly": false,
+        "businessLineageEligible": false,
+        "sourceAuthority": "UNKNOWN_SOURCE"
       },
       "detail": "Fabricated sha256 rejected: rawCsvFileExists=false"
     },
@@ -142,7 +152,7 @@
       "assertion": "res.status === 'INSUFFICIENT_DATA' && res.error.includes('INSUFFICIENT_COVERAGE')",
       "observed": {
         "status": "INSUFFICIENT_DATA",
-        "error": "INSUFFICIENT_COVERAGE: Keyword 'nano ultrasonic pet water fountain' not found in Google Trends public BigQuery top terms dataset for US (checked bigquery-public-data.google_trends.top_terms, jobId: mock_bqjob_1793684196713, bytesProcessed: 1048576). Public dataset tracks selected top terms, not arbitrary niche products. Official Explore CSV export can provide verified coverage."
+        "error": "INSUFFICIENT_COVERAGE: Keyword 'nano ultrasonic pet water fountain' not found in Google Trends public BigQuery top terms dataset for US (checked bigquery-public-data.google_trends.top_terms, jobId: mock_bqjob_1793690870640, bytesProcessed: 1048576). Public dataset tracks selected top terms, not arbitrary niche products. Official Explore CSV export can provide verified coverage."
       },
       "detail": "Status=INSUFFICIENT_DATA; error=INSUFFICIENT_COVERAGE: Keyword 'nano ultrasonic pet water fountain' not found in..."
     },
@@ -164,7 +174,12 @@
         "verificationReason": "Referenced CSV file with checksum '000011112222...' not found in storage.",
         "originKind": "UNVERIFIED",
         "contentIntegrityVerified": false,
-        "providerOriginVerified": false
+        "providerOriginVerified": false,
+        "rawContentIntegrityValid": false,
+        "csvOriginalIntegrityValid": false,
+        "fixtureOnly": false,
+        "businessLineageEligible": false,
+        "sourceAuthority": "UNKNOWN_SOURCE"
       },
       "detail": "Tampered hash rejected: rawCsvFileExists=false"
     },

@@ -1,0 +1,54 @@
+{
+  "req_live_test_weekly": {
+    "receiptId": "req_live_test_weekly",
+    "provider": "google_trends_serpapi",
+    "originKind": "UNIT_FIXTURE",
+    "fixtureProvenance": true,
+    "targetProductOrKeyword": "cat water fountain",
+    "region": "US",
+    "transportStatus": 200,
+    "capturedAt": "2026-11-03T07:24:19.891Z",
+    "rawResponseSha256": "04f4d039cdd4a884134914fdb9d2ed86ebbfa353991d714b78df545a96fd4b14",
+    "rawByteCount": 100,
+    "artifactPath": "D:\\Project_github\\Running-Ads\\tests\\fixtures\\kh02\\provider_receipts\\04f4d039cdd4a884134914fdb9d2ed86ebbfa353991d714b78df545a96fd4b14.json"
+  },
+  "req_live_verified_12345": {
+    "receiptId": "req_live_verified_12345",
+    "provider": "google_trends_serpapi",
+    "originKind": "UNIT_FIXTURE",
+    "fixtureProvenance": true,
+    "targetProductOrKeyword": "cat water fountain",
+    "region": "US",
+    "transportStatus": 200,
+    "capturedAt": "2026-11-03T07:24:19.935Z",
+    "rawResponseSha256": "04f4d039cdd4a884134914fdb9d2ed86ebbfa353991d714b78df545a96fd4b14",
+    "rawByteCount": 100,
+    "artifactPath": "D:\\Project_github\\Running-Ads\\tests\\fixtures\\kh02\\provider_receipts\\04f4d039cdd4a884134914fdb9d2ed86ebbfa353991d714b78df545a96fd4b14.json"
+  },
+  "req_uahpet_live_01": {
+    "receiptId": "req_uahpet_live_01",
+    "provider": "google_trends_serpapi",
+    "originKind": "UNIT_FIXTURE",
+    "fixtureProvenance": true,
+    "targetProductOrKeyword": "uahpet wireless cat water fountain",
+    "region": "US",
+    "transportStatus": 200,
+    "capturedAt": "2026-11-03T07:24:19.938Z",
+    "rawResponseSha256": "3440f19057ac7d1ac535150d1bbcc9a3078e0b7a5d46ad3f4bbd2c46235f61c8",
+    "rawByteCount": 100,
+    "artifactPath": "D:\\Project_github\\Running-Ads\\tests\\fixtures\\kh02\\provider_receipts\\3440f19057ac7d1ac535150d1bbcc9a3078e0b7a5d46ad3f4bbd2c46235f61c8.json"
+  },
+  "req_pet_feeder_01": {
+    "receiptId": "req_pet_feeder_01",
+    "provider": "google_trends_serpapi",
+    "originKind": "UNIT_FIXTURE",
+    "fixtureProvenance": true,
+    "targetProductOrKeyword": "automatic pet feeder",
+    "region": "US",
+    "transportStatus": 200,
+    "capturedAt": "2026-11-03T07:24:19.940Z",
+    "rawResponseSha256": "366cfeb156347d783c227be3fd7e10e397c8cd00c49c909673fc5208f36b841f",
+    "rawByteCount": 100,
+    "artifactPath": "D:\\Project_github\\Running-Ads\\tests\\fixtures\\kh02\\provider_receipts\\366cfeb156347d783c227be3fd7e10e397c8cd00c49c909673fc5208f36b841f.json"
+  }
+}

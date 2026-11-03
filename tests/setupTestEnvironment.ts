@@ -117,3 +117,8 @@ if (!process.env.TEST_DATABASE_URL) {
 if (!process.env.HOST) {
   process.env.HOST = "127.0.0.1";
 }
+
+try {
+  const { initKnownUnitFixturesForTest } = require("@/services/kh02/demand/temporalDemandEngine");
+  initKnownUnitFixturesForTest();
+} catch {}

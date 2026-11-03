@@ -1,0 +1,223 @@
+================================================================================
+KH-02 V12.4.3.7.9 — TRUSTED COLLECTOR BOUNDARY & SAFE TEST ISOLATION AUDIT
+Date: 2026-11-03 | Mode: IMPLEMENT + TEST + BACKTEST + AUDIT + COMMIT/PUSH
+Repository: quocan050302/Shopify-Search (D:\Project_github\Running-Ads)
+Locked Branch: feature/kh02-walmart-us-jina-reader-v12.4.3.5.1
+================================================================================
+
+[01] BASELINE, BRANCH & GIT INTEGRITY
+--------------------------------------------------------------------------------
+- Locked Branch: feature/kh02-walmart-us-jina-reader-v12.4.3.5.1
+- Upstream Remote: origin/feature/kh02-walmart-us-jina-reader-v12.4.3.5.1
+- Baseline Remote HEAD: 3347e0d43a08825d3da35bc2ecbca330bfafeb85
+- Code Implementation Parent: 2d4a252e571eed357131053617e2f3e7412385d8
+- Divergence Pre-Execution: 0 ahead, 0 behind baseline
+- Branch Discipline: Locked strictly to feature/kh02-walmart-us-jina-reader-v12.4.3.5.1.
+  Never switched to main/master, no rebase, no reset, no --force push.
+
+[02] P0-CRITICAL & P0-HIGH DEFECT ROOT CAUSE AND CODE REMEDIATION
+--------------------------------------------------------------------------------
+1. P0-CRITICAL: Dangerous Shared Directory File Cleanup in Unit Tests
+   - Offending File: tests/unit/kh02/v12_4_3_PostReviewHardening_2026_11_03.test.ts
+   - Root Cause: afterAll hook iterated data/provider_receipts and deleted files not in
+     a hardcoded fixture list, risking deletion of authentic evidence and race conditions.
+   - Remediation:
+     * Added setProviderReceiptStorageDirForTest(dir) and getProviderReceiptStorageDir()
+       in src/services/kh02/demand/temporalDemandEngine.ts.
+     * Rewrote test setup in PostReviewHardening to create an isolated temporary directory
+       under os.tmpdir() with run-owner marker file (.kh02_run_owner).
+     * afterAll exclusively cleans up the owned temporary test directory.
+     * Verified data/provider_receipts/ 4 baseline files remain untouched byte-for-byte.
+
+2. P0-HIGH: Collector-Only Trusted Origin & Capability Token
+   - File: src/services/kh02/demand/temporalDemandEngine.ts
+   - Root Cause: Callers could record originKind="ACTUAL_PROVIDER_INVOCATION" directly without
+     an active collector transport session or capability token.
+   - Remediation:
+     * Introduced createCollectorCapabilityToken() and isValidCollectorCapabilityToken().
+     * Enforced two-stage collector invocation lifecycle:
+       recordProviderInvocationAttempt() -> finalizeProviderInvocationFromTransport().
+     * recordTrustedProviderInvocation() rejects originKind="ACTUAL_PROVIDER_INVOCATION"
+       if called without a verified CollectorCapabilityToken.
+     * Descriptors lacking originKind strictly default to LOCAL_INTEGRITY_ONLY.
+
+3. P0-HIGH: Durable Receipt Persistence & Ledger
+   - File: src/services/kh02/demand/temporalDemandEngine.ts
+   - Root Cause: In-memory Maps (trustedInvocationLedger) were lost across worker restarts.
+   - Remediation:
+     * Implemented disk-based durable ledger (.provider_receipt_ledger.json) in active storage dir.
+     * Integrated fallback lookup: getTrustedProviderReceipt() and findTrustedReceiptByHash()
+       read from durable disk ledger on in-memory cache miss.
+     * Durable ledger survives in-memory cache clears across separate worker lifecycles.
+
+4. P0-HIGH: Test Fixture Fail-Closed Classification
+   - Files: src/services/kh02/demand/temporalDemandEngine.ts, tests/setupTestEnvironment.ts
+   - Root Cause: Synthetic unit test fixture receipts could produce AUTHORITATIVE_VERIFIED.
+   - Remediation:
+     * initKnownUnitFixtures() removed from module evaluation; isolated to explicit test setup.
+     * KNOWN_UNIT_FIXTURE_SHAS explicitly assigned originKind="UNIT_FIXTURE".
+     * Fixture receipts fail closed: providerOriginVerified=false, sourceAuthority="FIXTURE_ONLY".
+     * Business gates G15 and G16 strictly reject FIXTURE_ONLY from Evergreen acceptance.
+
+5. P1: Strict Backtest Chronology & Cadence Protection
+   - File: src/services/kh02/demand/temporalDemandEngine.ts
+   - Root Cause: 24h grace window permitted future points to leak into asOf historical replays.
+   - Remediation:
+     * When strictChronological === true, maxAllowedTimestamp = Date.now() (no 24h grace).
+     * Observations lacking verified knownAt/ingestedAt timestamps are rejected.
+     * Cadence protection: empirical weekly intervals (medianDelta <= 14) tagged as MONTHLY
+       are normalized to WEEKLY, preventing false sampling density passes.
+
+[03] COMPLETE PROVENANCE CHAIN GRAPH
+--------------------------------------------------------------------------------
+[Collector Transport Boundary (Network Call)]
+       │
+       ├─► recordProviderInvocationAttempt(attemptId, target, region)
+       │
+       ▼ (200 OK + Raw Bytes Captured)
+[finalizeProviderInvocationFromTransport(capabilityToken)]
+       │
+       ├─► Writes content-addressed JSON artifact: <sha256>.json
+       ├─► Saves to durable ledger: .provider_receipt_ledger.json
+       └─► Stamped with originKind = "ACTUAL_PROVIDER_INVOCATION"
+       │
+       ▼
+[ProductDemandObservation / ResearchEvidence DB]
+       │
+       ▼ (Deep Integrity & Parity Check)
+[isAuthenticProviderReceiptDescriptor] + [resolveVerifiedDemandEvidence]
+       │  - Full 64-hex SHA-256 match
+       │  - HTTP 200 verification
+       │  - Storage root confinement
+       │  - Parameter & payload deep parity (ID, status, query, region)
+       │  - Durable ledger verification (receiptId, transportStatus)
+       │
+       ▼
+[evaluateDemandSourceAuthority]
+       ├─► "AUTHORITATIVE_VERIFIED" (only if actual provider network invocation)
+       ├─► "FIXTURE_ONLY" (unit test fixtures from manifest / fixture storage)
+       ├─► "LOCAL_INTEGRITY_ONLY" (valid CSV without live provider network lineage)
+       └─► "CACHED_UNVERIFIED" (unbacked / mismatched)
+       │
+       ▼
+[evaluateDemandHistoryEvidence] (strictChronological, asOf cutoff, density >= 40%)
+       │
+       ▼
+[Top 3 Evergreen Opportunity Scoring] ──► API / UI (/products)
+
+[04] EVIDENCE TRUST TIER AUDIT
+--------------------------------------------------------------------------------
+- FIXTURE / FIXTURE_ONLY: Assigned to test fixtures in tests/fixtures/.
+  Cannot produce AUTHORITATIVE_VERIFIED or pass G15/G16 business gates.
+- LOCAL_INTEGRITY_ONLY: Stored CSV or local payload with valid 64-hex checksum.
+  Proves file content integrity, NOT live network invocation origin.
+- AUTHORITATIVE_VERIFIED / LIVE_ORIGIN_VERIFIED: Strictly reserved for verified
+  collector transport invocations with durable ledger record and deep content match.
+- INSUFFICIENT_HISTORICAL_EVIDENCE: Truthfully assigned when external live sources
+  are unauthenticated, span < 60 days, or coverage ratio < 40%.
+
+[05] TEST MATRIX & REGRESSION AUDIT (S01-S05, T01-T18, B01-B07, E01-E05)
+--------------------------------------------------------------------------------
+New Suite: tests/unit/kh02/v12_4_3_7_9_TrustedCollectorSafeTest.test.ts (35/35 PASS)
+- S01: Production receipt sentinel survives unit test byte-for-byte, SHA unchanged [PASS]
+- S02: Two parallel unit processes each isolated temp path; cleanup never touches prod [PASS]
+- S03: Path traversal, symlink dir/file, non-owned temp path => no user deletion [PASS]
+- S04: Fixture generated during test removed only if owned; unrelated file preserved [PASS]
+- S05: Full run checks no global unlinkSync/rmSync over data/provider_receipts [PASS]
+- T01: Valid raw local JSON + SHA without collector record => NOT LIVE [PASS]
+- T02: Test fixture with perfect hash and NODE_ENV=test => FIXTURE_ONLY [PASS]
+- T03: recordTrustedProviderInvocation without collector capability => reject [PASS]
+- T04: Receipt without originKind cannot default to ACTUAL_PROVIDER_INVOCATION [PASS]
+- T05: Caller registers fake provider response status=200 => rejects live [PASS]
+- T06: Forged hash, duplicate ID, conflicting payload, hash collision => rejects [PASS]
+- T07: Raw JSON ID/status/query/geo mismatch => rejects; parse failure => rejects [PASS]
+- T08: Provider HTTP 403/429/500/empty JSON/missing response status => blocked [PASS]
+- T09: Unit fixture under production root + fixture_manifest => rejects live [PASS]
+- T10: Non-fixture file under unit fixture path => not live [PASS]
+- T11: Valid collector-created test transport receipt => engineering integration PASS only [PASS]
+- T12: Durable receipt persists worker restart; reads from disk ledger [PASS]
+- T13: Retry/replay/race, concurrent receipt writes, idempotency => deterministic [PASS]
+- T14: Raw bytes artifact modified after DB insert => verification revoked [PASS]
+- T15: Valid CSV from user import => LOCAL_INTEGRITY_ONLY, not provider proof [PASS]
+- T16: Multiple observations share one receipt but wrong keyword/product => reject [PASS]
+- T17: Empty source name/region/keyword/receipt target => fail closed [PASS]
+- T18: Negative test asserts G15/G16 independently of fixture test positive [PASS]
+- B01: Old periodEnd, late ingestedAt after asOf => exclude from replay [PASS]
+- B02: Missing knownAt/invocationCapturedAt/ingestedAt => reject strict replay [PASS]
+- B03: Cutoff exact vs cutoff+1ms, UTC offset, DST => deterministic exclusion [PASS]
+- B04: Cadence WEEKLY vs forged MONTHLY tag, missing weekly bins => no false density [PASS]
+- B05: Mixed-product, wrong variant/region, overlapping periods => no blending [PASS]
+- B06: DEV & HOLDOUT windows, actual asOf cutoffs derived from current run [PASS]
+- B07: No fixture replay as business acceptance => INSUFFICIENT_HISTORICAL_EVIDENCE [PASS]
+- E01: Google raw=0 with persisted counts>0 => quarantined; no live credit [PASS]
+- E02: Meta normalized/ad IDs; wrong Amazon PDP => identity not VERIFIED [PASS]
+- E03: API/UI labels FIXTURE_ONLY vs LOCAL_INTEGRITY_ONLY vs LIVE_ORIGIN_VERIFIED [PASS]
+- E04: Worker restart / concurrent job / claim fencing preserves durable evidence [PASS]
+- E05: Authorized provider request tracing or explicit BLOCKED [PASS]
+
+Test Suite Summary:
+- tests/unit/kh02/v12_4_3_7_9_TrustedCollectorSafeTest.test.ts: 35/35 passed (604ms)
+- tests/unit/kh02/v12_4_3_PostReviewHardening_2026_11_03.test.ts: 82/82 passed (254ms)
+- tests/unit/kh02 (all KH-02 unit tests): 61/61 test files passed, 1309/1309 tests passed
+- tests/unit (all repository unit tests): 116/116 test files passed, 1929/1929 tests passed
+- tests/integration/kh01ProductIntelligenceWorkspace.test.ts: 5/5 files, 69/69 passed
+- tests/integration/kh02BrowserAcceptance.test.ts (Chromium E2E): 1/1 passed (39.14s)
+- TypeScript Compile: npx tsc --noEmit exited with code 0 (0 errors)
+
+[06] INDEPENDENT HISTORICAL DEV / HOLDOUT BACKTEST PROOF
+--------------------------------------------------------------------------------
+- Script: scripts/kh02/runBacktestV12_4_3_4_2.ts
+- Policy Scenario Verification: 21/21 scenarios PASS (ENGINEERING_POLICY_PASS)
+- Historical DEV Backtest (decision cutoff: 2026-10-24T00:00:00Z):
+  * Shortlist: 0 / 0 candidates
+  * Verdict: INSUFFICIENT_HISTORICAL_EVIDENCE (truthful, 0 lookahead)
+- Historical HOLDOUT Backtest (decision cutoff: 2026-10-30T12:00:00Z):
+  * Shortlist: 3 / 3 replayed candidates
+  * Real Longitudinal Demand: 0 / 3 candidates verified with authentic provider origin
+  * Verdict: INSUFFICIENT_HISTORICAL_EVIDENCE (truthful, 0 lookahead)
+- Aggregate Backtest Verdict: INSUFFICIENT_HISTORICAL_EVIDENCE
+
+[07] SYSTEM RESOURCE MONITORING & CONCURRENCY
+--------------------------------------------------------------------------------
+- Disk Free (D:): 64.12 GiB (Threshold: >= 8 GiB; Margin: +56.12 GiB)
+- Concurrency Semaphore: Max 2 bounded concurrent worker processes enforced
+- Process Hygiene: Clean teardown; zero orphan Chromium or Node subprocesses
+- Production Receipts Sentinel: 4 files in data/provider_receipts/ verified byte-for-byte:
+  * .fixture_manifest.json: 420 bytes, sha256: 982cfdb5f6d15e391fc14d994b1e70c9a840b6974343c20e316da70bfad39c04
+  * 04f4d039cdd4a884...json: 206 bytes, sha256: 04f4d039cdd4a884134914fdb9d2ed86ebbfa353991d714b78df545a96fd4b14
+  * 3440f19057ac7d1a...json: 325 bytes, sha256: 3440f19057ac7d1ac535150d1bbcc9a3078e0b7a5d46ad3f4bbd2c46235f61c8
+  * 366cfeb156347d78...json: 274 bytes, sha256: 366cfeb156347d783c227be3fd7e10e397c8cd00c49c909673fc5208f36b841f
+
+[08] EXTERNAL LIVE GATE STATUS (G06, G07, G15, G16)
+--------------------------------------------------------------------------------
+- Gate G06 (Google Ads Transparency): TRANSPORT_READY / BLOCKED_WITHOUT_SESSION
+- Gate G07 (TikTok Ads US): BLOCKED (upstream session credentials required; Organic disabled)
+- Gate G15 (Longitudinal Product Demand >=60d): INSUFFICIENT_EVIDENCE
+  (truthfully unverified without authenticated SerpApi/Google Trends live provider keys)
+- Gate G16 (Top 3 Shopify Winning Products US): INSUFFICIENT_EVIDENCE
+  (fails closed honestly; engineering verification does not elevate business gates)
+
+[09] CHANGED PATHS AUDIT
+--------------------------------------------------------------------------------
+- Modified:
+  * src/services/kh02/demand/temporalDemandEngine.ts
+  * tests/setupTestEnvironment.ts
+  * tests/unit/kh02/v12_4_3_PostReviewHardening_2026_11_03.test.ts
+  * tests/unit/kh02/v12_4_3_3_2_DemandAndIdentityIntegrity.test.ts
+  * acceptance/kh02-v12.4.3.4.6-strict-evidence-closure/BACKTEST_REPLAY_PROVENANCE.json
+  * acceptance/kh02-v12.4.3.4.6-strict-evidence-closure/POLICY_SCENARIO_RESULTS.json
+  * acceptance/kh02-v12.4.3.4.6-strict-evidence-closure/REAL_HISTORICAL_DEV_BACKTEST.json
+  * acceptance/kh02-v12.4.3.4.6-strict-evidence-closure/REAL_HISTORICAL_HOLDOUT_BACKTEST.json
+- Added:
+  * tests/unit/kh02/v12_4_3_7_9_TrustedCollectorSafeTest.test.ts
+  * data/provider_receipts/.provider_receipt_ledger.json
+  * reports/kh02/KH02_V12_4_3_7_9_TRUSTED_COLLECTOR_SAFE_TEST_AUDIT_2026-11-03.txt
+  * reports/kh02/KH02_V12_4_3_7_9_TRUSTED_COLLECTOR_SAFE_TEST_AUDIT_2026-11-03_MANIFEST.json
+- Unrelated files: 100% untouched.
+
+[10] COMMIT AND REMOTE VERIFICATION
+--------------------------------------------------------------------------------
+- Commit Message: fix(kh02): isolate test receipts and require collector-origin demand provenance
+- Target Branch: feature/kh02-walmart-us-jina-reader-v12.4.3.5.1
+================================================================================
+END OF AUDIT REPORT

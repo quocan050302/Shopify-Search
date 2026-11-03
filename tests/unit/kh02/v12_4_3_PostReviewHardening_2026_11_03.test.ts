@@ -1,4 +1,5 @@
-import { describe, it, expect, afterAll } from "vitest";
+import { describe, it, expect, beforeAll, afterAll } from "vitest";
+import os from "os";
 import {
   hasVerifiableCsvOrProviderLineage,
   evaluateDemandSourceAuthority,
@@ -14,6 +15,8 @@ import {
   clearTrustedProviderInvocationsForTest,
   UNIT_FIXTURE_STORAGE_DIR,
   KNOWN_UNIT_FIXTURE_SHAS,
+  setProviderReceiptStorageDirForTest,
+  createCollectorCapabilityToken,
 } from "@/services/kh02/demand/temporalDemandEngine";
 import fs from "fs";
 import path from "path";
@@ -239,7 +242,7 @@ describe("KH-02 Post-Review Hardening Audit Suite (2026-11-03)", () => {
       expect(unbackedDesc.rejectionReason).toContain("unverified string claim");
     });
 
-    it("evaluateDemandSourceAuthority grants AUTHORITATIVE_VERIFIED when observation carries authentic provider receipt with 64-hex SHA-256 (TEST FIXTURE)", () => {
+    it("evaluateDemandSourceAuthority returns FIXTURE_ONLY when observation carries test fixture receipt (P0-HIGH fail closed)", () => {
       const authenticLive = evaluateDemandSourceAuthority([
         {
           id: "obs_real_live_1",
@@ -259,9 +262,8 @@ describe("KH-02 Post-Review Hardening Audit Suite (2026-11-03)", () => {
           region: "US",
         } as any,
       ]);
-      expect(authenticLive.authority).toBe("AUTHORITATIVE_VERIFIED");
+      expect(authenticLive.authority).toBe("FIXTURE_ONLY");
       expect(authenticLive.productAttributionValid).toBe(true);
-      expect(authenticLive.reasons.length).toBe(0);
     });
   });
 
@@ -1113,19 +1115,24 @@ describe("KH-02 Post-Review Hardening Audit Suite (2026-11-03)", () => {
   });
 
   describe("MANDATORY ADVERSARIAL MATRIX (E01 - E36) — AUTHENTIC PROVIDER ORIGIN & REPLAY PARITY", () => {
+    let testTempDir: string;
+    let runOwnerMarkerPath: string;
+    const testRunId = `kh02-test-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+
+    beforeAll(() => {
+      testTempDir = fs.mkdtempSync(path.join(os.tmpdir(), "kh02-receipts-test-"));
+      runOwnerMarkerPath = path.join(testTempDir, ".kh02_run_owner");
+      fs.writeFileSync(runOwnerMarkerPath, JSON.stringify({ runId: testRunId, createdAt: Date.now() }));
+      setProviderReceiptStorageDirForTest(testTempDir);
+    });
+
     afterAll(() => {
-      const dir = path.resolve("data/provider_receipts");
-      if (fs.existsSync(dir)) {
-        const keep = new Set([
-          "04f4d039cdd4a884134914fdb9d2ed86ebbfa353991d714b78df545a96fd4b14.json",
-          "3440f19057ac7d1ac535150d1bbcc9a3078e0b7a5d46ad3f4bbd2c46235f61c8.json",
-          "366cfeb156347d783c227be3fd7e10e397c8cd00c49c909673fc5208f36b841f.json",
-          ".fixture_manifest.json",
-        ]);
-        for (const file of fs.readdirSync(dir)) {
-          if (!keep.has(file)) {
-            try { fs.unlinkSync(path.join(dir, file)); } catch {}
-          }
+      setProviderReceiptStorageDirForTest(null);
+      if (testTempDir && fs.existsSync(testTempDir)) {
+        if (fs.existsSync(runOwnerMarkerPath)) {
+          try {
+            fs.rmSync(testTempDir, { recursive: true, force: true });
+          } catch {}
         }
       }
     });
@@ -1174,6 +1181,7 @@ describe("KH-02 Post-Review Hardening Audit Suite (2026-11-03)", () => {
     });
 
     it("E04: ledger for request A + bytes of response B = HASH/RECEIPT MISMATCH", () => {
+      const testToken = createCollectorCapabilityToken("test_collector");
       const rawA = JSON.stringify({ id: "req_A", value: 100 });
       const storedA = saveRawProviderPayloadFile(rawA);
       recordTrustedProviderInvocation({
@@ -1187,7 +1195,7 @@ describe("KH-02 Post-Review Hardening Audit Suite (2026-11-03)", () => {
         rawResponseSha256: storedA.rawResponseSha256,
         rawByteCount: storedA.byteCount,
         artifactPath: storedA.artifactPath,
-      });
+      }, testToken);
       const res = isAuthenticProviderReceiptDescriptor({
         verified: true,
         providerRequestId: "req_ledger_A",
@@ -1336,6 +1344,7 @@ describe("KH-02 Post-Review Hardening Audit Suite (2026-11-03)", () => {
         search_parameters: { q: "smart pet feeder", geo: "US" },
         interest_over_time: { timeline_data: [{ date: "2026-07-01", values: [80] }] },
       });
+      const testToken = createCollectorCapabilityToken("test_collector");
       const stored = saveRawProviderPayloadFile(raw);
       recordTrustedProviderInvocation({
         receiptId: "req_live_e13",
@@ -1348,7 +1357,7 @@ describe("KH-02 Post-Review Hardening Audit Suite (2026-11-03)", () => {
         rawResponseSha256: stored.rawResponseSha256,
         rawByteCount: stored.byteCount,
         artifactPath: stored.artifactPath,
-      });
+      }, testToken);
 
       const res = isAuthenticProviderReceiptDescriptor({
         verified: true,
@@ -1669,6 +1678,26 @@ describe("KH-02 Post-Review Hardening Audit Suite (2026-11-03)", () => {
     });
 
     it("E36: multiple legitimately attributed observations from one trusted response can pass engineering when every point matches response and context", () => {
+      const testToken = createCollectorCapabilityToken("test_collector");
+      const raw = JSON.stringify({
+        search_metadata: { status: "Success", id: "req_live_e36" },
+        search_parameters: { q: "cat water fountain", geo: "US" },
+        interest_over_time: { timeline_data: [{ date: "2026-07-01", values: [75] }] },
+      });
+      const stored = saveRawProviderPayloadFile(raw);
+      recordTrustedProviderInvocation({
+        receiptId: "req_live_e36",
+        provider: "google_trends_serpapi",
+        originKind: "ACTUAL_PROVIDER_INVOCATION",
+        targetProductOrKeyword: "cat water fountain",
+        region: "US",
+        transportStatus: 200,
+        capturedAt: new Date().toISOString(),
+        rawResponseSha256: stored.rawResponseSha256,
+        rawByteCount: stored.byteCount,
+        artifactPath: stored.artifactPath,
+      }, testToken);
+
       const multiObs = [
         {
           id: "obs_multi_1",
@@ -1677,11 +1706,11 @@ describe("KH-02 Post-Review Hardening Audit Suite (2026-11-03)", () => {
           keyword: "cat water fountain",
           region: "US",
           source: "GOOGLE_TRENDS_LIVE",
-          evidenceReference: "provider-request:serpapi:req_live_verified_12345",
+          evidenceReference: "provider-request:serpapi:req_live_e36",
           verifiedDescriptor: {
             verified: true,
-            providerRequestId: "req_live_verified_12345",
-            rawResponseSha256: "04f4d039cdd4a884134914fdb9d2ed86ebbfa353991d714b78df545a96fd4b14",
+            providerRequestId: "req_live_e36",
+            rawResponseSha256: stored.rawResponseSha256,
             targetProductOrKeyword: "cat water fountain",
             region: "US",
             responseStatus: 200,
@@ -1691,7 +1720,6 @@ describe("KH-02 Post-Review Hardening Audit Suite (2026-11-03)", () => {
       const auth = evaluateDemandSourceAuthority(multiObs as any[], {
         requiredRegion: "US",
         candidateCanonicalName: "cat water fountain",
-        allowUnitFixtures: true,
       });
       expect(auth.authority).toBe("AUTHORITATIVE_VERIFIED");
       expect(auth.productAttributionValid).toBe(true);
