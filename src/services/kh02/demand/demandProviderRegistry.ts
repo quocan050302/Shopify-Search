@@ -10,7 +10,12 @@
 
 import type { SourceDiagnosticResult } from "../providers/sourceRegistry";
 import { prisma } from "@/lib/db";
-import { hasVerifiableCsvOrProviderLineage } from "./temporalDemandEngine";
+import {
+  hasVerifiableCsvOrProviderLineage,
+  recordProviderInvocationAttempt,
+  finalizeProviderInvocationFromTransport,
+  getAuthorizedCollectorCapabilityToken,
+} from "./temporalDemandEngine";
 import { verifyStoredCsvFile } from "./googleTrendsCsvValidator";
 import {
   executeBigQueryTrendsSearch,
@@ -651,10 +656,34 @@ export class GoogleTrendsLegacySerpApiProvider implements HistoricalDemandProvid
         `${query.startDate.toISOString().slice(0, 10)} ${query.endDate.toISOString().slice(0, 10)}`
       );
       url.searchParams.set("api_key", apiKey);
+      const attempt = recordProviderInvocationAttempt({
+        provider: "google_trends_serpapi",
+        targetProductOrKeyword: query.term,
+        region: query.region || "US",
+        productId: query.productId || null,
+      });
+
       const response = await fetch(url, { signal: AbortSignal.timeout(15000), cache: "no-store" });
       if (!response.ok) return { ...result, status: "FAILED", error: `SerpApi returned HTTP ${response.status}` };
-      const data = await response.json();
+      const arrayBuffer = await response.arrayBuffer();
+      const rawBytes = Buffer.from(arrayBuffer);
+      const data = JSON.parse(rawBytes.toString("utf-8"));
       if (data.error) return { ...result, status: "FAILED", error: "SerpApi reported a query error." };
+
+      const receiptId = data.search_metadata?.id || `req_serpapi_${Date.now()}`;
+      const token = getAuthorizedCollectorCapabilityToken("google_trends_serpapi_collector");
+      const receipt = finalizeProviderInvocationFromTransport({
+        attemptId: attempt.attemptId,
+        receiptId,
+        provider: "google_trends_serpapi",
+        transportStatus: response.status,
+        rawResponseBytes: rawBytes,
+        targetProductOrKeyword: query.term,
+        region: query.region || "US",
+        productId: query.productId || null,
+        originKind: "ACTUAL_PROVIDER_INVOCATION",
+      }, token);
+
       const timeline = data?.interest_over_time?.timeline_data;
       if (!Array.isArray(timeline)) return { ...result, status: "INSUFFICIENT_DATA" };
       const points: DemandDataPointResult[] = [];
@@ -684,7 +713,9 @@ export class GoogleTrendsLegacySerpApiProvider implements HistoricalDemandProvid
           region: query.region,
           source: "Google Trends (SerpApi)",
           scale: "GOOGLE_TRENDS_INDEX_0_100",
-        });
+          evidenceReference: `provider-request:serpapi:${receipt.receiptId}`,
+          rawResponseSha256: receipt.rawResponseSha256,
+        } as any);
       }
       points.sort((a, b) => a.periodStart.localeCompare(b.periodStart));
       return {
@@ -692,7 +723,9 @@ export class GoogleTrendsLegacySerpApiProvider implements HistoricalDemandProvid
         points,
         status: points.length ? "SUCCESS" : "INSUFFICIENT_DATA",
         provenance: points.length ? "AUTHORITATIVE_PROVIDER" : "UNVERIFIED",
-      };
+        receiptId: receipt.receiptId,
+        rawResponseSha256: receipt.rawResponseSha256,
+      } as any;
     } catch {
       return {
         ...result,

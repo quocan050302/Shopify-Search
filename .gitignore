@@ -71,3 +71,8 @@ artifacts/**/.scratch*
 __pycache__/
 
 /.setup-tmp/
+
+# provider receipts runtime ledger
+data/provider_receipts/.provider_receipt_ledger.json
+data/provider_receipts/*.lock
+data/provider_receipts/*.tmp*

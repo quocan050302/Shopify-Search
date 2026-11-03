@@ -367,6 +367,12 @@ export async function resolveProductDemandHistory(
           if (targetProductId) {
             for (const pt of seriesResult.points) {
               try {
+                const evidenceRef =
+                  (pt as any).evidenceReference ||
+                  ((seriesResult as any).receiptId
+                    ? `provider-request:serpapi:${(seriesResult as any).receiptId}`
+                    : null);
+
                 await prisma.productDemandObservation.create({
                   data: {
                     productId: targetProductId,
@@ -377,12 +383,15 @@ export async function resolveProductDemandHistory(
                     periodEnd: new Date(pt.periodEnd),
                     demandValue: pt.demandValue,
                     valueType: "RELATIVE_INTEREST",
-                    evidenceReference: (pt as any).evidenceReference || options.queryId || options.researchRunId || (isGoogleFreeMode ? "GOOGLE_FREE_DEMAND_INGESTION" : "DEMAND_API_INGESTION"),
+                    evidenceReference: evidenceRef,
                     methodologyVersion: isGoogleFreeMode ? "google_free_demand_live" : "serpapi_google_trends_live",
                   },
                 });
-              } catch {
-                // Ignore duplicate constraint violation
+              } catch (err: any) {
+                // Swallow only true unique-constraint duplicate violations (P2002)
+                if (err?.code !== "P2002") {
+                  throw err;
+                }
               }
             }
           }
@@ -396,7 +405,7 @@ export async function resolveProductDemandHistory(
             date: p.periodStart,
             value: p.demandValue,
             methodologyVersion: isGoogleFreeMode ? "google_free_demand_live" : "serpapi_google_trends_live",
-            evidenceReference: (p as any).evidenceReference || options.queryId || options.researchRunId || (isGoogleFreeMode ? "GOOGLE_FREE_DEMAND_INGESTION" : "DEMAND_API_INGESTION"),
+            evidenceReference: (p as any).evidenceReference || ((seriesResult as any).receiptId ? `provider-request:serpapi:${(seriesResult as any).receiptId}` : null),
           }));
 
           // Merge live points with existing valid (non-fixture, non-synthetic) points

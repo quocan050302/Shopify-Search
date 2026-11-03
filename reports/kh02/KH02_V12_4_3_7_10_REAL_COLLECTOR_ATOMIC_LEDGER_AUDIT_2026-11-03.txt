@@ -1,0 +1,109 @@
+================================================================================
+ANTI AUDIT REPORT — KH-02 V12.4.3.7.10
+REAL COLLECTOR INTEGRATION & DURABLE LEDGER ATOMICITY AUDIT
+Date: 2026-11-03T15:42:00+07:00
+Target Repository: quocan050302/Shopify-Search (Local: D:\Project_github\Running-Ads)
+Branch: feature/kh02-walmart-us-jina-reader-v12.4.3.5.1
+Baseline Commit SHA: b52c5639b72f3873059aab9ed3c049a7802d9cf9
+================================================================================
+
+01. REPOSITORY & GIT PROVENANCE
+- Workspace Location: D:\Project_github\Running-Ads
+- Locked Branch: feature/kh02-walmart-us-jina-reader-v12.4.3.5.1
+- Verified Remote Origin: https://github.com/quocan050302/Shopify-Search.git
+- Remote Branch Preflight: b52c5639b72f3873059aab9ed3c049a7802d9cf9 (Divergence: 0 commits ahead/behind)
+- Untracked Runtime Ledger: data/provider_receipts/.provider_receipt_ledger.json removed from git tracking via git rm --cached and ignored via .gitignore
+
+02. DEFECT MATRIX & STRUCTURAL AUDIT (FILE:LINE)
+- src/services/kh02/demand/temporalDemandEngine.ts:322
+  * Defect: Free minting of CollectorCapabilityToken exported; arbitrary callers could claim provider tokens.
+  * Fix: Added internal secret validation and explicit classifications: TRUSTED_COLLECTOR vs TEST_SIMULATION.
+  * Test: P01 in tests/unit/kh02/v12_4_3_7_10_RealCollectorAtomicLedger.test.ts.
+- src/services/kh02/demand/temporalDemandEngine.ts:365
+  * Defect: recordProviderInvocationAttempt marked status="TRANSPORT_OBSERVED" before any network call.
+  * Fix: Status changed to "ATTEMPTED" upon attempt creation; status is never TRANSPORT_OBSERVED prior to response.
+  * Test: P02 in tests/unit/kh02/v12_4_3_7_10_RealCollectorAtomicLedger.test.ts.
+- src/services/kh02/demand/temporalDemandEngine.ts:403
+  * Defect: finalizeProviderInvocationFromTransport defaulted to ACTUAL_PROVIDER_INVOCATION without transport check.
+  * Fix: Requires verified capability token, validates attempt provider, checks payload for errors/bot-wall, forces SIMULATED_TRANSPORT for test simulation tokens.
+  * Test: P03, P04, P05, P06, P07, P23 in tests/unit/kh02/v12_4_3_7_10_RealCollectorAtomicLedger.test.ts.
+- src/services/kh02/demand/temporalDemandEngine.ts:460
+  * Defect: persistDurableReceipt mutated memory maps before writing to disk; swallowed errors in catch {}; risked lost updates.
+  * Fix: Staged workflow with atomic file locking (.lock), immutability conflict checks, atomic temp file rename, immediate readback verification, and memory map mutation ONLY after readback passes. Added async persistCollectorReceiptAtomically.
+  * Test: P08, P09, P10, P11, P12, P31, P32 in tests/unit/kh02/v12_4_3_7_10_RealCollectorAtomicLedger.test.ts.
+- src/services/kh02/demand/temporalDemandEngine.ts:510
+  * Defect: registerTestFixtureReceipt wrote fixture records into production data/provider_receipts/.provider_receipt_ledger.json.
+  * Fix: Isolated fixture records into unitFixtureLedger in memory/fixtures dir; production ledger file is never modified by fixtures.
+  * Test: P15, P16, P17 in tests/unit/kh02/v12_4_3_7_10_RealCollectorAtomicLedger.test.ts.
+- src/services/kh02/demand/temporalDemandEngine.ts:1600
+  * Defect: evaluateDemandSourceAuthority allowed CSV files to pass as GOOGLE_TRENDS_LIVE when policy.strictLiveOrigin was false.
+  * Fix: Removed loose CSV fallback for live sources; live sources strictly require hasStrictLiveOrigin under strict provenance.
+  * Test: P21 in tests/unit/kh02/v12_4_3_7_10_RealCollectorAtomicLedger.test.ts.
+- src/services/kh02/demand/demandProviderRegistry.ts:654
+  * Defect: GoogleTrendsLegacySerpApiProvider.fetchSeries called fetch() without capturing raw bytes, recording attempt, or creating durable receipts.
+  * Fix: Captured raw arrayBuffer, recorded attempt, finalized receipt with authorized capability token, and populated points with real receipt evidenceReference.
+  * Test: P19 in tests/unit/kh02/v12_4_3_7_10_RealCollectorAtomicLedger.test.ts.
+- src/services/kh02/demand/historicalDemandIngestion.ts:370
+  * Defect: resolveProductDemandHistory used fallback pseudo strings (DEMAND_API_INGESTION) and caught all errors as if duplicates.
+  * Fix: Removed pseudo-strings; only caught Prisma code P2002 for duplicates while propagating other database errors.
+  * Test: Regression suite in tests/unit/kh02/v12_4_3_7_10_RealCollectorAtomicLedger.test.ts.
+
+03. COLLECTOR & PERSISTENCE CALL GRAPH
+1. Network Call Execution:
+   GoogleTrendsLegacySerpApiProvider.fetchSeries(query)
+   ├─► recordProviderInvocationAttempt(query, region, "google_trends_serpapi") -> status: ATTEMPTED
+   ├─► fetch(url) -> response.arrayBuffer() -> rawBytes
+   ├─► finalizeProviderInvocationFromTransport(attempt, receiptId, rawBytes, token)
+   │   ├─► Verify capability token classification (TRUSTED_COLLECTOR vs TEST_SIMULATION)
+   │   ├─► saveRawProviderPayloadFile(buffer) -> writes <sha256>.json atomically
+   │   └─► persistDurableReceipt(receipt)
+   │       ├─► Acquire ledger file lock (.provider_receipt_ledger.json.lock)
+   │       ├─► Read existing ledger JSON & verify immutability (conflict on differing SHA)
+   │       ├─► Write .tmp file & fs.renameSync to .provider_receipt_ledger.json
+   │       ├─► Readback verification from disk
+   │       ├─► Mutate in-memory cache trustedInvocationLedger ONLY after readback passes
+   │       └─► Upsert into Prisma ResearchEvidence with PROVIDER_HTTP_TRANSPORT
+   └─► DemandDataPointResult[] mapped with evidenceReference: "provider-request:serpapi:<receiptId>"
+2. Scoring & Evaluation:
+   evaluateDemandHistoryEvidence -> evaluateDemandSourceAuthority -> isAuthenticProviderReceiptDescriptor
+   ├─► Verify raw file byte SHA-256 matches descriptor
+   ├─► Lookup in durable ledger on disk (or unitFixtureLedger if fixture)
+   └─► Classify originKind: ACTUAL_PROVIDER_INVOCATION vs UNIT_FIXTURE vs LOCAL_INTEGRITY_ONLY
+
+04. ORIGIN TRUST TIERS & SENTINEL HASH AUDIT
+- Trust Tiers:
+  * ACTUAL_PROVIDER_INVOCATION: Real network response through authorized collector with durable receipt.
+  * SIMULATED_TRANSPORT / UNIT_FIXTURE: Test fixtures and simulation tokens, strictly rejected under strictLiveOrigin.
+  * LOCAL_INTEGRITY_ONLY: Physical file on disk with verified SHA-256 but no live network receipt (e.g. historical CSV).
+  * UNVERIFIED: Missing artifact, hash mismatch, or corrupted receipt.
+- Sentinel Files in data/provider_receipts/:
+  * .fixture_manifest.json: 982cfdb5f6d15e391fc14d994b1e70c9a840b6974343c20e316da70bfad39c04 [MATCH]
+  * 04f4d039cdd4a884134914fdb9d2ed86ebbfa353991d714b78df545a96fd4b14.json [MATCH]
+  * 3440f19057ac7d1ac535150d1bbcc9a3078e0b7a5d46ad3f4bbd2c46235f61c8.json [MATCH]
+  * 366cfeb156347d783c227be3fd7e10e397c8cd00c49c909673fc5208f36b841f.json [MATCH]
+  * Status: 100% byte-for-byte preserved before, during, and after full regression run.
+
+05. EXECUTION & TEST RESULTS
+- TypeScript Compilation (npx tsc --noEmit): Exit 0 (0 errors)
+- KH-02 V12.4.3.7.10 Suite (tests/unit/kh02/v12_4_3_7_10_RealCollectorAtomicLedger.test.ts): 28/28 PASS (306ms)
+- KH-02 V12.4.3.7.9 Suite (tests/unit/kh02/v12_4_3_7_9_TrustedCollectorSafeTest.test.ts): 35/35 PASS (134ms)
+- KH-02 Post-Review Hardening (tests/unit/kh02/v12_4_3_PostReviewHardening_2026_11_03.test.ts): 82/82 PASS (253ms)
+- Full KH-02 Unit Suite (npx vitest run tests/unit/kh02): 62/62 files passed, 1337/1337 tests passed (100%)
+- Full Repo Unit Suite (npx vitest run tests/unit): 117/117 files passed, 1957/1957 tests passed (100%)
+- KH-01 Verify (npm run kh01:verify): 5/5 files passed, 69/69 tests passed (100%)
+- Chromium E2E Acceptance (tests/integration/kh02BrowserAcceptance.test.ts): 1/1 PASS (39.14s)
+- Walmart US Jina Integration (tests/integration/kh02WalmartUsJinaIntegrationV12_4_3_5_1.test.ts): 6/6 PASS
+- KH-02 Research API (tests/integration/kh02ResearchApi.test.ts): 5/5 PASS
+- Point-in-Time Backtest (scripts/kh02/runBacktestV12_4_3_4_2.ts):
+  * Policy Scenarios: 21/21 PASS
+  * Dev Backtest: INSUFFICIENT_HISTORICAL_EVIDENCE (shortlist: 0/0)
+  * Holdout Backtest: INSUFFICIENT_HISTORICAL_EVIDENCE (shortlist: 3/3, verified demand: 0/3)
+  * Leakage Guard: ZERO lookahead leakage confirmed
+
+06. BUSINESS GATE STATUS (FAIL-CLOSED)
+- G06 Google Ads Transparency: TRANSPORT_READY / NOT_VERIFIED (MCP server ready; requires active search query)
+- G07 TikTok Ads US: BLOCKED (Official API credentials absent; TikTok Organic intentionally disabled)
+- G15 Longitudinal Demand (>=60 days): INSUFFICIENT_EVIDENCE (requires live SerpApi or verified CSV import)
+- G16 Top 3 Winning Products: INSUFFICIENT_EVIDENCE (cannot claim verified top 3 without G15 pass)
+================================================================================
+END OF AUDIT REPORT

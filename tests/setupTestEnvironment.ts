@@ -49,6 +49,12 @@ if (!process.env.TEST_DATABASE_URL) {
   const uniqueId = `vitest-run-${Date.now()}-${crypto.randomUUID()}`;
   const tempDir = path.join(os.tmpdir(), "swai-vitest-isolated", uniqueId);
   fs.mkdirSync(tempDir, { recursive: true });
+
+  const testReceiptDir = path.join(tempDir, "provider_receipts");
+  if (!fs.existsSync(testReceiptDir)) {
+    fs.mkdirSync(testReceiptDir, { recursive: true });
+  }
+  process.env.TEST_PROVIDER_RECEIPT_STORAGE_DIR = testReceiptDir;
   if (false) {
     try {
       fs.rmSync(tempDir, { recursive: true, force: true });
