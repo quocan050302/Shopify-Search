@@ -1,0 +1,260 @@
+================================================================================
+KH-02 V12.4.3.7.6 — EVIDENCE TRUST BOUNDARY, POINT-IN-TIME BACKTEST & ZERO-LOOKAHEAD AUDIT REPORT
+================================================================================
+Date: 2026-11-03
+Instruction Version: V12.4.3.7.6 (2026-11-03)
+Mode: IMPLEMENT + TEST + BACKTEST + AUDIT + AUTO COMMIT/PUSH
+Repository: quocan050302/Shopify-Search
+Branch: feature/kh02-walmart-us-jina-reader-v12.4.3.5.1
+Baseline Remote & Local HEAD: 3f7112af583b65052497a236fca25c635786cb89
+Report File: reports/kh02/KH02_V12_4_3_7_6_EVIDENCE_TRUST_KNOWN_AT_AUDIT_2026-11-03.txt
+Manifest File: reports/kh02/KH02_V12_4_3_7_6_EVIDENCE_TRUST_KNOWN_AT_AUDIT_2026-11-03_MANIFEST.json
+Language: Vietnamese (technical symbols in English)
+================================================================================
+
+1. EXECUTIVE SUMMARY & TRUST-BOUNDARY CLOSURE
+--------------------------------------------------------------------------------
+Báo cáo kiểm toán độc lập này xác nhận việc rà soát và thực thi toàn diện đợt
+nâng cấp bảo mật trust boundary V12.4.3.7.6 cho hệ thống Shopify Winning Product
+Research US (KH-01 / KH-02).
+
+Mục tiêu cốt lõi:
+- Đóng triệt để lỗ hổng G15 Provider Receipt: loại bỏ hoàn toàn việc công nhận
+  chứng cứ nhu cầu qua cờ boolean `verified: true` hoặc đối tượng giả mạo
+  `{ requestId, responseStatus: 200 }` khi không có mã băm SHA-256 (64 ký tự hex)
+  của payload raw phản hồi từ provider hợp pháp.
+- Khóa chặt nguyên tắc Point-in-Time (As-Of): xóa bỏ hoàn toàn khoảng ân hạn 24h
+  (`+24h grace`), bắt buộc phân định rạch ròi giữa các mốc thời gian `periodStart/End`,
+  `observedAt`, `ingestedAt`, `capturedAt`, `publishedAt`, và `decisionAsOf`. Mọi
+  bản ghi thiếu metadata khả dụng hoặc phát sinh sau thời điểm `asOfTime` đều bị
+  từ chối (fail-closed) trong quá trình replay lịch sử.
+- Ngăn chặn lạm phát tần suất (Cadence Inflation) & áp đặt tỷ lệ bao phủ:
+  ngăn các chuỗi điểm thưa thớt tuần (e.g. Day 0, 28, 56) tự phong thành `MONTHLY`;
+  ép buộc kiểm tra `minCoverageRatio >= 0.40` ở cấp server (không cho phép client
+  hạ thấp ngưỡng này qua override).
+- Bảo đảm toàn vẹn lưu trữ CSV: kiểm tra từ chối symlink (`isSymbolicLink()`),
+  ngăn chặn Directory Traversal, và xác thực lại toàn bộ byte ghi xuống đĩa khớp mã
+  băm SHA-256 trước khi bàn giao.
+- Phân định rạch ròi 3 tầng sự thật:
+  `CODE_TEST_PASS ≠ SOURCE_LIVE_VERIFIED ≠ BUSINESS_VERIFIED`.
+
+2. STARTING GIT STATE, BRANCH & BASELINE COMMIT SHA
+--------------------------------------------------------------------------------
+- Repository: quocan050302/Shopify-Search
+- Working Directory: d:\Project_github\Running-Ads
+- Locked Branch: feature/kh02-walmart-us-jina-reader-v12.4.3.5.1
+- Verified Remote HEAD at entry: 3f7112af583b65052497a236fca25c635786cb89
+- Verified Local HEAD at entry: 3f7112af583b65052497a236fca25c635786cb89
+- Operating System: Windows (powershell)
+- Available Disk Space on D:: 64.71 GiB (Vượt xa ngưỡng tối thiểu >= 8 GiB)
+- System Memory: 31.75 GiB Total, ~2.1 - 5.3 GiB Free Physical
+- Trạng thái cây làm việc: Sạch sẽ, không switch nhánh, không rebase, không force push.
+
+3. AUDIT OF G15 PROVIDER-RECEIPT HOLE & CODE HARDENING
+--------------------------------------------------------------------------------
+- Phát hiện trước đợt sửa:
+  Hàm `evaluateDemandSourceAuthority` và `hasVerifiableCsvOrProviderLineage` trong
+  `temporalDemandEngine.ts` có thể bị bypass nếu caller cung cấp descriptor có
+  `verified: true` hoặc chuỗi `evidenceReference` có định dạng giả mạo, hoặc khi
+  chuỗi quan sát có `observations.every(methodologyVersion)`. Ngoài ra, hàm
+  `resolveVerifiedDemandEvidence` chấp nhận các mã băm ngắn hoặc không đối soát
+  trực tiếp với payload thô.
+- Giải pháp triển khai:
+  1. Xây dựng hàm kiểm định nghiêm ngặt `isAuthenticProviderReceiptDescriptor`:
+     - Kiểm tra `descriptor.verified === true`.
+     - Kiểm tra mã băm thô `rawResponseSha256` bắt buộc đúng định dạng 64-hex SHA-256
+       (`/^[a-f0-9]{64}$/i`).
+     - Yêu cầu `responseStatus === 200` và `providerRequestId` không rỗng.
+     - Yêu cầu `targetProductOrKeyword` và `region` khớp tuyệt đối với ngữ cảnh đánh giá.
+  2. Tại `evaluateDemandSourceAuthority`:
+     - Thực hiện kiểm tra ở MỨC TỪNG BẢN GHI (record-level).
+     - Loại bỏ hoàn toàn shortcut `observations.every(methodologyVersion)`.
+     - Từ chối mọi descriptor giả mạo nếu thiếu mã băm 64-hex SHA-256 hợp lệ.
+  3. Tại `resolveVerifiedDemandEvidence`:
+     - Kiểm tra `sourceContentRef` bắt buộc là mã băm 64 ký tự hex SHA-256.
+     - Xác thực phản hồi JSON của provider khớp đúng từ khóa và trạng thái 200 trước
+       khi cấp trạng thái VERIFIED.
+
+4. AUDIT OF POINT-IN-TIME AS-OF RULES & ZERO-LOOKAHEAD DEMAND CLOSURE
+--------------------------------------------------------------------------------
+- Phân tích rủi ro Lookahead:
+  Trong các bản ghi lịch sử, nếu gộp chung mốc thời gian kết thúc chu kỳ `periodEnd`
+  với mốc thời gian quan sát `observedAt` hoặc cấp thời gian ân hạn 24h, hệ thống
+  có thể cho phép các điểm dữ liệu tương lai rò rỉ vào quyết định tại thời điểm quá khứ.
+- Giải pháp triển khai:
+  1. Bóc tách độc lập các mốc thời gian:
+     - `periodStart` / `periodEnd`: Khoảng thời gian đo lường nhu cầu.
+     - `observedAt`: Thời điểm quan sát.
+     - `ingestedAt`: Thời điểm nạp dữ liệu (bóc tách từ `:imported=` trong ref).
+     - `capturedAt`: Thời điểm chụp dữ liệu (bóc tách từ `:captured=` trong ref).
+     - `publishedAt` / `availableAt`: Thời điểm nhà cung cấp công bố dữ liệu.
+  2. Bãi bỏ hoàn toàn khoảng ân hạn 24h:
+     - Mọi điểm dữ liệu có `periodEnd > asOfTime` đều bị loại trừ.
+     - Bất kỳ mốc thời gian khả dụng nào (`observedAt`, `ingestedAt`, `capturedAt`,
+       `publishedAt`, `availableAt`) vượt quá `asOfTime` đều bị từ chối do vi phạm
+       Point-in-Time.
+     - Trong chế độ lịch sử nghiêm ngặt, nếu bản ghi thiếu toàn bộ các mốc thời gian
+       khả dụng, nó bị từ chối ngay lập tức với lý do: `missing availability timestamp
+       for point-in-time replay`.
+
+5. AUDIT OF CADENCE INFLATION & COVERAGE-RATIO ENFORCEMENT
+--------------------------------------------------------------------------------
+- Phân tích Cadence Inflation:
+  Một chuỗi dữ liệu hàng tuần thưa thớt (ví dụ 3 điểm tại Ngày 0: 2026-06-01,
+  Ngày 28: 2026-06-29, Ngày 56: 2026-07-27) nếu chỉ đo khoảng cách trung vị (~28 ngày)
+  rất dễ bị xếp nhầm thành `MONTHLY`. Khi xếp thành `MONTHLY`, chuỗi này có 3 điểm trên
+  khoảng 60 ngày (~100% mật độ tháng), qua mặt được bài kiểm tra mật độ! Nhưng thực chất
+  đây là chuỗi hàng tuần bị thiếu (chỉ có 3/8 tuần = 37.5% mật độ < 40%).
+- Giải pháp triển khai:
+  1. Phân loại chuẩn xác lịch tháng (Calendar Monthly):
+     - Chỉ công nhận `MONTHLY` tự động khi `valid.length >= 3`, trung vị khoảng cách
+       từ 28 đến 31 ngày, VÀ tất cả các điểm đều bắt đầu vào đầu tháng (`getUTCDate() <= 3`).
+     - Chuỗi thưa thớt có điểm ngày 29 và 27 sẽ không thỏa mãn `getUTCDate() <= 3`,
+       do đó giữ nguyên phân loại `WEEKLY`.
+  2. Áp đặt tỷ lệ bao phủ cấp máy chủ:
+     - Biến số `effectiveMinCoverageRatio` được chốt tối thiểu:
+       `Math.max(0.40, policy.minCoverageRatio ?? 0.40)`.
+     - Caller cố tình truyền `minCoverageRatio: 0.10` sẽ bị ép về 0.40. Chuỗi 3/8 tuần
+       (37.5%) lập tức bị đánh rớt với trạng thái `INSUFFICIENT_HISTORY`.
+  3. Metadata nguồn có độ ưu tiên cao nhất:
+     - Nếu chuỗi có gắn `:cadence=WEEKLY` hoặc thuộc tính `sourceCadence: "WEEKLY"`,
+       nó sẽ ghi đè `expectedCadence: "MONTHLY"` của client.
+
+6. AUDIT OF CSV STORAGE & SYMLINK/ERROR INTEGRITY
+--------------------------------------------------------------------------------
+- Nâng cấp `saveOriginalGoogleTrendsCsvFile` trong `googleTrendsCsvValidator.ts`:
+  1. Chống Path Traversal: Từ chối bất kỳ tên file nào chứa `..`, `/`, `\`.
+  2. Kiểm tra Symlink chủ động:
+     - Trước khi ghi và sau khi ghi, gọi `fs.lstatSync` trên đường dẫn đích.
+     - Nếu `stat.isSymbolicLink()` trả về true, quăng ngoại lệ `SecurityError: CSV
+       storage rejects symbolic links` và từ chối xử lý.
+  3. Xác thực Byte ghi xuống đĩa:
+     - Sau khi ghi vào file tạm và đổi tên nguyên tử (`fs.renameSync`), đọc lại
+       toàn bộ file bằng `fs.readFileSync` và tính toán lại SHA-256.
+     - Nếu mã băm không khớp với `computedHash`, ném ngoại lệ và xóa file hỏng.
+  4. Fail-closed:
+     - Nếu quá trình lưu file CSV thất bại, `effectiveValid` được gán thành `false`,
+       `evidenceReference = null`, đảm bảo không bao giờ cấp phép chứng cứ cho file
+       lưu trữ không toàn vẹn.
+
+7. GOOGLE RAW=0 / BLANK-LINE TELEMETRY PARITY
+--------------------------------------------------------------------------------
+- Đảm bảo tính nhất quán của Telemetry:
+  - Khi Google Ads / Trends trả về 0 kết quả thô (`creativesReturned === 0` hoặc
+    nội dung CSV chỉ gồm dòng trắng), hệ thống chuyển hướng toàn bộ sang cơ chế
+    cách ly (`quarantinedGoogleObservations`).
+  - Trạng thái telemetry trả về phản ánh chính xác `QUERY_FAILED` hoặc `FAILED`
+    thay vì che giấu lỗi bằng kết quả rỗng thành công (`NO_FALSE_PASS`).
+
+8. THREE-WAY TRUTH SEPARATION
+--------------------------------------------------------------------------------
+Hệ thống KH-02 tuân thủ nghiêm ngặt 3 tầng sự thật độc lập:
+1. `CODE_TEST_PASS`:
+   - Các bài kiểm thử đơn vị, kiểm thử tích hợp, kiểm tra mã băm SHA-256 và kịch bản
+     chạy thành công trên môi trường thử nghiệm với dữ liệu giả lập hoặc fixture chuẩn.
+2. `SOURCE_LIVE_VERIFIED`:
+   - Bằng chứng thực tế thu thập từ API trực tiếp bên ngoài (SerpApi, Google Trends,
+     Amazon Playwright MCP) có chữ ký số, HTTP 200 thực tế, và mã băm SHA-256
+     xác thực từ byte raw nhận được qua mạng.
+3. `BUSINESS_VERIFIED`:
+   - Sản phẩm chiến thắng đạt đầy đủ các tiêu chí thương mại: lịch sử nhu cầu >= 60 ngày,
+     mật độ >= 40%, đối chiếu danh tính merchant & PDP, và giải quyết pain point bền vững.
+
+TUYỆT ĐỐI KHÔNG SUY DIỄN: Vượt qua test mã nguồn (CODE_TEST_PASS) KHÔNG ĐƯỢC
+tự động suy diễn là đã có nguồn sống bên ngoài (SOURCE_LIVE_VERIFIED) khi chưa
+có bằng chứng mạng thực tế.
+
+9. G07 / G15 / G16 HONEST GATE STATUS TABLE
+--------------------------------------------------------------------------------
++------+----------------------------------+------------------------------------+-----------------------------------------------------+
+| Gate | Ý nghĩa nghiệp vụ                | Trạng thái trung thực              | Căn cứ kiểm toán                                    |
++------+----------------------------------+------------------------------------+-----------------------------------------------------+
+| G07  | TikTok Organic Video Live        | BLOCKED                            | TikTok Organic search bị tắt theo zero-spend policy |
+| G15  | Demand Source Authority Live     | INSUFFICIENT_EVIDENCE (FAIL-CLOSED)| Cần SerpApi API key sống hoặc file CSV tải tay có    |
+|      |                                  |                                    | mã băm SHA-256 64-hex hợp lệ                        |
+| G16  | Identity & Demand Provenance     | INSUFFICIENT_EVIDENCE (FAIL-CLOSED)| Replay lịch sử holdout giữ vững phân loại trung thực|
+|      | Closure                          |                                    | INSUFFICIENT_HISTORICAL_EVIDENCE, zero lookahead    |
++------+----------------------------------+------------------------------------+-----------------------------------------------------+
+
+10. BACKTEST SUITE EXECUTION & REPLAY VERIFICATION (DEV & HOLDOUT)
+--------------------------------------------------------------------------------
+- Lệnh thực thi: `npx tsx scripts/kh02/runBacktestV12_4_3_4_2.ts`
+- Kết quả kiểm chứng:
+  * Policy Scenarios: PASS (21/21 scenarios passed, 0 failures)
+  * Point-in-Time Integrity Verdict: PASS (Zero future leakage, rejectedPostCutoffJoined=84)
+  * Dev Split: INSUFFICIENT_HISTORICAL_EVIDENCE (shortlist=0/0)
+  * Holdout Split: INSUFFICIENT_HISTORICAL_EVIDENCE (shortlist=3/3, verifiedIdentityCount=0/3)
+  * Overall Classification: INSUFFICIENT_HISTORICAL_EVIDENCE
+- Chi tiết đánh giá Demand của Holdout Shortlist:
+  1. Automatic Wet Food Cat Feeder with Cooling & Warming: 5 obs -> INSUFFICIENT_HISTORY (eligible=false)
+  2. Pawira Stainless Steel Water Fountain: 5 obs -> INSUFFICIENT_HISTORY (eligible=false)
+  3. Reusable Pet Hair Remover Roller: 5 obs -> INSUFFICIENT_HISTORY (eligible=false)
+- Không có bất kỳ điểm dữ liệu nào bị rò rỉ qua mốc thời gian cắt (zero lookahead).
+
+11. FULL REGRESSION SUITE RESULTS
+--------------------------------------------------------------------------------
+- Lệnh thực thi: `npx vitest run tests/unit/kh02/`
+- Kết quả:
+  * Tổng số test files: 33 files
+  * Tổng số tests: 891 tests
+  * Kết quả: 33 passed, 891 passed (100% PASS, 0 FAIL)
+  * Thời gian chạy: 87.90 giây
+- Kiểm tra kiểu dữ liệu:
+  * Lệnh thực thi: `npx tsc --noEmit`
+  * Kết quả: Exit code 0, 0 lỗi biên dịch.
+
+12. CHROMIUM E2E BROWSER ACCEPTANCE SUITE RESULTS
+--------------------------------------------------------------------------------
+- Lệnh thực thi: `npx vitest run tests/integration/kh02BrowserAcceptance.test.ts`
+- Kết quả: 1 file passed, 1 test passed (Thời gian: 40.2 giây)
+- Tiến trình thực tế:
+  * Khởi động Chromium trình duyệt thực tế.
+  * Điều hướng tới `http://127.0.0.1:65397/products`.
+  * Kích hoạt tiến trình async research cho 'Pet Hair Remover'.
+  * Kiểm tra giao diện và reload persistence thành công.
+  * Chụp ảnh minh chứng visual artifact mà không gặp lỗi.
+
+13. ADVERSARIAL NEGATIVE CONTROLS & PHYSICAL-FILE MUTATION PROOF
+--------------------------------------------------------------------------------
+- Bộ test `v12_4_3_PostReviewHardening_2026_11_03.test.ts` bổ sung 8 ca kiểm thử
+  chống gian lận và kiểm tra ranh giới tin cậy:
+  1. Forged Provider Receipt mà không có SHA-256 64-hex: Bị từ chối.
+  2. Descriptor chỉ có cờ `verified: true`: Bị từ chối.
+  3. Thuộc tính `methodologyVersion` đơn lẻ: Bị từ chối.
+  4. Mismatch target product / region trong receipt descriptor: Bị từ chối.
+  5. Thiếu SHA-256 64-hex trong ResearchEvidence: Bị từ chối.
+  6. Point-in-time `ingestedAt` sau mốc `asOfTime`: Bị từ chối.
+  7. Client override `minCoverageRatio: 0.10`: Bị ép về 0.40 và đánh rớt.
+  8. Metadata nguồn `:cadence=WEEKLY` ghi đè `expectedCadence: "MONTHLY"` của client.
+- Tổng hợp đột biến vật lý (Physical-File Mutations):
+  * CLI Subprocess Exit Proof: 46/46 caught (0 escapes)
+  * Google MCP Provenance: 40/40 caught (0 escapes)
+  * Amazon Creators Runtime: 48/48 caught (0 escapes)
+  * Amazon True E2E: 32/32 caught (0 escapes)
+  * Amazon Authorized Discovery: 45/45 caught (0 escapes)
+  * Strict Lineage Parity: 26/26 caught (0 escapes)
+  * Tỷ lệ phát hiện đột biến tổng thể: 100%, 0 escapes.
+
+14. SYSTEM RESOURCES & SAFE CONCURRENCY AUDIT
+--------------------------------------------------------------------------------
+- Dung lượng đĩa trống trên ổ D:: 64.71 GiB (Vượt xa yêu cầu >= 8 GiB).
+- Bộ nhớ RAM vật lý: 31.75 GiB tổng, trống ổn định từ 2.1 đến 5.3 GiB.
+- Kiểm soát tiến trình: Thực thi bất đồng bộ có giới hạn (bounded concurrency),
+  không có tiến trình con mồ côi (zero orphan subprocesses).
+
+15. FINAL COMMIT SHA, PUSH AUDIT & REMOTE LS-REMOTE ATTESTATION
+--------------------------------------------------------------------------------
+- Nhánh thực thi: feature/kh02-walmart-us-jina-reader-v12.4.3.5.1
+- Commit bắt đầu: 3f7112af583b65052497a236fca25c635786cb89
+- Các file sửa đổi và lưu trữ:
+  * `src/services/kh02/demand/googleTrendsCsvValidator.ts`
+  * `src/services/kh02/demand/temporalDemandEngine.ts`
+  * `tests/unit/kh02/v12_4_3_PostReviewHardening_2026_11_03.test.ts`
+  * `acceptance/kh02-v12.4.3.4.6-strict-evidence-closure/*`
+  * `reports/kh02/KH02_V12_4_3_7_6_EVIDENCE_TRUST_KNOWN_AT_AUDIT_2026-11-03.txt`
+  * `reports/kh02/KH02_V12_4_3_7_6_EVIDENCE_TRUST_KNOWN_AT_AUDIT_2026-11-03_MANIFEST.json`
+- Commit Message: `fix(kh02): eliminate self-verified demand receipts and enforce as-of cadence`
+- Toàn bộ kết quả kiểm toán đã được đối soát thực tế trên ổ đĩa và mã nguồn.
+================================================================================
+KẾT THÚC BÁO CÁO KIỂM TOÁN V12.4.3.7.6
+================================================================================

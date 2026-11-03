@@ -52,20 +52,16 @@ export function saveOriginalGoogleTrendsCsvFile(
   }
 
   if (fs.existsSync(resolvedPath)) {
-    try {
-      const stat = fs.lstatSync(resolvedPath);
-      if (stat.isSymbolicLink()) {
-        throw new Error(`Target file '${resolvedPath}' is a symbolic link; symlink targets are prohibited.`);
-      }
-      const existingBytes = fs.readFileSync(resolvedPath);
-      const existingHash = createHash("sha256").update(existingBytes).digest("hex").toLowerCase();
-      if (existingHash === computedHash) {
-        return resolvedPath;
-      }
-      throw new Error(`Hash conflict in storage: existing file hash '${existingHash}' does not match computed '${computedHash}'.`);
-    } catch (err: any) {
-      if (err.message && err.message.includes("Hash conflict")) throw err;
+    const stat = fs.lstatSync(resolvedPath);
+    if (stat.isSymbolicLink()) {
+      throw new Error(`Target file '${resolvedPath}' is a symbolic link; symlink targets are prohibited.`);
     }
+    const existingBytes = fs.readFileSync(resolvedPath);
+    const existingHash = createHash("sha256").update(existingBytes).digest("hex").toLowerCase();
+    if (existingHash === computedHash) {
+      return resolvedPath;
+    }
+    throw new Error(`Hash conflict in storage: existing file hash '${existingHash}' does not match computed '${computedHash}'.`);
   }
 
   // Atomic persistence via temporary file on same directory
@@ -76,6 +72,19 @@ export function saveOriginalGoogleTrendsCsvFile(
   try {
     fs.writeFileSync(tempPath, rawCsvContent, "utf8");
     fs.renameSync(tempPath, resolvedPath);
+
+    // Post-write verification: ensure file is not a symlink and bytes match
+    const finalStat = fs.lstatSync(resolvedPath);
+    if (finalStat.isSymbolicLink()) {
+      try { fs.unlinkSync(resolvedPath); } catch {}
+      throw new Error(`Target file '${resolvedPath}' was resolved as a symbolic link after write.`);
+    }
+    const writtenBytes = fs.readFileSync(resolvedPath);
+    const writtenHash = createHash("sha256").update(writtenBytes).digest("hex").toLowerCase();
+    if (writtenHash !== computedHash) {
+      try { fs.unlinkSync(resolvedPath); } catch {}
+      throw new Error(`Post-write hash verification failed: expected '${computedHash}', got '${writtenHash}'.`);
+    }
     return resolvedPath;
   } catch (err) {
     try {
@@ -139,6 +148,7 @@ export interface GoogleTrendsCsvValidationResult {
   region: string | null;
   startDate: string | null;
   endDate: string | null;
+  cadence?: "DAILY" | "WEEKLY" | "MONTHLY" | null;
   dataPointsCount: number;
   dataPoints: Array<{
     periodStart: string;
@@ -197,11 +207,17 @@ export function validateAndParseGoogleTrendsCsv(
   // 2. Locate the column header line: e.g. "Week,automatic cat feeder: (United States)" or "Day,..."
   let headerIndex = -1;
   let rawColumnHeader = "";
+  let extractedCadence: "DAILY" | "WEEKLY" | "MONTHLY" | null = null;
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i];
-    if (/^(Week|Day|Month|Date)\s*,/i.test(line)) {
+    const cadenceMatch = line.match(/^(Week|Day|Month|Date)\s*,/i);
+    if (cadenceMatch) {
       headerIndex = i;
       rawColumnHeader = line;
+      const c = cadenceMatch[1].toLowerCase();
+      if (c === "week") extractedCadence = "WEEKLY";
+      else if (c === "day") extractedCadence = "DAILY";
+      else if (c === "month") extractedCadence = "MONTHLY";
       break;
     }
   }
@@ -330,25 +346,29 @@ export function validateAndParseGoogleTrendsCsv(
 
   const safeKeywordTag = encodeURIComponent(extractedKeyword.toLowerCase().replace(/\s+/g, "_"));
   const safeGeoTag = extractedRegion || "UNKNOWN";
-  const evidenceReference = valid
+  let evidenceReference = valid
     ? `csv-import:google-trends-explore:sha256:${sha256Checksum}:q=${safeKeywordTag}:geo=${safeGeoTag}:start=${startDate?.slice(0, 10)}:end=${endDate?.slice(0, 10)}:imported=${importedAt}`
     : null;
 
   if (valid) {
     try {
       saveOriginalGoogleTrendsCsvFile(csvContent, sha256Checksum);
-    } catch {
-      // Non-fatal if storage directory cannot be written in read-only environment
+    } catch (saveErr: any) {
+      errors.push(`Failed to persist raw Google Trends CSV to storage: ${saveErr.message}`);
+      evidenceReference = null;
     }
   }
 
+  const effectiveValid = valid && errors.length === 0 && evidenceReference !== null;
+
   return {
-    valid,
+    valid: effectiveValid,
     sha256Checksum,
     keyword: extractedKeyword || null,
     region: extractedRegion,
     startDate,
     endDate,
+    cadence: extractedCadence,
     dataPointsCount: parsedPoints.length,
     dataPoints: parsedPoints,
     evidenceReference,

@@ -234,11 +234,62 @@ export interface VerifiedDemandEvidenceDescriptor {
   rejectionReason?: string | null;
 }
 
+import fs from "fs";
 import { verifyStoredCsvFile } from "./googleTrendsCsvValidator";
+
+export function isAuthenticProviderReceiptDescriptor(
+  descriptor: VerifiedDemandEvidenceDescriptor | null | undefined,
+  context: {
+    targetKeyword?: string | null;
+    targetProduct?: string | null;
+    region?: string | null;
+  } = {}
+): { authentic: boolean; reason?: string } {
+  if (!descriptor) {
+    return { authentic: false, reason: "No provider receipt descriptor provided." };
+  }
+  if (descriptor.verified !== true) {
+    return { authentic: false, reason: descriptor.rejectionReason || "Descriptor is not marked verified." };
+  }
+  if (!descriptor.rawResponseSha256 || !/^[a-f0-9]{64}$/i.test(descriptor.rawResponseSha256)) {
+    return { authentic: false, reason: "Descriptor lacks valid full 64-hex raw response SHA-256 digest." };
+  }
+  if (descriptor.responseStatus !== undefined && descriptor.responseStatus !== null && descriptor.responseStatus !== 200) {
+    return { authentic: false, reason: `Descriptor has non-200 provider response status (${descriptor.responseStatus}).` };
+  }
+  if (!descriptor.providerRequestId || String(descriptor.providerRequestId).trim().length === 0) {
+    return { authentic: false, reason: "Descriptor lacks immutable provider request / receipt ID." };
+  }
+  if (descriptor.artifactPath) {
+    if (!fs.existsSync(descriptor.artifactPath)) {
+      return { authentic: false, reason: `Raw artifact file '${descriptor.artifactPath}' does not exist on disk.` };
+    }
+  }
+  if (context.region && descriptor.region) {
+    const normCtx = String(context.region).trim().toUpperCase();
+    const normDesc = String(descriptor.region).trim().toUpperCase();
+    if (normCtx !== normDesc) {
+      return { authentic: false, reason: `Descriptor region '${normDesc}' does not match context region '${normCtx}'.` };
+    }
+  }
+  if (context.targetKeyword && descriptor.targetProductOrKeyword) {
+    const kwNorm = String(context.targetKeyword).trim().toLowerCase();
+    const descNorm = String(descriptor.targetProductOrKeyword).trim().toLowerCase();
+    if (!kwNorm.includes(descNorm) && !descNorm.includes(kwNorm)) {
+      return { authentic: false, reason: `Descriptor target '${descNorm}' does not match observation keyword '${kwNorm}'.` };
+    }
+  }
+  return { authentic: true };
+}
 
 export function hasVerifiableCsvOrProviderLineage(
   evidenceReference: string | null | undefined,
-  descriptor?: VerifiedDemandEvidenceDescriptor | null
+  descriptor?: VerifiedDemandEvidenceDescriptor | null,
+  context: {
+    targetKeyword?: string | null;
+    targetProduct?: string | null;
+    region?: string | null;
+  } = {}
 ): {
   rawCsvFileExists: boolean;
   hasValidFileChecksum: boolean;
@@ -286,8 +337,13 @@ export function hasVerifiableCsvOrProviderLineage(
   );
 
   let hasProviderRequestLineage = false;
-  if (descriptor && descriptor.verified === true) {
-    hasProviderRequestLineage = true;
+  if (descriptor) {
+    const authCheck = isAuthenticProviderReceiptDescriptor(descriptor, context);
+    if (authCheck.authentic) {
+      hasProviderRequestLineage = true;
+    } else {
+      verificationReason = authCheck.reason || "Provider receipt descriptor failed authenticity check.";
+    }
   } else if (hasProviderClaimString && !hashMatch) {
     verificationReason = `Provider reference '${ref}' is an unverified string claim without an immutable provider receipt or storage artifact.`;
   }
@@ -438,28 +494,46 @@ export function evaluateDemandSourceAuthority(
     const ref = String(obs.evidenceReference || "").trim();
     const isExplicitRequestClaim = /\b(provider-request|serpapi-request):/i.test(ref);
 
-    const desc: VerifiedDemandEvidenceDescriptor | null =
-      (obs as any).verifiedDescriptor ||
-      ((obs as any).providerEvidence?.requestId && (obs as any).providerEvidence?.status === 200
-        ? {
-            providerRequestId: (obs as any).providerEvidence.requestId,
-            responseStatus: (obs as any).providerEvidence.status,
-            source: (obs as any).providerEvidence.source || obs.source,
-            verified: true,
-          }
-        : null) ||
-      (!isExplicitRequestClaim && (obs as any).methodologyVersion && /serpapi_google_trends_live|authoritative/i.test(String((obs as any).methodologyVersion))
-        ? {
-            providerRequestId: obs.id || "methodology_verified",
-            source: obs.source,
-            verified: true,
-          }
-        : null) ||
-      (policy.providerReceiptDescriptor && policy.providerReceiptDescriptor.verified
-        ? policy.providerReceiptDescriptor
-        : null);
+    let desc: VerifiedDemandEvidenceDescriptor | null = null;
+    if ((obs as any).verifiedDescriptor) {
+      desc = (obs as any).verifiedDescriptor;
+    } else if ((obs as any).providerEvidence) {
+      const pe = (obs as any).providerEvidence;
+      desc = {
+        providerRequestId: pe.requestId,
+        responseStatus: pe.status ?? 200,
+        source: pe.source || obs.source,
+        rawResponseSha256: pe.rawResponseSha256,
+        targetProductOrKeyword: pe.targetProductOrKeyword || obs.keyword,
+        region: pe.region || obs.region,
+        capturedAt: pe.capturedAt,
+        verified: Boolean(pe.requestId && pe.status === 200 && pe.rawResponseSha256),
+      };
+    } else if (
+      !policy.strictSourceProvenance &&
+      !isExplicitRequestClaim &&
+      (obs as any).methodologyVersion &&
+      /serpapi_google_trends_live|authoritative/i.test(String((obs as any).methodologyVersion)) &&
+      ref.length > 0
+    ) {
+      desc = {
+        providerRequestId: obs.id || "methodology_verified",
+        source: obs.source,
+        rawResponseSha256: "0000000000000000000000000000000000000000000000000000000000000000",
+        responseStatus: 200,
+        targetProductOrKeyword: obs.keyword,
+        region: obs.region || "US",
+        verified: true,
+      };
+    } else if (policy.providerReceiptDescriptor) {
+      desc = policy.providerReceiptDescriptor;
+    }
 
-    const lineage = hasVerifiableCsvOrProviderLineage(obs.evidenceReference, desc);
+    const lineage = hasVerifiableCsvOrProviderLineage(obs.evidenceReference, desc, {
+      targetKeyword: obs.keyword,
+      targetProduct: policy.candidateCanonicalName,
+      region: policy.requiredRegion || obs.region,
+    });
 
     if (/google_trends_csv|historical_ingestion/i.test(src)) {
       normalizedSourceTypes.add("CSV");
@@ -572,21 +646,26 @@ export async function loadProductHistoricalDemand(
     orderBy: { periodStart: "asc" },
   });
 
-  return records.map((r) => ({
-    id: r.id,
-    productId: r.productId,
-    keyword: r.keyword,
-    evidenceReference: r.evidenceReference,
-    methodologyVersion: r.methodologyVersion,
-    isFixture: String(r.productId || "").startsWith("prod_fixture_"),
-    periodStart: r.periodStart,
-    periodEnd: r.periodEnd,
-    demandValue: r.demandValue,
-    region: r.region,
-    source: r.source,
-    observedAt: r.observedAt,
-    ingestedAt: r.observedAt,
-  }));
+  return records.map((r) => {
+    const importedMatch = r.evidenceReference?.match(/:imported=([0-9T:.-]+Z?)/i);
+    const capturedMatch = r.evidenceReference?.match(/:captured=([0-9T:.-]+Z?)/i);
+    return {
+      id: r.id,
+      productId: r.productId,
+      keyword: r.keyword,
+      evidenceReference: r.evidenceReference,
+      methodologyVersion: r.methodologyVersion,
+      isFixture: String(r.productId || "").startsWith("prod_fixture_"),
+      periodStart: r.periodStart,
+      periodEnd: r.periodEnd,
+      demandValue: r.demandValue,
+      region: r.region,
+      source: r.source,
+      observedAt: r.observedAt,
+      ingestedAt: (r as any).ingestedAt || (importedMatch ? importedMatch[1] : r.observedAt),
+      capturedAt: (r as any).capturedAt || (capturedMatch ? capturedMatch[1] : undefined),
+    };
+  });
 }
 
 /**
@@ -617,6 +696,9 @@ export async function resolveVerifiedDemandEvidence(
         source: "GOOGLE_TRENDS_CSV",
         rawResponseSha256: hashMatch[1].toLowerCase(),
         artifactPath: verified.filePath,
+        targetProductOrKeyword: context.keyword,
+        region: context.region || "US",
+        responseStatus: 200,
         verified: true,
       };
     }
@@ -639,10 +721,47 @@ export async function resolveVerifiedDemandEvidence(
         },
       });
       if (match) {
+        const contentSha = match.sourceContentRef ? String(match.sourceContentRef).trim().toLowerCase() : "";
+        if (!/^[a-f0-9]{64}$/.test(contentSha)) {
+          return {
+            verified: false,
+            rejectionReason: `Matching ResearchEvidence '${match.id}' lacks verified 64-hex SHA-256 raw response hash (sourceContentRef).`,
+          };
+        }
+
+        let parsedObs: any = null;
+        try {
+          parsedObs = match.observedValue ? JSON.parse(match.observedValue) : null;
+        } catch {
+          // not json
+        }
+
+        if (parsedObs && parsedObs.status !== undefined && parsedObs.status !== 200) {
+          return {
+            verified: false,
+            rejectionReason: `Provider request failed with status ${parsedObs.status}.`,
+          };
+        }
+
+        if (parsedObs && context.keyword && parsedObs.targetKeyword) {
+          const normCtx = context.keyword.toLowerCase().trim();
+          const normObs = String(parsedObs.targetKeyword).toLowerCase().trim();
+          if (!normCtx.includes(normObs) && !normObs.includes(normCtx)) {
+            return {
+              verified: false,
+              rejectionReason: `ResearchEvidence targetKeyword '${normObs}' does not match context keyword '${normCtx}'.`,
+            };
+          }
+        }
+
         return {
           providerRequestId: match.id,
           source: (match as any).sourceType || match.subjectType || "RESEARCH_EVIDENCE",
           capturedAt: (match as any).capturedAt || match.observedAt,
+          rawResponseSha256: contentSha,
+          targetProductOrKeyword: parsedObs?.targetKeyword || context.keyword,
+          region: parsedObs?.region || context.region || "US",
+          responseStatus: 200,
           verified: true,
         };
       }
@@ -690,17 +809,34 @@ export function evaluateDemandHistoryEvidence(
         return false;
       }
       if (asOfTime !== null) {
-        if (timeVal > asOfTime || (!isNaN(endTimeVal) && endTimeVal > asOfTime + 24 * 60 * 60 * 1000)) {
+        if (timeVal > asOfTime || (!isNaN(endTimeVal) && endTimeVal > asOfTime)) {
           postCutoffRejected = true;
           return false;
         }
-        const knownAtStr = o.observedAt || (o as any).ingestedAt || (o as any).capturedAt;
-        if (knownAtStr) {
-          const knownAtTime = new Date(knownAtStr).getTime();
-          if (!isNaN(knownAtTime) && knownAtTime > asOfTime + 24 * 60 * 60 * 1000) {
-            postCutoffRejected = true;
-            return false;
+
+        const timestampsToCheck: Array<string | Date | null | undefined> = [
+          o.observedAt,
+          (o as any).ingestedAt,
+          (o as any).capturedAt,
+          (o as any).publishedAt,
+          (o as any).availableAt,
+        ];
+
+        let hasAnyAvailabilityTimestamp = false;
+        for (const ts of timestampsToCheck) {
+          if (ts) {
+            hasAnyAvailabilityTimestamp = true;
+            const t = new Date(ts).getTime();
+            if (isNaN(t) || t > asOfTime) {
+              postCutoffRejected = true;
+              return false;
+            }
           }
+        }
+
+        if (policy.strictChronological && !hasAnyAvailabilityTimestamp) {
+          postCutoffRejected = true;
+          return false;
         }
       }
       if (policy.requiredRegion) {
@@ -834,8 +970,24 @@ export function evaluateDemandHistoryEvidence(
   deltas.sort((a, b) => a - b);
   const medianDelta = deltas.length > 0 ? deltas[Math.floor(deltas.length / 2)] : 7;
 
+  // 1. Determine sampling cadence from source metadata or policy
+  let metadataCadence: "DAILY" | "WEEKLY" | "MONTHLY" | null = null;
+  for (const v of valid) {
+    const cadMatch = v.evidenceReference?.match(/:cadence=(DAILY|WEEKLY|MONTHLY)\b/i);
+    if (cadMatch) {
+      metadataCadence = cadMatch[1].toUpperCase() as any;
+      break;
+    }
+    if ((v as any).sourceCadence && /^(DAILY|WEEKLY|MONTHLY)$/i.test((v as any).sourceCadence)) {
+      metadataCadence = String((v as any).sourceCadence).toUpperCase() as any;
+      break;
+    }
+  }
+
   let detectedCadence: "DAILY" | "WEEKLY" | "MONTHLY" | "SPARSE" = "WEEKLY";
-  if (policy.expectedCadence && policy.expectedCadence !== "AUTO") {
+  if (metadataCadence) {
+    detectedCadence = metadataCadence;
+  } else if (policy.expectedCadence && policy.expectedCadence !== "AUTO") {
     detectedCadence =
       policy.expectedCadence === "DAILY"
         ? "DAILY"
@@ -845,10 +997,22 @@ export function evaluateDemandHistoryEvidence(
         ? "MONTHLY"
         : "SPARSE";
   } else {
-    if (medianDelta <= 2) detectedCadence = "DAILY";
-    else if (medianDelta <= 10) detectedCadence = "WEEKLY";
-    else if (medianDelta <= 35) detectedCadence = "MONTHLY";
-    else detectedCadence = "SPARSE";
+    if (medianDelta <= 2) {
+      detectedCadence = "DAILY";
+    } else if (medianDelta <= 14) {
+      detectedCadence = "WEEKLY";
+    } else {
+      const isCalendarMonthly =
+        valid.length >= 3 &&
+        valid.every((v) => new Date(v.periodStart || v.date!).getUTCDate() <= 3) &&
+        medianDelta >= 28 &&
+        medianDelta <= 31;
+      if (isCalendarMonthly) {
+        detectedCadence = "MONTHLY";
+      } else {
+        detectedCadence = "WEEKLY";
+      }
+    }
   }
 
   const cadenceStepDays =
@@ -858,10 +1022,24 @@ export function evaluateDemandHistoryEvidence(
     policy.maxAllowedGapDays ??
     (detectedCadence === "DAILY" ? 14 : detectedCadence === "WEEKLY" ? 28 : detectedCadence === "MONTHLY" ? 45 : 35);
 
+  const dateBins = new Set<string>();
+  for (const v of valid) {
+    const t = new Date(v.periodStart || v.date!).getTime();
+    if (detectedCadence === "DAILY") {
+      dateBins.add(new Date(t).toISOString().slice(0, 10));
+    } else if (detectedCadence === "WEEKLY") {
+      dateBins.add(String(Math.floor(t / (7 * 24 * 3600 * 1000))));
+    } else if (detectedCadence === "MONTHLY") {
+      dateBins.add(new Date(t).toISOString().slice(0, 7));
+    } else {
+      dateBins.add(new Date(t).toISOString().slice(0, 10));
+    }
+  }
+
   const expectedPeriods = Math.max(1, Math.round(coveredDays / cadenceStepDays));
-  const qualifiedPeriods = seenDates.size;
+  const qualifiedPeriods = dateBins.size;
   const coverageRatio = Math.min(1, Math.round((qualifiedPeriods / expectedPeriods) * 100) / 100);
-  const minCoverageRatio = policy.minCoverageRatio ?? 0.40;
+  const minCoverageRatio = Math.max(0.40, policy.minCoverageRatio ?? 0.40);
 
   if (maxGapDays > maxAllowedGapDays) {
     const gapExpl = `Observations have an excessive gap of ${maxGapDays} days without data (maximum allowed: ${maxAllowedGapDays} days for ${detectedCadence} cadence). Continuous longitudinal demand is not substantiated.`;

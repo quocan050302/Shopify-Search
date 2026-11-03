@@ -1,7 +1,7 @@
 {
   "split": "DEV",
   "niche": "Pet Gadgets",
-  "sourceSha": "c4132fb9f76d1aee7e28ae4e7611d9296cfbd83d",
+  "sourceSha": "3f7112af583b65052497a236fca25c635786cb89",
   "datasetFingerprintSha256": "9855ac11a972adc0a558c23b7608309f158301c12ad8dcb0de3e3a5fd65af6a4",
   "windowStart": "2026-06-01T00:00:00.000Z",
   "windowEnd": "2026-10-24T00:00:00.000Z",

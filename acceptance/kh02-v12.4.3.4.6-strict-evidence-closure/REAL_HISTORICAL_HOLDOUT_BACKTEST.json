@@ -1,7 +1,7 @@
 {
   "split": "HOLDOUT",
   "niche": "Pet Gadgets",
-  "sourceSha": "c4132fb9f76d1aee7e28ae4e7611d9296cfbd83d",
+  "sourceSha": "3f7112af583b65052497a236fca25c635786cb89",
   "datasetFingerprintSha256": "26bcffb0d900f14f43614918e4f1102015fbb2b9308292c6461acf6e582650b3",
   "windowStart": "2026-10-24T00:00:00.000Z",
   "windowEnd": "2026-10-30T12:00:00.000Z",
@@ -9776,7 +9776,7 @@
       "familyKey": "automatic_pet_feeder",
       "observationCount": 5,
       "coveredDays": 127,
-      "status": "UNVERIFIED",
+      "status": "INSUFFICIENT_HISTORY",
       "eligibleForEvergreen": false,
       "sources": [
         "GOOGLE_TRENDS_CSV"
@@ -9789,7 +9789,7 @@
       "familyKey": "pet_water_fountain",
       "observationCount": 5,
       "coveredDays": 127,
-      "status": "UNVERIFIED",
+      "status": "INSUFFICIENT_HISTORY",
       "eligibleForEvergreen": false,
       "sources": [
         "GOOGLE_TRENDS_CSV"
@@ -9802,7 +9802,7 @@
       "familyKey": "pet_hair_remover_roller",
       "observationCount": 5,
       "coveredDays": 127,
-      "status": "UNVERIFIED",
+      "status": "INSUFFICIENT_HISTORY",
       "eligibleForEvergreen": false,
       "sources": [
         "GOOGLE_TRENDS_CSV"
@@ -9844,5 +9844,5 @@
   },
   "demandCoverageStatus": "INSUFFICIENT_HISTORICAL_EVIDENCE",
   "verdict": "INSUFFICIENT_HISTORICAL_EVIDENCE",
-  "notes": "Point-in-time replay executed for niche 'Pet Gadgets' with 380 historical records (380 non-synthetic); zero future leakage verified (rejectedPostCutoffJoined=84). Niche-matched discovery shortlist items: 3/3 (nicheCoverageStatus=SUFFICIENT_NICHE_COVERAGE, verifiedIdentityCount=0/3, identityCoverageStatus=INSUFFICIENT_VERIFIED_IDENTITY, funnelProbableCount=0, shortfall=0). Demand evaluation detail: Automatic Wet Food Cat Feeder with Cooling & Warming: 5 obs (UNVERIFIED, eligible=false); Pawira Stainless Steel Water Fountain: 5 obs (UNVERIFIED, eligible=false); Reusable Pet Hair Remover Roller: 5 obs (UNVERIFIED, eligible=false). Demand coverage honest classification: INSUFFICIENT_HISTORICAL_EVIDENCE."
+  "notes": "Point-in-time replay executed for niche 'Pet Gadgets' with 380 historical records (380 non-synthetic); zero future leakage verified (rejectedPostCutoffJoined=84). Niche-matched discovery shortlist items: 3/3 (nicheCoverageStatus=SUFFICIENT_NICHE_COVERAGE, verifiedIdentityCount=0/3, identityCoverageStatus=INSUFFICIENT_VERIFIED_IDENTITY, funnelProbableCount=0, shortfall=0). Demand evaluation detail: Automatic Wet Food Cat Feeder with Cooling & Warming: 5 obs (INSUFFICIENT_HISTORY, eligible=false); Pawira Stainless Steel Water Fountain: 5 obs (INSUFFICIENT_HISTORY, eligible=false); Reusable Pet Hair Remover Roller: 5 obs (INSUFFICIENT_HISTORY, eligible=false). Demand coverage honest classification: INSUFFICIENT_HISTORICAL_EVIDENCE."
 }
