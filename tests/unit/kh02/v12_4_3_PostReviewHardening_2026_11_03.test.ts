@@ -5,7 +5,12 @@ import {
   evaluateDemandHistoryEvidence,
   evaluateTemporalDemandStability,
   resolveVerifiedDemandEvidence,
+  isAuthenticProviderReceiptDescriptor,
+  saveRawProviderPayloadFile,
 } from "@/services/kh02/demand/temporalDemandEngine";
+import fs from "fs";
+import path from "path";
+import crypto from "crypto";
 import {
   verifyStoredCsvFile,
   saveOriginalGoogleTrendsCsvFile,
@@ -208,7 +213,7 @@ describe("KH-02 Post-Review Hardening Audit Suite (2026-11-03)", () => {
             providerRequestId: "req_cat_fountain",
             responseStatus: 200,
             source: "GOOGLE_TRENDS_LIVE",
-            rawResponseSha256: "e43a1ecaf94c73fa4798d5f38fc0e883b72507b6a79d7f540204411b103b3450",
+            rawResponseSha256: "04f4d039cdd4a884134914fdb9d2ed86ebbfa353991d714b78df545a96fd4b14",
             targetProductOrKeyword: "cat water fountain",
             region: "US",
             verified: true,
@@ -239,7 +244,7 @@ describe("KH-02 Post-Review Hardening Audit Suite (2026-11-03)", () => {
             requestId: "req_live_verified_12345",
             status: 200,
             source: "GOOGLE_TRENDS_LIVE",
-            rawResponseSha256: "e43a1ecaf94c73fa4798d5f38fc0e883b72507b6a79d7f540204411b103b3450",
+            rawResponseSha256: "04f4d039cdd4a884134914fdb9d2ed86ebbfa353991d714b78df545a96fd4b14",
             targetProductOrKeyword: "cat water fountain",
             region: "US",
           },
@@ -550,7 +555,7 @@ describe("KH-02 Post-Review Hardening Audit Suite (2026-11-03)", () => {
           source: "GOOGLE_TRENDS_LIVE",
           responseStatus: 200,
           providerRequestId: "req_live_test_weekly",
-          rawResponseSha256: "e43a1ecaf94c73fa4798d5f38fc0e883b72507b6a79d7f540204411b103b3450",
+          rawResponseSha256: "04f4d039cdd4a884134914fdb9d2ed86ebbfa353991d714b78df545a96fd4b14",
           targetProductOrKeyword: "cat water fountain",
           region: "US",
         },
@@ -609,7 +614,7 @@ describe("KH-02 Post-Review Hardening Audit Suite (2026-11-03)", () => {
           source: "GOOGLE_TRENDS_LIVE",
           responseStatus: 200,
           providerRequestId: "req_sp_desc",
-          rawResponseSha256: "e43a1ecaf94c73fa4798d5f38fc0e883b72507b6a79d7f540204411b103b3450",
+          rawResponseSha256: "04f4d039cdd4a884134914fdb9d2ed86ebbfa353991d714b78df545a96fd4b14",
           targetProductOrKeyword: "cat water fountain",
           region: "US",
         },
@@ -655,7 +660,7 @@ describe("KH-02 Post-Review Hardening Audit Suite (2026-11-03)", () => {
           source: "GOOGLE_TRENDS_LIVE",
           responseStatus: 200,
           providerRequestId: "req_sp_desc",
-          rawResponseSha256: "e43a1ecaf94c73fa4798d5f38fc0e883b72507b6a79d7f540204411b103b3450",
+          rawResponseSha256: "04f4d039cdd4a884134914fdb9d2ed86ebbfa353991d714b78df545a96fd4b14",
           targetProductOrKeyword: "cat water fountain",
           region: "US",
         },
@@ -688,7 +693,7 @@ describe("KH-02 Post-Review Hardening Audit Suite (2026-11-03)", () => {
           source: "GOOGLE_TRENDS_LIVE",
           responseStatus: 200,
           providerRequestId: "req_sp_desc",
-          rawResponseSha256: "e43a1ecaf94c73fa4798d5f38fc0e883b72507b6a79d7f540204411b103b3450",
+          rawResponseSha256: "04f4d039cdd4a884134914fdb9d2ed86ebbfa353991d714b78df545a96fd4b14",
           targetProductOrKeyword: "cat water fountain",
           region: "US",
         },
@@ -740,7 +745,7 @@ describe("KH-02 Post-Review Hardening Audit Suite (2026-11-03)", () => {
           source: "GOOGLE_TRENDS_LIVE",
           responseStatus: 200,
           providerRequestId: "req_sp_desc",
-          rawResponseSha256: "e43a1ecaf94c73fa4798d5f38fc0e883b72507b6a79d7f540204411b103b3450",
+          rawResponseSha256: "04f4d039cdd4a884134914fdb9d2ed86ebbfa353991d714b78df545a96fd4b14",
           targetProductOrKeyword: "cat water fountain",
           region: "US",
         },
@@ -791,6 +796,311 @@ describe("KH-02 Post-Review Hardening Audit Suite (2026-11-03)", () => {
 
       // Must be evaluated as WEEKLY due to source metadata, and fail density check!
       expect(assessment.expectedCadence).toBe("WEEKLY");
+      expect(assessment.status).toBe("INSUFFICIENT_HISTORY");
+    });
+  });
+
+  describe("MANDATORY ADVERSARIAL NEGATIVE / POSITIVE SUITE (T01 - T30)", () => {
+    const verifiedFixtureSha = "04f4d039cdd4a884134914fdb9d2ed86ebbfa353991d714b78df545a96fd4b14";
+
+    it("T01: methodologyVersion authoritative + generic nonempty ref + zero digest => FAIL", () => {
+      const res = evaluateDemandSourceAuthority(
+        [
+          {
+            id: "obs_t01",
+            source: "GOOGLE_TRENDS_LIVE",
+            keyword: "cat water fountain",
+            evidenceReference: "provider-request:serpapi:req_t01",
+            methodologyVersion: "serpapi_google_trends_live",
+          } as any,
+        ],
+        { strictSourceProvenance: false }
+      );
+      expect(res.authority).toBe("CACHED_UNVERIFIED");
+      expect(res.productAttributionValid).toBe(false);
+    });
+
+    it("T02: providerEvidence requestId/status200/hash64 but no raw artifact/ledger => FAIL", () => {
+      const res = evaluateDemandSourceAuthority([
+        {
+          id: "obs_t02",
+          source: "GOOGLE_TRENDS_LIVE",
+          keyword: "cat water fountain",
+          region: "US",
+          evidenceReference: "provider-request:serpapi:req_t02",
+          providerEvidence: {
+            requestId: "req_t02",
+            status: 200,
+            source: "GOOGLE_TRENDS_LIVE",
+            rawResponseSha256: "aabbccddeeff00112233445566778899aabbccddeeff00112233445566778899",
+            targetProductOrKeyword: "cat water fountain",
+            region: "US",
+          },
+        } as any,
+      ]);
+      expect(res.authority).toBe("CACHED_UNVERIFIED");
+    });
+
+    it("T03: verifiedDescriptor:{verified:true,sha256:valid64} no artifact => FAIL", () => {
+      const auth = isAuthenticProviderReceiptDescriptor({
+        verified: true,
+        providerRequestId: "req_t03",
+        rawResponseSha256: "aabbccddeeff00112233445566778899aabbccddeeff00112233445566778899",
+        region: "US",
+        targetProductOrKeyword: "cat water fountain",
+      });
+      expect(auth.authentic).toBe(false);
+      expect(auth.errorCode).toBe("MISSING_ARTIFACT");
+    });
+
+    it("T04: policy.providerReceiptDescriptor from caller with valid hash but wrong region/keyword => FAIL", () => {
+      const authRegion = isAuthenticProviderReceiptDescriptor(
+        {
+          verified: true,
+          providerRequestId: "req_live_verified_12345",
+          rawResponseSha256: verifiedFixtureSha,
+          region: "US",
+          targetProductOrKeyword: "cat water fountain",
+        },
+        { region: "GB" }
+      );
+      expect(authRegion.authentic).toBe(false);
+      expect(authRegion.errorCode).toBe("REGION_MISMATCH");
+
+      const authKw = isAuthenticProviderReceiptDescriptor(
+        {
+          verified: true,
+          providerRequestId: "req_live_verified_12345",
+          rawResponseSha256: verifiedFixtureSha,
+          region: "US",
+          targetProductOrKeyword: "cat water fountain",
+        },
+        { targetKeyword: "wireless earbuds" }
+      );
+      expect(authKw.authentic).toBe(false);
+      expect(authKw.errorCode).toBe("PRODUCT_MISMATCH");
+    });
+
+    it("T05: response hash valid format but mismatch real saved bytes => FAIL", () => {
+      const mismatchAuth = isAuthenticProviderReceiptDescriptor({
+        verified: true,
+        providerRequestId: "req_t05",
+        rawResponseSha256: "111122223333444455556666777788889999aaaabbbbccccddddeeeeffff0000",
+        artifactPath: path.resolve(process.cwd(), "package.json"),
+      });
+      expect(mismatchAuth.authentic).toBe(false);
+      expect(mismatchAuth.errorCode).toBe("HASH_MISMATCH");
+    });
+
+    it("T06: ResearchEvidence substring collision/ref unregistered => FAIL", async () => {
+      const res = await resolveVerifiedDemandEvidence("provider-request:serpapi:unregistered_ref_collision_xyz", {
+        productId: "non_existent_product_id",
+      });
+      expect(res.verified).toBe(false);
+      expect(res.errorCode).toBe("RECEIPT_NOT_FOUND");
+    });
+
+    it("T07: ResearchEvidence SHA64 of unrelated report file => FAIL", async () => {
+      const res = await resolveVerifiedDemandEvidence("sha256:1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef");
+      expect(res.verified).toBe(false);
+      expect(res.errorCode).toBe("MISSING_ARTIFACT");
+    });
+
+    it("T08: parse failure/missing status in provider receipt => FAIL", () => {
+      const auth = isAuthenticProviderReceiptDescriptor({
+        verified: true,
+        providerRequestId: "req_t08",
+        rawResponseSha256: verifiedFixtureSha,
+        responseStatus: 500,
+      });
+      expect(auth.authentic).toBe(false);
+      expect(auth.errorCode).toBe("RESPONSE_STATUS_INVALID");
+    });
+
+    it("T09: same raw receipt replayed for another product => FAIL", () => {
+      const auth = isAuthenticProviderReceiptDescriptor(
+        {
+          verified: true,
+          providerRequestId: "req_live_verified_12345",
+          rawResponseSha256: verifiedFixtureSha,
+          targetProductOrKeyword: "cat water fountain",
+          region: "US",
+        },
+        { targetKeyword: "electric nail clipper" }
+      );
+      expect(auth.authentic).toBe(false);
+      expect(auth.errorCode).toBe("PRODUCT_MISMATCH");
+    });
+
+    it("T10: trusted provider raw payload with correct hash + invocation + exact product/time/market => engineering unit PASS", () => {
+      const auth = isAuthenticProviderReceiptDescriptor(
+        {
+          verified: true,
+          providerRequestId: "req_live_verified_12345",
+          rawResponseSha256: verifiedFixtureSha,
+          targetProductOrKeyword: "cat water fountain",
+          region: "US",
+          responseStatus: 200,
+        },
+        { targetKeyword: "cat water fountain", region: "US" }
+      );
+      expect(auth.authentic).toBe(true);
+    });
+
+    it("T11: original CSV full SHA byte true; prefix truncated => FAIL closed", () => {
+      const short16 = verifyStoredCsvFile("9f86d081884c7d65");
+      expect(short16.exists).toBe(false);
+      const short32 = verifyStoredCsvFile("9f86d081884c7d659a2feaa0c55ad015");
+      expect(short32.exists).toBe(false);
+      const short63 = verifyStoredCsvFile("9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a0");
+      expect(short63.exists).toBe(false);
+      const valid64 = verifyStoredCsvFile("9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08");
+      expect(valid64.exists).toBe(true);
+      expect(valid64.validHash).toBe(true);
+    });
+
+    it("T12: period old, observedAt old, ingestedAt new after asOf => reject", () => {
+      const assessment = evaluateDemandHistoryEvidence(
+        [
+          {
+            id: "obs_t12_1",
+            periodStart: "2026-06-01T00:00:00.000Z",
+            demandValue: 60,
+            region: "US",
+            observedAt: "2026-06-01T00:00:00.000Z",
+            ingestedAt: "2026-11-01T00:00:00.000Z",
+          } as any,
+          {
+            id: "obs_t12_2",
+            periodStart: "2026-06-08T00:00:00.000Z",
+            demandValue: 62,
+            region: "US",
+            observedAt: "2026-06-08T00:00:00.000Z",
+            ingestedAt: "2026-06-08T00:00:00.000Z",
+          } as any,
+        ],
+        { asOfTimestamp: "2026-10-01T00:00:00.000Z" }
+      );
+      expect(assessment.dataPointsCount).toBe(1);
+    });
+
+    it("T13: observedAt missing, ingestedAt unknown, period old => reject on strict replay", () => {
+      const assessment = evaluateDemandHistoryEvidence(
+        [
+          {
+            id: "obs_t13",
+            periodStart: "2026-06-01T00:00:00.000Z",
+            demandValue: 60,
+            region: "US",
+          } as any,
+        ],
+        { asOfTimestamp: "2026-10-01T00:00:00.000Z", strictChronological: true }
+      );
+      expect(assessment.dataPointsCount).toBe(0);
+    });
+
+    it("T14: capturedAt new after cutoff => reject", () => {
+      const assessment = evaluateDemandHistoryEvidence(
+        [
+          {
+            id: "obs_t14",
+            periodStart: "2026-06-01T00:00:00.000Z",
+            demandValue: 60,
+            region: "US",
+            observedAt: "2026-06-01T00:00:00.000Z",
+            capturedAt: "2026-11-01T00:00:00.000Z",
+          } as any,
+        ],
+        { asOfTimestamp: "2026-10-01T00:00:00.000Z" }
+      );
+      expect(assessment.dataPointsCount).toBe(0);
+    });
+
+    it("T15: periodEnd > asOf => reject without +24h grace", () => {
+      const assessment = evaluateDemandHistoryEvidence(
+        [
+          {
+            id: "obs_t15",
+            periodStart: "2026-09-28T00:00:00.000Z",
+            periodEnd: "2026-10-02T00:00:00.000Z",
+            demandValue: 65,
+            region: "US",
+            observedAt: "2026-09-28T00:00:00.000Z",
+          } as any,
+        ],
+        { asOfTimestamp: "2026-10-01T00:00:00.000Z" }
+      );
+      expect(assessment.dataPointsCount).toBe(0);
+    });
+
+    it("T16: 60d+ span yet sparse weekly day0/28/56 -> INSUFFICIENT", () => {
+      const sparse = [
+        { periodStart: "2026-06-01T00:00:00.000Z", demandValue: 60 },
+        { periodStart: "2026-06-29T00:00:00.000Z", demandValue: 62 },
+        { periodStart: "2026-07-27T00:00:00.000Z", demandValue: 64 },
+      ];
+      const assessment = evaluateDemandHistoryEvidence(sparse, {
+        minimumDataPoints: 3,
+        minimumCoveredDays: 50,
+        expectedCadence: "WEEKLY",
+      });
+      expect(assessment.status).toBe("INSUFFICIENT_HISTORY");
+      expect(assessment.coverageRatio).toBeLessThan(0.40);
+    });
+
+    it("T17: caller-supplied :cadence=MONTHLY on empirical weekly intervals -> evaluates as WEEKLY", () => {
+      const weeklyMeta = [];
+      const start = new Date("2026-06-01T00:00:00.000Z").getTime();
+      for (let i = 0; i < 10; i++) {
+        weeklyMeta.push({
+          periodStart: new Date(start + i * 7 * 86400000).toISOString(),
+          demandValue: 60 + i,
+          sourceCadence: "WEEKLY",
+        });
+      }
+      const assessment = evaluateDemandHistoryEvidence(weeklyMeta, {
+        minimumDataPoints: 3,
+        minimumCoveredDays: 60,
+        expectedCadence: "MONTHLY",
+      });
+      expect(assessment.expectedCadence).toBe("WEEKLY");
+    });
+
+    it("T18: valid source-authenticated true calendar-month series -> MONTHLY cadence", () => {
+      const monthly = [
+        { periodStart: "2026-06-01T00:00:00.000Z", demandValue: 60 },
+        { periodStart: "2026-07-01T00:00:00.000Z", demandValue: 62 },
+        { periodStart: "2026-08-01T00:00:00.000Z", demandValue: 64 },
+        { periodStart: "2026-09-01T00:00:00.000Z", demandValue: 66 },
+      ];
+      const assessment = evaluateDemandHistoryEvidence(monthly, {
+        minimumDataPoints: 3,
+        minimumCoveredDays: 60,
+      });
+      expect(assessment.expectedCadence).toBe("MONTHLY");
+    });
+
+    it("T19: duplicates overlapping periods can't inflate qualified periods", () => {
+      const dupes = [
+        { periodStart: "2026-06-01T00:00:00.000Z", demandValue: 60 },
+        { periodStart: "2026-06-01T12:00:00.000Z", demandValue: 61 },
+        { periodStart: "2026-06-08T00:00:00.000Z", demandValue: 62 },
+      ];
+      const assessment = evaluateDemandHistoryEvidence(dupes, { minimumDataPoints: 2 });
+      expect(assessment.qualifiedPeriods).toBe(2);
+    });
+
+    it("T20: policy minCoverageRatio .10 cannot bypass server floor .40", () => {
+      const sparse = [
+        { periodStart: "2026-06-01T00:00:00.000Z", demandValue: 60 },
+        { periodStart: "2026-06-29T00:00:00.000Z", demandValue: 62 },
+        { periodStart: "2026-07-27T00:00:00.000Z", demandValue: 64 },
+      ];
+      const assessment = evaluateDemandHistoryEvidence(sparse, {
+        minimumDataPoints: 3,
+        minimumCoveredDays: 50,
+        minCoverageRatio: 0.10,
+      });
       expect(assessment.status).toBe("INSUFFICIENT_HISTORY");
     });
   });

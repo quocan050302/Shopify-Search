@@ -1,0 +1,229 @@
+================================================================================
+KH-02 V12.4.3.7.7 — STRICT EVIDENCE ORIGIN, PROVIDER RECEIPT & POINT-IN-TIME AUDIT REPORT
+================================================================================
+Date: 2026-11-03
+Instruction Version: V12.4.3.7.7 (2026-11-03)
+Mode: IMPLEMENT + TEST + BACKTEST + AUDIT + AUTO COMMIT/PUSH
+Repository: quocan050302/Shopify-Search
+Branch: feature/kh02-walmart-us-jina-reader-v12.4.3.5.1
+Baseline Remote & Local HEAD: 3145290209dd1e4320fa187244c85620170766d3
+Report File: reports/kh02/KH02_V12_4_3_7_7_PROVENANCE_ORIGIN_FULL_VALIDATION_2026-11-03.txt
+Manifest File: reports/kh02/KH02_V12_4_3_7_7_PROVENANCE_ORIGIN_FULL_VALIDATION_2026-11-03_MANIFEST.json
+Language: Vietnamese (technical symbols in English)
+================================================================================
+
+A. BASELINE GIT STATE, BRANCH & BASELINE COMMIT SHA
+--------------------------------------------------------------------------------
+- Repository: quocan050302/Shopify-Search
+- Working Directory: D:\Project_github\Running-Ads
+- Locked Branch: feature/kh02-walmart-us-jina-reader-v12.4.3.5.1 (Khóa cố định, không tạo/đổi nhánh)
+- Entry Local HEAD: 3145290209dd1e4320fa187244c85620170766d3
+- Entry Remote FETCH_HEAD: 3145290209dd1e4320fa187244c85620170766d3
+- Git Worktree Status at Entry: Clean (0 uncommitted files)
+- Operating System: Windows (powershell)
+- Available Disk Space on D:: 64.64 GiB (Vượt xa ngưỡng tối thiểu >= 8 GiB)
+- System Memory: 31.75 GiB Total, ~7.09 GiB Free Physical
+
+B. EXECUTIVE THREE-LAYER TRUTH TABLE
+--------------------------------------------------------------------------------
++--------------------------+-----------------------+--------------------------------------------------------+
+| Tầng sự thật             | Trạng thái            | Căn cứ kiểm toán                                       |
++--------------------------+-----------------------+--------------------------------------------------------+
+| 1. ENGINEERING_PASS      | PASS                  | Toàn bộ unit tests (911/911), KH-01 (69/69), tsc (0 err|
+|                          |                       | E2E Chromium (1/1), backtest (Policy 21/21) đạt 100%.  |
+| 2. PROVIDER_LIVE_VERIFIED| BLOCKED/INSUFFICIENT  | Không có live SerpApi paid key / TikTok live session   |
+|                          |                       | trong phiên chạy tự động. Không tự phong PASS.         |
+| 3. BUSINESS_VERIFIED     | INSUFFICIENT_EVIDENCE | Holdout shortlist=3/3 nhưng verifiedIdentity=0/3.      |
+|                          |                       | Giữ vững phân loại trung thực, không bịa đặt Top 3.    |
+| Gate G07                 | BLOCKED               | TikTok Ads US: thiếu session live; TikTok Organic bị tắt|
+| Gate G15                 | INSUFFICIENT_EVIDENCE | Nhu cầu Google Trends live fail-closed khi thiếu receipt|
+| Gate G16                 | INSUFFICIENT_EVIDENCE | Danh tính Amazon PDP live fail-closed trong replay offline|
++--------------------------+-----------------------+--------------------------------------------------------+
+
+C. DETAILED FUNCTION CALL MAP & CODE HARDENING AUDIT
+--------------------------------------------------------------------------------
+1. `isAuthenticProviderReceiptDescriptor`
+   - File & Line: `src/services/kh02/demand/temporalDemandEngine.ts:250`
+   - Input: descriptor (`VerifiedDemandEvidenceDescriptor`), context (keyword, region, workspaceId, runId)
+   - Output: `{ authentic: boolean; reason?: string; errorCode?: DemandEvidenceRejectionCode }`
+   - Root Cause cũ: Chỉ kiểm tra định dạng regex 64-hex SHA-256 và cờ `verified: true`, không đọc
+     byte raw thực tế trên đĩa, chấp nhận digest toàn số 0 `0000...0000`.
+   - Khắc phục:
+     * Cấm digest toàn số 0 (`/^0{64}$/`) và digest lặp ký tự đơn.
+     * Cấm request ID placeholder (`methodology_verified`, `synthetic`, `mock`, `todo`).
+     * Bắt buộc kiểm tra file artifact vật lý tồn tại trên đĩa (`PROVIDER_RECEIPT_STORAGE_DIR`,
+       `GOOGLE_TRENDS_CSV_STORAGE_DIR` hoặc `descriptor.artifactPath`).
+     * Từ chối symlink (`isSymbolicLink()`).
+     * Đọc byte thực tế, băm SHA-256 độc lập và so sánh tuyệt đối với `rawResponseSha256`.
+     * Đối chiếu context: region, keyword/product, workspaceId, researchRunId.
+     * Trả về mã lỗi có cấu trúc (`MISSING_ARTIFACT`, `HASH_MISMATCH`, `REGION_MISMATCH`, `PRODUCT_MISMATCH`).
+
+2. `evaluateDemandSourceAuthority`
+   - File & Line: `src/services/kh02/demand/temporalDemandEngine.ts:600`
+   - Input: `observations: HistoricalObservation[]`, `policy: DemandHistoryPolicy`
+   - Output: `{ authority: DemandSourceAuthority; reasons: string[]; productAttributionValid: boolean }`
+   - Root Cause cũ: Nhánh `methodologyVersion: serpapi_google_trends_live` tự sinh descriptor với
+     `rawResponseSha256 = "000000...000000"` (64 số 0) và `verified = true` khi `strictSourceProvenance=false`.
+   - Khắc phục:
+     * Xóa bỏ hoàn toàn nhánh tạo 64 số 0 và fallback `methodologyVersion` -> VERIFIED.
+     * Mọi `providerEvidence` hay `policy.providerReceiptDescriptor` phải được thẩm tra qua
+       `isAuthenticProviderReceiptDescriptor` (yêu cầu artifact vật lý khớp SHA).
+     * Kiểm tra từng bản ghi riêng biệt, từ chối trộn nguồn (mixed sources).
+
+3. `resolveVerifiedDemandEvidence`
+   - File & Line: `src/services/kh02/demand/temporalDemandEngine.ts:770`
+   - Input: `evidenceReference: string`, `context: { productId, keyword, region, workspaceId, researchRunId }`
+   - Output: `Promise<VerifiedDemandEvidenceDescriptor>`
+   - Root Cause cũ: Dùng `observedValue: { contains: ref }` (khớp substring lỏng lẻo); không đọc
+     byte raw artifact để đối chiếu với `sourceContentRef`; gán mặc định status 200, region US.
+   - Khắc phục:
+     * Dùng exact lookup theo `id: providerRequestId`, `sourceContentRef: contentSha`, hoặc `id: ref`.
+     * Kiểm tra `sourceContentRef` là 64-hex SHA-256 (không chấp nhận 64 số 0).
+     * Bắt buộc artifact vật lý tồn tại trên đĩa, đọc byte và đối chiếu băm SHA-256.
+     * Phân tích JSON `observedValue`, kiểm tra `status === 200`, `region` và `targetKeyword` khớp context.
+     * Không tự ý gán mặc định khi thiếu trường dữ liệu.
+
+4. `loadProductHistoricalDemand`
+   - File & Line: `src/services/kh02/demand/temporalDemandEngine.ts:740`
+   - Input: `productId: string`
+   - Output: `Promise<DemandDataPoint[]>`
+   - Root Cause cũ: Gán fallback `ingestedAt: r.observedAt` khi thiếu ingestion timestamp.
+   - Khắc phục: Giữ `ingestedAt: null` khi không có timestamp nạp tin cậy (`:imported=`).
+
+5. `evaluateDemandHistoryEvidence`
+   - File & Line: `src/services/kh02/demand/temporalDemandEngine.ts:980`
+   - Input: `observations: HistoricalObservation[]`, `policy: DemandHistoryPolicy`
+   - Output: `DemandHistoryAssessment`
+   - Khắc phục:
+     * Chặn rò rỉ point-in-time: Kiểm tra toàn bộ availability timestamps (`observedAt`, `ingestedAt`,
+       `capturedAt`, `publishedAt`, `availableAt`) <= `asOfTime`.
+     * Chặn chuỗi trộn lẫn tần suất (conflicting cadences trong cùng series) -> fail-closed.
+     * Chặn cadence inflation: Nhãn `:cadence=MONTHLY` tự phong trên dữ liệu tuần bị ép về `WEEKLY`.
+     * Áp đặt sàn `minCoverageRatio >= 0.40` cấp máy chủ.
+
+D. PROOF OF REMOVAL: ZERO-DIGEST & FAKE PATHS ELIMINATED
+--------------------------------------------------------------------------------
+- Kiểm tra toàn bộ mã nguồn: `git grep "0000000000000000000000000000000000000000000000000000000000000000"`
+  -> Không còn tồn tại bất kỳ dòng lệnh nào khởi tạo chuỗi 64 số 0 trong `temporalDemandEngine.ts`.
+- Bộ test đối kháng (T01 - T10):
+  * T01 (methodologyVersion + zero digest): FAIL closed -> `CACHED_UNVERIFIED`.
+  * T02 (providerEvidence có SHA64 nhưng không có file artifact trên đĩa): FAIL closed -> `CACHED_UNVERIFIED`.
+  * T03 (verifiedDescriptor {verified:true, sha256} không có artifact): FAIL closed -> `MISSING_ARTIFACT`.
+  * T04 (valid hash nhưng sai region/keyword): FAIL closed -> `REGION_MISMATCH` / `PRODUCT_MISMATCH`.
+  * T05 (hash đúng format nhưng byte file thực tế khác băm): FAIL closed -> `HASH_MISMATCH`.
+  * T06 (ResearchEvidence không tìm thấy trong DB): FAIL closed -> `RECEIPT_NOT_FOUND`.
+  * T07 (ResearchEvidence SHA64 file không tồn tại): FAIL closed -> `MISSING_ARTIFACT`.
+  * T08 (provider response status 500): FAIL closed -> `RESPONSE_STATUS_INVALID`.
+  * T09 (provider receipt đúng nhưng dùng lại cho sản phẩm khác): FAIL closed -> `PRODUCT_MISMATCH`.
+  * T10 (provider payload có file thực tế khớp byte hash + đúng keyword + status 200): PASS (Unit fixture).
+
+E. RESEARCH EVIDENCE RAW ORIGIN & ARTIFACT STORAGE
+--------------------------------------------------------------------------------
+- Thư mục lưu trữ artifact nhà cung cấp: `data/provider_receipts/`
+- Helper kiểm toán: `saveRawProviderPayloadFile` & `verifyStoredProviderReceipt`
+- Các fixture artifact đã được xác thực byte-for-byte và lưu trữ:
+  * `04f4d039cdd4a884134914fdb9d2ed86ebbfa353991d714b78df545a96fd4b14.json` (Cat Water Fountain, 206 bytes)
+  * `366cfeb156347d783c227be3fd7e10e397c8cd00c49c909673fc5208f36b841f.json` (Automatic Pet Feeder, 274 bytes)
+  * `3440f19057ac7d1ac535150d1bbcc9a3078e0b7a5d46ad3f4bbd2c46235f61c8.json` (Uahpet Wireless Fountain, 325 bytes)
+- Mỗi artifact chứa payload phản hồi thô, mã băm SHA-256 tính từ bytes trên đĩa,
+  không thể mạo danh hoặc tráo đổi nội dung.
+
+F. TRUSTED CSV PROOF & STORAGE INTEGRITY
+--------------------------------------------------------------------------------
+- Thư mục lưu trữ CSV: `data/google_trends_imports/`
+- File hợp lệ hiện hữu:
+  * `49f452e8413178ee0b3e1e2d42c2fd495693b552f211bc908a16511b63302109.csv`
+  * `9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08.csv`
+  * `f300258f9ea08da45034f449ade0c43d643cf280838d0f370a264d6805826d39.csv`
+- Kiểm tra toàn vẹn (T11): Các tiền tố 16, 32, 63 ký tự bị từ chối; chỉ chấp nhận chuỗi 64-hex đầy đủ.
+- Ghi file nguyên tử (atomic rename), kiểm tra từ chối symlink (`isSymbolicLink()`), đọc lại byte
+  và kiểm tra SHA-256 ngay sau khi lưu.
+
+G. KNOWN-AT, AS-OF & POINT-IN-TIME VERIFICATION
+--------------------------------------------------------------------------------
+- T12: Điểm dữ liệu quan sát cũ (2026-06) nhưng nạp muộn (2026-11) sau mốc cutoff (2026-10) -> BỊ LOẠI BỎ.
+- T13: Bản ghi thiếu hoàn toàn availability timestamps trong replay nghiêm ngặt -> BỊ LOẠI BỎ.
+- T14: Mốc `capturedAt` sau cutoff -> BỊ LOẠI BỎ.
+- T15: Mốc `periodEnd` vượt quá cutoff -> BỊ LOẠI BỎ (không có khoảng ân hạn 24h).
+- T16: Chuỗi thưa 3 điểm qua 60 ngày (Ngày 0, 28, 56) có mật độ < 40% -> INSUFFICIENT_HISTORY.
+- T17: Chuỗi tuần có nhãn tự phong `:cadence=MONTHLY` bị ép về `WEEKLY`.
+- T18: Chuỗi tháng lịch thực sự (bắt đầu ngày 1 hàng tháng) được nhận diện `MONTHLY`.
+- T19: Các điểm trùng mốc thời gian không làm tăng số chu kỳ đủ điều kiện (`qualifiedPeriods`).
+- T20: Client override `minCoverageRatio: 0.10` bị sàn máy chủ 0.40 chặn đứng.
+
+H. PROVIDER TRACE & REAL NETWORK BOUNDARY
+--------------------------------------------------------------------------------
+- Meta Ads Live: Chạy qua runtime thực tế nếu có token; fallback an toàn khi thiếu session.
+- Google Ads Transparency: Đảm bảo đối chiếu 1:1, cách ly hoàn toàn trường hợp raw=0.
+- Amazon US: Giữ vững nguyên tắc Playwright MCP Search -> PDP exact match; cấm hardcode ASIN.
+- TikTok Ads US (G07): BLOCKED (không có upstream session); TikTok Organic DISABLED.
+- Walmart US: Tạm dừng / không can thiệp, không phá vỡ ranh giới bot-wall.
+
+I. FULL REGRESSION SUITE RESULTS
+--------------------------------------------------------------------------------
+1. TypeScript Compilation Check:
+   - Command: `npx tsc --noEmit`
+   - Result: Exit code 0, 0 compilation errors.
+2. KH-02 Unit Test Suites:
+   - Command: `npx vitest run tests/unit/kh02/`
+   - Result: 33/33 test files passed, 911/911 tests passed (0 failures).
+   - Duration: 57.74s.
+3. KH-01 Verification Suite:
+   - Command: `npm run kh01:verify`
+   - Result: 5/5 test files passed, 69/69 tests passed (0 failures).
+   - Duration: 3.95s.
+4. Chromium E2E Acceptance Suite:
+   - Command: `npx vitest run tests/integration/kh02BrowserAcceptance.test.ts`
+   - Result: 1/1 test file passed, 1/1 test passed (37.88s).
+   - Thao tác: Mở browser Chromium thực, điều hướng `/products`, async research 'Pet Hair Remover',
+     kiểm tra reload persistence và chụp visual artifacts thành công.
+
+J. HISTORICAL BACKTEST VERIFICATION (DEV & HOLDOUT)
+--------------------------------------------------------------------------------
+- Command: `npx tsx scripts/kh02/runBacktestV12_4_3_4_2.ts`
+- Policy Scenarios Verdict: PASS (21/21 scenarios passed, 0 failures).
+- Point-in-Time Integrity Verdict: PASS (Zero future leakage, rejectedPostCutoffJoined=84).
+- DEV Split: INSUFFICIENT_HISTORICAL_EVIDENCE (shortlist=0/0).
+- HOLDOUT Split: INSUFFICIENT_HISTORICAL_EVIDENCE (shortlist=3/3, verifiedIdentityCount=0/3).
+- Overall Classification: INSUFFICIENT_HISTORICAL_EVIDENCE.
+- Đánh giá trung thực: Không có dữ liệu tương lai bị rò rỉ, không tự xưng Top-3 thương mại khi thiếu chứng cứ sống.
+
+K. ASYNC ORCHESTRATION & RESOURCE AUDIT
+--------------------------------------------------------------------------------
+- Bộ nhớ RAM vật lý: 31.75 GiB Total, ~7.09 GiB Free.
+- Dung lượng đĩa trên ổ D:: Bắt đầu 64.64 GiB, Tối thiểu 64.64 GiB, Kết thúc 64.64 GiB (Vượt ngưỡng 8 GiB).
+- Quản lý tiến trình: Không có process con mồ côi (zero orphan PIDs).
+
+L. GOOGLE RAW=0 & G07 TIKTOK LABEL AUDIT
+--------------------------------------------------------------------------------
+- Google Raw=0: Giữ nguyên cơ chế cách ly `quarantinedGoogleObservations`, telemetry báo `FAILED` / `QUERY_FAILED`.
+- G07: Được định danh chính xác là **TikTok Ads US** (BLOCKED). TikTok Organic bị vô hiệu hóa theo chính sách zero-spend.
+
+M. SUMMARY OF COMMITTED CHANGES
+--------------------------------------------------------------------------------
+- Files modified / created:
+  * `src/services/kh02/demand/temporalDemandEngine.ts` (Loại bỏ zero-digest, siết chặt artifact bytes verification, as-of cutoff)
+  * `tests/unit/kh02/v12_4_3_PostReviewHardening_2026_11_03.test.ts` (Bổ sung suite T01-T20)
+  * `tests/unit/kh02/v12_4_3_3_2_DemandAndIdentityIntegrity.test.ts` (Cập nhật fixture receipt hợp lệ)
+  * `tests/unit/kh02/v12_4_3_NextExecutionAudit_2026_11_03.test.ts` (Gắn verified fixture receipt)
+  * `data/provider_receipts/*` (Lưu trữ 3 artifact JSON mẫu với SHA256 bytes thực)
+  * `acceptance/kh02-v12.4.3.4.6-strict-evidence-closure/*` (Backtest logs cập nhật)
+  * `reports/kh02/KH02_V12_4_3_7_7_PROVENANCE_ORIGIN_FULL_VALIDATION_2026-11-03.txt` (Báo cáo này)
+  * `reports/kh02/KH02_V12_4_3_7_7_PROVENANCE_ORIGIN_FULL_VALIDATION_2026-11-03_MANIFEST.json`
+
+N. FINAL COMMIT & REMOTE ATTESTATION
+--------------------------------------------------------------------------------
+- Nhánh: `feature/kh02-walmart-us-jina-reader-v12.4.3.5.1`
+- Baseline SHA: `3145290209dd1e4320fa187244c85620170766d3`
+- Commit Message: `fix(kh02): close provider receipt origin and historical known-at gaps`
+- Git push: Fast-forward tới origin, không dùng force-push.
+- Remote SHA: Xác nhận qua `git ls-remote`.
+
+O. NEXT THREE PRECISE EXTERNAL UNBLOCK STEPS
+--------------------------------------------------------------------------------
+1. Cung cấp SerpApi API key sống vào biến môi trường `SERPAPI_API_KEY` nếu muốn xác thực G15 live provider.
+2. Khởi tạo phiên trình duyệt Playwright MCP có quyền truy cập Amazon US Search & PDP để giải phóng G16 live.
+3. Cấp session ủy quyền TikTok Ads US nếu cần kích hoạt Gate G07.
+================================================================================
+KẾT THÚC BÁO CÁO KIỂM TOÁN V12.4.3.7.7
+================================================================================

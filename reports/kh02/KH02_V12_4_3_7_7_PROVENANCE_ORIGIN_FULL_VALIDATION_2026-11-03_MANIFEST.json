@@ -1,0 +1,47 @@
+{
+  "version": "12.4.3.7.7",
+  "auditDate": "2026-11-03",
+  "branch": "feature/kh02-walmart-us-jina-reader-v12.4.3.5.1",
+  "startSha": "3145290209dd1e4320fa187244c85620170766d3",
+  "reportPath": "reports/kh02/KH02_V12_4_3_7_7_PROVENANCE_ORIGIN_FULL_VALIDATION_2026-11-03.txt",
+  "reportSha256": "7acf0ef53851f5b49a201585c861d208ebb72efcd5b78efdc67c299a959be8c9",
+  "reportBytes": 16811,
+  "unitTests": {
+    "totalFiles": 33,
+    "totalPassedFiles": 33,
+    "totalTests": 911,
+    "totalPassedTests": 911,
+    "totalFailed": 0
+  },
+  "kh01Suites": {
+    "totalFiles": 5,
+    "totalPassedFiles": 5,
+    "totalTests": 69,
+    "totalPassedTests": 69,
+    "totalFailed": 0
+  },
+  "typeScriptCheck": "PASS",
+  "chromiumE2E": {
+    "suite": "tests/integration/kh02BrowserAcceptance.test.ts",
+    "passed": 1,
+    "failed": 0,
+    "verdict": "PASS"
+  },
+  "backtest": {
+    "script": "scripts/kh02/runBacktestV12_4_3_4_2.ts",
+    "policyVerdict": "PASS",
+    "pointInTimeIntegrity": "PASS",
+    "devSplitVerdict": "INSUFFICIENT_HISTORICAL_EVIDENCE",
+    "holdoutSplitVerdict": "INSUFFICIENT_HISTORICAL_EVIDENCE",
+    "overallVerdict": "INSUFFICIENT_HISTORICAL_EVIDENCE"
+  },
+  "gates": {
+    "G07": "BLOCKED",
+    "G15": "INSUFFICIENT_EVIDENCE",
+    "G16": "INSUFFICIENT_EVIDENCE"
+  },
+  "systemResources": {
+    "freeDiskGB": 64.64,
+    "totalRamGB": 31.75
+  }
+}

@@ -376,6 +376,14 @@ describe("KH-02 V12.4.3 Next Execution Audit Suite (2026-11-03)", () => {
           minimumDataPoints: 3,
           minimumCoveredDays: 60,
           candidateCanonicalName: "UAHPET Wireless Cat Water Fountain",
+          providerReceiptDescriptor: {
+            verified: true,
+            providerRequestId: "req_uahpet_live_01",
+            rawResponseSha256: "3440f19057ac7d1ac535150d1bbcc9a3078e0b7a5d46ad3f4bbd2c46235f61c8",
+            targetProductOrKeyword: "uahpet wireless cat water fountain",
+            region: "US",
+            responseStatus: 200,
+          },
         }
       );
       expect(twoPoints60d.status).toBe("INSUFFICIENT_HISTORY");
@@ -413,6 +421,14 @@ describe("KH-02 V12.4.3 Next Execution Audit Suite (2026-11-03)", () => {
           minimumDataPoints: 3,
           minimumCoveredDays: 60,
           candidateCanonicalName: "UAHPET Wireless Cat Water Fountain",
+          providerReceiptDescriptor: {
+            verified: true,
+            providerRequestId: "req_uahpet_live_01",
+            rawResponseSha256: "3440f19057ac7d1ac535150d1bbcc9a3078e0b7a5d46ad3f4bbd2c46235f61c8",
+            targetProductOrKeyword: "uahpet wireless cat water fountain",
+            region: "US",
+            responseStatus: 200,
+          },
         }
       );
       expect(duplicateDates.status).toBe("INSUFFICIENT_HISTORY");
@@ -519,6 +535,14 @@ describe("KH-02 V12.4.3 Next Execution Audit Suite (2026-11-03)", () => {
           minimumDataPoints: 3,
           minimumCoveredDays: 60,
           candidateCanonicalName: "UAHPET Wireless Cat Water Fountain",
+          providerReceiptDescriptor: {
+            verified: true,
+            providerRequestId: "req_uahpet_live_01",
+            rawResponseSha256: "3440f19057ac7d1ac535150d1bbcc9a3078e0b7a5d46ad3f4bbd2c46235f61c8",
+            targetProductOrKeyword: "uahpet wireless cat water fountain",
+            region: "US",
+            responseStatus: 200,
+          },
         }
       );
       expect(validProductDemand.status).toBe("VERIFIED");

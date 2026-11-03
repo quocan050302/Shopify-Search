@@ -172,7 +172,15 @@ describe("SWAI KH-02 V12.4.3.3.2 — Authoritative Demand, Identity & Top-3 Inte
           region: "US",
           source: "Google Trends (SerpApi)",
           methodologyVersion: "serpapi_google_trends_live",
-          evidenceReference: "DEMAND_API_INGESTION",
+          evidenceReference: "provider-request:serpapi:req_pet_feeder_01",
+          providerEvidence: {
+            requestId: "req_pet_feeder_01",
+            status: 200,
+            source: "Google Trends (SerpApi)",
+            rawResponseSha256: "366cfeb156347d783c227be3fd7e10e397c8cd00c49c909673fc5208f36b841f",
+            targetProductOrKeyword: "automatic pet feeder",
+            region: "US",
+          },
         },
         {
           demandValue: 70,
@@ -182,7 +190,15 @@ describe("SWAI KH-02 V12.4.3.3.2 — Authoritative Demand, Identity & Top-3 Inte
           region: "US",
           source: "Google Trends (SerpApi)",
           methodologyVersion: "serpapi_google_trends_live",
-          evidenceReference: "DEMAND_API_INGESTION",
+          evidenceReference: "provider-request:serpapi:req_pet_feeder_01",
+          providerEvidence: {
+            requestId: "req_pet_feeder_01",
+            status: 200,
+            source: "Google Trends (SerpApi)",
+            rawResponseSha256: "366cfeb156347d783c227be3fd7e10e397c8cd00c49c909673fc5208f36b841f",
+            targetProductOrKeyword: "automatic pet feeder",
+            region: "US",
+          },
         },
         {
           demandValue: 75,
@@ -192,7 +208,15 @@ describe("SWAI KH-02 V12.4.3.3.2 — Authoritative Demand, Identity & Top-3 Inte
           region: "US",
           source: "Google Trends (SerpApi)",
           methodologyVersion: "serpapi_google_trends_live",
-          evidenceReference: "DEMAND_API_INGESTION",
+          evidenceReference: "provider-request:serpapi:req_pet_feeder_01",
+          providerEvidence: {
+            requestId: "req_pet_feeder_01",
+            status: 200,
+            source: "Google Trends (SerpApi)",
+            rawResponseSha256: "366cfeb156347d783c227be3fd7e10e397c8cd00c49c909673fc5208f36b841f",
+            targetProductOrKeyword: "automatic pet feeder",
+            region: "US",
+          },
         },
       ];
 

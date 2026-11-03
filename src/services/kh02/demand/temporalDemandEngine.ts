@@ -15,7 +15,28 @@
  *    verifiable source authority.
  */
 
+import fs from "fs";
+import path from "path";
+import crypto from "crypto";
 import { prisma } from "@/lib/db";
+import { GOOGLE_TRENDS_CSV_STORAGE_DIR, verifyStoredCsvFile } from "./googleTrendsCsvValidator";
+
+export const PROVIDER_RECEIPT_STORAGE_DIR = path.resolve(
+  process.cwd(),
+  process.env.PROVIDER_RECEIPT_STORAGE_DIR || "data/provider_receipts"
+);
+
+export type DemandEvidenceRejectionCode =
+  | "MISSING_ARTIFACT"
+  | "HASH_MISMATCH"
+  | "RECEIPT_NOT_FOUND"
+  | "ORIGIN_UNVERIFIED"
+  | "RUN_MISMATCH"
+  | "PRODUCT_MISMATCH"
+  | "REGION_MISMATCH"
+  | "SOURCE_MISMATCH"
+  | "RESPONSE_STATUS_INVALID"
+  | "TIME_INVALID";
 
 export type KH02DemandClass =
   | "EVERGREEN_STABLE"
@@ -224,6 +245,7 @@ export interface VerifiedDemandEvidenceDescriptor {
   providerRequestId?: string | null;
   source?: string | null;
   researchRunId?: string | null;
+  workspaceId?: string | null;
   targetProductOrKeyword?: string | null;
   region?: string | null;
   responseStatus?: number | null;
@@ -232,10 +254,25 @@ export interface VerifiedDemandEvidenceDescriptor {
   artifactPath?: string | null;
   verified: boolean;
   rejectionReason?: string | null;
+  errorCode?: DemandEvidenceRejectionCode | null;
 }
 
-import fs from "fs";
-import { verifyStoredCsvFile } from "./googleTrendsCsvValidator";
+export function saveRawProviderPayloadFile(
+  rawContent: string | Buffer
+): { artifactPath: string; rawResponseSha256: string } {
+  const dir = path.resolve(PROVIDER_RECEIPT_STORAGE_DIR);
+  if (!fs.existsSync(dir)) {
+    fs.mkdirSync(dir, { recursive: true });
+  }
+  const buffer = Buffer.isBuffer(rawContent) ? rawContent : Buffer.from(rawContent, "utf-8");
+  const rawResponseSha256 = crypto.createHash("sha256").update(buffer).digest("hex").toLowerCase();
+  const filePath = path.join(dir, `${rawResponseSha256}.json`);
+
+  const tempPath = path.join(dir, `.tmp_${rawResponseSha256}_${Date.now()}.json`);
+  fs.writeFileSync(tempPath, buffer);
+  fs.renameSync(tempPath, filePath);
+  return { artifactPath: filePath, rawResponseSha256 };
+}
 
 export function isAuthenticProviderReceiptDescriptor(
   descriptor: VerifiedDemandEvidenceDescriptor | null | undefined,
@@ -243,42 +280,99 @@ export function isAuthenticProviderReceiptDescriptor(
     targetKeyword?: string | null;
     targetProduct?: string | null;
     region?: string | null;
+    workspaceId?: string | null;
+    researchRunId?: string | null;
   } = {}
-): { authentic: boolean; reason?: string } {
+): { authentic: boolean; reason?: string; errorCode?: DemandEvidenceRejectionCode } {
   if (!descriptor) {
-    return { authentic: false, reason: "No provider receipt descriptor provided." };
+    return { authentic: false, reason: "No provider receipt descriptor provided.", errorCode: "RECEIPT_NOT_FOUND" };
   }
   if (descriptor.verified !== true) {
-    return { authentic: false, reason: descriptor.rejectionReason || "Descriptor is not marked verified." };
+    return { authentic: false, reason: descriptor.rejectionReason || "Descriptor is not marked verified.", errorCode: "ORIGIN_UNVERIFIED" };
   }
   if (!descriptor.rawResponseSha256 || !/^[a-f0-9]{64}$/i.test(descriptor.rawResponseSha256)) {
-    return { authentic: false, reason: "Descriptor lacks valid full 64-hex raw response SHA-256 digest." };
+    return { authentic: false, reason: "Descriptor lacks valid full 64-hex raw response SHA-256 digest.", errorCode: "HASH_MISMATCH" };
+  }
+  if (/^0{64}$/.test(descriptor.rawResponseSha256)) {
+    return { authentic: false, reason: "Descriptor uses prohibited zero-digest (0000...0000).", errorCode: "HASH_MISMATCH" };
+  }
+  if (/^(.)\1{63}$/.test(descriptor.rawResponseSha256)) {
+    return { authentic: false, reason: "Descriptor uses prohibited repeating digest pattern.", errorCode: "HASH_MISMATCH" };
+  }
+  if (
+    !descriptor.providerRequestId ||
+    String(descriptor.providerRequestId).trim().length === 0 ||
+    /^(methodology_verified|synthetic|mock|todo|null|undefined)$/i.test(String(descriptor.providerRequestId).trim())
+  ) {
+    return { authentic: false, reason: "Descriptor lacks immutable provider request / receipt ID.", errorCode: "RECEIPT_NOT_FOUND" };
   }
   if (descriptor.responseStatus !== undefined && descriptor.responseStatus !== null && descriptor.responseStatus !== 200) {
-    return { authentic: false, reason: `Descriptor has non-200 provider response status (${descriptor.responseStatus}).` };
+    return { authentic: false, reason: `Descriptor has non-200 provider response status (${descriptor.responseStatus}).`, errorCode: "RESPONSE_STATUS_INVALID" };
   }
-  if (!descriptor.providerRequestId || String(descriptor.providerRequestId).trim().length === 0) {
-    return { authentic: false, reason: "Descriptor lacks immutable provider request / receipt ID." };
-  }
+
+  // Physical file verification: MUST exist on disk and byte hash must match exactly
+  let foundArtifactPath: string | null = null;
   if (descriptor.artifactPath) {
-    if (!fs.existsSync(descriptor.artifactPath)) {
-      return { authentic: false, reason: `Raw artifact file '${descriptor.artifactPath}' does not exist on disk.` };
+    foundArtifactPath = path.resolve(descriptor.artifactPath);
+  } else {
+    const candidateJson = path.join(PROVIDER_RECEIPT_STORAGE_DIR, `${descriptor.rawResponseSha256.toLowerCase()}.json`);
+    const candidateCsv = path.join(GOOGLE_TRENDS_CSV_STORAGE_DIR, `${descriptor.rawResponseSha256.toLowerCase()}.csv`);
+    const candidateBin = path.join(PROVIDER_RECEIPT_STORAGE_DIR, `${descriptor.rawResponseSha256.toLowerCase()}.bin`);
+    if (fs.existsSync(candidateJson)) {
+      foundArtifactPath = candidateJson;
+    } else if (fs.existsSync(candidateCsv)) {
+      foundArtifactPath = candidateCsv;
+    } else if (fs.existsSync(candidateBin)) {
+      foundArtifactPath = candidateBin;
     }
   }
+
+  if (!foundArtifactPath || !fs.existsSync(foundArtifactPath)) {
+    return {
+      authentic: false,
+      reason: `No verified raw artifact found on disk matching rawResponseSha256 '${descriptor.rawResponseSha256}'.`,
+      errorCode: "MISSING_ARTIFACT",
+    };
+  }
+
+  try {
+    if (fs.lstatSync(foundArtifactPath).isSymbolicLink()) {
+      return { authentic: false, reason: "Raw artifact cannot be a symbolic link.", errorCode: "MISSING_ARTIFACT" };
+    }
+    const bytes = fs.readFileSync(foundArtifactPath);
+    const computedSha = crypto.createHash("sha256").update(bytes).digest("hex").toLowerCase();
+    if (computedSha !== descriptor.rawResponseSha256.toLowerCase()) {
+      return {
+        authentic: false,
+        reason: `Raw artifact bytes SHA-256 ('${computedSha.slice(0, 12)}...') does not match descriptor SHA-256 ('${descriptor.rawResponseSha256.slice(0, 12)}...').`,
+        errorCode: "HASH_MISMATCH",
+      };
+    }
+  } catch (err: any) {
+    return { authentic: false, reason: `Failed to read and verify artifact: ${err?.message || err}`, errorCode: "MISSING_ARTIFACT" };
+  }
+
   if (context.region && descriptor.region) {
     const normCtx = String(context.region).trim().toUpperCase();
     const normDesc = String(descriptor.region).trim().toUpperCase();
     if (normCtx !== normDesc) {
-      return { authentic: false, reason: `Descriptor region '${normDesc}' does not match context region '${normCtx}'.` };
+      return { authentic: false, reason: `Descriptor region '${normDesc}' does not match context region '${normCtx}'.`, errorCode: "REGION_MISMATCH" };
     }
   }
   if (context.targetKeyword && descriptor.targetProductOrKeyword) {
     const kwNorm = String(context.targetKeyword).trim().toLowerCase();
     const descNorm = String(descriptor.targetProductOrKeyword).trim().toLowerCase();
-    if (!kwNorm.includes(descNorm) && !descNorm.includes(kwNorm)) {
-      return { authentic: false, reason: `Descriptor target '${descNorm}' does not match observation keyword '${kwNorm}'.` };
+    if (kwNorm !== descNorm && !kwNorm.includes(descNorm) && !descNorm.includes(kwNorm)) {
+      return { authentic: false, reason: `Descriptor target '${descNorm}' does not match observation keyword '${kwNorm}'.`, errorCode: "PRODUCT_MISMATCH" };
     }
   }
+  if (context.researchRunId && descriptor.researchRunId && context.researchRunId !== descriptor.researchRunId) {
+    return { authentic: false, reason: `Descriptor researchRunId '${descriptor.researchRunId}' does not match context '${context.researchRunId}'.`, errorCode: "RUN_MISMATCH" };
+  }
+  if (context.workspaceId && descriptor.workspaceId && context.workspaceId !== descriptor.workspaceId) {
+    return { authentic: false, reason: `Descriptor workspaceId '${descriptor.workspaceId}' does not match context '${context.workspaceId}'.`, errorCode: "RUN_MISMATCH" };
+  }
+
   return { authentic: true };
 }
 
@@ -507,23 +601,8 @@ export function evaluateDemandSourceAuthority(
         targetProductOrKeyword: pe.targetProductOrKeyword || obs.keyword,
         region: pe.region || obs.region,
         capturedAt: pe.capturedAt,
+        artifactPath: pe.artifactPath,
         verified: Boolean(pe.requestId && pe.status === 200 && pe.rawResponseSha256),
-      };
-    } else if (
-      !policy.strictSourceProvenance &&
-      !isExplicitRequestClaim &&
-      (obs as any).methodologyVersion &&
-      /serpapi_google_trends_live|authoritative/i.test(String((obs as any).methodologyVersion)) &&
-      ref.length > 0
-    ) {
-      desc = {
-        providerRequestId: obs.id || "methodology_verified",
-        source: obs.source,
-        rawResponseSha256: "0000000000000000000000000000000000000000000000000000000000000000",
-        responseStatus: 200,
-        targetProductOrKeyword: obs.keyword,
-        region: obs.region || "US",
-        verified: true,
       };
     } else if (policy.providerReceiptDescriptor) {
       desc = policy.providerReceiptDescriptor;
@@ -662,8 +741,8 @@ export async function loadProductHistoricalDemand(
       region: r.region,
       source: r.source,
       observedAt: r.observedAt,
-      ingestedAt: (r as any).ingestedAt || (importedMatch ? importedMatch[1] : r.observedAt),
-      capturedAt: (r as any).capturedAt || (capturedMatch ? capturedMatch[1] : undefined),
+      ingestedAt: (r as any).ingestedAt || (importedMatch ? importedMatch[1] : null),
+      capturedAt: (r as any).capturedAt || (capturedMatch ? capturedMatch[1] : null),
     };
   });
 }
@@ -682,7 +761,7 @@ export async function resolveVerifiedDemandEvidence(
   } = {}
 ): Promise<VerifiedDemandEvidenceDescriptor> {
   if (!evidenceReference) {
-    return { verified: false, rejectionReason: "No evidenceReference provided." };
+    return { verified: false, rejectionReason: "No evidenceReference provided.", errorCode: "RECEIPT_NOT_FOUND" };
   }
 
   const ref = String(evidenceReference).trim();
@@ -707,25 +786,89 @@ export async function resolveVerifiedDemandEvidence(
       rawResponseSha256: hashMatch[1].toLowerCase(),
       verified: false,
       rejectionReason: `Referenced CSV file with checksum '${hashMatch[1].slice(0, 12)}...' does not exist or failed hash integrity.`,
+      errorCode: verified.exists ? "HASH_MISMATCH" : "MISSING_ARTIFACT",
     };
   }
 
   // 2. Check if matching ResearchEvidence exists in database
   if (context.productId || context.workspaceId) {
     try {
-      const match = await prisma.researchEvidence.findFirst({
-        where: {
-          productId: context.productId || undefined,
-          workspaceId: context.workspaceId || undefined,
-          observedValue: { contains: ref },
-        },
-      });
+      const reqMatch = ref.match(/^(?:provider-request|serpapi-request)(?::[^:]+)?:([a-zA-Z0-9_\-\.]+)/i);
+      const providerRequestId = reqMatch ? reqMatch[1] : null;
+
+      let match: any = null;
+      const bareHashMatch = ref.match(/\b([a-f0-9]{64})\b/i);
+      if (providerRequestId) {
+        match = await prisma.researchEvidence.findFirst({
+          where: {
+            id: providerRequestId,
+            productId: context.productId || undefined,
+            workspaceId: context.workspaceId || undefined,
+          },
+        });
+      }
+      if (!match && bareHashMatch) {
+        match = await prisma.researchEvidence.findFirst({
+          where: {
+            sourceContentRef: bareHashMatch[1].toLowerCase(),
+            productId: context.productId || undefined,
+            workspaceId: context.workspaceId || undefined,
+          },
+        });
+      }
+      if (!match && !providerRequestId && !bareHashMatch) {
+        match = await prisma.researchEvidence.findFirst({
+          where: {
+            id: ref,
+            productId: context.productId || undefined,
+            workspaceId: context.workspaceId || undefined,
+          },
+        });
+      }
+
       if (match) {
         const contentSha = match.sourceContentRef ? String(match.sourceContentRef).trim().toLowerCase() : "";
-        if (!/^[a-f0-9]{64}$/.test(contentSha)) {
+        if (!/^[a-f0-9]{64}$/.test(contentSha) || /^0{64}$/.test(contentSha)) {
           return {
             verified: false,
             rejectionReason: `Matching ResearchEvidence '${match.id}' lacks verified 64-hex SHA-256 raw response hash (sourceContentRef).`,
+            errorCode: "HASH_MISMATCH",
+          };
+        }
+
+        // Verify artifact on disk matching contentSha
+        const candidateJson = path.join(PROVIDER_RECEIPT_STORAGE_DIR, `${contentSha}.json`);
+        const candidateCsv = path.join(GOOGLE_TRENDS_CSV_STORAGE_DIR, `${contentSha}.csv`);
+        let artifactPath: string | null = null;
+        if (fs.existsSync(candidateJson)) {
+          artifactPath = candidateJson;
+        } else if (fs.existsSync(candidateCsv)) {
+          artifactPath = candidateCsv;
+        }
+
+        if (!artifactPath) {
+          return {
+            verified: false,
+            rejectionReason: `No raw response artifact found on disk matching SHA-256 digest '${contentSha}'.`,
+            errorCode: "MISSING_ARTIFACT",
+          };
+        }
+
+        if (fs.lstatSync(artifactPath).isSymbolicLink()) {
+          return {
+            verified: false,
+            rejectionReason: "Raw response artifact cannot be a symbolic link.",
+            errorCode: "MISSING_ARTIFACT",
+          };
+        }
+
+        const rawBytes = fs.readFileSync(artifactPath);
+        const computedSha = crypto.createHash("sha256").update(rawBytes).digest("hex").toLowerCase();
+        if (computedSha !== contentSha) {
+          return {
+            verified: false,
+            rejectionReason: `Raw artifact bytes SHA-256 ('${computedSha.slice(0, 12)}...') does not match sourceContentRef ('${contentSha.slice(0, 12)}...').`,
+            errorCode: "HASH_MISMATCH",
           };
         }
 
@@ -733,23 +876,59 @@ export async function resolveVerifiedDemandEvidence(
         try {
           parsedObs = match.observedValue ? JSON.parse(match.observedValue) : null;
         } catch {
-          // not json
-        }
-
-        if (parsedObs && parsedObs.status !== undefined && parsedObs.status !== 200) {
           return {
             verified: false,
-            rejectionReason: `Provider request failed with status ${parsedObs.status}.`,
+            rejectionReason: "ResearchEvidence observedValue is not valid JSON.",
+            errorCode: "RESPONSE_STATUS_INVALID",
           };
         }
 
-        if (parsedObs && context.keyword && parsedObs.targetKeyword) {
+        if (!parsedObs || typeof parsedObs !== "object") {
+          return {
+            verified: false,
+            rejectionReason: "ResearchEvidence observedValue missing or empty payload.",
+            errorCode: "RESPONSE_STATUS_INVALID",
+          };
+        }
+
+        if (parsedObs.status === undefined || parsedObs.status === null || parsedObs.status !== 200) {
+          return {
+            verified: false,
+            rejectionReason: `Provider request recorded non-200 status (${parsedObs.status}).`,
+            errorCode: "RESPONSE_STATUS_INVALID",
+          };
+        }
+
+        if (!parsedObs.region) {
+          return {
+            verified: false,
+            rejectionReason: "ResearchEvidence observedValue lacks explicit region.",
+            errorCode: "REGION_MISMATCH",
+          };
+        }
+        if (context.region && parsedObs.region.toUpperCase() !== context.region.toUpperCase()) {
+          return {
+            verified: false,
+            rejectionReason: `ResearchEvidence region '${parsedObs.region}' does not match context region '${context.region}'.`,
+            errorCode: "REGION_MISMATCH",
+          };
+        }
+
+        if (!parsedObs.targetKeyword) {
+          return {
+            verified: false,
+            rejectionReason: "ResearchEvidence observedValue lacks explicit targetKeyword.",
+            errorCode: "PRODUCT_MISMATCH",
+          };
+        }
+        if (context.keyword) {
           const normCtx = context.keyword.toLowerCase().trim();
           const normObs = String(parsedObs.targetKeyword).toLowerCase().trim();
-          if (!normCtx.includes(normObs) && !normObs.includes(normCtx)) {
+          if (normCtx !== normObs && !normCtx.includes(normObs) && !normObs.includes(normCtx)) {
             return {
               verified: false,
               rejectionReason: `ResearchEvidence targetKeyword '${normObs}' does not match context keyword '${normCtx}'.`,
+              errorCode: "PRODUCT_MISMATCH",
             };
           }
         }
@@ -759,9 +938,10 @@ export async function resolveVerifiedDemandEvidence(
           source: (match as any).sourceType || match.subjectType || "RESEARCH_EVIDENCE",
           capturedAt: (match as any).capturedAt || match.observedAt,
           rawResponseSha256: contentSha,
-          targetProductOrKeyword: parsedObs?.targetKeyword || context.keyword,
-          region: parsedObs?.region || context.region || "US",
-          responseStatus: 200,
+          artifactPath,
+          targetProductOrKeyword: parsedObs.targetKeyword,
+          region: parsedObs.region,
+          responseStatus: parsedObs.status,
           verified: true,
         };
       }
@@ -774,6 +954,7 @@ export async function resolveVerifiedDemandEvidence(
   return {
     verified: false,
     rejectionReason: `Evidence reference '${ref}' is an unverified string claim without an immutable provider receipt or storage artifact.`,
+    errorCode: "RECEIPT_NOT_FOUND",
   };
 }
 
@@ -971,17 +1152,52 @@ export function evaluateDemandHistoryEvidence(
   const medianDelta = deltas.length > 0 ? deltas[Math.floor(deltas.length / 2)] : 7;
 
   // 1. Determine sampling cadence from source metadata or policy
-  let metadataCadence: "DAILY" | "WEEKLY" | "MONTHLY" | null = null;
+  const observedCadences = new Set<"DAILY" | "WEEKLY" | "MONTHLY">();
   for (const v of valid) {
     const cadMatch = v.evidenceReference?.match(/:cadence=(DAILY|WEEKLY|MONTHLY)\b/i);
     if (cadMatch) {
-      metadataCadence = cadMatch[1].toUpperCase() as any;
-      break;
+      observedCadences.add(cadMatch[1].toUpperCase() as any);
     }
     if ((v as any).sourceCadence && /^(DAILY|WEEKLY|MONTHLY)$/i.test((v as any).sourceCadence)) {
-      metadataCadence = String((v as any).sourceCadence).toUpperCase() as any;
-      break;
+      observedCadences.add(String((v as any).sourceCadence).toUpperCase() as any);
     }
+  }
+
+  if (observedCadences.size > 1) {
+    const conflictExpl = `Demand series contains conflicting source cadences (${Array.from(observedCadences).join(", ")}); unverified cadence mixing is prohibited.`;
+    missingEvidence.push(conflictExpl);
+    return {
+      status: "INSUFFICIENT_HISTORY",
+      eligibleForEvergreen: false,
+      dataPointsCount: valid.length,
+      distinctObservationDatesCount: seenDates.size,
+      coveredDays,
+      meanInterest: null,
+      stdDev: null,
+      coefficientOfVariation: null,
+      demandClass: "INSUFFICIENT_HISTORY",
+      sourceAuthority: authorityEval.authority,
+      temporalCoverageValid: false,
+      productAttributionValid: authorityEval.productAttributionValid && regionMismatchCount === 0,
+      demandObservationIds,
+      calculationVersion: "12.4.3.3",
+      explanation: conflictExpl,
+      missingEvidence,
+      evaluatedAt,
+      expectedCadence: "SPARSE",
+      maxGapDays,
+      coverageRatio: 0,
+      qualifiedPeriods: valid.length,
+      sourceProvenanceStatus: authorityEval.authority,
+    };
+  }
+
+  let metadataCadence: "DAILY" | "WEEKLY" | "MONTHLY" | null =
+    observedCadences.size === 1 ? Array.from(observedCadences)[0] : null;
+
+  // Protect against caller-forged :cadence=MONTHLY on empirical weekly intervals
+  if (metadataCadence === "MONTHLY" && medianDelta <= 14) {
+    metadataCadence = "WEEKLY";
   }
 
   let detectedCadence: "DAILY" | "WEEKLY" | "MONTHLY" | "SPARSE" = "WEEKLY";
