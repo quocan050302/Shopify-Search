@@ -5,6 +5,7 @@
   "branch": "feature/kh02-walmart-us-jina-reader-v12.4.3.5.1",
   "baselineReviewHeadSha": "5873a3ee15b83b48de23792e57788cc6b6522240",
   "priorCodeCommitSha": "360e986d97494017974d678b5026bb224dd505b8",
+  "testedCodeCommitSha": "d7f1df63f52d7af7bbc6f85575e698025f1ae483",
   "engineeringVerdict": "PASS",
   "engineeringGates": {
     "typeScriptNoEmit": "PASS (0 errors)",
