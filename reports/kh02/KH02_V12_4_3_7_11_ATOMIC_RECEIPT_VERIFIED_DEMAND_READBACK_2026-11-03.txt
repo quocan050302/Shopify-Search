@@ -89,3 +89,4 @@ Branch: feature/kh02-walmart-us-jina-reader-v12.4.3.5.1
   2) Configure authorized SerpApi credentials or BigQuery sandbox for live longitudinal Google Trends fetching.
   3) Run live end-to-end pipeline under active network credentials to substantiate G15/G16 business verification.
 =========================================================================================
+
