@@ -152,6 +152,7 @@ export interface EvergreenLeaderboardResult {
     brandOnlyMatches: number;
     rejectedCreatives: number;
     unmatchedCreatives: number;
+    quarantinedCount?: number;
     associationMismatchDetected?: boolean;
     associationMismatchReason?: string | null;
     creativeAssociationLedger: Array<any>;
@@ -1299,19 +1300,43 @@ export async function runEvergreenProductResearch(
               })
           );
           sourceStatuses.GOOGLE_ADS = googleResult.status;
-          const googleRawCreativesExplicitZero =
+          const rawCreativesCount =
+            googleResult.enrichmentExecution?.creativesReturned ??
+            googleResult.enrichmentExecution?.creativesRetrievedCount ??
+            (Array.isArray(googleResult.enrichmentExecution?.rawCreatives)
+              ? googleResult.enrichmentExecution.rawCreatives.length
+              : 0);
+
+          const isZeroRawMismatch =
             Boolean(googleResult.enrichmentExecution) &&
-            (googleResult.enrichmentExecution.creativesReturned === 0 ||
-              (Array.isArray(googleResult.enrichmentExecution.rawCreatives) &&
-                googleResult.enrichmentExecution.rawCreatives.length === 0 &&
-                (googleResult.enrichmentExecution.creativesReturned ?? 0) === 0));
-          if (googleRawCreativesExplicitZero && googleResult.observations.length > 0) {
+            rawCreativesCount === 0 &&
+            googleResult.observations.length > 0;
+
+          const acceptedGoogleObservations: SourceObservation[] = isZeroRawMismatch
+            ? []
+            : googleResult.observations;
+          const quarantinedGoogleObservations: SourceObservation[] = isZeroRawMismatch
+            ? [...googleResult.observations]
+            : [];
+
+          if (isZeroRawMismatch) {
             const mismatchMsg = `GOOGLE_ZERO_RAW_NONZERO_OBSERVATIONS_MISMATCH: rawCreatives=0 while googleResult.observations=${googleResult.observations.length}; quarantined unbacked observations.`;
             warnings.push(mismatchMsg);
             if (googleResult.enrichmentExecution) {
               (googleResult.enrichmentExecution as any).associationMismatchDetected = true;
               (googleResult.enrichmentExecution as any).associationMismatchReason = mismatchMsg;
+              (googleResult.enrichmentExecution as any).quarantinedObservationsCount = quarantinedGoogleObservations.length;
+              (googleResult.enrichmentExecution as any).normalizedObservations = 0;
+              (googleResult.enrichmentExecution as any).productLevelMatches = 0;
+              (googleResult.enrichmentExecution as any).brandLevelMatches = 0;
+              (googleResult.enrichmentExecution as any).creativesReturned = 0;
+              (googleResult.enrichmentExecution as any).creativesRetrievedCount = 0;
+              (googleResult.enrichmentExecution as any).creativeAssociationLedger = [];
             }
+            googleResult.observations = [];
+            googleResult.retrievedCount = 0;
+            googleResult.acceptedCount = 0;
+            sourceStatuses.GOOGLE_ADS = "QUERY_SUCCEEDED_EMPTY";
           } else {
             secondaryObservations.push(...googleResult.observations);
           }
@@ -1324,26 +1349,28 @@ export async function runEvergreenProductResearch(
             googleResult.status === "QUERY_SUCCEEDED_EMPTY" ||
             googleResult.status === "QUERY_FAILED" ||
             Boolean(googleResult.enrichmentExecution && (googleResult.enrichmentExecution.domainsAttempted ?? 0) > 0);
-          const isSuccess = googleResult.status === "PASSED" || googleResult.status === "QUERY_SUCCEEDED_EMPTY";
-          const googleLiveObs = googleResult.observations.filter(
+          const isSuccess =
+            (googleResult.status === "PASSED" || googleResult.status === "QUERY_SUCCEEDED_EMPTY") &&
+            !isZeroRawMismatch;
+          const googleLiveObs = acceptedGoogleObservations.filter(
             (o) => o.provenance === "LIVE_PROVIDER" || o.provenance === "REAL_UPSTREAM"
           );
           const isTrulyLive = isSuccess && googleLiveObs.length > 0;
           const liveProvenance: ObservationProvenance = isTrulyLive
             ? "LIVE_PROVIDER"
-            : (googleResult.observations.length > 0 ? "CACHED_SOURCE" : "NONE");
+            : (acceptedGoogleObservations.length > 0 ? "CACHED_SOURCE" : "NONE");
 
           providerTelemetry.GOOGLE_ADS = {
             source: "GOOGLE_ADS",
             queryExecuted: isExecuted,
-            queryStatus: googleResult.status,
+            queryStatus: isZeroRawMismatch ? "QUERY_SUCCEEDED_EMPTY" : googleResult.status,
             queryTimestamp: isExecuted ? googleNow : null,
-            retrievedCount: isSuccess ? googleResult.retrievedCount : null,
-            acceptedCount: isSuccess ? googleResult.acceptedCount : null,
+            retrievedCount: isZeroRawMismatch ? 0 : (isSuccess ? googleResult.retrievedCount : null),
+            acceptedCount: isZeroRawMismatch ? 0 : (isSuccess ? googleResult.acceptedCount : null),
             queryProvenance: liveProvenance,
             isLive: isTrulyLive,
             queryError: googleError,
-            lastSuccessfulRecordCount: isSuccess ? googleResult.retrievedCount : null,
+            lastSuccessfulRecordCount: isZeroRawMismatch ? 0 : (isSuccess ? googleResult.retrievedCount : null),
             lastSuccessfulQueryAt: isSuccess ? googleNow : null,
             enrichmentExecution: googleResult.enrichmentExecution,
           };
@@ -2412,45 +2439,53 @@ export async function runEvergreenProductResearch(
       },
     },
     googleAds: {
-      rawCreativesCount:
-        providerTelemetry.GOOGLE_ADS?.enrichmentExecution?.creativesReturned ??
-        providerTelemetry.GOOGLE_ADS?.enrichmentExecution?.creativesRetrievedCount ??
-        (Array.isArray(providerTelemetry.GOOGLE_ADS?.enrichmentExecution?.rawCreatives)
-          ? providerTelemetry.GOOGLE_ADS.enrichmentExecution.rawCreatives.length
-          : providerTelemetry.GOOGLE_ADS?.enrichmentExecution?.creativeAssociationLedger?.length || 0),
-      persistedCreativesCount:
-        providerTelemetry.GOOGLE_ADS?.enrichmentExecution?.normalizedObservations ??
-        (providerTelemetry.GOOGLE_ADS?.enrichmentExecution?.creativeAssociationLedger?.length || 0),
-      totalCreativesFound:
-        providerTelemetry.GOOGLE_ADS?.enrichmentExecution?.creativesReturned ??
-        providerTelemetry.GOOGLE_ADS?.enrichmentExecution?.creativesRetrievedCount ??
-        providerTelemetry.GOOGLE_ADS?.enrichmentExecution?.totalCreativesFound ??
-        (providerTelemetry.GOOGLE_ADS?.enrichmentExecution?.creativeAssociationLedger?.length || 0),
-      exactProductMatches:
-        providerTelemetry.GOOGLE_ADS?.enrichmentExecution?.productAssociatedCount ?? 0,
-      probableProductMatches:
-        providerTelemetry.GOOGLE_ADS?.enrichmentExecution?.probableProductMatches ??
-        (
-          providerTelemetry.GOOGLE_ADS?.enrichmentExecution?.creativeAssociationLedger || []
-        ).filter(
-          (l: any) =>
-            l.associationVerdict === "PROBABLE_PRODUCT_MATCH" ||
-            l.associationClassification === "PROBABLE_PRODUCT_MATCH" ||
-            l.associationType === "PROBABLE_PRODUCT_MATCH"
-        ).length,
-      brandOnlyMatches:
-        providerTelemetry.GOOGLE_ADS?.enrichmentExecution?.brandOnlyCount ?? 0,
+      rawCreativesCount: Boolean((providerTelemetry.GOOGLE_ADS?.enrichmentExecution as any)?.associationMismatchDetected)
+        ? 0
+        : (providerTelemetry.GOOGLE_ADS?.enrichmentExecution?.creativesReturned ??
+          providerTelemetry.GOOGLE_ADS?.enrichmentExecution?.creativesRetrievedCount ??
+          (Array.isArray(providerTelemetry.GOOGLE_ADS?.enrichmentExecution?.rawCreatives)
+            ? providerTelemetry.GOOGLE_ADS.enrichmentExecution.rawCreatives.length
+            : providerTelemetry.GOOGLE_ADS?.enrichmentExecution?.creativeAssociationLedger?.length || 0)),
+      persistedCreativesCount: Boolean((providerTelemetry.GOOGLE_ADS?.enrichmentExecution as any)?.associationMismatchDetected)
+        ? 0
+        : (providerTelemetry.GOOGLE_ADS?.enrichmentExecution?.normalizedObservations ??
+          (providerTelemetry.GOOGLE_ADS?.enrichmentExecution?.creativeAssociationLedger?.length || 0)),
+      totalCreativesFound: Boolean((providerTelemetry.GOOGLE_ADS?.enrichmentExecution as any)?.associationMismatchDetected)
+        ? 0
+        : (providerTelemetry.GOOGLE_ADS?.enrichmentExecution?.creativesReturned ??
+          providerTelemetry.GOOGLE_ADS?.enrichmentExecution?.creativesRetrievedCount ??
+          providerTelemetry.GOOGLE_ADS?.enrichmentExecution?.totalCreativesFound ??
+          (providerTelemetry.GOOGLE_ADS?.enrichmentExecution?.creativeAssociationLedger?.length || 0)),
+      exactProductMatches: Boolean((providerTelemetry.GOOGLE_ADS?.enrichmentExecution as any)?.associationMismatchDetected)
+        ? 0
+        : (providerTelemetry.GOOGLE_ADS?.enrichmentExecution?.productAssociatedCount ?? 0),
+      probableProductMatches: Boolean((providerTelemetry.GOOGLE_ADS?.enrichmentExecution as any)?.associationMismatchDetected)
+        ? 0
+        : (providerTelemetry.GOOGLE_ADS?.enrichmentExecution?.probableProductMatches ??
+          (
+            providerTelemetry.GOOGLE_ADS?.enrichmentExecution?.creativeAssociationLedger || []
+          ).filter(
+            (l: any) =>
+              l.associationVerdict === "PROBABLE_PRODUCT_MATCH" ||
+              l.associationClassification === "PROBABLE_PRODUCT_MATCH" ||
+              l.associationType === "PROBABLE_PRODUCT_MATCH"
+          ).length),
+      brandOnlyMatches: Boolean((providerTelemetry.GOOGLE_ADS?.enrichmentExecution as any)?.associationMismatchDetected)
+        ? 0
+        : (providerTelemetry.GOOGLE_ADS?.enrichmentExecution?.brandOnlyCount ?? 0),
       rejectedCreatives:
         providerTelemetry.GOOGLE_ADS?.enrichmentExecution?.rejectedCount ?? 0,
       unmatchedCreatives:
         providerTelemetry.GOOGLE_ADS?.enrichmentExecution?.unmatchedCount ?? 0,
+      quarantinedCount: Number((providerTelemetry.GOOGLE_ADS?.enrichmentExecution as any)?.quarantinedObservationsCount || 0),
       associationMismatchDetected: Boolean(
         (providerTelemetry.GOOGLE_ADS?.enrichmentExecution as any)?.associationMismatchDetected
       ),
       associationMismatchReason:
         (providerTelemetry.GOOGLE_ADS?.enrichmentExecution as any)?.associationMismatchReason ?? null,
-      creativeAssociationLedger:
-        providerTelemetry.GOOGLE_ADS?.enrichmentExecution?.creativeAssociationLedger ?? [],
+      creativeAssociationLedger: Boolean((providerTelemetry.GOOGLE_ADS?.enrichmentExecution as any)?.associationMismatchDetected)
+        ? []
+        : (providerTelemetry.GOOGLE_ADS?.enrichmentExecution?.creativeAssociationLedger ?? []),
     },
     marketplaceEvidence: amazonEnrichment.marketplaceEvidence,
     marketplaceTelemetry: amazonEnrichment.marketplaceTelemetry,

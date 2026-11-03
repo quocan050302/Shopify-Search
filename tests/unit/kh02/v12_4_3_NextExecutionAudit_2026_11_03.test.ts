@@ -451,7 +451,7 @@ describe("KH-02 V12.4.3 Next Execution Audit Suite (2026-11-03)", () => {
       );
       expect(broadTermSeries.eligibleForEvergreen).toBe(false);
 
-      // 4. Positive: >= 3 distinct dates spanning >= 60 days for product-specific term in US from authoritative source
+      // 4. Positive: continuous observation series spanning >= 60 days for product-specific term in US from authoritative source
       const validProductDemand = evaluateDemandHistoryEvidence(
         [
           {
@@ -466,8 +466,28 @@ describe("KH-02 V12.4.3 Next Execution Audit Suite (2026-11-03)", () => {
           },
           {
             id: "obs_v2",
-            periodStart: "2026-08-15T00:00:00.000Z",
+            periodStart: "2026-07-15T00:00:00.000Z",
+            demandValue: 66,
+            region: "US",
+            source: "GOOGLE_TRENDS_LIVE",
+            keyword: "uahpet wireless cat water fountain",
+            evidenceReference: "serpapi:google_trends:uahpet:2026-07-15",
+            methodologyVersion: "serpapi_google_trends_live_v1",
+          },
+          {
+            id: "obs_v3",
+            periodStart: "2026-08-01T00:00:00.000Z",
             demandValue: 68,
+            region: "US",
+            source: "GOOGLE_TRENDS_LIVE",
+            keyword: "uahpet wireless cat water fountain",
+            evidenceReference: "serpapi:google_trends:uahpet:2026-08-01",
+            methodologyVersion: "serpapi_google_trends_live_v1",
+          },
+          {
+            id: "obs_v4",
+            periodStart: "2026-08-15T00:00:00.000Z",
+            demandValue: 67,
             region: "US",
             source: "GOOGLE_TRENDS_LIVE",
             keyword: "uahpet wireless cat water fountain",
@@ -475,13 +495,23 @@ describe("KH-02 V12.4.3 Next Execution Audit Suite (2026-11-03)", () => {
             methodologyVersion: "serpapi_google_trends_live_v1",
           },
           {
-            id: "obs_v3",
-            periodStart: "2026-10-01T00:00:00.000Z",
+            id: "obs_v5",
+            periodStart: "2026-09-01T00:00:00.000Z",
+            demandValue: 70,
+            region: "US",
+            source: "GOOGLE_TRENDS_LIVE",
+            keyword: "uahpet wireless cat water fountain",
+            evidenceReference: "serpapi:google_trends:uahpet:2026-09-01",
+            methodologyVersion: "serpapi_google_trends_live_v1",
+          },
+          {
+            id: "obs_v6",
+            periodStart: "2026-09-15T00:00:00.000Z",
             demandValue: 71,
             region: "US",
             source: "GOOGLE_TRENDS_LIVE",
             keyword: "uahpet wireless cat water fountain",
-            evidenceReference: "serpapi:google_trends:uahpet:2026-10-01",
+            evidenceReference: "serpapi:google_trends:uahpet:2026-09-15",
             methodologyVersion: "serpapi_google_trends_live_v1",
           },
         ],

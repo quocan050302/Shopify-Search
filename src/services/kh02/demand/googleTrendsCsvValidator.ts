@@ -43,16 +43,32 @@ export function verifyStoredCsvFile(sha256Checksum: string): {
   if (!sha256Checksum || typeof sha256Checksum !== "string" || sha256Checksum.length < 16) {
     return { exists: false, validHash: false, filePath: null };
   }
-  let filePath = path.join(GOOGLE_TRENDS_CSV_STORAGE_DIR, `${sha256Checksum}.csv`);
-  if (!fs.existsSync(filePath)) {
-    if (sha256Checksum.length >= 16 && fs.existsSync(GOOGLE_TRENDS_CSV_STORAGE_DIR)) {
+
+  // Path traversal & non-hex injection protection (Bug P0-A requirement A7)
+  const cleanChecksum = sha256Checksum.trim().toLowerCase();
+  if (!/^[a-f0-9]{16,64}$/.test(cleanChecksum)) {
+    return { exists: false, validHash: false, filePath: null };
+  }
+
+  const storageDirResolved = path.resolve(GOOGLE_TRENDS_CSV_STORAGE_DIR);
+  let filePath = path.join(storageDirResolved, `${cleanChecksum}.csv`);
+  const resolvedPath = path.resolve(filePath);
+  if (!resolvedPath.startsWith(storageDirResolved + path.sep)) {
+    return { exists: false, validHash: false, filePath: null };
+  }
+
+  if (!fs.existsSync(resolvedPath)) {
+    if (fs.existsSync(storageDirResolved)) {
       try {
-        const files = fs.readdirSync(GOOGLE_TRENDS_CSV_STORAGE_DIR);
+        const files = fs.readdirSync(storageDirResolved);
         const prefixMatch = files.find(
-          (f) => f.startsWith(sha256Checksum) && f.endsWith(".csv")
+          (f) => f.startsWith(cleanChecksum) && f.endsWith(".csv")
         );
         if (prefixMatch) {
-          filePath = path.join(GOOGLE_TRENDS_CSV_STORAGE_DIR, prefixMatch);
+          filePath = path.join(storageDirResolved, prefixMatch);
+          if (!path.resolve(filePath).startsWith(storageDirResolved + path.sep)) {
+            return { exists: false, validHash: false, filePath: null };
+          }
         } else {
           return { exists: false, validHash: false, filePath: null };
         }
@@ -63,12 +79,13 @@ export function verifyStoredCsvFile(sha256Checksum: string): {
       return { exists: false, validHash: false, filePath: null };
     }
   }
+
   try {
     const bytes = fs.readFileSync(filePath, "utf8");
     const computedHash = createHash("sha256").update(bytes, "utf8").digest("hex");
     const validHash =
-      computedHash === sha256Checksum ||
-      (sha256Checksum.length < 64 && computedHash.startsWith(sha256Checksum));
+      computedHash === cleanChecksum ||
+      (cleanChecksum.length < 64 && computedHash.startsWith(cleanChecksum));
     return {
       exists: true,
       validHash,

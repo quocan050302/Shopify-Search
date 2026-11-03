@@ -263,11 +263,16 @@ export function buildBuyerOrientedWhyItFits(
       ? rawProblem.replace(/\.+$/, "")
       : null;
 
+  const linkedAdsCount = Array.isArray(candidate.supportingAdIds)
+    ? candidate.supportingAdIds.length
+    : 0;
   const provenanceClause = merchantPageVerified
     ? `verified on ${candidate.storeDomain || "the merchant storefront"}`
-    : `supported by ${
-        candidate.supportingAdIds?.length || 1
-      } linked advertising creative(s)${
+    : linkedAdsCount > 0
+    ? `supported by ${linkedAdsCount} linked advertising creative(s)${
+        candidate.storeDomain ? ` for ${candidate.storeDomain}` : ""
+      }`
+    : `discovered from product signals${
         candidate.storeDomain ? ` for ${candidate.storeDomain}` : ""
       }`;
 
@@ -483,17 +488,17 @@ export function buildCanonicalRecommendedProducts(
       obsArray.length - currentRunLiveAdsCount
     );
     const supportingAdCount =
-      (Array.isArray(candidate.supportingAdIds) && candidate.supportingAdIds.length > 0
+      Array.isArray(candidate.supportingAdIds) && candidate.supportingAdIds.length > 0
         ? candidate.supportingAdIds.length
-        : obsArray.length) || 1;
+        : obsArray.length;
     const obsCount = Math.max(
       supportingAdCount,
-      candidate.totalObservationCount || obsArray.length || 1
+      candidate.totalObservationCount || obsArray.length || 0
     );
     const distinctAdvertisersCount =
       candidate.distinctAdvertisersCount ||
-      (Array.isArray(candidate.advertiserNames) ? candidate.advertiserNames.length : 1) ||
-      1;
+      (Array.isArray(candidate.advertiserNames) ? candidate.advertiserNames.length : 0) ||
+      (supportingAdCount > 0 ? 1 : 0);
 
     let qualificationBadgeLabel = "Provisional · Needs Demand History";
     let qualificationTone: "emerald" | "amber" | "slate" = "slate";
@@ -512,8 +517,10 @@ export function buildCanonicalRecommendedProducts(
     const verifiedEvidenceItems: string[] = [];
     if (merchantPageVerified) {
       verifiedEvidenceItems.push("Merchant product page verified");
-    } else {
+    } else if (supportingAdCount > 0) {
       verifiedEvidenceItems.push("Ad-supported product (merchant page unverified)");
+    } else {
+      verifiedEvidenceItems.push("Candidate discovery only (merchant & ads unverified)");
     }
 
     if (
@@ -532,22 +539,35 @@ export function buildCanonicalRecommendedProducts(
                   ? "Meta Ads"
                   : s === "GOOGLE_ADS_TRANSPARENCY" || s === "GOOGLE_ADS"
                   ? "Google Ads"
+                  : s === "AMAZON_US" || s === "AMAZON"
+                  ? "Amazon US"
+                  : s === "WALMART_US" || s === "WALMART"
+                  ? "Walmart US"
+                  : s === "TIKTOK_ADS"
+                  ? "TikTok Ads"
+                  : s === "TIKTOK_ORGANIC"
+                  ? "TikTok Organic"
                   : String(s)
               )
             )
           )
-        : ["Meta Ads"];
+        : [];
 
     if (currentRunLiveAdsCount > 0) {
       verifiedEvidenceItems.push(
         `Live ads observed (${currentRunLiveAdsCount} in current run)`
       );
     }
-    verifiedEvidenceItems.push(
-      `Historical advertising observations: ${supportingAdCount} distinct ad${
-        supportingAdCount === 1 ? "" : "s"
-      } · ${obsCount} total obs (${sources.join(", ")})`
-    );
+    if (obsCount > 0 || supportingAdCount > 0) {
+      const sourceStr = sources.length > 0 ? ` (${sources.join(", ")})` : "";
+      verifiedEvidenceItems.push(
+        `Historical advertising observations: ${supportingAdCount} distinct ad${
+          supportingAdCount === 1 ? "" : "s"
+        } · ${obsCount} total obs${sourceStr}`
+      );
+    } else {
+      verifiedEvidenceItems.push("No verified advertising observations");
+    }
 
     if (candidate.aiIntelligence?.aiExecuted) {
       verifiedEvidenceItems.push("AI product classification verified");
@@ -652,7 +672,7 @@ export function buildCanonicalRecommendedProducts(
       currentRunLiveAdsCount,
       currentRunCachedAdsCount,
       distinctAdvertisersCount,
-      supportingSources: sources,
+      supportingSources: sources.length > 0 ? sources : ["No Verified Source"],
       audienceBadgeLabel: audience.label,
       audienceFitStatus: audience.status,
       whyItMatters,
@@ -795,11 +815,19 @@ export function buildAllCandidatesExplorerList(
                   ? "Meta Ads"
                   : s === "GOOGLE_ADS_TRANSPARENCY" || s === "GOOGLE_ADS"
                   ? "Google Ads"
+                  : s === "AMAZON_US" || s === "AMAZON"
+                  ? "Amazon US"
+                  : s === "WALMART_US" || s === "WALMART"
+                  ? "Walmart US"
+                  : s === "TIKTOK_ADS"
+                  ? "TikTok Ads"
+                  : s === "TIKTOK_ORGANIC"
+                  ? "TikTok Organic"
                   : String(s)
               )
             )
           )
-        : ["Meta Ads"];
+        : [];
 
     const plainEnglishReason =
       explorerStatus === "EXCLUDED"
@@ -872,8 +900,8 @@ export function buildAllCandidatesExplorerList(
         rankedItem?.score?.evidenceConfidence ??
         Math.round((Number(candidate.identityConfidence) || 0.5) * 100),
       observationCount:
-        candidate.totalObservationCount || candidate.supportingAdIds?.length || 1,
-      supportingSources: sources,
+        candidate.totalObservationCount || candidate.supportingAdIds?.length || 0,
+      supportingSources: sources.length > 0 ? sources : ["No Verified Source"],
       plainEnglishReason,
       rejectionReasonCode: candidate.rejectionDetail?.reasonCode || null,
       researchProductId: candidate.researchProductId || null,
