@@ -1,0 +1,165 @@
+==========================================================================================
+KH-02 V12.4.3.7.15 — HMAC TRUST BOUNDARY & ATTESTATION PATH HARDENING AUDIT
+Date: 2026-11-04 (Asia/Ho_Chi_Minh) | Repository: quocan050302/Shopify-Search
+Locked Branch: feature/kh02-walmart-us-jina-reader-v12.4.3.5.1
+==========================================================================================
+
+1. GIT BASELINE, BRANCH LOCK & COMMIT PARITY
+------------------------------------------------------------------------------------------
+- Repository: quocan050302/Shopify-Search
+- Working Root: D:\Project_github\Running-Ads
+- Locked Branch: feature/kh02-walmart-us-jina-reader-v12.4.3.5.1
+- Baseline Remote HEAD: b9a30ada3290b81466dfa4bf407b10b35cb67908
+- Ancestry Verification: Direct continuation on locked branch (no merge, rebase, or reset)
+- Uncommitted Runtime Artifacts Staged: 0 (.lock, .tmp, ledger files excluded via .gitignore)
+- Sentinel Provider Receipts Preserved: 5/5 files bitwise identical to baseline
+
+2. ARCHITECTURAL VULNERABILITIES & PRODUCTION CODE FIXES (V12.4.3.7.15)
+------------------------------------------------------------------------------------------
+[P0-A] Exported Live Attestation Issuer & Circular Minting Elimination
+- Root Cause:
+  `issueTrustedTransportAttestation` was publicly exported and accepted caller-supplied parameters
+  (rawBytes, receiptId, attemptId, endpoint, status, isTestSimulation? defaulting to false).
+  Any external caller or test utility could invoke it to mint `captureMethod: "NATIVE_HTTPS_FETCH"`
+  and `testOrSimulated: false` attestations without proving actual transport execution by a live collector.
+- Code Fix:
+  1) Public Issuer Demotion: `issueTrustedTransportAttestation` is permanently demoted to only mint
+     `captureMethod: "SIMULATED_TEST_TRANSPORT"` and `testOrSimulated: true`. It is blocked from ever
+     registering into `trustedInvocationsRegistry` or minting live origin claims.
+  2) Private Collector-Bound Issuer: Created private `mintInternalLiveTransportAttestation(params, invocationProof)`
+     inside `temporalDemandEngine.ts`. It strictly requires an active, non-simulated `TrustedInvocationProof`,
+     verifies the endpoint against the allowlist (`https://serpapi.com/search.json`), and signs only with
+     a genuine production key.
+  3) Production Transport Binding: `executeTrustedSerpApiDemandRequest` directly calls
+     `mintInternalLiveTransportAttestation` immediately after receiving a real HTTP Response, binding
+     the exact attemptId, raw SHA-256, HTTP status, endpoint, and invocation proof.
+
+[P0-B] Secret Isolation & Test Key Guarding
+- Root Cause:
+  `getProvenanceSigningKey()` exported the raw signing secret, and `setProvenanceSigningKeyForTest()`
+  allowed arbitrary callers to set in-memory signing keys without checking environment boundaries.
+  Test-signed attestations could potentially be passed off as live origin evidence.
+- Code Fix:
+  1) Production Secret Isolation: `setProvenanceSigningKeyForTest` immediately throws `SECURITY_VIOLATION`
+     if `NODE_ENV === "production"`.
+  2) Non-Leaking Key Inspection: Public `getProvenanceSigningKey()` returns `{ keyConfigured, keyId, isTestKey }`
+     without exposing the raw secret string. Secret access is restricted to private `getInternalProvenanceSigningSecret()`.
+  3) Fail-Closed Test Key Demotion: In `verifyDurableTransportAttestation` and `resolveVerifiedDemandEvidence`,
+     when `strictLiveOrigin: true` is requested, attestations signed with test keys (`test_key_v1` or
+     `isTestKey: true`) are strictly rejected with `ORIGIN_UNVERIFIED` and `eligible: false`.
+
+[P1-C] Attestation Storage Path Sanitization & Symlink / Conflict Protection
+- Root Cause:
+  Attestation persistence and loading used raw `receiptId` strings in file path construction without
+  sanitization, exposing the system to directory traversal (`../`), symlink following, or Windows device names.
+- Code Fix:
+  1) Strict Attestation ID Validation: `validateAndSanitizeAttestationId` allows only `[a-zA-Z0-9_-]{1,128}`
+     and explicitly rejects path separators (`/`, `\`), traversal (`..`), colons, control characters,
+     and reserved Windows device names (`CON`, `PRN`, `AUX`, `NUL`, `COM1-9`, `LPT1-9`).
+  2) Path Traversal & Symlink Guarding: `resolveSafeAttestationPath` verifies that the resolved path stays
+     strictly inside the canonical attestation directory. `lstatSync` is used to detect and reject symlinks.
+  3) Atomic Multi-Process Persistence: `persistTransportAttestationAtomically` acquires an exclusive file lock,
+     performs deep identity conflict checks against existing files (comparing raw SHA-256, upstream ID,
+     capture method, and signature), writes atomically to a `.tmp` file with `fsync`, and renames into place.
+
+[P1-D] Canonical Serialization Schema 2.0 Injective Encoding
+- Root Cause:
+  Schema 1.0 used pipe-delimited (`|`) field concatenation, which was theoretically susceptible to delimiter
+  injection if field values contained pipe characters.
+- Code Fix:
+  1) Domain Separator: Schema 2.0 uses domain separator `SWAI_KH02_ATTESTATION_V2\n`.
+  2) Injective Length-Prefixed Serialization: Encodes fields with explicit length prefixes:
+     `${k.length}:${k}=${vBuf.length}:${v}\n` with sorted keys and Unicode NFC normalization.
+  3) Constant-Time Verification: Signatures are verified using `crypto.timingSafeEqual` over 64-hex SHA-256 HMACs.
+  4) Backward-Compatible Parsing: Legacy Schema 1.0 remains readable for historical replay, but Schema 2.0
+     is strictly required for all new attestations and mandatory under `strictLiveOrigin: true`.
+
+[P1-E] Fail-Closed Business Gates (G06, G07, G15, G16)
+- Guarantees:
+  Zero false PASS. Offline, test-signed, or simulated attestations are permanently blocked from elevating
+  business gates G06 (Google Ads), G07 (TikTok Ads), G15 (Longitudinal Demand), and G16 (Top-3 Winning Products).
+  All missing or test-key receipts resolve to `ORIGIN_UNVERIFIED`, `INSUFFICIENT_HISTORICAL_EVIDENCE`, or `BLOCKED`.
+
+[P1-F] Harness Synchronization & Multi-Process Verification
+- Code Fix:
+  `tests/support/kh02TestProvenanceHarness.ts` updated to construct valid Schema 2.0 attestations signed with
+  explicit test key `test_key_v1`. Multi-process concurrency tests (T26, T27) verified real OS child processes
+  safely persist attestations under atomic locking with zero lost updates.
+
+3. VERIFICATION MATRIX & TEST EXECUTION RESULTS
+------------------------------------------------------------------------------------------
+Gate S0: Static Analysis & Clean Hygiene
+- `npx tsc --noEmit`: PASS (0 errors, clean build)
+- `git diff --check`: PASS (0 trailing whitespace, 0 merge markers)
+
+Gate S1: Targeted V15 Suite (`tests/unit/kh02/v12_4_3_7_15_HmacTrustPathHardening.test.ts`)
+- Command: `npx vitest run tests/unit/kh02/v12_4_3_7_15_HmacTrustPathHardening.test.ts`
+- Result: PASS (35/35 tests in 3.42s)
+  - Part 1: Exported Issuer Lockdown & Circular Minting Elimination (T01 - T06): 6/6 PASS
+  - Part 2: Signing Key Security & Production Secret Isolation (T07 - T12): 6/6 PASS
+  - Part 3: Injective Schema 2.0 Canonical Serialization (T13 - T18): 6/6 PASS
+  - Part 4: Storage Path Sanitization & Symlink / Conflict Protection (T19 - T24): 6/6 PASS
+  - Part 5: Multi-Process Concurrency & Process Restart Durability (T25 - T30): 6/6 PASS
+  - Part 6: Positive Invariants & Fail-Closed Gate Proofs (P01 - P05): 5/5 PASS
+
+Gate S2: Combined Core Provenance Suites (6 suites)
+- Command: `npx vitest run tests/unit/kh02/v12_4_3_7_15* tests/unit/kh02/v12_4_3_7_14* tests/unit/kh02/v12_4_3_7_13* tests/unit/kh02/v12_4_3_7_12* tests/unit/kh02/v12_4_3_7_11* tests/unit/kh02/v12_4_3_7_10*`
+- Result: PASS (255/255 tests across 6 files, 64.17s)
+  - V15 (HmacTrustPathHardening): 35/35 PASS
+  - V14 (TrustedProofIsolationDurableRecovery): 60/60 PASS
+  - V13 (UnforgeableCollectorUnifiedEligibility): 56/56 PASS
+  - V12 (EvidenceEligibilityFencing): 40/40 PASS
+  - V11 (AtomicReceiptCommitReadback): 36/36 PASS
+  - V10 (RealCollectorAtomicLedger): 28/28 PASS
+
+Gate S3: Full KH-02 Unit Suite
+- Command: `npx vitest run tests/unit/kh02 --no-file-parallelism`
+- Result: PASS (1564/1564 tests across 67 test files, 157.02s)
+
+Gate S4: Full KH-02 Integration Suite
+- Command: `npx vitest run tests/integration/kh02`
+- Result: PASS (33/33 tests across 9 test files, 55.43s)
+  - `kh02BrowserAcceptance.test.ts`: PASS (1/1 Chromium E2E)
+  - `kh02HttpServerE2E.test.ts`: PASS (6/6 HTTP route handlers)
+  - `kh02WalmartUsJinaIntegrationV12_4_3_5_1.test.ts`: PASS (6/6)
+  - `kh02V12_1_3_Acceptance.test.ts`: PASS (4/4)
+  - `geminiWorkerPipeline.test.ts`: PASS (2/2)
+  - `kh02V12_1_4_2_LongResearch.test.ts`: PASS (3/3)
+  - `kh02V12_1_Persistence.test.ts`: PASS (4/4)
+  - `kh02V12_1_4_1_LegacyMigration.test.ts`: PASS (2/2)
+  - `kh02ResearchApi.test.ts`: PASS (5/5)
+
+Gate S5: KH-01 Cross-System Regression
+- Command: `npm run kh01:verify`
+- Result: PASS (69/69 tests across 5 files, 3.47s)
+
+Gate S6: Point-in-Time Backtest Policy Replay
+- Command: `npx tsx scripts/kh02/runBacktestV12_4_3_4_2.ts`
+- Result: PASS (Exit code 0, Policy=PASS, Dev=INSUFFICIENT, Holdout=INSUFFICIENT, zero lookahead leakage)
+
+Sentinel Provider Receipts Integrity Baseline:
+- `.fixture_manifest.json`: 982CFDB5F6D15E391FC14D994B1E70C9A840B6974343C20E316DA70BFAD39C04 (BITWISE IDENTICAL)
+- `.provider_receipt_ledger.json`: 0BDCAA3BFC231CD01A1C3BF3108FC112AA91878612C92C08FAF8099C7299D72F (BITWISE IDENTICAL)
+- `04f4d039cdd4a884134914fdb9d2ed86ebbfa353991d714b78df545a96fd4b14.json`: 04F4D039CDD4A884134914FDB9D2ED86EBBFA353991D714B78DF545A96FD4B14 (BITWISE IDENTICAL)
+- `3440f19057ac7d1ac535150d1bbcc9a3078e0b7a5d46ad3f4bbd2c46235f61c8.json`: 3440F19057AC7D1AC535150D1BBCC9A3078E0B7A5D46AD3F4BBD2C46235F61C8 (BITWISE IDENTICAL)
+- `366cfeb156347d783c227be3fd7e10e397c8cd00c49c909673fc5208f36b841f.json`: 366CFEB156347D783C227BE3FD7E10E397C8CD00C49C909673FC5208F36B841F (BITWISE IDENTICAL)
+- Zero mutations, zero file additions, zero deletions in data/provider_receipts/
+
+4. REALISTIC CRYPTOGRAPHIC THREAT BOUNDARY DEFINITION
+------------------------------------------------------------------------------------------
+- Threat Boundary Definition:
+  A cryptographic HMAC establishes integrity and provenance ONLY relative to the entity holding the
+  signing key. An attestation signed with a test key (`test_key_v1`) proves internal format correctness,
+  recovery determinism, and tamper-evident storage, but CANNOT independently attest that a remote
+  third-party server was contacted.
+- Production Security Boundary:
+  1) Public callers and untrusted input cannot mint LIVE-origin attestations.
+  2) Live attestations are strictly collector-bound and minted only via private `mintInternalLiveTransportAttestation`
+     guarded by an active, unexpired `TrustedInvocationProof` and endpoint allowlist.
+  3) In production environments (`NODE_ENV === "production"`), test keys cannot be configured.
+  4) Under `strictLiveOrigin: true`, test keys and simulated capture methods are rejected fail-closed.
+  5) Business gates G06, G07, G15, and G16 remain blocked/insufficient in the absence of genuine live tokens.
+
+==========================================================================================
+AUDIT VERDICT: PASS (ENGINEERING GATES S0 - S6 SATISFIED)
+==========================================================================================

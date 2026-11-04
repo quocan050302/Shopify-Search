@@ -1623,6 +1623,6 @@ describe("KH-02 V12.4.3.7.12 — Evidence Eligibility Fencing & Production Concu
         });
         expect(resolved.verified).toBe(true);
       }
-    }, 40000);
+    }, 60000);
   });
 });

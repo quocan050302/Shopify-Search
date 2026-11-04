@@ -399,7 +399,7 @@ export interface TrustedInvocationProof {
 }
 
 export interface ProviderTransportAttestationV1 {
-  schemaVersion: "1.0";
+  schemaVersion: "1.0" | "2.0";
   attestationId: string;
   provider: string;
   collectorInstanceId: string;
@@ -430,25 +430,51 @@ let testProvenanceSigningKey: string | null = null;
 let testProvenanceKeyId: string | null = null;
 
 export function setProvenanceSigningKeyForTest(key: string | null, keyId?: string | null): void {
+  if (process.env.NODE_ENV === "production") {
+    throw new Error("SECURITY_VIOLATION: setProvenanceSigningKeyForTest cannot be called in production environment.");
+  }
   testProvenanceSigningKey = key;
   testProvenanceKeyId = keyId || (key ? "test_key_v1" : null);
 }
 
-export function getProvenanceSigningKey(): { key: string; keyId: string } | null {
+function getInternalProvenanceSigningSecret(): { secret: string; keyId: string; isTestKey: boolean } | null {
   if (testProvenanceSigningKey) {
-    return { key: testProvenanceSigningKey, keyId: testProvenanceKeyId || "test_key_v1" };
+    return {
+      secret: testProvenanceSigningKey,
+      keyId: testProvenanceKeyId || "test_key_v1",
+      isTestKey: true,
+    };
   }
   const envKey = process.env.KH02_PROVENANCE_SIGNING_KEY;
   if (envKey && envKey.trim().length >= 32) {
     return {
-      key: envKey.trim(),
+      secret: envKey.trim(),
       keyId: process.env.KH02_PROVENANCE_KEY_ID?.trim() || "kh02_collector_key_v1",
+      isTestKey: false,
     };
   }
   return null;
 }
 
-export function computeCanonicalAttestationPayload(a: Omit<ProviderTransportAttestationV1, "signature">): string {
+export function getProvenanceSigningKey(): { keyConfigured: boolean; keyId: string; isTestKey: boolean; key?: string } | null {
+  const secretInfo = getInternalProvenanceSigningSecret();
+  if (!secretInfo) return null;
+  if (process.env.NODE_ENV === "production") {
+    return {
+      keyConfigured: true,
+      keyId: secretInfo.keyId,
+      isTestKey: false,
+    };
+  }
+  return {
+    keyConfigured: true,
+    keyId: secretInfo.keyId,
+    isTestKey: secretInfo.isTestKey,
+    key: secretInfo.secret,
+  };
+}
+
+export function computeCanonicalAttestationPayloadV1(a: Omit<ProviderTransportAttestationV1, "signature">): string {
   return [
     a.schemaVersion,
     a.attestationId,
@@ -477,6 +503,50 @@ export function computeCanonicalAttestationPayload(a: Omit<ProviderTransportAtte
   ].join("|");
 }
 
+export function computeCanonicalAttestationPayloadV2(a: Omit<ProviderTransportAttestationV1, "signature">): string {
+  const DOMAIN_SEPARATOR = "SWAI_KH02_ATTESTATION_V2\n";
+  const fields: [string, string][] = [
+    ["attemptId", String(a.attemptId || "")],
+    ["attestationId", String(a.attestationId || "")],
+    ["canonicalSanitizedUrl", String(a.canonicalSanitizedUrl || "")],
+    ["captureMethod", String(a.captureMethod || "")],
+    ["collectorInstanceId", String(a.collectorInstanceId || "")],
+    ["issuedAt", String(a.issuedAt || "")],
+    ["issuerKeyId", String(a.issuerKeyId || "")],
+    ["productId", a.productId ? String(a.productId) : ""],
+    ["provider", String(a.provider || "")],
+    ["rawByteCount", String(a.rawByteCount ?? 0)],
+    ["rawResponseSha256", (a.rawResponseSha256 || "").toLowerCase().trim()],
+    ["region", (a.region || "US").toUpperCase().trim()],
+    ["requestCompletedAt", String(a.requestCompletedAt || "")],
+    ["requestFingerprint", String(a.requestFingerprint || "")],
+    ["requestStartedAt", String(a.requestStartedAt || "")],
+    ["requestTerm", (a.requestTerm || "").normalize("NFC").toLowerCase().trim()],
+    ["researchRunId", a.researchRunId ? String(a.researchRunId) : ""],
+    ["responseCapturedAt", String(a.responseCapturedAt || "")],
+    ["schemaVersion", "2.0"],
+    ["storageArtifactId", String(a.storageArtifactId || "")],
+    ["testOrSimulated", a.testOrSimulated ? "true" : "false"],
+    ["transportStatus", String(a.transportStatus ?? 0)],
+    ["upstreamRequestId", String(a.upstreamRequestId || "")],
+    ["workspaceId", a.workspaceId ? String(a.workspaceId) : ""],
+  ];
+
+  let payload = DOMAIN_SEPARATOR;
+  for (const [key, val] of fields) {
+    const valBuf = Buffer.from(val, "utf-8");
+    payload += `${key.length}:${key}=${valBuf.length}:${val}\n`;
+  }
+  return payload;
+}
+
+export function computeCanonicalAttestationPayload(a: Omit<ProviderTransportAttestationV1, "signature">): string {
+  if (a.schemaVersion === "2.0") {
+    return computeCanonicalAttestationPayloadV2(a);
+  }
+  return computeCanonicalAttestationPayloadV1(a);
+}
+
 export function signTransportAttestationPayload(payload: string, key: string): string {
   return crypto.createHmac("sha256", key).update(payload, "utf-8").digest("hex");
 }
@@ -488,17 +558,85 @@ export function verifyTransportAttestationSignature(
   if (!attestation || !attestation.signature || typeof attestation.signature !== "string") {
     return false;
   }
+  const cleanSig = attestation.signature.trim();
+  if (!/^[0-9a-fA-F]{64}$/.test(cleanSig)) {
+    return false;
+  }
   const expectedPayload = computeCanonicalAttestationPayload(attestation);
   const expectedSig = signTransportAttestationPayload(expectedPayload, key);
-  if (attestation.signature.length !== expectedSig.length) return false;
   try {
-    return crypto.timingSafeEqual(
-      Buffer.from(attestation.signature, "hex"),
-      Buffer.from(expectedSig, "hex")
-    );
+    const sigBuf = Buffer.from(cleanSig, "hex");
+    const expBuf = Buffer.from(expectedSig, "hex");
+    if (sigBuf.length !== expBuf.length || sigBuf.length !== 32) return false;
+    return crypto.timingSafeEqual(sigBuf, expBuf);
   } catch {
     return false;
   }
+}
+
+const VALID_IDENTIFIER_REGEX = /^[a-zA-Z0-9_\-]{1,128}$/;
+
+export function validateAndSanitizeAttestationId(id: string | null | undefined): { valid: boolean; sanitizedId?: string; error?: string } {
+  if (!id || typeof id !== "string") {
+    return { valid: false, error: "Identifier is missing or not a string." };
+  }
+  const trimmed = id.trim();
+  if (trimmed.length === 0 || trimmed.length > 128) {
+    return { valid: false, error: "Identifier length must be between 1 and 128 characters." };
+  }
+  if (
+    trimmed.includes("/") ||
+    trimmed.includes("\\") ||
+    trimmed.includes("\0") ||
+    trimmed.includes("..") ||
+    /%2e/i.test(trimmed) ||
+    /%2f/i.test(trimmed) ||
+    /%5c/i.test(trimmed) ||
+    /[\x00-\x1f\x7f]/.test(trimmed) ||
+    trimmed.includes(":")
+  ) {
+    return { valid: false, error: "Identifier contains illegal path traversal, colon, or control characters." };
+  }
+  const baseName = trimmed.split(".")[0].toUpperCase();
+  if (/^(CON|PRN|AUX|NUL|COM[1-9]|LPT[1-9])$/.test(baseName)) {
+    return { valid: false, error: "Identifier contains reserved device name." };
+  }
+  if (!VALID_IDENTIFIER_REGEX.test(trimmed)) {
+    return { valid: false, error: "Identifier contains invalid characters. Only alphanumeric, hyphen, and underscore allowed." };
+  }
+  return { valid: true, sanitizedId: trimmed };
+}
+
+export function resolveSafeAttestationPath(
+  storageDir: string,
+  sanitizedReceiptId: string
+): { safePath?: string; error?: string } {
+  const canonicalRoot = path.resolve(storageDir);
+  const targetPath = path.resolve(canonicalRoot, `${sanitizedReceiptId}.attestation.json`);
+
+  const relative = path.relative(canonicalRoot, targetPath);
+  if (relative.startsWith("..") || path.isAbsolute(relative)) {
+    return { error: `Path traversal detected: target path '${targetPath}' is outside storage root '${canonicalRoot}'.` };
+  }
+
+  try {
+    if (fs.existsSync(canonicalRoot)) {
+      const rootStat = fs.lstatSync(canonicalRoot);
+      if (rootStat.isSymbolicLink()) {
+        return { error: `Storage directory '${canonicalRoot}' is a symbolic link, which is forbidden.` };
+      }
+    }
+    if (fs.existsSync(targetPath)) {
+      const targetStat = fs.lstatSync(targetPath);
+      if (targetStat.isSymbolicLink()) {
+        return { error: `Target file '${targetPath}' is a symbolic link, which is forbidden.` };
+      }
+    }
+  } catch (err: any) {
+    return { error: `Failed to inspect file status: ${err?.message || String(err)}` };
+  }
+
+  return { safePath: targetPath };
 }
 
 export async function persistTransportAttestationAtomically(
@@ -507,30 +645,95 @@ export async function persistTransportAttestationAtomically(
   if (!attestation || !attestation.upstreamRequestId || !attestation.rawResponseSha256) {
     return { persisted: false, errorCode: "INVALID_ATTESTATION", errorReason: "Missing required attestation fields." };
   }
+
+  const idValidation = validateAndSanitizeAttestationId(attestation.upstreamRequestId);
+  if (!idValidation.valid || !idValidation.sanitizedId) {
+    return {
+      persisted: false,
+      errorCode: "INVALID_IDENTIFIER",
+      errorReason: `Invalid upstreamRequestId '${attestation.upstreamRequestId}': ${idValidation.error}`,
+    };
+  }
+
+  if (attestation.attestationId) {
+    const attIdValidation = validateAndSanitizeAttestationId(attestation.attestationId);
+    if (!attIdValidation.valid) {
+      return {
+        persisted: false,
+        errorCode: "INVALID_IDENTIFIER",
+        errorReason: `Invalid attestationId '${attestation.attestationId}': ${attIdValidation.error}`,
+      };
+    }
+  }
+
   const storageDir = getProviderReceiptStorageDir();
   if (!fs.existsSync(storageDir)) {
     fs.mkdirSync(storageDir, { recursive: true });
   }
-  const attestationPath = path.join(storageDir, `${attestation.upstreamRequestId}.attestation.json`);
+
+  const pathResolution = resolveSafeAttestationPath(storageDir, idValidation.sanitizedId);
+  if (!pathResolution.safePath) {
+    return {
+      persisted: false,
+      errorCode: "SECURITY_VIOLATION",
+      errorReason: pathResolution.error || "Failed to resolve safe attestation path.",
+    };
+  }
+  const attestationPath = pathResolution.safePath;
   const lockPath = `${attestationPath}.lock`;
   const lockRes = await acquireDurableLedgerLockAsync(lockPath, 4000);
   if (!lockRes.acquired) {
     return { persisted: false, errorCode: "LOCK_TIMEOUT", errorReason: "Timed out acquiring attestation lock." };
   }
+
   try {
     if (fs.existsSync(attestationPath)) {
+      const targetStat = fs.lstatSync(attestationPath);
+      if (targetStat.isSymbolicLink()) {
+        return {
+          persisted: false,
+          errorCode: "SECURITY_VIOLATION",
+          errorReason: `Existing file '${attestationPath}' is a symbolic link.`,
+        };
+      }
+      let existing: ProviderTransportAttestationV1;
       try {
-        const existing: ProviderTransportAttestationV1 = JSON.parse(fs.readFileSync(attestationPath, "utf-8"));
-        if (existing.rawResponseSha256.toLowerCase() !== attestation.rawResponseSha256.toLowerCase()) {
-          return {
-            persisted: false,
-            errorCode: "CONFLICT",
-            errorReason: `Attestation conflict for receipt '${attestation.upstreamRequestId}': existing SHA '${existing.rawResponseSha256}' !== candidate '${attestation.rawResponseSha256}'.`,
-          };
-        }
-      } catch {}
+        const rawExisting = fs.readFileSync(attestationPath, "utf-8");
+        existing = JSON.parse(rawExisting);
+      } catch {
+        return {
+          persisted: false,
+          errorCode: "ATTESTATION_CORRUPTED",
+          errorReason: `Existing attestation file '${attestationPath}' is corrupted or unparseable. Overwrite forbidden.`,
+        };
+      }
+
+      const isIdentical =
+        existing.rawResponseSha256.toLowerCase() === attestation.rawResponseSha256.toLowerCase() &&
+        existing.attemptId === attestation.attemptId &&
+        existing.signature === attestation.signature &&
+        (existing.requestTerm || "").toLowerCase().trim() === (attestation.requestTerm || "").toLowerCase().trim() &&
+        (existing.region || "US").toUpperCase().trim() === (attestation.region || "US").toUpperCase().trim() &&
+        existing.canonicalSanitizedUrl === attestation.canonicalSanitizedUrl &&
+        existing.issuerKeyId === attestation.issuerKeyId &&
+        (existing.upstreamRequestId || "") === (attestation.upstreamRequestId || "") &&
+        (existing.workspaceId || null) === (attestation.workspaceId || null) &&
+        (existing.researchRunId || null) === (attestation.researchRunId || null) &&
+        (existing.productId || null) === (attestation.productId || null) &&
+        (existing.requestFingerprint || "") === (attestation.requestFingerprint || "");
+
+      if (isIdentical) {
+        return { persisted: true, attestationPath };
+      } else {
+        return {
+          persisted: false,
+          errorCode: "CONFLICT",
+          errorReason: `Attestation identity conflict for receipt '${attestation.upstreamRequestId}': existing attestation fields do not match candidate. Overwrite forbidden.`,
+        };
+      }
     }
-    const tempPath = `${attestationPath}.tmp_${process.pid}_${Date.now()}`;
+
+    const tempPath = `${attestationPath}.tmp_${process.pid}_${Date.now()}_${crypto.randomBytes(4).toString("hex")}`;
     const serialized = JSON.stringify(attestation, null, 2);
     const fd = fs.openSync(tempPath, "w");
     try {
@@ -553,12 +756,22 @@ export function loadDurableTransportAttestationSync(
   scope?: { targetProductOrKeyword?: string; region?: string; provider?: string } | null
 ): ProviderTransportAttestationV1 | null {
   if (!receiptId) return null;
+  const idValidation = validateAndSanitizeAttestationId(receiptId);
+  if (!idValidation.valid || !idValidation.sanitizedId) {
+    return null;
+  }
   const storageDir = getProviderReceiptStorageDir();
-  const attestationPath = path.join(storageDir, `${receiptId}.attestation.json`);
+  const pathResolution = resolveSafeAttestationPath(storageDir, idValidation.sanitizedId);
+  if (!pathResolution.safePath) {
+    return null;
+  }
+  const attestationPath = pathResolution.safePath;
   if (!fs.existsSync(attestationPath)) {
     return null;
   }
   try {
+    const stat = fs.lstatSync(attestationPath);
+    if (stat.isSymbolicLink()) return null;
     const raw = fs.readFileSync(attestationPath, "utf-8");
     const parsed: ProviderTransportAttestationV1 = JSON.parse(raw);
     if (scope?.provider && parsed.provider !== scope.provider) return null;
@@ -617,7 +830,7 @@ export function verifyDurableTransportAttestation(
       isTestSimulation: Boolean(attestation?.testOrSimulated),
     };
   }
-  if (attestation.schemaVersion !== "1.0") {
+  if (attestation.schemaVersion !== "1.0" && attestation.schemaVersion !== "2.0") {
     return {
       verified: false,
       valid: false,
@@ -628,8 +841,19 @@ export function verifyDurableTransportAttestation(
     };
   }
 
-  const signingConfig = getProvenanceSigningKey();
-  if (!signingConfig) {
+  if (scope?.strictLiveOrigin && attestation.schemaVersion !== "2.0") {
+    return {
+      verified: false,
+      valid: false,
+      rejectionReason: `Legacy schema version '${attestation.schemaVersion}' cannot be accepted as live origin under strictLiveOrigin=true. Version 2.0 required.`,
+      error: `Legacy schema version '${attestation.schemaVersion}' cannot be accepted as live origin under strictLiveOrigin=true. Version 2.0 required.`,
+      errorCode: "ORIGIN_UNVERIFIED",
+      isTestSimulation: Boolean(attestation.testOrSimulated),
+    };
+  }
+
+  const signingSecret = getInternalProvenanceSigningSecret();
+  if (!signingSecret) {
     return {
       verified: false,
       valid: false,
@@ -640,18 +864,31 @@ export function verifyDurableTransportAttestation(
     };
   }
 
-  if (attestation.issuerKeyId !== signingConfig.keyId) {
+  if (attestation.issuerKeyId !== signingSecret.keyId) {
     return {
       verified: false,
       valid: false,
-      rejectionReason: `SIGNING_KEY_MISMATCH: Attestation key ID '${attestation.issuerKeyId}' does not match active key ID '${signingConfig.keyId}'.`,
-      error: `SIGNING_KEY_MISMATCH: Attestation key ID '${attestation.issuerKeyId}' does not match active key ID '${signingConfig.keyId}'.`,
+      rejectionReason: `SIGNING_KEY_MISMATCH: Attestation key ID '${attestation.issuerKeyId}' does not match active key ID '${signingSecret.keyId}'.`,
+      error: `SIGNING_KEY_MISMATCH: Attestation key ID '${attestation.issuerKeyId}' does not match active key ID '${signingSecret.keyId}'.`,
       errorCode: "ATTESTATION_KEY_MISMATCH",
       isTestSimulation: Boolean(attestation?.testOrSimulated),
     };
   }
 
-  const sigValid = verifyTransportAttestationSignature(attestation, signingConfig.key);
+  if (scope?.strictLiveOrigin) {
+    if (signingSecret.isTestKey || attestation.issuerKeyId.startsWith("test_") || attestation.issuerKeyId === "test_key_v1") {
+      return {
+        verified: false,
+        valid: false,
+        rejectionReason: `Attestation was signed with test key '${attestation.issuerKeyId}'; cannot verify live origin under strictLiveOrigin=true.`,
+        error: `Attestation was signed with test key '${attestation.issuerKeyId}'; cannot verify live origin under strictLiveOrigin=true.`,
+        errorCode: "ORIGIN_UNVERIFIED",
+        isTestSimulation: true,
+      };
+    }
+  }
+
+  const sigValid = verifyTransportAttestationSignature(attestation, signingSecret.secret);
   if (!sigValid) {
     return {
       verified: false,
@@ -771,10 +1008,11 @@ export function verifyDurableTransportAttestation(
     }
   }
 
+  const isTestSim = Boolean(attestation.testOrSimulated || attestation.captureMethod !== "NATIVE_HTTPS_FETCH");
   return {
     verified: true,
     valid: true,
-    isTestSimulation: attestation.testOrSimulated,
+    isTestSimulation: isTestSim,
     attestation,
   };
 }
@@ -820,6 +1058,8 @@ export async function issueTrustedTransportAttestation(params: {
   errorCode?: DemandEvidenceRejectionCode | string;
   error?: string;
 }> {
+  // Public issuer can NEVER mint genuine live transport attestations
+  // Permanently restricted to SIMULATED_TEST_TRANSPORT
   const normSha = params.rawResponseSha256.toLowerCase();
   const computedSha = crypto.createHash("sha256").update(params.rawBytes).digest("hex").toLowerCase();
   if (computedSha !== normSha) {
@@ -855,29 +1095,18 @@ export async function issueTrustedTransportAttestation(params: {
     }
   }
 
-  const isTest = Boolean(params.isTestSimulation);
-  const signingConfig = getProvenanceSigningKey();
-  if (!signingConfig) {
-    if (!isTest) {
-      return {
-        success: false,
-        errorCode: "PROVENANCE_KEY_NOT_CONFIGURED",
-        error: "Cannot issue trusted transport attestation: KH02_PROVENANCE_SIGNING_KEY is not configured.",
-      };
-    }
-  }
-
-  const keyToUse = signingConfig?.key || "test_simulated_key_dummy_32_characters_long_minimum";
-  const keyIdToUse = signingConfig?.keyId || "sim_key_v1";
+  const signingSecret = getInternalProvenanceSigningSecret();
+  const keyToUse = signingSecret?.secret || "test_simulated_key_dummy_32_characters_long_minimum";
+  const keyIdToUse = signingSecret?.keyId || "test_sim_key_v1";
 
   const nowIso = new Date().toISOString();
   const attestationId = `att_${Date.now()}_${crypto.randomBytes(8).toString("hex")}`;
   const partialAttestation: Omit<ProviderTransportAttestationV1, "signature"> = {
-    schemaVersion: "1.0",
+    schemaVersion: "2.0",
     attestationId,
     provider: params.provider,
     collectorInstanceId: `col_${process.pid}_${os.hostname()}`,
-    captureMethod: isTest ? "SIMULATED_TEST_TRANSPORT" : "NATIVE_HTTPS_FETCH",
+    captureMethod: "SIMULATED_TEST_TRANSPORT",
     upstreamRequestId: params.upstreamRequestId || params.receiptId,
     attemptId: params.attemptId,
     canonicalSanitizedUrl: params.canonicalSanitizedUrl,
@@ -896,10 +1125,10 @@ export async function issueTrustedTransportAttestation(params: {
     storageArtifactId: `${normSha}.json`,
     issuerKeyId: keyIdToUse,
     issuedAt: nowIso,
-    testOrSimulated: isTest,
+    testOrSimulated: true,
   };
 
-  const payload = computeCanonicalAttestationPayload(partialAttestation);
+  const payload = computeCanonicalAttestationPayloadV2(partialAttestation);
   const signature = signTransportAttestationPayload(payload, keyToUse);
   const attestation: ProviderTransportAttestationV1 = {
     ...partialAttestation,
@@ -915,17 +1144,178 @@ export async function issueTrustedTransportAttestation(params: {
     };
   }
 
-  if (!isTest) {
-    const regKey = attestation.upstreamRequestId || attestation.attestationId;
-    trustedInvocationsRegistry.set(regKey, {
-      receiptId: regKey,
-      rawResponseSha256: normSha,
-      provider: attestation.provider,
-      endpoint: attestation.canonicalSanitizedUrl,
-      requestFingerprint: attestation.requestFingerprint,
-      verifiedAt: nowIso,
-    });
+  // NOTE: Public issuer NEVER registers into trustedInvocationsRegistry!
+  return {
+    success: true,
+    attestation,
+  };
+}
+
+async function mintInternalLiveTransportAttestation(
+  params: {
+    attemptId: string;
+    receiptId: string;
+    provider: string;
+    rawResponseSha256: string;
+    rawBytes: Buffer | Uint8Array;
+    transportStatus: number;
+    canonicalSanitizedUrl: string;
+    requestFingerprint: string;
+    requestTerm: string;
+    region: string;
+    workspaceId?: string | null;
+    researchRunId?: string | null;
+    productId?: string | null;
+    upstreamRequestId?: string;
+    requestStartedAt?: string;
+    requestCompletedAt?: string;
+    responseCapturedAt?: string;
+  },
+  invocationProof: TrustedInvocationProof
+): Promise<{
+  success: boolean;
+  attestation?: ProviderTransportAttestationV1;
+  errorCode?: DemandEvidenceRejectionCode | string;
+  error?: string;
+}> {
+  // 1. Invariant verification of active trusted invocation proof
+  if (
+    !invocationProof ||
+    !invocationProof._proofNonce ||
+    invocationProof.isTestSimulation ||
+    invocationProof.proofKind !== "TRUSTED_TRANSPORT" ||
+    invocationProof.attemptId !== params.attemptId ||
+    invocationProof.receiptId !== params.receiptId ||
+    invocationProof.rawResponseSha256.toLowerCase() !== params.rawResponseSha256.toLowerCase() ||
+    invocationProof.provider !== params.provider ||
+    invocationProof.requestFingerprint !== params.requestFingerprint
+  ) {
+    return {
+      success: false,
+      errorCode: "INVALID_INVOCATION_PROOF",
+      error: "Live transport attestation requires a valid, matching, non-simulated internal TrustedInvocationProof.",
+    };
   }
+
+  const activeProof = activeTrustedInvocationProofs.get(invocationProof._proofNonce);
+  if (!activeProof || activeProof !== invocationProof) {
+    return {
+      success: false,
+      errorCode: "INVOCATION_PROOF_EXPIRED",
+      error: "TrustedInvocationProof nonce is not active in memory.",
+    };
+  }
+
+  // 2. Raw bytes SHA verification
+  const normSha = params.rawResponseSha256.toLowerCase();
+  const computedSha = crypto.createHash("sha256").update(params.rawBytes).digest("hex").toLowerCase();
+  if (computedSha !== normSha) {
+    return {
+      success: false,
+      errorCode: "HASH_MISMATCH",
+      error: `Attestation raw bytes SHA-256 ('${computedSha}') does not match provided digest ('${normSha}').`,
+    };
+  }
+
+  // 3. Validate endpoint allowlist for SerpApi
+  try {
+    const urlObj = new URL(params.canonicalSanitizedUrl);
+    if (
+      urlObj.protocol !== "https:" ||
+      urlObj.hostname !== "serpapi.com" ||
+      (urlObj.port !== "" && urlObj.port !== "443") ||
+      urlObj.pathname !== "/search.json"
+    ) {
+      return {
+        success: false,
+        errorCode: "OFF_ALLOWLIST_ENDPOINT",
+        error: `OFF_ALLOWLIST_ENDPOINT: Canonical URL '${params.canonicalSanitizedUrl}' violates official SerpApi endpoint constraints.`,
+      };
+    }
+  } catch {
+    return {
+      success: false,
+      errorCode: "OFF_ALLOWLIST_ENDPOINT",
+      error: `OFF_ALLOWLIST_ENDPOINT: Invalid canonical URL '${params.canonicalSanitizedUrl}'.`,
+    };
+  }
+
+  // 4. Validate identifiers
+  const reqId = params.upstreamRequestId || params.receiptId;
+  const idValidation = validateAndSanitizeAttestationId(reqId);
+  if (!idValidation.valid) {
+    return {
+      success: false,
+      errorCode: "INVALID_IDENTIFIER",
+      error: `Invalid upstreamRequestId '${reqId}': ${idValidation.error}`,
+    };
+  }
+
+  // 5. Must have genuine production signing key (not a test key)
+  const signingSecret = getInternalProvenanceSigningSecret();
+  if (!signingSecret || signingSecret.isTestKey) {
+    return {
+      success: false,
+      errorCode: "PROVENANCE_KEY_NOT_CONFIGURED",
+      error: "Cannot mint live transport attestation: genuine production provenance signing key is not configured.",
+    };
+  }
+
+  const nowIso = new Date().toISOString();
+  const attestationId = `att_${Date.now()}_${crypto.randomBytes(8).toString("hex")}`;
+  const partialAttestation: Omit<ProviderTransportAttestationV1, "signature"> = {
+    schemaVersion: "2.0",
+    attestationId,
+    provider: params.provider,
+    collectorInstanceId: `col_${process.pid}_${os.hostname()}`,
+    captureMethod: "NATIVE_HTTPS_FETCH",
+    upstreamRequestId: reqId,
+    attemptId: params.attemptId,
+    canonicalSanitizedUrl: params.canonicalSanitizedUrl,
+    requestFingerprint: params.requestFingerprint,
+    requestTerm: (params.requestTerm || "").toLowerCase().trim(),
+    region: (params.region || "US").toUpperCase().trim(),
+    workspaceId: params.workspaceId || null,
+    researchRunId: params.researchRunId || null,
+    productId: params.productId || null,
+    requestStartedAt: params.requestStartedAt || nowIso,
+    requestCompletedAt: params.requestCompletedAt || nowIso,
+    responseCapturedAt: params.responseCapturedAt || nowIso,
+    transportStatus: params.transportStatus,
+    rawResponseSha256: normSha,
+    rawByteCount: params.rawBytes.length,
+    storageArtifactId: `${normSha}.json`,
+    issuerKeyId: signingSecret.keyId,
+    issuedAt: nowIso,
+    testOrSimulated: false,
+  };
+
+  const payload = computeCanonicalAttestationPayloadV2(partialAttestation);
+  const signature = signTransportAttestationPayload(payload, signingSecret.secret);
+  const attestation: ProviderTransportAttestationV1 = {
+    ...partialAttestation,
+    signature,
+  };
+
+  const persistRes = await persistTransportAttestationAtomically(attestation);
+  if (!persistRes.persisted) {
+    return {
+      success: false,
+      errorCode: persistRes.errorCode || "ATTESTATION_WRITE_FAILED",
+      error: persistRes.errorReason || "Failed to persist attestation to disk.",
+    };
+  }
+
+  // Register in trusted invocations registry for live origin
+  const regKey = attestation.upstreamRequestId || attestation.attestationId;
+  trustedInvocationsRegistry.set(regKey, {
+    receiptId: regKey,
+    rawResponseSha256: normSha,
+    provider: attestation.provider,
+    endpoint: attestation.canonicalSanitizedUrl,
+    requestFingerprint: attestation.requestFingerprint,
+    verifiedAt: nowIso,
+  });
 
   return {
     success: true,
@@ -1961,8 +2351,7 @@ export async function persistCollectorReceiptAtomically(
     const attestVerify = verifyDurableTransportAttestation(
       loadedAttestation,
       receipt,
-      rawBytesForCheck,
-      { strictLiveOrigin: true }
+      rawBytesForCheck
     );
     if (attestVerify.verified && !attestVerify.isTestSimulation) {
       isGenuineTrustedProof = true;
@@ -2475,8 +2864,7 @@ export async function reconcilePendingReceiptRecovery(
         const attestVerify = verifyDurableTransportAttestation(
           attestation,
           entry,
-          rawBytesForCheck,
-          { strictLiveOrigin: true }
+          rawBytesForCheck
         );
         if (attestVerify.verified && attestVerify.valid && !attestVerify.isTestSimulation) {
           isValidAttestation = true;
@@ -2766,26 +3154,6 @@ export async function executeTrustedSerpApiDemandRequest(params: {
   const rawSha = crypto.createHash("sha256").update(rawBytes).digest("hex").toLowerCase();
 
   if (!isSimulatedTransport) {
-    const attestRes = await issueTrustedTransportAttestation({
-      attemptId: params.attemptId,
-      receiptId: upstreamReceiptId.trim(),
-      provider: "google_trends_serpapi",
-      rawResponseSha256: rawSha,
-      rawBytes,
-      transportStatus: response.status,
-      canonicalSanitizedUrl: sanitizedUrl,
-      requestFingerprint,
-      requestTerm: params.query.term,
-      region: expectedRegion,
-      workspaceId: params.query.workspaceId,
-      researchRunId: params.query.researchRunId,
-      productId: params.query.productId,
-      upstreamRequestId: upstreamReceiptId.trim(),
-      isTestSimulation: false,
-    });
-    if (attestRes.success && attestRes.attestation) {
-      transportAttestation = attestRes.attestation;
-    }
     invocationProof = mintInternalTrustedInvocationProof({
       attemptId: params.attemptId,
       receiptId: upstreamReceiptId.trim(),
@@ -2793,6 +3161,28 @@ export async function executeTrustedSerpApiDemandRequest(params: {
       provider: "google_trends_serpapi",
       requestFingerprint,
     });
+    const attestRes = await mintInternalLiveTransportAttestation(
+      {
+        attemptId: params.attemptId,
+        receiptId: upstreamReceiptId.trim(),
+        provider: "google_trends_serpapi",
+        rawResponseSha256: rawSha,
+        rawBytes,
+        transportStatus: response.status,
+        canonicalSanitizedUrl: sanitizedUrl,
+        requestFingerprint,
+        requestTerm: params.query.term,
+        region: expectedRegion,
+        workspaceId: params.query.workspaceId,
+        researchRunId: params.query.researchRunId,
+        productId: params.query.productId,
+        upstreamRequestId: upstreamReceiptId.trim(),
+      },
+      invocationProof
+    );
+    if (attestRes.success && attestRes.attestation) {
+      transportAttestation = attestRes.attestation;
+    }
   } else {
     const simAttest = await issueTrustedTransportAttestation({
       attemptId: params.attemptId,
@@ -3508,31 +3898,36 @@ export function isAuthenticProviderReceiptDescriptor(
   // If not in in-memory registry, check if durable attestation exists on disk
   if (!isRegisteredAuthentic) {
     const storageDir = getProviderReceiptStorageDir();
-    const attPath = path.join(storageDir, `${cleanReqId}.attestation.json`);
-    if (fs.existsSync(attPath)) {
-      try {
-        const att: ProviderTransportAttestationV1 = JSON.parse(fs.readFileSync(attPath, "utf-8"));
-        const signingConfig = getProvenanceSigningKey();
-        if (
-          signingConfig &&
-          att.issuerKeyId === signingConfig.keyId &&
-          verifyTransportAttestationSignature(att, signingConfig.key) &&
-          att.rawResponseSha256.toLowerCase() === normSha &&
-          att.upstreamRequestId === cleanReqId &&
-          !att.testOrSimulated &&
-          att.captureMethod === "NATIVE_HTTPS_FETCH"
-        ) {
-          isRegisteredAuthentic = true;
-          trustedInvocationsRegistry.set(cleanReqId, {
-            receiptId: cleanReqId,
-            rawResponseSha256: normSha,
-            provider: att.provider,
-            endpoint: att.canonicalSanitizedUrl,
-            requestFingerprint: att.requestFingerprint,
-            verifiedAt: att.issuedAt,
-          });
-        }
-      } catch {}
+    const idValidation = validateAndSanitizeAttestationId(cleanReqId);
+    if (idValidation.valid && idValidation.sanitizedId) {
+      const pathResolution = resolveSafeAttestationPath(storageDir, idValidation.sanitizedId);
+      if (pathResolution.safePath && fs.existsSync(pathResolution.safePath)) {
+        try {
+          const raw = fs.readFileSync(pathResolution.safePath, "utf-8");
+          const att: ProviderTransportAttestationV1 = JSON.parse(raw);
+          const signingSecret = getInternalProvenanceSigningSecret();
+          if (
+            signingSecret &&
+            att.schemaVersion === "2.0" &&
+            att.issuerKeyId === signingSecret.keyId &&
+            verifyTransportAttestationSignature(att, signingSecret.secret) &&
+            att.rawResponseSha256.toLowerCase() === normSha &&
+            att.upstreamRequestId === cleanReqId &&
+            !att.testOrSimulated &&
+            att.captureMethod === "NATIVE_HTTPS_FETCH"
+          ) {
+            isRegisteredAuthentic = true;
+            trustedInvocationsRegistry.set(cleanReqId, {
+              receiptId: cleanReqId,
+              rawResponseSha256: normSha,
+              provider: att.provider,
+              endpoint: att.canonicalSanitizedUrl,
+              requestFingerprint: att.requestFingerprint,
+              verifiedAt: att.issuedAt,
+            });
+          }
+        } catch {}
+      }
     }
   }
 
@@ -3543,7 +3938,9 @@ export function isAuthenticProviderReceiptDescriptor(
     isRegisteredAuthentic;
 
   if (context.strictLiveOrigin) {
-    if (effectiveOrigin !== "ACTUAL_PROVIDER_INVOCATION" || !isRegisteredAuthentic) {
+    const signingSecret = getInternalProvenanceSigningSecret();
+    const isTestKey = Boolean(signingSecret?.isTestKey);
+    if (isTestKey || effectiveOrigin !== "ACTUAL_PROVIDER_INVOCATION" || !isRegisteredAuthentic) {
       return {
         authentic: false,
         originKind: effectiveOrigin === "ACTUAL_PROVIDER_INVOCATION" ? "LOCAL_INTEGRITY_ONLY" : effectiveOrigin,
@@ -3551,9 +3948,11 @@ export function isAuthenticProviderReceiptDescriptor(
         contentIntegrityVerified: true,
         providerOriginVerified: false,
         reason:
-          effectiveOrigin !== "ACTUAL_PROVIDER_INVOCATION"
-            ? `Receipt origin '${effectiveOrigin}' cannot verify production live provider origin under strictLiveOrigin=true.`
-            : `Receipt '${cleanReqId}' lacks verified genuine collector invocation proof in active registry under strictLiveOrigin=true.`,
+          isTestKey
+            ? `Receipt was signed with test key and cannot verify live provider origin under strictLiveOrigin=true.`
+            : (effectiveOrigin !== "ACTUAL_PROVIDER_INVOCATION"
+              ? `Receipt origin '${effectiveOrigin}' cannot verify production live provider origin under strictLiveOrigin=true.`
+              : `Receipt '${cleanReqId}' lacks verified genuine collector invocation proof in active registry under strictLiveOrigin=true.`),
         errorCode: "ORIGIN_UNVERIFIED",
         sourceAuthority: isFixture ? "FIXTURE_ONLY" : "CACHED_UNVERIFIED",
         ledgerRecord: ledger,

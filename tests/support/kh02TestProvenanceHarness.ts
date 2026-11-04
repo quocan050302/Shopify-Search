@@ -11,6 +11,9 @@ import {
   issueTrustedTransportAttestation,
   setProvenanceSigningKeyForTest,
   clearTestTransportAttestationsForTest,
+  computeCanonicalAttestationPayload,
+  signTransportAttestationPayload,
+  persistTransportAttestationAtomically,
   type TrustedInvocationProof,
   type ProviderTransportAttestationV1,
 } from "@/services/kh02/demand/temporalDemandEngine";
@@ -41,6 +44,9 @@ export async function createTestSimulatedTransportAttestation(params: {
   term?: string;
   region?: string;
 }): Promise<ProviderTransportAttestationV1> {
+  if (process.env.NODE_ENV === "production") {
+    throw new Error("SECURITY_VIOLATION: createTestSimulatedTransportAttestation cannot be used in production.");
+  }
   setProvenanceSigningKeyForTest(TEST_PROVENANCE_SIGNING_KEY_32, TEST_PROVENANCE_KEY_ID);
   const res = await issueTrustedTransportAttestation({
     attemptId: params.attemptId,
@@ -63,8 +69,9 @@ export async function createTestSimulatedTransportAttestation(params: {
 }
 
 /**
- * Creates an authorized test signed transport attestation (testOrSimulated: false).
+ * Creates an authorized test signed transport attestation with test key (issuerKeyId: "test_key_v1").
  * Used exclusively to test cryptographic verification, process restart, and tamper rejection in test environments.
+ * Under strictLiveOrigin=true, this will fail closed because it was signed with a test key.
  */
 export async function createTestSignedLiveTransportAttestation(params: {
   attemptId: string;
@@ -79,29 +86,53 @@ export async function createTestSignedLiveTransportAttestation(params: {
   productId?: string | null;
   issuedAt?: string;
 }): Promise<ProviderTransportAttestationV1> {
+  if (process.env.NODE_ENV === "production") {
+    throw new Error("SECURITY_VIOLATION: createTestSignedLiveTransportAttestation cannot be used in production.");
+  }
   setProvenanceSigningKeyForTest(TEST_PROVENANCE_SIGNING_KEY_32, TEST_PROVENANCE_KEY_ID);
-  const res = await issueTrustedTransportAttestation({
-    attemptId: params.attemptId,
-    receiptId: params.receiptId,
+  const nowIso = params.issuedAt || new Date().toISOString();
+  const normSha = params.rawResponseSha256.toLowerCase();
+  const attestationId = `test_att_${Date.now()}_${crypto.randomBytes(6).toString("hex")}`;
+
+  const partialAttestation: Omit<ProviderTransportAttestationV1, "signature"> = {
+    schemaVersion: "2.0",
+    attestationId,
     provider: params.provider || "google_trends_serpapi",
-    rawResponseSha256: params.rawResponseSha256,
-    rawBytes: params.rawBytes,
-    transportStatus: 200,
+    collectorInstanceId: `col_test_${process.pid}`,
+    captureMethod: "NATIVE_HTTPS_FETCH",
+    upstreamRequestId: params.receiptId,
+    attemptId: params.attemptId,
     canonicalSanitizedUrl: "https://serpapi.com/search.json?engine=google_trends&data_type=TIMESERIES",
     requestFingerprint: `test_fp_${Date.now()}`,
-    requestTerm: params.term || "cat toy",
-    region: params.region || "US",
+    requestTerm: (params.term || "cat toy").toLowerCase().trim(),
+    region: (params.region || "US").toUpperCase().trim(),
     workspaceId: params.workspaceId || null,
     researchRunId: params.researchRunId || null,
     productId: params.productId || null,
-    upstreamRequestId: params.receiptId,
-    responseCapturedAt: params.issuedAt,
-    requestCompletedAt: params.issuedAt,
-    isTestSimulation: false,
-  });
-  if (!res.success || !res.attestation) {
-    throw new Error(`Failed to create test signed live attestation: ${res.error}`);
+    requestStartedAt: nowIso,
+    requestCompletedAt: nowIso,
+    responseCapturedAt: nowIso,
+    transportStatus: 200,
+    rawResponseSha256: normSha,
+    rawByteCount: params.rawBytes.length,
+    storageArtifactId: `${normSha}.json`,
+    issuerKeyId: TEST_PROVENANCE_KEY_ID,
+    issuedAt: nowIso,
+    testOrSimulated: false,
+  };
+
+  const payload = computeCanonicalAttestationPayload(partialAttestation);
+  const signature = signTransportAttestationPayload(payload, TEST_PROVENANCE_SIGNING_KEY_32);
+  const attestation: ProviderTransportAttestationV1 = {
+    ...partialAttestation,
+    signature,
+  };
+
+  const persistRes = await persistTransportAttestationAtomically(attestation);
+  if (!persistRes.persisted) {
+    throw new Error(`Failed to persist test signed live attestation: ${persistRes.errorReason}`);
   }
-  return res.attestation;
+
+  return attestation;
 }
 
