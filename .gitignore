@@ -76,3 +76,5 @@ __pycache__/
 data/provider_receipts/.provider_receipt_ledger.json
 data/provider_receipts/*.lock
 data/provider_receipts/*.tmp*
+data/provider_receipts/*.attestation.json
+reports/kh02/.runlogs/

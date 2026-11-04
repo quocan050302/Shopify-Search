@@ -984,15 +984,21 @@ describe("KH-02 V12.4.3.7.11 — Atomic Receipt Commit & Verified Demand Readbac
       `;
       fs.writeFileSync(workerScript, workerCode, "utf-8");
 
-      const tsxBin = path.resolve(process.cwd(), "node_modules/.bin/tsx");
+      const tsxCli = path.resolve(process.cwd(), "node_modules/tsx/dist/cli.mjs");
+      const useNode = fs.existsSync(tsxCli);
+      const tsxBin = useNode ? process.execPath : path.resolve(process.cwd(), process.platform === "win32" ? "node_modules/.bin/tsx.cmd" : "node_modules/.bin/tsx");
       // Spawn worker A and worker B calling real production persistCollectorReceiptAtomically
       const runWorker = (id: string, receiptId: string, sha: string) =>
         new Promise<number>((resolve) => {
-          const child = spawn(tsxBin, [workerScript, id, workerDir, barrierFile, receiptId, sha], {
+          const spawnArgs = useNode
+            ? [tsxCli, workerScript, id, workerDir, barrierFile, receiptId, sha]
+            : [workerScript, id, workerDir, barrierFile, receiptId, sha];
+          const child = spawn(tsxBin, spawnArgs, {
             cwd: process.cwd(),
             env: { ...process.env },
             stdio: "pipe",
           });
+          child.on("error", () => resolve(1));
           child.on("exit", (code) => resolve(code ?? 1));
         });
 

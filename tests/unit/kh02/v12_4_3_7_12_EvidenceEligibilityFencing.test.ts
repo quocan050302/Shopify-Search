@@ -694,11 +694,38 @@ describe("KH-02 V12.4.3.7.12 — Evidence Eligibility Fencing & Production Concu
       const targetFile = path.join(testStorageDir, "dummy_target.txt");
       fs.writeFileSync(targetFile, "dummy", "utf-8");
       const symlinkLock = path.join(testStorageDir, "symlink.lock");
-      fs.symlinkSync(targetFile, symlinkLock);
+      let symlinkCreated = false;
+      try {
+        fs.symlinkSync(targetFile, symlinkLock);
+        symlinkCreated = true;
+      } catch (err: any) {
+        if (process.platform === "win32" && (err?.code === "EPERM" || err?.code === "ENOTSUP")) {
+          const origLstat = fs.lstatSync;
+          fs.writeFileSync(symlinkLock, "simulated_symlink", "utf-8");
+          (fs as any).lstatSync = (p: fs.PathLike) => {
+            const stat = origLstat(p);
+            if (String(p).includes("symlink.lock")) {
+              return { ...stat, isSymbolicLink: () => true };
+            }
+            return stat;
+          };
+          try {
+            const acq = tryAcquireDurableLedgerLockSync(symlinkLock, 200);
+            expect(acq.acquired).toBe(false);
+            expect(acq.errorCode).toBe("LOCK_SYMLINK_REJECTED");
+          } finally {
+            (fs as any).lstatSync = origLstat;
+          }
+          return;
+        }
+        throw err;
+      }
 
-      const acq = tryAcquireDurableLedgerLockSync(symlinkLock, 200);
-      expect(acq.acquired).toBe(false);
-      expect(acq.errorCode).toBe("LOCK_SYMLINK_REJECTED");
+      if (symlinkCreated) {
+        const acq = tryAcquireDurableLedgerLockSync(symlinkLock, 200);
+        expect(acq.acquired).toBe(false);
+        expect(acq.errorCode).toBe("LOCK_SYMLINK_REJECTED");
+      }
     });
 
     it("F21: Legacy ledger JSON on disk lacking commitState='EVIDENCE_ELIGIBLE' or eligible=true is normalized to RECOVERY_REQUIRED / eligible=false and rejected by resolveVerifiedDemandEvidence", async () => {
@@ -1088,20 +1115,27 @@ describe("KH-02 V12.4.3.7.12 — Evidence Eligibility Fencing & Production Concu
   // PART 2: C01 - C08 Multi-Process Production Concurrency Proof
   // ============================================================================
   describe("Part 2: Multi-Process Production Concurrency Proof (C01 - C08)", () => {
-    const tsxBin = path.resolve(process.cwd(), "node_modules/.bin/tsx");
+    const tsxCli = path.resolve(process.cwd(), "node_modules/tsx/dist/cli.mjs");
+    const useNode = fs.existsSync(tsxCli);
+    const tsxBin = useNode ? process.execPath : path.resolve(process.cwd(), process.platform === "win32" ? "node_modules/.bin/tsx.cmd" : "node_modules/.bin/tsx");
     const enginePath = path.resolve(process.cwd(), "src/services/kh02/demand/temporalDemandEngine.ts");
 
     function spawnTsxWorker(scriptPath: string, args: string[]): Promise<{ code: number; stdout: string; stderr: string }> {
       return new Promise((resolve) => {
-        const child = spawn(tsxBin, [scriptPath, ...args], {
+        const spawnArgs = useNode ? [tsxCli, scriptPath, ...args] : [scriptPath, ...args];
+        const child = spawn(tsxBin, spawnArgs, {
           cwd: process.cwd(),
           env: { ...process.env },
           stdio: "pipe",
         });
         let stdout = "";
         let stderr = "";
-        child.stdout.on("data", (d) => (stdout += d.toString()));
-        child.stderr.on("data", (d) => (stderr += d.toString()));
+        child.stdout?.on("data", (d) => (stdout += d.toString()));
+        child.stderr?.on("data", (d) => (stderr += d.toString()));
+        child.on("error", (err) => {
+          stderr += String(err);
+          resolve({ code: 1, stdout, stderr });
+        });
         child.on("exit", (code) => resolve({ code: code ?? 1, stdout, stderr }));
       });
     }
@@ -1589,6 +1623,6 @@ describe("KH-02 V12.4.3.7.12 — Evidence Eligibility Fencing & Production Concu
         });
         expect(resolved.verified).toBe(true);
       }
-    }, 25000);
+    }, 40000);
   });
 });

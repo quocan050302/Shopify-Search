@@ -1,7 +1,10 @@
 {
   "split": "HOLDOUT",
   "niche": "Pet Gadgets",
-  "sourceSha": "77ca51a50fee60f8e290a057373a5298600426a7",
+  "sourceSha": "d83da34e9e6b935c791f82cb63337cda1596d2d1",
+  "evaluatedCodeSha": "d83da34e9e6b935c791f82cb63337cda1596d2d1",
+  "evaluatedTreeSha": "17fd2d0f57ba367d688f36bde78f4e76e5eb5590",
+  "inputBaselineCommitSha": "d83da34e9e6b935c791f82cb63337cda1596d2d1",
   "datasetFingerprintSha256": "26bcffb0d900f14f43614918e4f1102015fbb2b9308292c6461acf6e582650b3",
   "windowStart": "2026-10-24T00:00:00.000Z",
   "windowEnd": "2026-10-30T12:00:00.000Z",

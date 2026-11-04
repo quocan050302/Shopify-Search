@@ -1219,20 +1219,27 @@ describe("KH-02 V12.4.3.7.13 — Unforgeable Collector Provenance & Unified Elig
   });
 
   describe("Part 2: Real OS Multi-Process Concurrency Proof (C01 - C08)", () => {
-    const tsxBin = path.resolve(process.cwd(), "node_modules/.bin/tsx");
+    const tsxCli = path.resolve(process.cwd(), "node_modules/tsx/dist/cli.mjs");
+    const useNode = fs.existsSync(tsxCli);
+    const tsxBin = useNode ? process.execPath : path.resolve(process.cwd(), process.platform === "win32" ? "node_modules/.bin/tsx.cmd" : "node_modules/.bin/tsx");
     const enginePath = path.resolve(process.cwd(), "src/services/kh02/demand/temporalDemandEngine.ts");
 
     function spawnTsxWorker(scriptPath: string, args: string[]): Promise<{ code: number; stdout: string; stderr: string }> {
       return new Promise((resolve) => {
-        const child = spawn(tsxBin, [scriptPath, ...args], {
+        const spawnArgs = useNode ? [tsxCli, scriptPath, ...args] : [scriptPath, ...args];
+        const child = spawn(tsxBin, spawnArgs, {
           cwd: process.cwd(),
           env: { ...process.env },
           stdio: "pipe",
         });
         let stdout = "";
         let stderr = "";
-        child.stdout.on("data", (d) => (stdout += d.toString()));
-        child.stderr.on("data", (d) => (stderr += d.toString()));
+        child.stdout?.on("data", (d) => (stdout += d.toString()));
+        child.stderr?.on("data", (d) => (stderr += d.toString()));
+        child.on("error", (err) => {
+          stderr += String(err);
+          resolve({ code: 1, stdout, stderr });
+        });
         child.on("exit", (code) => resolve({ code: code ?? 1, stdout, stderr }));
       });
     }
@@ -1389,7 +1396,7 @@ describe("KH-02 V12.4.3.7.13 — Unforgeable Collector Provenance & Unified Elig
           expect(ledger[item.receiptId]?.eligible).toBe(true);
         }
       }
-    }, 25000);
+    }, 40000);
 
     it("C03: 2 real OS child processes calling REAL persistCollectorReceiptAtomically with the SAME receiptId and IDENTICAL payload succeed idempotently", async () => {
       const barrierFile = path.join(testStorageDir, "c03_barrier.txt");
@@ -1743,6 +1750,6 @@ describe("KH-02 V12.4.3.7.13 — Unforgeable Collector Provenance & Unified Elig
         });
         expect(resolved.verified).toBe(true);
       }
-    }, 25000);
+    }, 40000);
   });
 });

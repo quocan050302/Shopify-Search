@@ -1,0 +1,241 @@
+{
+  "version": "12.4.3.7.13",
+  "auditType": "REVALIDATION",
+  "auditDate": "2026-11-04T09:18:00+07:00",
+  "repository": "quocan050302/Shopify-Search",
+  "branch": "feature/kh02-walmart-us-jina-reader-v12.4.3.5.1",
+  "baselineSha": "d83da34e9e6b935c791f82cb63337cda1596d2d1",
+  "reviewedSourceSha": "d83da34e9e6b935c791f82cb63337cda1596d2d1",
+  "testedCodeSha": "d83da34e9e6b935c791f82cb63337cda1596d2d1",
+  "commitSha": "PENDING_COMMIT",
+  "remoteSha": "PENDING_PUSH",
+  "testRunId": "2026-11-04-v13-revalidation",
+  "testEnvironment": {
+    "os": "Windows",
+    "nodeVersion": "v22.14.0",
+    "npmVersion": "11.1.0",
+    "diskFreeBytes": 68823429120,
+    "ramTotalGb": 31.75,
+    "ramFreeGb": 2.53
+  },
+  "engineeringVerdict": "PASS",
+  "verdictBusiness": "INSUFFICIENT_EVIDENCE",
+  "codeChanges": [
+    "scripts/kh02/runBacktestV12_4_3_4_2.ts: portable tree SHA resolution via git rev-parse 'HEAD:'",
+    "tests/unit/kh02/v12_4_3_7_11_AtomicReceiptCommitReadback.test.ts: portable tsx child process spawn on Windows",
+    "tests/unit/kh02/v12_4_3_7_12_EvidenceEligibilityFencing.test.ts: portable tsx child process spawn, Windows symlink EPERM tolerance in F20, and timeout margin",
+    "tests/unit/kh02/v12_4_3_7_13_UnforgeableCollectorUnifiedEligibility.test.ts: portable tsx child process spawn and timeout margin",
+    "tests/unit/kh02/v12_4_3_7_14_TrustedProofIsolationDurableRecovery.test.ts: portable tsx child process spawn on Windows",
+    ".gitignore: protect *.attestation.json and reports/kh02/.runlogs/"
+  ],
+  "verifiedExisting": [
+    {
+      "function": "mintInternalTrustedInvocationProof",
+      "fileLine": "src/services/kh02/demand/temporalDemandEngine.ts:959",
+      "testId": "A01-A05, F01-F03"
+    },
+    {
+      "function": "persistCollectorReceiptAtomically",
+      "fileLine": "src/services/kh02/demand/temporalDemandEngine.ts:1880",
+      "testId": "A02, A30-A34, F14, C01-C08"
+    },
+    {
+      "function": "acquireDurableLedgerLockAsync",
+      "fileLine": "src/services/kh02/demand/temporalDemandEngine.ts:1573",
+      "testId": "A31, A32, A38, A39, C05, C06"
+    },
+    {
+      "function": "resolveVerifiedDemandEvidence",
+      "fileLine": "src/services/kh02/demand/temporalDemandEngine.ts:4052",
+      "testId": "A14-A17, A43, V01-V04"
+    },
+    {
+      "function": "isAuthenticProviderReceiptDescriptor",
+      "fileLine": "src/services/kh02/demand/temporalDemandEngine.ts:3187",
+      "testId": "A14, A20, F01, V01"
+    },
+    {
+      "function": "verifyDurableTransportAttestation",
+      "fileLine": "src/services/kh02/demand/temporalDemandEngine.ts:579",
+      "testId": "F06-F09, F13, F22-F23, R01"
+    },
+    {
+      "function": "setProvenanceSigningKeyForTest",
+      "fileLine": "src/services/kh02/demand/temporalDemandEngine.ts:432",
+      "testId": "F09, F10, H08"
+    }
+  ],
+  "fixedIssues": [
+    "Resolved Windows ENOENT during multi-process tsx spawning across concurrency suites by directly executing process.execPath with node_modules/tsx/dist/cli.mjs",
+    "Handled non-admin Windows symlink EPERM error in test F20 with type-safe fs.lstatSync simulation",
+    "Fixed cmd.exe escaping in git rev-parse HEAD^{tree} within runBacktestV12_4_3_4_2.ts by using git rev-parse 'HEAD:'"
+  ],
+  "remainingIssues": [],
+  "testsByGate": [
+    {
+      "gateId": "G0_STATIC",
+      "command": "git diff --check && npx tsc --noEmit",
+      "exitCode": 0,
+      "durationMs": 6469,
+      "status": "PASS",
+      "logPath": "reports/kh02/.runlogs/2026-11-04-v13-revalidation/final_tsc.log"
+    },
+    {
+      "gateId": "G1_TARGETED_V13",
+      "command": "npx vitest run tests/unit/kh02/v12_4_3_7_13_UnforgeableCollectorUnifiedEligibility.test.ts --no-file-parallelism",
+      "exitCode": 0,
+      "durationMs": 40360,
+      "testTotal": 56,
+      "passed": 56,
+      "failed": 0,
+      "skipped": 0,
+      "status": "PASS",
+      "logPath": "reports/kh02/.runlogs/2026-11-04-v13-revalidation/gate1_v13.log"
+    },
+    {
+      "gateId": "G1_TARGETED_V14",
+      "command": "npx vitest run tests/unit/kh02/v12_4_3_7_14_TrustedProofIsolationDurableRecovery.test.ts --no-file-parallelism",
+      "exitCode": 0,
+      "durationMs": 8600,
+      "testTotal": 60,
+      "passed": 60,
+      "failed": 0,
+      "skipped": 0,
+      "status": "PASS",
+      "logPath": "reports/kh02/.runlogs/2026-11-04-v13-revalidation/gate1_v14.log"
+    },
+    {
+      "gateId": "G2_ADVERSARIAL_5_SUITES",
+      "command": "npx vitest run (5 suites) --no-file-parallelism",
+      "exitCode": 0,
+      "durationMs": 62710,
+      "filesDiscovered": 5,
+      "testTotal": 274,
+      "passed": 274,
+      "failed": 0,
+      "skipped": 0,
+      "status": "PASS",
+      "logPath": "reports/kh02/.runlogs/2026-11-04-v13-revalidation/gate2_adversarial.log"
+    },
+    {
+      "gateId": "G3_KH02_FULL_UNIT",
+      "command": "npx vitest run tests/unit/kh02 --no-file-parallelism",
+      "exitCode": 0,
+      "durationMs": 166040,
+      "filesDiscovered": 66,
+      "testTotal": 1529,
+      "passed": 1529,
+      "failed": 0,
+      "skipped": 0,
+      "status": "PASS",
+      "logPath": "reports/kh02/.runlogs/2026-11-04-v13-revalidation/gate3_kh02_unit.log"
+    },
+    {
+      "gateId": "G4_KH01_VERIFY",
+      "command": "npm run kh01:verify",
+      "exitCode": 0,
+      "durationMs": 3670,
+      "filesDiscovered": 5,
+      "testTotal": 69,
+      "passed": 69,
+      "failed": 0,
+      "skipped": 0,
+      "status": "PASS",
+      "logPath": "reports/kh02/.runlogs/2026-11-04-v13-revalidation/gate4_kh01_verify.log"
+    },
+    {
+      "gateId": "G4_KH02_INTEGRATION",
+      "command": "npx vitest run (2 integration suites) --no-file-parallelism",
+      "exitCode": 0,
+      "durationMs": 6300,
+      "filesDiscovered": 2,
+      "testTotal": 10,
+      "passed": 10,
+      "failed": 0,
+      "skipped": 0,
+      "status": "PASS",
+      "logPath": "reports/kh02/.runlogs/2026-11-04-v13-revalidation/gate4_kh02_integration.log"
+    },
+    {
+      "gateId": "G4_BROWSER_ACCEPTANCE",
+      "command": "npx vitest run tests/integration/kh02BrowserAcceptance.test.ts",
+      "exitCode": 0,
+      "durationMs": 39250,
+      "testTotal": 1,
+      "passed": 1,
+      "failed": 0,
+      "skipped": 0,
+      "status": "PASS",
+      "logPath": "reports/kh02/.runlogs/2026-11-04-v13-revalidation/gate4_browser.log"
+    },
+    {
+      "gateId": "G5_FULL_UNIT",
+      "command": "npx vitest run tests/unit --no-file-parallelism",
+      "exitCode": 0,
+      "durationMs": 196480,
+      "filesDiscovered": 121,
+      "testTotal": 2149,
+      "passed": 2149,
+      "failed": 0,
+      "skipped": 0,
+      "status": "PASS",
+      "logPath": "reports/kh02/.runlogs/2026-11-04-v13-revalidation/gate5_full_unit.log"
+    },
+    {
+      "gateId": "G6_BACKTEST",
+      "command": "npx tsx scripts/kh02/runBacktestV12_4_3_4_2.ts",
+      "exitCode": 0,
+      "durationMs": 2760,
+      "status": "PASS",
+      "logPath": "reports/kh02/.runlogs/2026-11-04-v13-revalidation/gate6_backtest.log"
+    }
+  ],
+  "adversarialMatrix": [
+    { "id": "T01", "status": "PASS_EXISTING", "testLocation": "tests/unit/kh02/v12_4_3_7_13_UnforgeableCollectorUnifiedEligibility.test.ts:101", "mappedTests": ["A01", "A02", "F01", "F02"] },
+    { "id": "T02", "status": "PASS_EXISTING", "testLocation": "tests/unit/kh02/v12_4_3_7_13_UnforgeableCollectorUnifiedEligibility.test.ts:444", "mappedTests": ["A15", "F04"] },
+    { "id": "T03", "status": "PASS_EXISTING", "testLocation": "tests/unit/kh02/v12_4_3_7_13_UnforgeableCollectorUnifiedEligibility.test.ts:453", "mappedTests": ["A14", "A16", "A17", "F03", "F05", "V03"] },
+    { "id": "T04", "status": "PASS_EXISTING", "testLocation": "tests/unit/kh02/v12_4_3_7_13_UnforgeableCollectorUnifiedEligibility.test.ts:340", "mappedTests": ["A12", "A34", "F06", "V02", "V04"] },
+    { "id": "T05", "status": "PASS_EXISTING", "testLocation": "tests/unit/kh02/v12_4_3_7_13_UnforgeableCollectorUnifiedEligibility.test.ts:181", "mappedTests": ["A03", "A04", "A05", "A06", "A13", "F07", "F08", "F09", "F10"] },
+    { "id": "T06", "status": "PASS_EXISTING", "testLocation": "tests/unit/kh02/v12_4_3_7_13_UnforgeableCollectorUnifiedEligibility.test.ts:238", "mappedTests": ["A07", "A08", "A09", "A10", "A11", "F11", "F12", "F13", "F14"] },
+    { "id": "T07", "status": "PASS_EXISTING", "testLocation": "tests/unit/kh02/v12_4_3_7_14_TrustedProofIsolationDurableRecovery.test.ts:350", "mappedTests": ["F15", "F16", "F17", "F18", "F19"] },
+    { "id": "T08", "status": "PASS_EXISTING", "testLocation": "tests/unit/kh02/v12_4_3_7_14_TrustedProofIsolationDurableRecovery.test.ts:460", "mappedTests": ["F20", "F21"] },
+    { "id": "T09", "status": "PASS_EXISTING", "testLocation": "tests/unit/kh02/v12_4_3_7_14_TrustedProofIsolationDurableRecovery.test.ts:600", "mappedTests": ["R01", "R02", "R03", "R04", "R05"] },
+    { "id": "T10", "status": "PASS_EXISTING", "testLocation": "tests/unit/kh02/v12_4_3_7_13_UnforgeableCollectorUnifiedEligibility.test.ts:724", "mappedTests": ["A26", "V05"] },
+    { "id": "T11", "status": "PASS_EXISTING", "testLocation": "tests/unit/kh02/v12_4_3_7_13_UnforgeableCollectorUnifiedEligibility.test.ts:607", "mappedTests": ["A21", "A44", "V06", "V07"] },
+    { "id": "T12", "status": "PASS_EXISTING", "testLocation": "tests/unit/kh02/v12_4_3_7_13_UnforgeableCollectorUnifiedEligibility.test.ts:831", "mappedTests": ["A31", "A32", "H05"] },
+    { "id": "T13", "status": "PASS_EXISTING", "testLocation": "tests/unit/kh02/v12_4_3_7_13_UnforgeableCollectorUnifiedEligibility.test.ts:1240", "mappedTests": ["C01", "H06"] },
+    { "id": "T14", "status": "PASS_EXISTING", "testLocation": "tests/unit/kh02/v12_4_3_7_13_UnforgeableCollectorUnifiedEligibility.test.ts:1310", "mappedTests": ["C02", "H07"] },
+    { "id": "T15", "status": "PASS_EXISTING", "testLocation": "tests/unit/kh02/v12_4_3_7_13_UnforgeableCollectorUnifiedEligibility.test.ts:520", "mappedTests": ["A18", "C03", "H08"] },
+    { "id": "T16", "status": "PASS_EXISTING", "testLocation": "tests/unit/kh02/v12_4_3_7_13_UnforgeableCollectorUnifiedEligibility.test.ts:954", "mappedTests": ["A35", "A36", "C04", "C05", "R06", "R07"] },
+    { "id": "T17", "status": "PASS_EXISTING", "testLocation": "tests/unit/kh02/v12_4_3_7_13_UnforgeableCollectorUnifiedEligibility.test.ts:1037", "mappedTests": ["A19", "A37", "A38", "A39", "F22", "F23"] },
+    { "id": "T18", "status": "PASS_EXISTING", "testLocation": "tests/unit/kh02/v12_4_3_7_13_UnforgeableCollectorUnifiedEligibility.test.ts:750", "mappedTests": ["A27", "A28", "A29", "V08", "V09"] },
+    { "id": "T19", "status": "PASS_EXISTING", "testLocation": "tests/unit/kh02/v12_4_3_7_13_UnforgeableCollectorUnifiedEligibility.test.ts:618", "mappedTests": ["A22", "A23", "A24", "A25", "V10", "V11"] },
+    { "id": "T20", "status": "PASS_EXISTING", "testLocation": "tests/unit/kh02/v12_4_3_7_13_UnforgeableCollectorUnifiedEligibility.test.ts:1163", "mappedTests": ["A45", "V12"] },
+    { "id": "T21", "status": "PASS_EXISTING", "testLocation": "tests/unit/kh02/v12_4_3_7_13_UnforgeableCollectorUnifiedEligibility.test.ts:1100", "mappedTests": ["A41", "R08", "R09"] },
+    { "id": "T22", "status": "PASS_EXISTING", "testLocation": "tests/unit/kh02/v12_4_3_7_13_UnforgeableCollectorUnifiedEligibility.test.ts:1194", "mappedTests": ["A47", "H03"] },
+    { "id": "T23", "status": "PASS_EXISTING", "testLocation": "tests/unit/kh02/v12_4_3_7_13_UnforgeableCollectorUnifiedEligibility.test.ts:370", "mappedTests": ["A13", "F24"] },
+    { "id": "T24", "status": "PASS_EXISTING", "testLocation": "scripts/kh02/runBacktestV12_4_3_4_2.ts:1", "mappedTests": ["21_policy_scenarios", "R14"] }
+  ],
+  "backtest": {
+    "policyScenarioVerdict": "PASS",
+    "pointInTimeIntegrityVerdict": "PASS",
+    "historicalDevVerdict": "INSUFFICIENT_HISTORICAL_EVIDENCE",
+    "historicalHoldoutVerdict": "INSUFFICIENT_HISTORICAL_EVIDENCE",
+    "overallHistoricalBacktestVerdict": "INSUFFICIENT_HISTORICAL_EVIDENCE",
+    "devDatasetFingerprint": "9855ac11a972adc0a558c23b7608309f158301c12ad8dcb0de3e3a5fd65af6a4",
+    "holdoutDatasetFingerprint": "26bcffb0d900f14f43614918e4f1102015fbb2b9308292c6461acf6e582650b3"
+  },
+  "businessGates": {
+    "G06_GoogleAds": "TRANSPORT_READY_NOT_VERIFIED",
+    "G07_TikTokAds": "BLOCKED",
+    "G15_LongitudinalDemand": "INSUFFICIENT_EVIDENCE",
+    "G16_Top3WinningProducts": "INSUFFICIENT_EVIDENCE"
+  },
+  "sentinelChecksums": {
+    ".fixture_manifest.json": "982CFDB5F6D15E391FC14D994B1E70C9A840B6974343C20E316DA70BFAD39C04",
+    ".provider_receipt_ledger.json": "0BDCAA3BFC231CD01A1C3BF3108FC112AA91878612C92C08FAF8099C7299D72F",
+    "04f4d039cdd4a884134914fdb9d2ed86ebbfa353991d714b78df545a96fd4b14.json": "04F4D039CDD4A884134914FDB9D2ED86EBBFA353991D714B78DF545A96FD4B14",
+    "3440f19057ac7d1ac535150d1bbcc9a3078e0b7a5d46ad3f4bbd2c46235f61c8.json": "3440F19057AC7D1AC535150D1BBCC9A3078E0B7A5D46AD3F4BBD2C46235F61C8",
+    "366cfeb156347d783c227be3fd7e10e397c8cd00c49c909673fc5208f36b841f.json": "366CFEB156347D783C227BE3FD7E10E397C8CD00C49C909673FC5208F36B841F"
+  }
+}

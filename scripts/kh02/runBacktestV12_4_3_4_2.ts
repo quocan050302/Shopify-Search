@@ -2716,7 +2716,7 @@ export async function runRealHistoricalProductReplay(
         cwd: process.cwd(),
         encoding: "utf8",
       }).trim();
-      currentTreeSha = execSync("git rev-parse HEAD^{tree}", {
+      currentTreeSha = execSync('git rev-parse "HEAD:"', {
         cwd: process.cwd(),
         encoding: "utf8",
       }).trim();

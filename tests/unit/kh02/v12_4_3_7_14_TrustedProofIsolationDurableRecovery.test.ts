@@ -54,6 +54,23 @@ import {
 } from "../../support/kh02TestProvenanceHarness";
 
 describe("KH-02 V12.4.3.7.14 — Trusted Proof Isolation & Durable Provenance Recovery", () => {
+  const tsxCli = path.resolve(process.cwd(), "node_modules/tsx/dist/cli.mjs");
+  const useNode = fs.existsSync(tsxCli);
+  const tsxBin = useNode ? process.execPath : path.resolve(process.cwd(), process.platform === "win32" ? "node_modules/.bin/tsx.cmd" : "node_modules/.bin/tsx");
+
+  function runTsxScript(scriptPath: string, args: string[] = []): Promise<number> {
+    return new Promise<number>((resolve) => {
+      const spawnArgs = useNode ? [tsxCli, scriptPath, ...args] : [scriptPath, ...args];
+      const child = spawn(tsxBin, spawnArgs, {
+        cwd: process.cwd(),
+        env: { ...process.env },
+        stdio: "pipe",
+      });
+      child.on("error", () => resolve(1));
+      child.on("close", (code) => resolve(code ?? 1));
+    });
+  }
+
   let testStorageDir: string;
   let originalStorageDir: string;
 
@@ -900,11 +917,7 @@ describe("KH-02 V12.4.3.7.14 — Trusted Proof Isolation & Durable Provenance Re
       const childScriptPath = path.join(testStorageDir, "child_verifier_r06.ts");
       fs.writeFileSync(childScriptPath, scriptCode, "utf-8");
 
-      const tsxBin = path.resolve(process.cwd(), "node_modules/.bin/tsx");
-      const exitCode = await new Promise<number>((resolve) => {
-        const child = spawn(tsxBin, [childScriptPath], { stdio: "inherit" });
-        child.on("close", resolve);
-      });
+      const exitCode = await runTsxScript(childScriptPath);
       expect(exitCode).toBe(0);
     });
 
@@ -965,11 +978,7 @@ describe("KH-02 V12.4.3.7.14 — Trusted Proof Isolation & Durable Provenance Re
       const childScriptPath = path.join(testStorageDir, "child_verifier_r07.ts");
       fs.writeFileSync(childScriptPath, scriptCode, "utf-8");
 
-      const tsxBin = path.resolve(process.cwd(), "node_modules/.bin/tsx");
-      const exitCode = await new Promise<number>((resolve) => {
-        const child = spawn(tsxBin, [childScriptPath], { stdio: "inherit" });
-        child.on("close", resolve);
-      });
+      const exitCode = await runTsxScript(childScriptPath);
       expect(exitCode).toBe(0);
     });
 
@@ -1656,14 +1665,7 @@ describe("KH-02 V12.4.3.7.14 — Trusted Proof Isolation & Durable Provenance Re
       const workerScript = path.join(testStorageDir, "worker_h05.ts");
       fs.writeFileSync(workerScript, workerCode, "utf-8");
 
-      const tsxBin = path.resolve(process.cwd(), "node_modules/.bin/tsx");
-      const runWorker = (id: string) =>
-        new Promise<number>((resolve) => {
-          const child = spawn(tsxBin, [workerScript, id, testStorageDir, barrierPath], {
-            stdio: "inherit",
-          });
-          child.on("close", resolve);
-        });
+      const runWorker = (id: string) => runTsxScript(workerScript, [id, testStorageDir, barrierPath]);
 
       const p1 = runWorker("1");
       const p2 = runWorker("2");
@@ -1741,14 +1743,7 @@ describe("KH-02 V12.4.3.7.14 — Trusted Proof Isolation & Durable Provenance Re
       const verifierScript = path.join(testStorageDir, "verifier_h06.ts");
       fs.writeFileSync(verifierScript, verifierCode, "utf-8");
 
-      const tsxBin = path.resolve(process.cwd(), "node_modules/.bin/tsx");
-      const runVerifier = (id: string) =>
-        new Promise<number>((resolve) => {
-          const child = spawn(tsxBin, [verifierScript, id, testStorageDir, barrierPath], {
-            stdio: "inherit",
-          });
-          child.on("close", resolve);
-        });
+      const runVerifier = (id: string) => runTsxScript(verifierScript, [id, testStorageDir, barrierPath]);
 
       const p1 = runVerifier("1");
       const p2 = runVerifier("2");
