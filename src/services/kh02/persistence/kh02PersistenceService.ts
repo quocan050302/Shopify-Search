@@ -34,6 +34,8 @@ export interface KH02RunSummary {
   effectiveJobState?: KH02EffectiveJobState;
   progress: number;
   totalCandidates: number;
+  totalObservations: number | null;
+  verifiedCandidates: number | null;
   topCandidateTitles: string[];
   startedAt: string | null;
   completedAt: string | null;
@@ -1082,12 +1084,20 @@ export async function getKH02ResearchRuns(
   return jobs.map((job) => {
     let topic = "General Research";
     let totalCandidates = job.totalItems || 0;
+    let totalObservations: number | null = null;
+    let verifiedCandidates: number | null = null;
     let topCandidateTitles: string[] = [];
 
     if (job.resultJson) {
       try {
         const parsed = JSON.parse(job.resultJson);
         if (parsed.topic) topic = parsed.topic;
+        if (typeof parsed.totalObservationsCollected === "number") {
+          totalObservations = parsed.totalObservationsCollected;
+        }
+        if (typeof parsed.candidateFunnel?.verifiedEvergreenCandidates === "number") {
+          verifiedCandidates = parsed.candidateFunnel.verifiedEvergreenCandidates;
+        }
         if (Array.isArray(parsed.topThree)) {
           topCandidateTitles = parsed.topThree.map((item: any) => item.candidate?.title || "Product Candidate");
         }
@@ -1101,6 +1111,8 @@ export async function getKH02ResearchRuns(
       status: job.status,
       progress: job.progress,
       totalCandidates,
+      totalObservations,
+      verifiedCandidates,
       topCandidateTitles,
       startedAt: job.startedAt ? job.startedAt.toISOString() : null,
       completedAt: job.completedAt ? job.completedAt.toISOString() : null,

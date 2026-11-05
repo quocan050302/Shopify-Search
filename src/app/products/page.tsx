@@ -112,9 +112,9 @@ interface RecentRunHistoryItem {
   status: string;
   currentStage: string;
   progressPct: number;
-  totalObservations: number;
+  totalObservations: number | null;
   totalCandidates: number;
-  verifiedCandidates: number;
+  verifiedCandidates: number | null;
   evergreenWinners: number;
   createdAt: string;
   completedAt?: string | null;
@@ -3874,7 +3874,7 @@ export default function ProductsPage() {
                     <div className="min-w-0 space-y-0.5">
                       <div className="font-bold text-white truncate">{run.topic}</div>
                       <div className="text-[11px] text-slate-400 font-mono">
-                        {run.lookbackDays}D · {run.totalObservations} obs ·{" "}
+                        {run.lookbackDays}D · {run.totalObservations ?? "—"} obs ·{" "}
                         {run.evergreenWinners} evergreen
                       </div>
                       <div className="text-[10px] text-slate-500">

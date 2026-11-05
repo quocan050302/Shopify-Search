@@ -155,6 +155,7 @@ describe("SWAI KH-02 V12.1 — Persistence & Workspace Isolation", () => {
       remainingCandidates: [],
       insufficientEvidenceCandidates: [],
       totalCandidatesDiscovered: 1,
+      totalObservationsCollected: 5,
       generatedAt: new Date().toISOString(),
       warnings: [],
       errors: [],
@@ -162,6 +163,12 @@ describe("SWAI KH-02 V12.1 — Persistence & Workspace Isolation", () => {
 
     // Persist snapshot
     await persistKH02RankingSnapshot(runId, WORKSPACE_A, mockResult);
+    const summary = (await getKH02ResearchRuns(WORKSPACE_A)).find((run) => run.runId === runId);
+    expect(summary).toMatchObject({
+      totalCandidates: 1,
+      totalObservations: 5,
+      verifiedCandidates: null,
+    });
 
     // Simulate page reload: restore latest leaderboard
     const restored = await getKH02Leaderboard(WORKSPACE_A);
