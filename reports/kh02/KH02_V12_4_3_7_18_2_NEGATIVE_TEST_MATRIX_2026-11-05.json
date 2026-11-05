@@ -1,0 +1,202 @@
+{
+  "version": "12.4.3.7.18.2",
+  "evaluatedAt": "2026-11-05T23:45:00+07:00",
+  "testedCodeCommitSha": "36d559465ece26ac872144d61c58117130ac00c9",
+  "baselineSha": "dc68cc51c8db95e0090754d6e106e13470649a6b",
+  "branch": "feature/kh02-walmart-us-jina-reader-v12.4.3.5.1",
+  "vectors": [
+    {
+      "id": "PA01",
+      "vector": "Missing evidenceReference on PROVIDER_API",
+      "expectedError": "PROVIDER_RECEIPT_REQUIRED",
+      "actualStatusCode": 422,
+      "dbRowsMutated": 0,
+      "result": "PASS"
+    },
+    {
+      "id": "PA02",
+      "vector": "Whitespace-only evidenceReference on PROVIDER_API",
+      "expectedError": "PROVIDER_RECEIPT_REQUIRED",
+      "actualStatusCode": 422,
+      "dbRowsMutated": 0,
+      "result": "PASS"
+    },
+    {
+      "id": "PA03",
+      "vector": "Unbacked request ID string without disk artifact",
+      "expectedError": "PROVIDER_RECEIPT_REQUIRED",
+      "actualStatusCode": 422,
+      "dbRowsMutated": 0,
+      "result": "PASS"
+    },
+    {
+      "id": "PA04",
+      "vector": "UNIT_FIXTURE descriptor passed with strictLiveOrigin: true",
+      "expectedError": "PROVIDER_ORIGIN_UNVERIFIED",
+      "actualStatusCode": 422,
+      "dbRowsMutated": 0,
+      "result": "PASS"
+    },
+    {
+      "id": "PA05",
+      "vector": "LOCAL_INTEGRITY_ONLY origin passed as PROVIDER_API authority",
+      "expectedError": "PROVIDER_ORIGIN_UNVERIFIED",
+      "actualStatusCode": 422,
+      "dbRowsMutated": 0,
+      "result": "PASS"
+    },
+    {
+      "id": "PA06",
+      "vector": "SIMULATED_TRANSPORT origin passed as PROVIDER_API authority",
+      "expectedError": "PROVIDER_ORIGIN_UNVERIFIED",
+      "actualStatusCode": 422,
+      "dbRowsMutated": 0,
+      "result": "PASS"
+    },
+    {
+      "id": "PA07",
+      "vector": "TEST_SIMULATION origin passed as PROVIDER_API authority",
+      "expectedError": "PROVIDER_ORIGIN_UNVERIFIED",
+      "actualStatusCode": 422,
+      "dbRowsMutated": 0,
+      "result": "PASS"
+    },
+    {
+      "id": "PA08",
+      "vector": "Self-asserted originKind=ACTUAL_PROVIDER_INVOCATION without live proof",
+      "expectedError": "PROVIDER_ORIGIN_UNVERIFIED",
+      "actualStatusCode": 422,
+      "dbRowsMutated": 0,
+      "result": "PASS"
+    },
+    {
+      "id": "PA09",
+      "vector": "Corrupted artifact content hash mismatch",
+      "expectedError": "HASH_MISMATCH",
+      "actualStatusCode": 422,
+      "dbRowsMutated": 0,
+      "result": "PASS"
+    },
+    {
+      "id": "PA10",
+      "vector": "Cross-product replay (Product A receipt used for Product B)",
+      "expectedError": "PRODUCT_MISMATCH",
+      "actualStatusCode": 422,
+      "dbRowsMutated": 0,
+      "result": "PASS"
+    },
+    {
+      "id": "PA11",
+      "vector": "Cross-tenant replay (Workspace A receipt used in Workspace B)",
+      "expectedError": "FORBIDDEN_WORKSPACE_PRODUCT",
+      "actualStatusCode": 422,
+      "dbRowsMutated": 0,
+      "result": "PASS"
+    },
+    {
+      "id": "PA12",
+      "vector": "Keyword mismatch (receipt for cat water fountain used for pet feeder)",
+      "expectedError": "PRODUCT_MISMATCH",
+      "actualStatusCode": 422,
+      "dbRowsMutated": 0,
+      "result": "PASS"
+    },
+    {
+      "id": "PA13",
+      "vector": "Geographic region mismatch (US receipt used for UK/CA)",
+      "expectedError": "REGION_MISMATCH",
+      "actualStatusCode": 422,
+      "dbRowsMutated": 0,
+      "result": "PASS"
+    },
+    {
+      "id": "PA14",
+      "vector": "Observation date mismatch outside provider series coverage",
+      "expectedError": "DATE_MISMATCH",
+      "actualStatusCode": 422,
+      "dbRowsMutated": 0,
+      "result": "PASS"
+    },
+    {
+      "id": "PA15",
+      "vector": "Tampered demandValue differing from verified provider artifact",
+      "expectedError": "VALUE_MISMATCH",
+      "actualStatusCode": 422,
+      "dbRowsMutated": 0,
+      "result": "PASS"
+    },
+    {
+      "id": "PA16",
+      "vector": "Future timestamp (time-travel attack > Date.now() + 60s)",
+      "expectedError": "POINT_IN_TIME_VIOLATION",
+      "actualStatusCode": 422,
+      "dbRowsMutated": 0,
+      "result": "PASS"
+    },
+    {
+      "id": "PA17",
+      "vector": "AsOf backdated historical replay with receipt captured after asOf",
+      "expectedError": "POINT_IN_TIME_VIOLATION",
+      "actualStatusCode": 422,
+      "dbRowsMutated": 0,
+      "result": "PASS"
+    },
+    {
+      "id": "PA18",
+      "vector": "Path traversal in evidenceReference (e.g. ../../etc/passwd)",
+      "expectedError": "PROVIDER_RECEIPT_REQUIRED",
+      "actualStatusCode": 422,
+      "dbRowsMutated": 0,
+      "result": "PASS"
+    },
+    {
+      "id": "PA19",
+      "vector": "Truncated or non-64 hex SHA checksum in receipt reference",
+      "expectedError": "PROVIDER_RECEIPT_REQUIRED",
+      "actualStatusCode": 422,
+      "dbRowsMutated": 0,
+      "result": "PASS"
+    },
+    {
+      "id": "PA20",
+      "vector": "Authoritative provider alias (authoritative_api) without receipt",
+      "expectedError": "PROVIDER_RECEIPT_REQUIRED",
+      "actualStatusCode": 422,
+      "dbRowsMutated": 0,
+      "result": "PASS"
+    },
+    {
+      "id": "PA21",
+      "vector": "Authoritative provider alias (google_trends_live) with fixture receipt",
+      "expectedError": "PROVIDER_ORIGIN_UNVERIFIED",
+      "actualStatusCode": 422,
+      "dbRowsMutated": 0,
+      "result": "PASS"
+    },
+    {
+      "id": "PA22",
+      "vector": "Authoritative provider alias (Google Trends (SerpApi)) with unbacked ID",
+      "expectedError": "PROVIDER_RECEIPT_REQUIRED",
+      "actualStatusCode": 422,
+      "dbRowsMutated": 0,
+      "result": "PASS"
+    },
+    {
+      "id": "PA23",
+      "vector": "Unsupported point source (UNSUPPORTED_FOO_SOURCE)",
+      "expectedError": "UNSUPPORTED_SOURCE",
+      "actualStatusCode": 422,
+      "dbRowsMutated": 0,
+      "result": "PASS"
+    },
+    {
+      "id": "PA24",
+      "vector": "USER_MANUAL does not require receipt but never opens provider authority",
+      "expectedError": "None (allowed for manual estimation)",
+      "actualStatusCode": 200,
+      "dbRowsMutated": 1,
+      "result": "PASS"
+    }
+  ],
+  "allVectorsPass": true
+}

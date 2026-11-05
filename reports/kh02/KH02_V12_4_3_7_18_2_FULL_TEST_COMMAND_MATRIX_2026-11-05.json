@@ -1,0 +1,122 @@
+{
+  "version": "12.4.3.7.18.2",
+  "evaluatedAt": "2026-11-05T23:45:00+07:00",
+  "testedCodeCommitSha": "36d559465ece26ac872144d61c58117130ac00c9",
+  "baselineSha": "dc68cc51c8db95e0090754d6e106e13470649a6b",
+  "branch": "feature/kh02-walmart-us-jina-reader-v12.4.3.5.1",
+  "overallEngineeringVerdict": "PASS",
+  "stagingReadinessVerdict": "STAGING_SHADOW_ONLY_GO",
+  "businessEvidenceVerdict": "INSUFFICIENT_AND_BLOCKED",
+  "gates": {
+    "S0": {
+      "name": "Baseline and Source Hygiene",
+      "commands": [
+        "git status --short --branch",
+        "npx tsc --noEmit",
+        "git diff --check"
+      ],
+      "exitCode": 0,
+      "durationMs": 4500,
+      "verdict": "PASS"
+    },
+    "S1": {
+      "name": "New V18.2 Targeted Tests",
+      "command": "npx vitest run tests/unit/kh02/v12_4_3_7_18_2_StrictProviderOriginAdmission.test.ts tests/integration/kh02/v12_4_3_7_18_2_ProviderReceiptWriteBoundary.test.ts tests/integration/kh02/v12_4_3_7_18_2_FinalReleaseGate.test.ts",
+      "testFiles": 3,
+      "testsTotal": 38,
+      "testsPassed": 38,
+      "testsFailed": 0,
+      "testsSkipped": 0,
+      "durationMs": 1240,
+      "exitCode": 0,
+      "verdict": "PASS"
+    },
+    "S2": {
+      "name": "Provenance & Security Regression",
+      "commands": [
+        "npx vitest run tests/unit/kh02/v12_4_3_7_16_*.test.ts tests/unit/kh02/v12_4_3_7_17_*.test.ts --maxWorkers=2",
+        "npx vitest run tests/unit/kh02/v12_4_3_7_18_*.test.ts tests/integration/kh02/v12_4_3_7_18_*.test.ts tests/unit/kh02/v12_4_3_5_3_Flow02CsvProvenanceAndGoogleExactPdp.test.ts --maxWorkers=2"
+      ],
+      "testFiles": 23,
+      "testsTotal": 369,
+      "testsPassed": 369,
+      "testsFailed": 0,
+      "testsSkipped": 0,
+      "durationMs": 37360,
+      "exitCode": 0,
+      "verdict": "PASS"
+    },
+    "S3": {
+      "name": "Full KH-02 Unit Suite",
+      "command": "npx vitest run tests/unit/kh02 --maxWorkers=2",
+      "testFiles": 84,
+      "testsTotal": 1913,
+      "testsPassed": 1913,
+      "testsFailed": 0,
+      "testsSkipped": 0,
+      "durationMs": 126830,
+      "exitCode": 0,
+      "verdict": "PASS"
+    },
+    "S4": {
+      "name": "Full KH-02 Integration Suite",
+      "command": "npx vitest run tests/integration/kh02 --maxWorkers=2",
+      "testFiles": 16,
+      "testsTotal": 77,
+      "testsPassed": 77,
+      "testsFailed": 0,
+      "testsSkipped": 0,
+      "durationMs": 58890,
+      "exitCode": 0,
+      "verdict": "PASS"
+    },
+    "S5": {
+      "name": "KH-01 Cross-System Regression",
+      "command": "npm run kh01:verify",
+      "testFiles": 5,
+      "testsTotal": 69,
+      "testsPassed": 69,
+      "testsFailed": 0,
+      "testsSkipped": 0,
+      "durationMs": 1620,
+      "exitCode": 0,
+      "verdict": "PASS"
+    },
+    "S6": {
+      "name": "Point-in-Time Historical Backtest",
+      "command": "npx tsx scripts/kh02/runBacktestV12_4_3_4_2.ts",
+      "policyScenarioVerdict": "PASS",
+      "devSplitVerdict": "INSUFFICIENT_HISTORICAL_EVIDENCE",
+      "holdoutSplitVerdict": "INSUFFICIENT_HISTORICAL_EVIDENCE",
+      "overallHistoricalVerdict": "INSUFFICIENT_HISTORICAL_EVIDENCE",
+      "durationMs": 2100,
+      "exitCode": 0,
+      "verdict": "PASS (Engineering / Policy Replay)"
+    },
+    "S7": {
+      "name": "Final Staging Shadow-Only Release-Candidate Gate",
+      "command": "npx vitest run tests/integration/kh02/v12_4_3_7_18_2_FinalReleaseGate.test.ts",
+      "testsTotal": 6,
+      "testsPassed": 6,
+      "testsFailed": 0,
+      "testsSkipped": 0,
+      "durationMs": 120,
+      "exitCode": 0,
+      "verdict": "PASS"
+    },
+    "S8": {
+      "name": "CI/Truth Gate",
+      "status": "CI_NOT_CONFIGURED_OR_NOT_RUN",
+      "note": "Local test logs fully support LOCAL_ENGINEERING_PASS; GitHub Actions CI not triggered for local unpushed commit",
+      "verdict": "CI_NOT_CONFIGURED_OR_NOT_RUN"
+    }
+  },
+  "totals": {
+    "totalUniqueUnitTests": 1913,
+    "totalUniqueIntegrationTests": 77,
+    "totalCrossSystemTests": 69,
+    "totalTestsPassed": 2059,
+    "totalTestsFailed": 0,
+    "totalTestsSkipped": 0
+  }
+}

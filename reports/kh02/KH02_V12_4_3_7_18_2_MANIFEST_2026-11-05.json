@@ -1,0 +1,43 @@
+{
+  "version": "12.4.3.7.18.2",
+  "auditDate": "2026-11-05T23:45:00+07:00",
+  "repository": "quocan050302/Shopify-Search",
+  "branch": "feature/kh02-walmart-us-jina-reader-v12.4.3.5.1",
+  "baselineSha": "dc68cc51c8db95e0090754d6e106e13470649a6b",
+  "testedCodeCommitSha": "36d559465ece26ac872144d61c58117130ac00c9",
+  "treeSha": "ce3d3605e2cbe4976e39fae80ac351748935a832",
+  "engineeringVerdict": "PASS",
+  "stagingVerdict": "STAGING_SHADOW_ONLY_GO",
+  "businessVerdict": "INSUFFICIENT_AND_BLOCKED",
+  "engineeringGates": {
+    "S0_baselineAndHygiene": "PASS (tsc 0 errors, git diff --check clean)",
+    "S1_v18_2_TargetedSuites": "PASS (38/38 across 3 suites)",
+    "S2_provenanceSecurityRegression": "PASS (369/369 across 23 suites)",
+    "S3_fullKh02UnitSuite": "PASS (1913/1913 across 84 files, duration 126.83s)",
+    "S4_fullKh02IntegrationSuite": "PASS (77/77 across 16 files, duration 58.89s)",
+    "S5_kh01CrossRegression": "PASS (69/69 across 5 files, duration 1.62s)",
+    "S6_historicalBacktestReplay": "PASS (Policy=PASS, Dev=INSUFFICIENT, Holdout=INSUFFICIENT, Exit 0)",
+    "S7_stagingReleaseGate": "PASS (RG01-RG06 verified)",
+    "S8_ciTruthGate": "CI_NOT_CONFIGURED_OR_NOT_RUN"
+  },
+  "sentinelHashes": {
+    "receipt_04f4d039_sha256": "04f4d039cdd4a884134914fdb9d2ed86ebbfa353991d714b78df545a96fd4b14",
+    "receipt_3440f190_sha256": "3440f19057ac7d1ac535150d1bbcc9a3078e0b7a5d46ad3f4bbd2c46235f61c8",
+    "receipt_366cfeb1_sha256": "366cfeb156347d783c227be3fd7e10e397c8cd00c49c909673fc5208f36b841f",
+    "bitwiseIntegrityPreserved": true
+  },
+  "businessGates": {
+    "G06_GoogleAds": "TRANSPORT_READY_NOT_VERIFIED",
+    "G07_TikTokAds": "BLOCKED",
+    "G15_LongitudinalDemand": "INSUFFICIENT_EVIDENCE",
+    "G16_Top3WinningProducts": "INSUFFICIENT_EVIDENCE"
+  },
+  "artifactFiles": [
+    "reports/kh02/KH02_V12_4_3_7_18_2_STRICT_PROVIDER_ORIGIN_AUDIT_2026-11-05.md",
+    "reports/kh02/KH02_V12_4_3_7_18_2_PROVIDER_RECEIPT_SCOPE_TRACE_2026-11-05.json",
+    "reports/kh02/KH02_V12_4_3_7_18_2_NEGATIVE_TEST_MATRIX_2026-11-05.json",
+    "reports/kh02/KH02_V12_4_3_7_18_2_FULL_TEST_COMMAND_MATRIX_2026-11-05.json",
+    "reports/kh02/KH02_V12_4_3_7_18_2_FINAL_RELEASE_GATE_2026-11-05.json",
+    "reports/kh02/KH02_V12_4_3_7_18_2_MANIFEST_2026-11-05.json"
+  ]
+}

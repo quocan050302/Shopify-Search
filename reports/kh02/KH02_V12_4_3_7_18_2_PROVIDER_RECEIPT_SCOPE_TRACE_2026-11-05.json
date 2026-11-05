@@ -1,0 +1,64 @@
+{
+  "version": "12.4.3.7.18.2",
+  "evaluatedAt": "2026-11-05T23:45:00+07:00",
+  "testedCodeCommitSha": "36d559465ece26ac872144d61c58117130ac00c9",
+  "baselineSha": "dc68cc51c8db95e0090754d6e106e13470649a6b",
+  "branch": "feature/kh02-walmart-us-jina-reader-v12.4.3.5.1",
+  "sentinelReceipts": {
+    "04f4d039cdd4a884134914fdb9d2ed86ebbfa353991d714b78df545a96fd4b14": {
+      "cadence": "WEEKLY",
+      "sha256": "04f4d039cdd4a884134914fdb9d2ed86ebbfa353991d714b78df545a96fd4b14",
+      "file": "data/provider_receipts/04f4d039cdd4a884134914fdb9d2ed86ebbfa353991d714b78df545a96fd4b14.json",
+      "verified": true,
+      "bitwiseMatch": true
+    },
+    "3440f19057ac7d1ac535150d1bbcc9a3078e0b7a5d46ad3f4bbd2c46235f61c8": {
+      "cadence": "DAILY",
+      "sha256": "3440f19057ac7d1ac535150d1bbcc9a3078e0b7a5d46ad3f4bbd2c46235f61c8",
+      "file": "data/provider_receipts/3440f19057ac7d1ac535150d1bbcc9a3078e0b7a5d46ad3f4bbd2c46235f61c8.json",
+      "verified": true,
+      "bitwiseMatch": true
+    },
+    "366cfeb156347d783c227be3fd7e10e397c8cd00c49c909673fc5208f36b841f": {
+      "cadence": "HOURLY",
+      "sha256": "366cfeb156347d783c227be3fd7e10e397c8cd00c49c909673fc5208f36b841f",
+      "file": "data/provider_receipts/366cfeb156347d783c227be3fd7e10e397c8cd00c49c909673fc5208f36b841f.json",
+      "verified": true,
+      "bitwiseMatch": true
+    }
+  },
+  "scopeValidationRules": {
+    "deepAdmissionPredicate": "assertVerifiedProviderOriginForImport",
+    "resolver": "resolveVerifiedDemandEvidence",
+    "enforcedStrictLiveOrigin": true,
+    "conjunctiveRequirements": [
+      "desc.verified === true",
+      "desc.verifiedOrigin === true",
+      "desc.providerOriginVerified === true",
+      "desc.originKind === \"ACTUAL_PROVIDER_INVOCATION\"",
+      "desc.eligible === true",
+      "desc.eligibleForBusiness === true",
+      "desc.durablePersistenceVerified === true",
+      "desc.commitState === \"EVIDENCE_ELIGIBLE\"",
+      "desc.responseStatus === 200"
+    ],
+    "rejectedOrigins": [
+      "UNIT_FIXTURE",
+      "LOCAL_INTEGRITY_ONLY",
+      "SIMULATED_TRANSPORT",
+      "TEST_SIMULATION",
+      "CACHED_UNVERIFIED",
+      "UNKNOWN_SOURCE",
+      "self-asserted ACTUAL_PROVIDER_INVOCATION without verified descriptor"
+    ],
+    "scopeInvariants": [
+      "productId exact match",
+      "workspaceId tenant match",
+      "keyword/search term exact token alignment",
+      "region strict case-insensitive match (e.g. US)",
+      "observationDate within receipt capture window and not in future",
+      "observationValue matches receipt point payload",
+      "no lookahead / time travel (capturedAt <= now + 60s)"
+    ]
+  }
+}
