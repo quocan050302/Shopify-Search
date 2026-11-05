@@ -1,0 +1,143 @@
+{
+  "version": "12.4.3.7.17",
+  "auditDate": "2026-11-05T20:16:00+07:00",
+  "baselineSha": "63145d247fa5f3a93ba280819ecbf2c40859efef",
+  "testedCodeCommitSha": "ecec01c23527364c6488c68b08de686fefe0a19a",
+  "commandMatrix": [
+    {
+      "gate": "S0_typeScriptCheck",
+      "command": "npx tsc --noEmit",
+      "exitCode": 0,
+      "passed": true,
+      "summary": "0 errors, clean build"
+    },
+    {
+      "gate": "S1_v17_networkSsrfRedirect",
+      "command": "npx vitest run tests/unit/kh02/v12_4_3_7_17_NetworkSsrfRedirect.test.ts",
+      "exitCode": 0,
+      "passed": true,
+      "totalTests": 24,
+      "passedTests": 24,
+      "duration": "38ms",
+      "testGroups": ["A01-A24"]
+    },
+    {
+      "gate": "S1_v17_pdpContentCreativeProvenance",
+      "command": "npx vitest run tests/unit/kh02/v12_4_3_7_17_PdpContentCreativeProvenance.test.ts",
+      "exitCode": 0,
+      "passed": true,
+      "totalTests": 18,
+      "passedTests": 18,
+      "duration": "25ms",
+      "testGroups": ["B01-B18"]
+    },
+    {
+      "gate": "S1_v17_csvRowBindingAndLineage",
+      "command": "npx vitest run tests/unit/kh02/v12_4_3_7_17_CsvRowBindingAndLineage.test.ts",
+      "exitCode": 0,
+      "passed": true,
+      "totalTests": 24,
+      "passedTests": 24,
+      "duration": "1.06s",
+      "testGroups": ["C01-C24"]
+    },
+    {
+      "gate": "S1_v17_dbUniquenessMultiProcess",
+      "command": "npx vitest run tests/unit/kh02/v12_4_3_7_17_DbUniquenessMultiProcess.test.ts",
+      "exitCode": 0,
+      "passed": true,
+      "totalTests": 18,
+      "passedTests": 18,
+      "duration": "688ms",
+      "testGroups": ["D01-D18"]
+    },
+    {
+      "gate": "S1_v17_regressionBusinessResourceGuards",
+      "command": "npx vitest run tests/unit/kh02/v12_4_3_7_17_RegressionBusinessResourceGuards.test.ts",
+      "exitCode": 0,
+      "passed": true,
+      "totalTests": 18,
+      "passedTests": 18,
+      "duration": "9ms",
+      "testGroups": ["E01-E10", "F01-F08"]
+    },
+    {
+      "gate": "S2_regression_flow02",
+      "command": "npx vitest run tests/unit/kh02/v12_4_3_5_3_Flow02CsvProvenanceAndGoogleExactPdp.test.ts",
+      "exitCode": 0,
+      "passed": true,
+      "totalTests": 33,
+      "passedTests": 33,
+      "duration": "847ms"
+    },
+    {
+      "gate": "S2_regression_v16_mandatoryDurableAttestation",
+      "command": "npx vitest run tests/unit/kh02/v12_4_3_7_16_MandatoryDurableAttestation.test.ts",
+      "exitCode": 0,
+      "passed": true,
+      "totalTests": 26,
+      "passedTests": 26,
+      "duration": "18.25s"
+    },
+    {
+      "gate": "S2_regression_v16_transactionalDemandImport",
+      "command": "npx vitest run tests/unit/kh02/v12_4_3_7_16_TransactionalDemandImport.test.ts",
+      "exitCode": 0,
+      "passed": true,
+      "totalTests": 21,
+      "passedTests": 21,
+      "duration": "458ms"
+    },
+    {
+      "gate": "S2_regression_v16_realPdpVerification",
+      "command": "npx vitest run tests/unit/kh02/v12_4_3_7_16_RealPdpVerification.test.ts",
+      "exitCode": 0,
+      "passed": true,
+      "totalTests": 27,
+      "passedTests": 27,
+      "duration": "71ms"
+    },
+    {
+      "gate": "S3_full_kh02_unit_suites",
+      "command": "npx vitest run tests/unit/kh02",
+      "exitCode": 0,
+      "passed": true,
+      "totalFiles": 77,
+      "passedFiles": 77,
+      "totalTests": 1797,
+      "passedTests": 1797,
+      "failedTests": 0,
+      "skippedTests": 0,
+      "duration": "121.56s"
+    },
+    {
+      "gate": "S4_full_kh02_integration_suites",
+      "command": "npx vitest run tests/integration/kh02",
+      "exitCode": 0,
+      "passed": true,
+      "totalFiles": 9,
+      "passedFiles": 9,
+      "totalTests": 33,
+      "passedTests": 33,
+      "duration": "51.08s"
+    },
+    {
+      "gate": "S5_kh01_cross_system_verify",
+      "command": "npm run kh01:verify",
+      "exitCode": 0,
+      "passed": true,
+      "totalFiles": 5,
+      "passedFiles": 5,
+      "totalTests": 69,
+      "passedTests": 69,
+      "duration": "1.51s"
+    },
+    {
+      "gate": "S6_point_in_time_backtest",
+      "command": "npx tsx scripts/kh02/runBacktestV12_4_3_4_2.ts",
+      "exitCode": 0,
+      "passed": true,
+      "summary": "Policy=PASS, Dev=INSUFFICIENT, Holdout=INSUFFICIENT, zero lookahead leakage"
+    }
+  ]
+}

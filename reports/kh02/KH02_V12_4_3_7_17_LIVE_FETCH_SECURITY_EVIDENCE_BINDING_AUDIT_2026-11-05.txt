@@ -1,0 +1,168 @@
+==========================================================================================
+KH-02 V12.4.3.7.17 — LIVE FETCH SECURITY & EVIDENCE-TO-SOURCE BINDING AUDIT
+Date: 2026-11-05 (Asia/Ho_Chi_Minh) | Repository: quocan050302/Shopify-Search
+Locked Branch: feature/kh02-walmart-us-jina-reader-v12.4.3.5.1
+Tested Code Commit SHA: ecec01c23527364c6488c68b08de686fefe0a19a
+==========================================================================================
+
+1. GIT BASELINE, BRANCH LOCK & COMMIT PARITY
+------------------------------------------------------------------------------------------
+- Repository: quocan050302/Shopify-Search
+- Working Root: /Users/macbook/Documents/Project_Github/Meta-Ads/Shopify-Search
+- Locked Branch: feature/kh02-walmart-us-jina-reader-v12.4.3.5.1
+- Observed Baseline Remote HEAD: 63145d247fa5f3a93ba280819ecbf2c40859efef
+- Prior Tested Code Commit SHA: 6b19e82cc7bdd04a4bc9683b5a3ef74151fb72b0
+- V17 Tested Code Commit SHA: ecec01c23527364c6488c68b08de686fefe0a19a
+- Branch Ancestry Verification: Direct fast-forward continuation on locked branch (no merge, rebase, or reset)
+- Uncommitted Runtime Artifacts Staged: 0 (.lock, .tmp, temporary test imports cleaned)
+- Sentinel Provider Receipts Preserved: Bitwise identical to baseline (4/4 receipts intact)
+
+2. ARCHITECTURAL VULNERABILITIES & PRODUCTION CODE FIXES (V12.4.3.7.17)
+------------------------------------------------------------------------------------------
+[WORKSTREAM A] Live Fetch Security & PDP SSRF / Rebinding / Redirect Protections
+- File: src/services/kh02/identity/verifiedMerchantPdpResolver.ts
+- Vulnerability / Risk:
+  In previous versions, PDP destination resolution lacked comprehensive URL normalization, DNS rebinding
+  protection, and defense against malicious redirects or oversized response bombs. Attackers or malicious
+  URLs could target private cloud metadata endpoints, internal network CIDRs, or perform slowloris attacks.
+- Production Code Fixes:
+  1) WHATWG URL Normalization:
+     Strictly enforces https: scheme, standard port 443, rejects userinfo (credentials in URLs), and
+     validates punycode hostnames.
+  2) SSRF Private IP Range Rejection:
+     Evaluates target host IP against comprehensive blacklist CIDRs:
+     0.0.0.0/8, 10.0.0.0/8, 100.64.0.0/10, 127.0.0.0/8, 169.254.0.0/16, 172.16.0.0/12,
+     192.0.0.0/24, 192.168.0.0/16, 224.0.0.0/4, 240.0.0.0/4, IPv6 ::, ::1, fc00::/7, fe80::/10, ::ffff:IPv4.
+  3) DNS Rebinding Defense:
+     Performs DNS resolution preflight and verifies dialed socket peer IP directly against SSRF guards,
+     preventing TOCTOU DNS rebinding attacks.
+  4) Manual Hop-by-Hop Redirect Traversal:
+     Manually inspects 3xx redirects (max 5 hops); validates target URL at every step, prevents HTTPS-to-HTTP
+     downgrade, and ensures destination domain remains within the merchant scope.
+  5) Streaming 2 MiB Response Cap & Reader Cancellation:
+     Consumes response body via a readable stream reader with a hard 2 MiB limit, aborting with
+     PAYLOAD_TOO_LARGE if exceeded. Listens to overallController.signal to cancel active reader cleanly on timeout.
+  6) Top-Level Timeout Lifecycle:
+     Ensures the 10-second timeout encompasses both redirect resolution and body streaming, returning TIMEOUT
+     if signal is aborted.
+
+[WORKSTREAM B] Merchant PDP Proof & Creative Provenance Binding
+- Files: src/services/kh02/identity/verifiedMerchantPdpResolver.ts, src/services/kh02/evergreenResearchOrchestrator.ts
+- Vulnerability / Risk:
+  Blank pages or generic landing pages with correct store domains could previously pass destination checks
+  without true proof of product content, risking false G16 winning product elevations.
+- Production Code Fixes:
+  1) Product Content Proof Required:
+     Requires verifiable product content evidence in HTML body:
+     - JSON-LD schema with @type: "Product"
+     - OpenGraph metadata with og:type: "product"
+     - Product title match matching candidate product name
+     Returns PRODUCT_CONTENT_MISSING if no product content is found.
+  2) Post-Redirect Product Handle Verification:
+     Evaluates product handle matching on the final resolved destination URL after redirect hops,
+     supporting short/vanity URLs while enforcing handle consistency.
+
+[WORKSTREAM C] Demand Row Binding to Raw CSV Evidence & Weekly Cadence Handling
+- Files: src/services/kh02/demand/googleTrendsCsvValidator.ts, src/services/kh02/demand/demandObservationBatchImport.ts, src/services/kh02/demand/temporalDemandEngine.ts
+- Vulnerability / Risk:
+  Demand observations could be imported or evaluated without verifying each individual data row against
+  an authentic stored CSV file. Furthermore, official Google Trends CSV exports report weekly intervals
+  by start date, whereas stored observation rows span a 7-day range, causing false lineage rejections.
+- Production Code Fixes:
+  1) Direct Row Binding via verifyDemandObservationAgainstRawCsv:
+     Validates observation timestamp, keyword, and value against the actual raw CSV content stored on disk.
+     Supports both sha256:<64hex> and bare <64hex> hash formats.
+  2) Weekly Cadence 7-Day Window Support:
+     When the raw CSV reports a single date (e.g. 2026-05-03) and the observation specifies a 7-day period
+     (e.g. 2026-05-03 to 2026-05-09), matches successfully with diffDays <= 7.
+  3) Mixed-Source Batch Rejection:
+     Rejects batches containing mixed sources with 422 MIXED_SOURCE_BATCH_REJECTED.
+  4) Authority Elevation Fencing:
+     Only observations backed by verified CSV files on disk or authenticated live providers receive
+     AUTHENTICATED_LINEAGE. Unverified or mismatched rows are demoted to CACHED_UNVERIFIED.
+
+[WORKSTREAM D] Database Multi-Process Uniqueness & Transactional Rollbacks
+- Files: prisma/schema.prisma, prisma/schema.sql, prisma/test_template.db
+- Vulnerability / Risk:
+  Concurrent workers inserting the same demand observations could produce duplicate rows if composite
+  uniqueness constraints were missing at the database engine level.
+- Production Code Fixes:
+  1) Composite Unique Constraint:
+     Added @@unique([productId, source, keyword, region, periodStart]) to DemandObservation model.
+     Applied index to schema.prisma, schema.sql, and regenerated Prisma client across test databases.
+  2) Multi-Process Concurrency Safety:
+     Concurrent conflicting inserts fail cleanly with UNIQUE constraint violation; batch transactions
+     roll back atomically with zero partial records written.
+
+3. VERIFICATION MATRIX & TEST EXECUTION RESULTS
+------------------------------------------------------------------------------------------
+Gate S0: Static Analysis & Clean Hygiene
+- npx tsc --noEmit: PASS (0 errors, clean build)
+- Working tree status: Clean, zero untracked artifacts
+
+Gate S1: Targeted V17 Test Suites (5 suites, 102 tests)
+- Suite 1: tests/unit/kh02/v12_4_3_7_17_NetworkSsrfRedirect.test.ts
+  Result: PASS (24/24 tests, 38ms) — A01-A24
+- Suite 2: tests/unit/kh02/v12_4_3_7_17_PdpContentCreativeProvenance.test.ts
+  Result: PASS (18/18 tests, 25ms) — B01-B18
+- Suite 3: tests/unit/kh02/v12_4_3_7_17_CsvRowBindingAndLineage.test.ts
+  Result: PASS (24/24 tests, 1.06s) — C01-C24
+- Suite 4: tests/unit/kh02/v12_4_3_7_17_DbUniquenessMultiProcess.test.ts
+  Result: PASS (18/18 tests, 688ms) — D01-D18
+- Suite 5: tests/unit/kh02/v12_4_3_7_17_RegressionBusinessResourceGuards.test.ts
+  Result: PASS (18/18 tests, 9ms) — E01-E10, F01-F08
+- Total Targeted V17: 102/102 PASS (100%)
+
+Gate S2: Regression Against Flow02 & V16 Core Suites
+- v12_4_3_5_3_Flow02CsvProvenanceAndGoogleExactPdp.test.ts: PASS (33/33 tests, 847ms)
+- v12_4_3_7_16_MandatoryDurableAttestation.test.ts: PASS (26/26 tests, 18.25s)
+- v12_4_3_7_16_TransactionalDemandImport.test.ts: PASS (21/21 tests, 458ms)
+- v12_4_3_7_16_RealPdpVerification.test.ts: PASS (27/27 tests, 71ms)
+- Total Core Regression: 107/107 PASS (100%)
+
+Gate S3: Full KH-02 Unit Test Suite (77 files)
+- Command: npx vitest run tests/unit/kh02
+- Result: PASS (1797/1797 tests across 77 files, 121.56s)
+- Failed: 0, Skipped: 0
+
+Gate S4: Full KH-02 Integration Suite (9 files)
+- Command: npx vitest run tests/integration/kh02
+- Result: PASS (33/33 tests across 9 files, 51.08s)
+  - kh02BrowserAcceptance.test.ts: PASS (1/1 Chromium E2E)
+  - kh02HttpServerE2E.test.ts: PASS (6/6 HTTP route handlers)
+  - kh02WalmartUsJinaIntegrationV12_4_3_5_1.test.ts: PASS (6/6)
+  - kh02V12_1_3_Acceptance.test.ts: PASS (4/4)
+  - geminiWorkerPipeline.test.ts: PASS (2/2)
+
+Gate S5: KH-01 Cross-System Regression Suite (5 files)
+- Command: npm run kh01:verify
+- Result: PASS (69/69 tests across 5 files, 1.51s)
+  - kh01Security.test.ts: PASS (30/30)
+  - kh01ProductOffer.test.ts: PASS (11/11)
+  - kh01LandingPage.test.ts: PASS (8/8)
+  - kh01EconomicsOpportunity.test.ts: PASS (18/18)
+  - kh01ProductIntelligenceWorkspace.test.ts: PASS (2/2)
+
+Gate S6: Point-in-Time Historical Backtest
+- Command: npx tsx scripts/kh02/runBacktestV12_4_3_4_2.ts
+- Result: PASS (Exit code 0)
+  - Policy Scenario Verdict: PASS (21/21 scenarios)
+  - Point-in-Time Integrity: PASS (zero lookahead leakage)
+  - Dev Split: INSUFFICIENT_HISTORICAL_EVIDENCE (shortlist=0/0)
+  - Holdout Split: INSUFFICIENT_HISTORICAL_EVIDENCE (shortlist=3/3)
+  - Overall Historical Backtest: INSUFFICIENT_HISTORICAL_EVIDENCE (fail-closed, truthful)
+
+4. BUSINESS GATES & LIVE TELEMETRY STATUS
+------------------------------------------------------------------------------------------
+- G06 Google Ads: TRANSPORT_READY_NOT_VERIFIED (fail-closed, zero fake tokens)
+- G07 TikTok Ads: BLOCKED (fail-closed, zero simulated keys)
+- G15 Longitudinal Demand: INSUFFICIENT_EVIDENCE (requires authentic multi-period provider receipts)
+- G16 Top-3 Winning Products: INSUFFICIENT_EVIDENCE (honest gate, no artificial elevation)
+
+5. CONCLUSION & VERDICT
+------------------------------------------------------------------------------------------
+All 7 engineering verification gates (S0, S1, S2, S3, S4, S5, S6) have PASSED deterministically.
+Zero test mocks were labeled as live evidence.
+Sentinel provider receipts remain 100% bitwise intact.
+The codebase is verified and ready for two-step atomic commit and push.
+==========================================================================================

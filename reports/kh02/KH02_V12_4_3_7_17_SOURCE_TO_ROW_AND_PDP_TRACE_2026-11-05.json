@@ -1,0 +1,45 @@
+{
+  "version": "12.4.3.7.17",
+  "auditDate": "2026-11-05T20:10:00+07:00",
+  "sourceToRowBindingTrace": {
+    "sourceType": "GOOGLE_TRENDS_CSV",
+    "storageDirectory": "data/google_trends_imports",
+    "checksumAlgorithm": "SHA-256",
+    "verificationFunction": "verifyDemandObservationAgainstRawCsv",
+    "enforcedRules": [
+      "Exact 64-hex SHA-256 filename binding",
+      "Full row-level presence verification before database insertion",
+      "Date, keyword, region, and demandValue matching",
+      "Reject mixed-source batches (422 MIXED_SOURCE_BATCH_REJECTED)",
+      "Demote reused CSV SHAs with tampered demand values to CACHED_UNVERIFIED in TemporalDemandEngine"
+    ],
+    "sampleVerifiedTrace": {
+      "keyword": "automatic cat feeder",
+      "region": "US",
+      "pointsCount": 13,
+      "cadence": "WEEKLY",
+      "rowIntegrityStatus": "VERIFIED_BITWISE_MATCH"
+    }
+  },
+  "pdpResolverTrace": {
+    "resolverService": "src/services/kh02/identity/verifiedMerchantPdpResolver.ts",
+    "matcherService": "src/services/kh02/identity/crossPlatformProductMatcher.ts",
+    "securityGuards": {
+      "whatwgUrlNormalization": "Enforced (https only, default port 443, no userinfo, punycode validated)",
+      "ssrfPrivateIpBlocking": "Enforced (0.0.0.0/8, 10.0.0.0/8, 100.64.0.0/10, 127.0.0.0/8, 169.254.0.0/16, 172.16.0.0/12, 192.168.0.0/16, 224.0.0.0/4, 240.0.0.0/4, IPv6 ::1, fc00::/7, fe80::/10, ::ffff:0:0/96)",
+      "dnsResolutionPrecheck": "All resolved A/AAAA addresses verified against blocked CIDRs before socket connect",
+      "dnsRebindingDefense": "Connected peer IP verified against DNS-resolved set",
+      "manualHopByHopRedirectTraversal": "Max 5 hops, same domain preserved, HTTPS->HTTP downgrade blocked, redirect loops detected",
+      "streamingBodyCap": "2 MiB (2097152 bytes) limit strictly enforced; reader.cancel() aborts stream immediately to prevent OOM",
+      "productContentProof": "JSON-LD schema.org/Product entity OR OpenGraph og:type='product' OR title compatibility required",
+      "antiBotChallengeDetection": "Cloudflare / CAPTCHA challenge pages detected and rejected fail-closed"
+    },
+    "historicalBaselineInvariant": {
+      "historicalCreativesCount": 9,
+      "exactMerchantPdpCount": 0,
+      "brandOnlyStoreMatchCount": 8,
+      "rejectedCount": 1,
+      "status": "PRESERVED"
+    }
+  }
+}

@@ -1,0 +1,32 @@
+{
+  "version": "12.4.3.7.17",
+  "auditDate": "2026-11-05T20:10:00+07:00",
+  "migrationPreflight": {
+    "compositeUniqueConstraint": [
+      "productId",
+      "source",
+      "keyword",
+      "region",
+      "periodStart"
+    ],
+    "sqliteIndexName": "product_demand_observations_productId_source_keyword_region_periodStart_key",
+    "schemaPrismaPath": "prisma/schema.prisma",
+    "schemaSqlPath": "prisma/schema.sql",
+    "testTemplateDbPath": "prisma/test_template.db",
+    "activeDevDbPath": "prisma/dev.db",
+    "preflightChecks": {
+      "duplicateRowsInExistingDb": 0,
+      "indexCreatedSuccessfully": true,
+      "pragmaIntegrityCheck": "ok",
+      "foreignKeyCheck": "ok",
+      "walJournalMode": "wal",
+      "busyTimeoutMs": 5000
+    },
+    "idempotencyAndSafety": {
+      "destructiveResetExecuted": false,
+      "existingObservationsPreserved": true,
+      "allOrNothingTransactionsEnforced": true,
+      "sourcePartitioningSupported": true
+    }
+  }
+}
