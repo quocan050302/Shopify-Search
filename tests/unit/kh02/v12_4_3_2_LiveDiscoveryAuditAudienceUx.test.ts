@@ -1,4 +1,5 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, beforeAll } from "vitest";
+import { saveOriginalGoogleTrendsCsvFile } from "@/services/kh02/demand/googleTrendsCsvValidator";
 import {
   evaluateDemandSourceAuthority,
   auditDemandObservationsProvenance,
@@ -75,6 +76,11 @@ function makeBaseCandidate(
 }
 
 describe("SWAI KH-02 V12.4.3.2 — Live Discovery, Forensic Demand Audit, Audience Relevance & UX ViewModel", () => {
+  beforeAll(() => {
+    const csv = "Category: All categories\nWeek,dog water fountain: (United States)\n2025-09-01,55\n2025-10-01,61\n2025-11-01,68\n";
+    const sha = "3aa60e05c7c6d4ce96e64f93cbacef0aacd6d0f75846b5d1ecd2fb26fafc4039";
+    saveOriginalGoogleTrendsCsvFile(csv, sha);
+  });
   describe("1. Release & Runtime Identity", () => {
     it("reports release version 12.4.3.2..12.4.3.5.0.3", () => {
       expect(SWAI_KH02_RELEASE_VERSION).toMatch(/^12\.4\.3\.(2|2\.1|3|3\.1|3\.2|4\.1|4\.2|4\.3|4\.4|4\.5|4\.6|4\.7|4\.8|4\.9|5\.0|5\.0\.1|5\.0\.2|5\.0\.3)$/);
@@ -188,7 +194,7 @@ describe("SWAI KH-02 V12.4.3.2 — Live Discovery, Forensic Demand Audit, Audien
           productId: "prod_fountain_1",
           keyword: "dog water fountain",
           source: "GOOGLE_TRENDS_CSV",
-          evidenceReference: "csv-import:job_2026_04:sha256:9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08",
+          evidenceReference: "csv-import:job_2026_04:sha256:3aa60e05c7c6d4ce96e64f93cbacef0aacd6d0f75846b5d1ecd2fb26fafc4039",
           demandValue: 61,
           date: "2025-10-01T00:00:00Z",
         },
@@ -196,7 +202,7 @@ describe("SWAI KH-02 V12.4.3.2 — Live Discovery, Forensic Demand Audit, Audien
           productId: "prod_fountain_1",
           keyword: "dog water fountain",
           source: "GOOGLE_TRENDS_CSV",
-          evidenceReference: "csv-import:job_2026_04:sha256:9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08",
+          evidenceReference: "csv-import:job_2026_04:sha256:3aa60e05c7c6d4ce96e64f93cbacef0aacd6d0f75846b5d1ecd2fb26fafc4039",
           demandValue: 68,
           date: "2025-11-01T00:00:00Z",
         },

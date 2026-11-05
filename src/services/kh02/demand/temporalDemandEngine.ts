@@ -4810,6 +4810,16 @@ export async function resolveVerifiedDemandEvidence(
       errorCode: "ORIGIN_UNVERIFIED",
     };
   }
+  const capturedMs = new Date(rawCapturedAt).getTime();
+  if (capturedMs > Date.now() + 60000) {
+    return {
+      verified: false,
+      eligible: false,
+      verifiedOrigin: false,
+      rejectionReason: `Evidence capturedAt '${rawCapturedAt}' is in the future (time-travel violation).`,
+      errorCode: "POINT_IN_TIME_VIOLATION",
+    };
+  }
 
   // Deep raw artifact parity check if JSON
   if (artifactPath.endsWith(".json")) {
@@ -5006,13 +5016,13 @@ export async function resolveVerifiedDemandEvidence(
   }
 
   const effectiveTarget = trustedReceipt.targetProductOrKeyword || parsedObs?.targetProductOrKeyword || parsedObs?.targetKeyword;
-  if (context.keyword && effectiveTarget) {
-    if (!areCompatibleProductKeywords(context.keyword, String(effectiveTarget))) {
+  if (context.keyword) {
+    if (!effectiveTarget || !areCompatibleProductKeywords(context.keyword, String(effectiveTarget))) {
       return {
         verified: false,
         eligible: false,
         verifiedOrigin: false,
-        rejectionReason: `Evidence targetKeyword '${effectiveTarget}' does not match context keyword '${context.keyword}'.`,
+        rejectionReason: `Evidence targetKeyword '${effectiveTarget || "MISSING"}' does not match context keyword '${context.keyword}'.`,
         errorCode: "PRODUCT_MISMATCH",
       };
     }

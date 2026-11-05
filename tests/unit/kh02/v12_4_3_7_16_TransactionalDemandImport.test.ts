@@ -32,8 +32,29 @@ describe("KH-02 V12.4.3.7.16 — Transactional Demand Import (B01 - B20, D03)", 
   const otherTenantProductId = "prod_b_tenant_002";
   const testWorkspaceId = "ws_test_b";
   const otherWorkspaceId = "ws_other_b";
+  let testEvidenceRef: string;
+  let testEvidenceRefB: string;
 
   beforeEach(async () => {
+    const sampleCsv =
+      "Category: All categories\nWeek,cat feeder: (United States)\n" +
+      "2026-08-01,40\n" +
+      "2026-08-02,42\n" +
+      "2026-08-03,45\n" +
+      "2026-08-04,48\n" +
+      "2026-08-05,48\n" +
+      "2026-08-08,45\n";
+    const shaA = crypto.createHash("sha256").update(Buffer.from(sampleCsv, "utf8")).digest("hex");
+    saveOriginalGoogleTrendsCsvFile(sampleCsv, shaA);
+    testEvidenceRef = `csv-import:google-trends-explore:sha256:${shaA}:q=cat_feeder`;
+
+    const sampleCsvB =
+      "Category: All categories\nWeek,cat feeder: (United States)\n" +
+      "2026-08-01,90\n";
+    const shaB = crypto.createHash("sha256").update(Buffer.from(sampleCsvB, "utf8")).digest("hex");
+    saveOriginalGoogleTrendsCsvFile(sampleCsvB, shaB);
+    testEvidenceRefB = `csv-import:google-trends-explore:sha256:${shaB}:q=cat_feeder`;
+
     // Clean up test rows
     await prisma.productDemandObservation.deleteMany({
       where: { productId: { in: [testProductId, otherTenantProductId] } },
@@ -121,12 +142,13 @@ describe("KH-02 V12.4.3.7.16 — Transactional Demand Import (B01 - B20, D03)", 
       productId: testProductId,
       workspaceId: testWorkspaceId,
       source: "GOOGLE_TRENDS_CSV",
+      evidenceReference: testEvidenceRef,
       region: "US",
       points: [
         { keyword: "cat feeder", region: "US", periodStart: "2026-08-01T00:00:00.000Z", periodEnd: "2026-08-07T00:00:00.000Z", demandValue: 40 },
         { keyword: "cat feeder", region: "US", periodStart: "2026-08-02T00:00:00.000Z", periodEnd: "2026-08-08T00:00:00.000Z", demandValue: 42 },
         { keyword: "cat feeder", region: "US", periodStart: "2026-08-03T00:00:00.000Z", periodEnd: "2026-08-09T00:00:00.000Z", demandValue: 45 },
-        { keyword: "cat feeder", region: "US", periodStart: "2026-08-04T00:00:00.000Z", periodEnd: "2026-08-10T00:00:00.000Z", demandValue: 90 }, // CONFLICT!
+        { keyword: "cat feeder", region: "US", periodStart: "2026-08-04T00:00:00.000Z", periodEnd: "2026-08-10T00:00:00.000Z", demandValue: 48 }, // CONFLICT with 50 in DB!
         { keyword: "cat feeder", region: "US", periodStart: "2026-08-05T00:00:00.000Z", periodEnd: "2026-08-11T00:00:00.000Z", demandValue: 48 },
       ],
     };
@@ -256,6 +278,7 @@ describe("KH-02 V12.4.3.7.16 — Transactional Demand Import (B01 - B20, D03)", 
       productId: testProductId,
       workspaceId: testWorkspaceId,
       source: "GOOGLE_TRENDS_CSV",
+      evidenceReference: testEvidenceRef,
       region: "US",
       points,
     });
@@ -282,6 +305,7 @@ describe("KH-02 V12.4.3.7.16 — Transactional Demand Import (B01 - B20, D03)", 
         productId: testProductId,
         workspaceId: testWorkspaceId,
         source: "GOOGLE_TRENDS_CSV",
+        evidenceReference: testEvidenceRef,
         region: "US",
         points: pointsA,
       }),
@@ -289,6 +313,7 @@ describe("KH-02 V12.4.3.7.16 — Transactional Demand Import (B01 - B20, D03)", 
         productId: testProductId,
         workspaceId: testWorkspaceId,
         source: "GOOGLE_TRENDS_CSV",
+        evidenceReference: testEvidenceRef,
         region: "US",
         points: pointsB,
       }),
@@ -314,6 +339,7 @@ describe("KH-02 V12.4.3.7.16 — Transactional Demand Import (B01 - B20, D03)", 
         productId: testProductId,
         workspaceId: testWorkspaceId,
         source: "GOOGLE_TRENDS_CSV",
+        evidenceReference: testEvidenceRef,
         region: "US",
         points: pointsA,
       }),
@@ -321,6 +347,7 @@ describe("KH-02 V12.4.3.7.16 — Transactional Demand Import (B01 - B20, D03)", 
         productId: testProductId,
         workspaceId: testWorkspaceId,
         source: "GOOGLE_TRENDS_CSV",
+        evidenceReference: testEvidenceRefB,
         region: "US",
         points: pointsB,
       }),
@@ -413,6 +440,7 @@ describe("KH-02 V12.4.3.7.16 — Transactional Demand Import (B01 - B20, D03)", 
       productId: testProductId,
       workspaceId: testWorkspaceId,
       source: "GOOGLE_TRENDS_CSV",
+      evidenceReference: testEvidenceRef,
       region: "US",
       points,
     });

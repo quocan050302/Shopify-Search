@@ -13,7 +13,8 @@
 
 import fs from "fs";
 import path from "path";
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, beforeAll } from "vitest";
+import { saveOriginalGoogleTrendsCsvFile } from "@/services/kh02/demand/googleTrendsCsvValidator";
 import {
   resolveMetaExecutionPolicy,
   collectMetaProductSignals,
@@ -99,7 +100,7 @@ function buildAuthoritativeDemandSeries(overrides: Partial<DemandDataPoint> = {}
       keyword: "Automatic Wet Food Cat Feeder",
       source: "GOOGLE_TRENDS_CSV",
       region: "US",
-      evidenceReference: "csv-import:job_uahpet_2026:sha256:9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08",
+      evidenceReference: "csv-import:job_uahpet_2026:sha256:107089a9ae947cc6fc5b7c251bc6aab5e692096dc66e8dc47de62a549351d74f",
       methodologyVersion: "12.4.3.1",
       periodStart: "2026-06-01",
       periodEnd: "2026-06-30",
@@ -112,7 +113,7 @@ function buildAuthoritativeDemandSeries(overrides: Partial<DemandDataPoint> = {}
       keyword: "Automatic Wet Food Cat Feeder",
       source: "GOOGLE_TRENDS_CSV",
       region: "US",
-      evidenceReference: "csv-import:job_uahpet_2026:sha256:9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08",
+      evidenceReference: "csv-import:job_uahpet_2026:sha256:107089a9ae947cc6fc5b7c251bc6aab5e692096dc66e8dc47de62a549351d74f",
       methodologyVersion: "12.4.3.1",
       periodStart: "2026-07-01",
       periodEnd: "2026-07-31",
@@ -125,7 +126,7 @@ function buildAuthoritativeDemandSeries(overrides: Partial<DemandDataPoint> = {}
       keyword: "Automatic Wet Food Cat Feeder",
       source: "GOOGLE_TRENDS_CSV",
       region: "US",
-      evidenceReference: "csv-import:job_uahpet_2026:sha256:9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08",
+      evidenceReference: "csv-import:job_uahpet_2026:sha256:107089a9ae947cc6fc5b7c251bc6aab5e692096dc66e8dc47de62a549351d74f",
       methodologyVersion: "12.4.3.1",
       periodStart: "2026-08-01",
       periodEnd: "2026-08-31",
@@ -138,7 +139,7 @@ function buildAuthoritativeDemandSeries(overrides: Partial<DemandDataPoint> = {}
       keyword: "Automatic Wet Food Cat Feeder",
       source: "GOOGLE_TRENDS_CSV",
       region: "US",
-      evidenceReference: "csv-import:job_uahpet_2026:sha256:9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08",
+      evidenceReference: "csv-import:job_uahpet_2026:sha256:107089a9ae947cc6fc5b7c251bc6aab5e692096dc66e8dc47de62a549351d74f",
       methodologyVersion: "12.4.3.1",
       periodStart: "2026-09-01",
       periodEnd: "2026-09-30",
@@ -149,6 +150,11 @@ function buildAuthoritativeDemandSeries(overrides: Partial<DemandDataPoint> = {}
 }
 
 describe("SWAI KH-02 V12.4.3.1 — Evidence Provenance, Runtime Parity & Async Truth Suite", () => {
+  beforeAll(() => {
+    const csv = "Category: All categories\nWeek,Automatic Wet Food Cat Feeder: (United States)\n2026-06-01,68\n2026-07-01,71\n2026-08-01,70\n2026-09-01,72\n";
+    const sha = "107089a9ae947cc6fc5b7c251bc6aab5e692096dc66e8dc47de62a549351d74f";
+    saveOriginalGoogleTrendsCsvFile(csv, sha);
+  });
   // ============================================================================
   // GROUP 1: Strict Meta Query Provenance & Split G06 Gates (F01, F02)
   // ============================================================================

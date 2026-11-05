@@ -15,7 +15,7 @@
 import { prisma } from "@/lib/db";
 import { buildAuthorizedProductWhere } from "@/services/research/authorizedScopeHelpers";
 import { verifyDemandObservationAgainstRawCsv } from "./googleTrendsCsvValidator";
-import { resolveVerifiedDemandEvidence } from "./temporalDemandEngine";
+import { resolveVerifiedDemandEvidence, type VerifiedDemandEvidenceDescriptor } from "./temporalDemandEngine";
 
 export const MAX_DB_ATTEMPTS = 5;
 
@@ -69,11 +69,16 @@ function assertIdenticalOrThrowConflict(existing: any, pt: NormalizedPoint, prod
   const existingRef = (existing.evidenceReference || "").trim();
   const incomingRef = (pt.evidenceReference || "").trim();
   if (existingRef && incomingRef && existingRef !== incomingRef) {
-    throw new BatchImportError(
-      `Conflicting evidenceReference for product '${productId}' at '${pt.periodStart.toISOString()}': existing='${existingRef}', incoming='${incomingRef}'`,
-      409,
-      "CONFLICTING_DUPLICATE_OBSERVATION"
-    );
+    const exSha = existingRef.match(/\bsha256:([a-f0-9]{64})\b/i);
+    const inSha = incomingRef.match(/\bsha256:([a-f0-9]{64})\b/i);
+    const sameSha = Boolean(exSha && inSha && exSha[1].toLowerCase() === inSha[1].toLowerCase());
+    if (!sameSha) {
+      throw new BatchImportError(
+        `Conflicting evidenceReference for product '${productId}' at '${pt.periodStart.toISOString()}': existing='${existingRef}', incoming='${incomingRef}'`,
+        409,
+        "CONFLICTING_DUPLICATE_OBSERVATION"
+      );
+    }
   }
 
   // 3. periodEnd check: date range disagreement
@@ -120,6 +125,8 @@ export interface DemandObservationBatchInput {
   evidenceReference?: string | null;
   methodologyVersion?: string | null;
   strictProvenance?: boolean;
+  asOfTimestamp?: string | Date | null;
+  asOf?: string | Date | null;
   points: DemandObservationBatchPoint[];
 }
 
@@ -134,6 +141,131 @@ export interface DemandObservationBatchResult {
 
 const DEMAND_VALUE_MAX = 100;
 const MAX_ROWS_PER_IMPORT = 500;
+
+export function isAuthoritativeProviderSource(source: string | null | undefined): boolean {
+  if (!source) return false;
+  const s = String(source).trim();
+  return (
+    s === "PROVIDER_API" ||
+    /^(provider_api|authoritative_api|google_trends_live|google_trends_api|live_provider)$/i.test(s) ||
+    /^Google Trends \(SerpApi\)$/i.test(s)
+  );
+}
+
+export interface AssertProviderOriginParams {
+  evidenceRef: string | null | undefined;
+  productId: string;
+  workspaceId?: string | null;
+  keyword: string;
+  region: string;
+  periodStart: Date;
+  demandValue: number | null;
+  asOfTimestamp?: string | Date | null;
+  asOf?: string | Date | null;
+  rowIndex?: number;
+}
+
+/**
+ * Asserts that a provider evidence reference represents an authentic, verified,
+ * durable provider origin matching the exact scope (product, workspace, keyword,
+ * region, date, value) under strict live origin verification.
+ *
+ * Enforces CONJUNCTIVE verification:
+ * - desc.verified === true
+ * - desc.verifiedOrigin === true
+ * - desc.providerOriginVerified === true
+ * - desc.originKind === "ACTUAL_PROVIDER_INVOCATION"
+ * - desc.eligible === true
+ * - desc.eligibleForBusiness === true
+ * - desc.durablePersistenceVerified === true
+ * - desc.commitState === "EVIDENCE_ELIGIBLE"
+ * - desc.responseStatus === 200
+ *
+ * Rejects UNIT_FIXTURE, LOCAL_INTEGRITY_ONLY, SIMULATED_TRANSPORT, TEST_SIMULATION,
+ * CACHED_UNVERIFIED, UNKNOWN_SOURCE, test stubs, missing artifacts, tampered hashes,
+ * and scope mismatches.
+ */
+export async function assertVerifiedProviderOriginForImport(
+  params: AssertProviderOriginParams
+): Promise<VerifiedDemandEvidenceDescriptor> {
+  const {
+    evidenceRef,
+    productId,
+    workspaceId,
+    keyword,
+    region,
+    periodStart,
+    demandValue,
+    asOfTimestamp,
+    asOf,
+    rowIndex,
+  } = params;
+  const rowPrefix = rowIndex ? `Row ${rowIndex}: ` : "";
+
+  if (!evidenceRef || typeof evidenceRef !== "string" || evidenceRef.trim().length === 0) {
+    throw new BatchImportError(
+      `${rowPrefix}PROVIDER_API requires authentic provider receipt verification.`,
+      422,
+      "PROVIDER_RECEIPT_REQUIRED"
+    );
+  }
+
+  const effectiveAsOf = asOfTimestamp || asOf;
+  const desc = await resolveVerifiedDemandEvidence(evidenceRef.trim(), {
+    productId,
+    workspaceId: workspaceId || undefined,
+    keyword,
+    region,
+    observationDate: periodStart,
+    observationValue: demandValue,
+    strictLiveOrigin: true,
+    asOfTimestamp: effectiveAsOf || undefined,
+  });
+
+  // Strict Conjunctive Predicate (all must be true):
+  const isConjunctiveSuccess =
+    desc.verified === true &&
+    desc.verifiedOrigin === true &&
+    desc.providerOriginVerified === true &&
+    desc.originKind === "ACTUAL_PROVIDER_INVOCATION" &&
+    desc.eligible === true &&
+    desc.eligibleForBusiness === true &&
+    desc.durablePersistenceVerified === true &&
+    desc.commitState === "EVIDENCE_ELIGIBLE" &&
+    desc.responseStatus === 200;
+
+  if (!isConjunctiveSuccess) {
+    const reason = desc.rejectionReason || "Receipt failed strict provider origin verification.";
+    let code = "PROVIDER_RECEIPT_REQUIRED";
+    if (desc.errorCode === "ORIGIN_UNVERIFIED") {
+      code = "PROVIDER_ORIGIN_UNVERIFIED";
+    } else if (desc.errorCode === "PRODUCT_MISMATCH") {
+      code = "PRODUCT_MISMATCH";
+    } else if (desc.errorCode === "REGION_MISMATCH") {
+      code = "REGION_MISMATCH";
+    } else if (desc.errorCode === "DATE_MISMATCH") {
+      code = "DATE_MISMATCH";
+    } else if (desc.errorCode === "HASH_MISMATCH") {
+      code = "HASH_MISMATCH";
+    } else if (desc.errorCode === "RUN_MISMATCH") {
+      code = "FORBIDDEN_WORKSPACE_PRODUCT";
+    } else if (desc.errorCode === "POINT_IN_TIME_VIOLATION") {
+      code = "POINT_IN_TIME_VIOLATION";
+    } else if (desc.errorCode === "RECEIPT_NOT_FOUND" || !desc.errorCode) {
+      code = "PROVIDER_RECEIPT_REQUIRED";
+    } else {
+      code = "PROVIDER_ORIGIN_UNVERIFIED";
+    }
+
+    throw new BatchImportError(
+      `${rowPrefix}PROVIDER_API requires authentic provider receipt verification: ${reason}`,
+      422,
+      code
+    );
+  }
+
+  return desc;
+}
 
 export async function executeDemandObservationBatchImport(
   input: DemandObservationBatchInput
@@ -313,34 +445,26 @@ export async function executeDemandObservationBatchImport(
           rowVerify.code
         );
       }
-    } else if (pointSource === "PROVIDER_API") {
-      if (!evRef) {
-        throw new BatchImportError(
-          `Row ${rowIndex}: PROVIDER_API requires authentic provider receipt verification.`,
-          422,
-          "PROVIDER_RECEIPT_REQUIRED"
-        );
-      }
-      const desc = await resolveVerifiedDemandEvidence(evRef, {
+    } else if (isAuthoritativeProviderSource(pointSource)) {
+      await assertVerifiedProviderOriginForImport({
+        evidenceRef: evRef,
         productId: input.productId,
+        workspaceId: input.workspaceId,
         keyword: kw,
         region: reg,
-        workspaceId: input.workspaceId,
-        observationDate: pStart,
-        observationValue: dVal,
+        periodStart: pStart,
+        demandValue: dVal,
+        asOfTimestamp: input.asOfTimestamp || input.asOf,
+        rowIndex,
       });
-      if (
-        !desc.verified ||
-        (!desc.providerOriginVerified &&
-          desc.originKind !== "ACTUAL_PROVIDER_INVOCATION" &&
-          desc.originKind !== "UNIT_FIXTURE")
-      ) {
-        throw new BatchImportError(
-          `Row ${rowIndex}: PROVIDER_API requires authentic provider receipt verification: ${desc.rejectionReason || "Receipt not verified"}`,
-          422,
-          "PROVIDER_RECEIPT_REQUIRED"
-        );
-      }
+    } else if (pointSource === "USER_MANUAL") {
+      // USER_MANUAL is permitted for manual estimations, but does not grant live provider authority
+    } else {
+      throw new BatchImportError(
+        `Row ${rowIndex}: Unsupported or unrecognized demand observation source '${pointSource}'. Supported sources: GOOGLE_TRENDS_CSV, PROVIDER_API, USER_MANUAL.`,
+        422,
+        "UNSUPPORTED_SOURCE"
+      );
     }
 
     validatedPoints.push({
