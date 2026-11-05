@@ -164,7 +164,8 @@ export async function resolveProductDemandHistory(
 
   // 2. If not found by productId, check if observations exist matching a single canonical product
   // CRITICAL: NEVER merge multiple distinct products into one time series
-  if (rawRecords.length === 0 && searchTerm.length > 2) {
+  // If candidate already has an explicit productId, do NOT fall back to arbitrary substring matches
+  if (rawRecords.length === 0 && !candidate.productId && searchTerm.length > 2) {
     const candidateProducts = await prisma.researchProduct.findMany({
       where: {
         AND: [
@@ -399,19 +400,30 @@ export async function resolveProductDemandHistory(
                 ((seriesResult as any).receiptId
                   ? `provider-request:serpapi:${(seriesResult as any).receiptId}`
                   : null);
+              const pointSource =
+                pt.source || (isGoogleFreeMode ? "Google Trends (Free Demand)" : "Google Trends (SerpApi)");
+              const pointKeyword = pt.keyword || searchTerm;
+              const pointMethodology =
+                pt.methodologyVersion ||
+                (pointSource === "GOOGLE_TRENDS_CSV"
+                  ? "google_trends_explore_csv_v1"
+                  : isGoogleFreeMode
+                  ? "google_free_demand_live"
+                  : "serpapi_google_trends_live");
+
               try {
                 await prisma.productDemandObservation.create({
                   data: {
                     productId: targetProductId,
-                    source: pt.source || (isGoogleFreeMode ? "Google Trends (Free Demand)" : "Google Trends (SerpApi)"),
+                    source: pointSource,
                     region: pt.region || region,
-                    keyword: searchTerm,
+                    keyword: pointKeyword,
                     periodStart: new Date(pt.periodStart),
                     periodEnd: new Date(pt.periodEnd),
                     demandValue: pt.demandValue,
                     valueType: "RELATIVE_INTEREST",
                     evidenceReference: evidenceRef,
-                    methodologyVersion: isGoogleFreeMode ? "google_free_demand_live" : "serpapi_google_trends_live",
+                    methodologyVersion: pointMethodology,
                   },
                 });
               } catch (err: any) {
@@ -420,7 +432,7 @@ export async function resolveProductDemandHistory(
                   const existingObs = await prisma.productDemandObservation.findFirst({
                     where: {
                       productId: targetProductId,
-                      keyword: searchTerm,
+                      keyword: pointKeyword,
                       region: pt.region || region,
                       periodStart: new Date(pt.periodStart),
                     },
@@ -448,11 +460,22 @@ export async function resolveProductDemandHistory(
               ((seriesResult as any).receiptId
                 ? `provider-request:serpapi:${(seriesResult as any).receiptId}`
                 : null);
+            const pointSource =
+              p.source || (isGoogleFreeMode ? "Google Trends (Free Demand)" : "Google Trends (SerpApi)");
+            const pointKeyword = p.keyword || searchTerm;
+            const pointMethodology =
+              p.methodologyVersion ||
+              (pointSource === "GOOGLE_TRENDS_CSV"
+                ? "google_trends_explore_csv_v1"
+                : isGoogleFreeMode
+                ? "google_free_demand_live"
+                : "serpapi_google_trends_live");
+
             let verifiedDescriptor: any;
             if (evidenceRef) {
               const resolved = await resolveVerifiedDemandEvidence(evidenceRef, {
                 productId: targetProductId,
-                keyword: searchTerm,
+                keyword: pointKeyword,
                 region,
                 workspaceId: options.workspaceId || null,
                 researchRunId: (options as any).researchRunId || null,
@@ -467,10 +490,10 @@ export async function resolveProductDemandHistory(
               periodEnd: p.periodEnd,
               demandValue: p.demandValue,
               region: p.region,
-              source: p.source,
+              source: pointSource,
               date: p.periodStart,
               value: p.demandValue,
-              methodologyVersion: isGoogleFreeMode ? "google_free_demand_live" : "serpapi_google_trends_live",
+              methodologyVersion: pointMethodology,
               evidenceReference: evidenceRef,
               verifiedDescriptor,
               observedAt: capturedTs || undefined,

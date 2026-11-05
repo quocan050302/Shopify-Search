@@ -49,7 +49,10 @@ import {
   clusterProductCandidates,
   mergeDuplicateCandidateRecords,
 } from "./identity/productCandidateDiscovery";
-import { matchCrossPlatformProductEvidence } from "./identity/crossPlatformProductMatcher";
+import {
+  matchCrossPlatformProductEvidence,
+  classifyVerifiedGoogleMerchantDestination,
+} from "./identity/crossPlatformProductMatcher";
 import {
   loadProductHistoricalDemand,
   DemandDataPoint,
@@ -1521,6 +1524,9 @@ export async function runEvergreenProductResearch(
     rawLandingUrl: string | null;
     finalDestination: string | null;
     normalizedProductUrl: string | null;
+    verifiedMerchantPdp?: boolean;
+    destinationVerificationStatus?: string;
+    destinationVerificationReason?: string | null;
     creativeTitle: string | null;
     candidateIdsEvaluated: string[];
     matchedCandidateId?: string | null;
@@ -1564,12 +1570,20 @@ export async function runEvergreenProductResearch(
     let bestEvidence: string | null = null;
     let bestRejectionReason: string | null = null;
     let bestCandidateId: string | null = null;
+    let verifiedMerchantPdp = false;
+    let finalDestUrl: string | null = null;
+    let normalizedPdpUrl: string | null = null;
+    let destinationStatus: string = "MISSING_DESTINATION";
+    let destinationReason: string | null = null;
 
     if (!obs.landingPageUrl && !obs.sourceUrl) {
       bestVerdict = "MISSING_DESTINATION";
       bestRejectionReason = "Missing landing page destination URL";
+      destinationStatus = "MISSING_DESTINATION";
+      destinationReason = "Missing landing page destination URL";
     } else {
       for (const candidate of candidates) {
+        const destCheck = classifyVerifiedGoogleMerchantDestination(obs.landingPageUrl, candidate);
         const match = matchCrossPlatformProductEvidence(candidate, {
           title: obs.title,
           url: obs.landingPageUrl || obs.sourceUrl,
@@ -1577,18 +1591,63 @@ export async function runEvergreenProductResearch(
           platform: obs.source,
         });
 
+        // 1. Conflict / rejection takes precedence
+        if (match.associationClassification === "REJECTED_UNRELATED_CREATIVE") {
+          if (bestVerdict === "UNMATCHED") {
+            bestVerdict = "REJECTED_UNRELATED_CREATIVE";
+            bestRejectionReason =
+              (match.matchReasons || []).join("; ") ||
+              "Creative rejected: unrelated or conflicting product";
+            destinationStatus = destCheck.destinationVerificationStatus;
+            destinationReason = destCheck.reason;
+          }
+          continue;
+        }
+
+        // 2. Exact match requires BOTH associationClassification === 'EXACT_PRODUCT_MATCH' AND verifiedMerchantPdp
         if (
-          match.isProductSpecificEvidence !== false &&
-          (match.confidence === "EXACT" || match.confidence === "HIGH_CONFIDENCE")
+          match.associationClassification === "EXACT_PRODUCT_MATCH" &&
+          match.isProductSpecificEvidence !== false
         ) {
-          bestVerdict = "EXACT_PRODUCT_MATCH";
-          bestClassification = match.confidence;
-          bestEvidence =
-            (match.matchReasons || []).join("; ") ||
-            `Exact cross-platform product title/URL match with candidate ${candidate.candidateId}`;
-          bestCandidateId = candidate.candidateId;
-          bestRejectionReason = null;
-          break; // Highest tier reached
+          if (destCheck.isVerifiedPdp) {
+            bestVerdict = "EXACT_PRODUCT_MATCH";
+            bestClassification = match.confidence;
+            bestEvidence =
+              (match.matchReasons || []).join("; ") ||
+              `Exact cross-platform product title/URL match with candidate ${candidate.candidateId}`;
+            bestCandidateId = candidate.candidateId;
+            bestRejectionReason = null;
+            verifiedMerchantPdp = true;
+            finalDestUrl = destCheck.finalDestination;
+            normalizedPdpUrl = destCheck.normalizedProductUrl;
+            destinationStatus = destCheck.destinationVerificationStatus;
+            destinationReason = destCheck.reason;
+            break; // Highest verified tier reached
+          } else {
+            // Downgrade to PROBABLE_PRODUCT_MATCH because destination PDP is not confirmed
+            bestVerdict = "PROBABLE_PRODUCT_MATCH";
+            bestClassification = "PROBABLE";
+            bestEvidence = `${(match.matchReasons || []).join("; ")}; Downgraded from EXACT: ${destCheck.reason}`;
+            bestCandidateId = candidate.candidateId;
+            bestRejectionReason = null;
+            destinationStatus = destCheck.destinationVerificationStatus;
+            destinationReason = destCheck.reason;
+          }
+        } else if (
+          match.associationClassification === "PROBABLE_PRODUCT_MATCH" &&
+          match.isProductSpecificEvidence !== false
+        ) {
+          if (bestVerdict !== "PROBABLE_PRODUCT_MATCH") {
+            bestVerdict = "PROBABLE_PRODUCT_MATCH";
+            bestClassification = match.confidence;
+            bestEvidence =
+              (match.matchReasons || []).join("; ") ||
+              `Probable product match with candidate ${candidate.candidateId}`;
+            bestCandidateId = candidate.candidateId;
+            bestRejectionReason = null;
+            destinationStatus = destCheck.destinationVerificationStatus;
+            destinationReason = destCheck.reason;
+          }
         } else if (
           match.associationClassification === "BRAND_ONLY_MATCH" ||
           (!match.isProductSpecificEvidence &&
@@ -1597,35 +1656,22 @@ export async function runEvergreenProductResearch(
             extractRegistrableDomain(obs.advertiserDomain) ===
               extractRegistrableDomain(candidate.storeDomain))
         ) {
-          if (bestVerdict === "UNMATCHED") {
+          if (bestVerdict === "UNMATCHED" || bestVerdict === "REJECTED_UNRELATED_CREATIVE") {
             bestVerdict = "BRAND_ONLY_MATCH";
             bestClassification = "BRAND_DOMAIN_MATCH";
             bestEvidence =
               (match.matchReasons || []).join("; ") ||
               `Domain match (${obs.advertiserDomain}) without product-specific headline/URL alignment`;
             bestCandidateId = candidate.candidateId;
+            bestRejectionReason = null;
+            destinationStatus = destCheck.destinationVerificationStatus;
+            destinationReason = destCheck.reason;
           }
-        } else if (
-          match.isProductSpecificEvidence !== false &&
-          match.confidence === "PROBABLE" &&
-          bestVerdict !== "PROBABLE_PRODUCT_MATCH"
-        ) {
-          bestVerdict = "PROBABLE_PRODUCT_MATCH";
-          bestClassification = "PROBABLE";
-          bestEvidence =
-            (match.matchReasons || []).join("; ") ||
-            `Probable product match with candidate ${candidate.candidateId}`;
-          bestCandidateId = candidate.candidateId;
-        } else if (
-          match.associationClassification === "REJECTED_UNRELATED_CREATIVE" &&
-          bestVerdict === "UNMATCHED"
-        ) {
-          bestRejectionReason =
-            (match.matchReasons || []).join("; ") || "Creative rejected: unrelated or conflicting product";
         } else if (bestVerdict === "UNMATCHED") {
           bestRejectionReason =
             (match.matchReasons || []).join("; ") || "Low cross-platform text/URL similarity";
-          bestCandidateId = null;
+          destinationStatus = destCheck.destinationVerificationStatus;
+          destinationReason = destCheck.reason;
         }
       }
 
@@ -1663,16 +1709,11 @@ export async function runEvergreenProductResearch(
       advertiserDomain: obs.advertiserDomain || null,
       sourceMarket: (obs as any).region || (obs as any).targetCountry || "US",
       rawLandingUrl: obs.landingPageUrl || obs.sourceUrl || null,
-      finalDestination:
-        obs.landingPageUrl && !obs.landingPageUrl.includes("adstransparency.google.com")
-          ? obs.landingPageUrl
-          : null,
-      normalizedProductUrl:
-        bestVerdict === "EXACT_PRODUCT_MATCH" &&
-        obs.landingPageUrl &&
-        !obs.landingPageUrl.includes("adstransparency.google.com")
-          ? obs.landingPageUrl
-          : null,
+      finalDestination: finalDestUrl,
+      normalizedProductUrl: normalizedPdpUrl,
+      verifiedMerchantPdp,
+      destinationVerificationStatus: destinationStatus,
+      destinationVerificationReason: destinationReason,
       creativeTitle: obs.title || null,
       candidateIdsEvaluated: candidates.map((c) => c.candidateId),
       matchedCandidateId:

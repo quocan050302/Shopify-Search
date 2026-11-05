@@ -14,6 +14,9 @@ import {
   hasVerifiableCsvOrProviderLineage,
   recordProviderInvocationAttempt,
   executeTrustedSerpApiDemandRequest,
+  isBroadCategoryDemandTerm,
+  isPromotionalAdCopyDemandKeyword,
+  detectSpecificProductFamily,
 } from "./temporalDemandEngine";
 import { verifyStoredCsvFile } from "./googleTrendsCsvValidator";
 import {
@@ -58,6 +61,14 @@ export interface DemandDataPointResult {
   source: string;
   scale: "GOOGLE_TRENDS_INDEX_0_100" | "GOOGLE_TOP_TERMS_RANK_SCORE";
   evidenceClass?: DemandEvidenceClass;
+  productId?: string;
+  keyword?: string;
+  evidenceReference?: string;
+  methodologyVersion?: string;
+  observedAt?: string;
+  capturedAt?: string;
+  sourceCadence?: string;
+  rawResponseSha256?: string;
 }
 
 export interface DemandSeriesResult {
@@ -68,10 +79,12 @@ export interface DemandSeriesResult {
   points: DemandDataPointResult[];
   status: "SUCCESS" | "INSUFFICIENT_DATA" | "BLOCKED" | "FAILED";
   acquiredAt: string;
-  provenance: "AUTHORITATIVE_PROVIDER" | "CACHED_OBSERVATION" | "UNVERIFIED";
+  provenance: "AUTHORITATIVE_PROVIDER" | "CACHED_OBSERVATION" | "UNVERIFIED" | "VERIFIED_HISTORICAL_SOURCE";
   evidenceClass?: DemandEvidenceClass;
   error?: string;
   discoveryOnly?: boolean;
+  receiptId?: string;
+  sourceTransportType?: "LOCAL_VERIFIED_CSV" | "BIGQUERY_SANDBOX" | "SERPAPI_HTTPS" | "TRENDING_NOW_RSS";
 }
 
 export interface HistoricalDemandProvider {
@@ -336,13 +349,18 @@ export class GoogleTrendsCsvImportProvider implements HistoricalDemandProvider {
     }
 
     try {
+      const whereClause: any = {
+        source: "GOOGLE_TRENDS_CSV",
+        region: query.region || "US",
+      };
+      if (query.productId) {
+        whereClause.productId = query.productId;
+      } else {
+        whereClause.keyword = { contains: query.term.trim() };
+      }
+
       const records = await prisma.productDemandObservation.findMany({
-        where: {
-          source: "GOOGLE_TRENDS_CSV",
-          region: query.region || "US",
-          keyword: { contains: query.term.trim() },
-          ...(query.productId ? { productId: query.productId } : {}),
-        },
+        where: whereClause,
         orderBy: { periodStart: "asc" },
       });
 
@@ -353,14 +371,41 @@ export class GoogleTrendsCsvImportProvider implements HistoricalDemandProvider {
         if (!lineage.hasValidFileChecksum || !lineage.rawCsvFileExists) continue;
         if (r.demandValue === null || typeof r.demandValue !== "number") continue;
 
+        // Strict validation: reject broad category queries and promotional headlines
+        if (isBroadCategoryDemandTerm(r.keyword)) continue;
+        if (isPromotionalAdCopyDemandKeyword(r.keyword)) continue;
+
+        // Product family guard
+        if (query.canonicalProductName) {
+          const candFam = detectSpecificProductFamily(query.canonicalProductName);
+          const kwFam = detectSpecificProductFamily(r.keyword);
+          if (candFam && kwFam && candFam !== kwFam) continue;
+        }
+
+        // Validate keyword relevance to candidate product
+        const checkTarget = (query.canonicalProductName || query.term).toLowerCase();
+        const kwLower = (r.keyword || "").toLowerCase();
+        const isSubstringMatch = checkTarget.includes(kwLower) || kwLower.includes(checkTarget);
+        const kwWords = kwLower.split(/\s+/).filter((w: string) => w.length > 2);
+        const hasWordOverlap = kwWords.some((w: string) => checkTarget.includes(w));
+        if (!isSubstringMatch && !hasWordOverlap) {
+          continue; // Keyword cannot be attributed to candidate product
+        }
+
         verifiedPoints.push({
           periodStart: r.periodStart.toISOString ? r.periodStart.toISOString() : String(r.periodStart),
           periodEnd: r.periodEnd.toISOString ? r.periodEnd.toISOString() : String(r.periodEnd),
           demandValue: r.demandValue,
           region: r.region,
-          source: "Google Trends Explore CSV Export",
+          source: "GOOGLE_TRENDS_CSV",
           scale: "GOOGLE_TRENDS_INDEX_0_100",
           evidenceClass: "VERIFIED_HISTORICAL_SOURCE",
+          productId: r.productId,
+          keyword: r.keyword,
+          evidenceReference: r.evidenceReference || undefined,
+          methodologyVersion: r.methodologyVersion || undefined,
+          observedAt: r.observedAt ? (r.observedAt.toISOString ? r.observedAt.toISOString() : String(r.observedAt)) : undefined,
+          sourceCadence: "WEEKLY",
         });
       }
 
@@ -369,8 +414,9 @@ export class GoogleTrendsCsvImportProvider implements HistoricalDemandProvider {
           ...result,
           points: verifiedPoints,
           status: "SUCCESS",
-          provenance: "AUTHORITATIVE_PROVIDER",
+          provenance: "VERIFIED_HISTORICAL_SOURCE",
           evidenceClass: "VERIFIED_HISTORICAL_SOURCE",
+          sourceTransportType: "LOCAL_VERIFIED_CSV",
         };
       }
 

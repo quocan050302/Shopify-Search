@@ -275,7 +275,10 @@ export function validateAndParseGoogleTrendsCsv(
   if (effectiveExpectedKeyword && effectiveExpectedKeyword.trim()) {
     const normExpected = effectiveExpectedKeyword.toLowerCase().trim();
     const normExtracted = extractedKeyword.toLowerCase().trim();
-    if (!normExtracted.includes(normExpected) && !normExpected.includes(normExtracted)) {
+    const isSubstring = normExtracted.includes(normExpected) || normExpected.includes(normExtracted);
+    const extractedTokens = normExtracted.split(/\s+/).filter((t) => t.length > 2);
+    const hasTokenMatch = extractedTokens.length > 0 && extractedTokens.every((t) => normExpected.includes(t));
+    if (!isSubstring && !hasTokenMatch) {
       errors.push(`CSV keyword '${extractedKeyword}' does not match expected keyword '${effectiveExpectedKeyword}'.`);
     }
   }

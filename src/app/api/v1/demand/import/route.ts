@@ -11,6 +11,11 @@ import {
   validateAndParseGoogleTrendsCsv,
   verifyStoredCsvFile,
 } from "@/services/kh02/demand/googleTrendsCsvValidator";
+import {
+  resolveAuthorizedResearchContext,
+  ResearchAuthError,
+} from "@/services/research/researchAuthService";
+import { buildAuthorizedProductWhere } from "@/services/research/authorizedScopeHelpers";
 
 export interface DemandImportRow {
   keyword: string;
@@ -35,6 +40,8 @@ const MAX_ROWS_PER_IMPORT = 500;
 
 export async function POST(request: NextRequest) {
   try {
+    const authContext = await resolveAuthorizedResearchContext(request);
+    const workspaceId = authContext.workspaceId;
     const body: DemandImportPayload = await request.json();
 
     if (!body.productId || typeof body.productId !== "string") {
@@ -44,9 +51,28 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Verify product exists
-    const product = await prisma.researchProduct.findUnique({ where: { id: body.productId } });
+    // Verify product exists within the caller's authorized workspace
+    const product = await prisma.researchProduct.findFirst({
+      where: {
+        id: body.productId,
+        ...buildAuthorizedProductWhere(workspaceId),
+      },
+    });
+
     if (!product) {
+      const existsGlobally = await prisma.researchProduct.findUnique({ where: { id: body.productId } });
+      if (existsGlobally) {
+        return NextResponse.json(
+          {
+            success: false,
+            error: {
+              code: "FORBIDDEN_WORKSPACE_PRODUCT",
+              message: `Access denied: Product ${body.productId} belongs to another workspace.`,
+            },
+          },
+          { status: 403 }
+        );
+      }
       return NextResponse.json(
         { success: false, error: { code: "PRODUCT_NOT_FOUND", message: `Product ${body.productId} not found.` } },
         { status: 404 }
@@ -87,6 +113,22 @@ export async function POST(request: NextRequest) {
         });
 
         if (existing) {
+          if (
+            existing.demandValue !== null &&
+            pt.demandValue !== null &&
+            Math.abs(existing.demandValue - pt.demandValue) > 0.001
+          ) {
+            return NextResponse.json(
+              {
+                success: false,
+                error: {
+                  code: "CONFLICTING_DUPLICATE_OBSERVATION",
+                  message: `Conflicting duplicate demand observation for product '${body.productId}' at '${pt.periodStart}': existing=${existing.demandValue}, incoming=${pt.demandValue}`,
+                },
+              },
+              { status: 409 }
+            );
+          }
           skippedCount++;
           continue;
         }
@@ -125,7 +167,7 @@ export async function POST(request: NextRequest) {
         },
         meta: {
           timestamp: new Date().toISOString(),
-          note: "Official Google Trends CSV imported, cryptographically verified, and persisted.",
+          note: "Official Google Trends CSV imported, byte integrity verified (SHA-256), and persisted.",
         },
       });
     }
@@ -283,6 +325,12 @@ export async function POST(request: NextRequest) {
       },
     });
   } catch (error: any) {
+    if (error instanceof ResearchAuthError) {
+      return NextResponse.json(
+        { success: false, error: { code: error.code, message: error.message } },
+        { status: error.statusCode || 401 }
+      );
+    }
     return NextResponse.json(
       { success: false, error: { code: "IMPORT_FAILED", message: error.message } },
       { status: 500 }

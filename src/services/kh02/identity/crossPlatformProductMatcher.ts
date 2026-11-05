@@ -38,10 +38,237 @@ export interface ProductMatchHypothesis {
   reviewedBy?: string | null;
 }
 
-function extractProductHandleFromUrl(url?: string | null): string | null {
+export function extractProductHandleFromUrl(url?: string | null): string | null {
   if (!url) return null;
   const m = String(url).match(/\/products\/([a-z0-9-_]+)/i);
   return m && m[1] ? m[1].toLowerCase() : null;
+}
+
+export interface VerifiedGoogleMerchantDestinationResult {
+  isVerifiedPdp: boolean;
+  destinationVerificationStatus:
+    | "CONFIRMED_MERCHANT_PDP"
+    | "MISSING_DESTINATION"
+    | "TRANSPARENCY_ONLY"
+    | "GENERIC_GOOGLE_URL"
+    | "REDIRECTOR_OR_SHORTENER"
+    | "INVALID_URL_SCHEME"
+    | "STORE_DOMAIN_MISMATCH"
+    | "NON_PDP_PAGE"
+    | "PRODUCT_HANDLE_CONFLICT";
+  finalDestination: string | null;
+  normalizedProductUrl: string | null;
+  extractedHandle: string | null;
+  reason: string;
+}
+
+export function classifyVerifiedGoogleMerchantDestination(
+  rawUrl: string | null | undefined,
+  candidate: {
+    storeDomain?: string | null;
+    canonicalProductUrl?: string | null;
+    candidateId?: string;
+  }
+): VerifiedGoogleMerchantDestinationResult {
+  if (!rawUrl || typeof rawUrl !== "string" || !rawUrl.trim()) {
+    return {
+      isVerifiedPdp: false,
+      destinationVerificationStatus: "MISSING_DESTINATION",
+      finalDestination: null,
+      normalizedProductUrl: null,
+      extractedHandle: null,
+      reason: "No destination URL provided.",
+    };
+  }
+
+  let parsed: URL;
+  try {
+    parsed = new URL(rawUrl.trim());
+  } catch {
+    return {
+      isVerifiedPdp: false,
+      destinationVerificationStatus: "INVALID_URL_SCHEME",
+      finalDestination: null,
+      normalizedProductUrl: null,
+      extractedHandle: null,
+      reason: `Malformed destination URL '${rawUrl}'.`,
+    };
+  }
+
+  if (parsed.protocol !== "https:") {
+    return {
+      isVerifiedPdp: false,
+      destinationVerificationStatus: "INVALID_URL_SCHEME",
+      finalDestination: null,
+      normalizedProductUrl: null,
+      extractedHandle: null,
+      reason: `Destination URL must use HTTPS protocol; received '${parsed.protocol}'.`,
+    };
+  }
+
+  const hostname = parsed.hostname.toLowerCase();
+
+  // Check for Google Ads Transparency URLs and variants
+  if (
+    hostname === "adstransparency.google.com" ||
+    hostname.endsWith(".adstransparency.google.com") ||
+    parsed.pathname.includes("/advertiser/")
+  ) {
+    return {
+      isVerifiedPdp: false,
+      destinationVerificationStatus: "TRANSPARENCY_ONLY",
+      finalDestination: null,
+      normalizedProductUrl: null,
+      extractedHandle: null,
+      reason: "URL points to Google Ads Transparency listing, not merchant product page.",
+    };
+  }
+
+  // Check for generic Google domains and tracking/redirect services
+  if (
+    hostname === "google.com" ||
+    hostname.endsWith(".google.com") ||
+    hostname.includes("googleadservices.com") ||
+    hostname.includes("googlesyndication.com") ||
+    hostname.includes("doubleclick.net")
+  ) {
+    return {
+      isVerifiedPdp: false,
+      destinationVerificationStatus: "GENERIC_GOOGLE_URL",
+      finalDestination: null,
+      normalizedProductUrl: null,
+      extractedHandle: null,
+      reason: "URL is a generic Google domain or ad redirector.",
+    };
+  }
+
+  // Check for known link shorteners / redirect services
+  const shortenerDomains = [
+    "bit.ly",
+    "tinyurl.com",
+    "t.co",
+    "goo.gl",
+    "ow.ly",
+    "buff.ly",
+    "is.gd",
+    "rebrand.ly",
+  ];
+  if (shortenerDomains.includes(hostname) || shortenerDomains.some((d) => hostname.endsWith("." + d))) {
+    return {
+      isVerifiedPdp: false,
+      destinationVerificationStatus: "REDIRECTOR_OR_SHORTENER",
+      finalDestination: null,
+      normalizedProductUrl: null,
+      extractedHandle: null,
+      reason: `Link shortener / redirect service '${hostname}' cannot verify canonical merchant PDP destination.`,
+    };
+  }
+
+  // Check for redirect URL parameters attempting to embed a target URL
+  const redirectParamNames = ["url", "dest", "destination", "target", "adurl", "r"];
+  for (const p of redirectParamNames) {
+    if (parsed.searchParams.has(p)) {
+      const val = parsed.searchParams.get(p);
+      if (val && /^https?:\/\//i.test(val)) {
+        return {
+          isVerifiedPdp: false,
+          destinationVerificationStatus: "REDIRECTOR_OR_SHORTENER",
+          finalDestination: null,
+          normalizedProductUrl: null,
+          extractedHandle: null,
+          reason: `Unresolved redirect parameter '?${p}=' detected in URL.`,
+        };
+      }
+    }
+  }
+
+  // Domain verification against candidate store domain
+  if (candidate.storeDomain) {
+    const candRegDomain = extractRegistrableDomain(candidate.storeDomain);
+    const evRegDomain = extractRegistrableDomain(hostname);
+    if (!candRegDomain || !evRegDomain || candRegDomain !== evRegDomain) {
+      return {
+        isVerifiedPdp: false,
+        destinationVerificationStatus: "STORE_DOMAIN_MISMATCH",
+        finalDestination: null,
+        normalizedProductUrl: null,
+        extractedHandle: null,
+        reason: `Destination domain '${evRegDomain}' does not match candidate merchant domain '${candRegDomain}'.`,
+      };
+    }
+  }
+
+  // Path inspection: must be a product page (/products/<handle>), not homepage, collection, blog, cart, etc.
+  const pathname = parsed.pathname;
+  if (!pathname || pathname === "/" || pathname === "") {
+    return {
+      isVerifiedPdp: false,
+      destinationVerificationStatus: "NON_PDP_PAGE",
+      finalDestination: null,
+      normalizedProductUrl: null,
+      extractedHandle: null,
+      reason: "Destination is the store homepage, not a specific product detail page.",
+    };
+  }
+
+  const nonPdpPatterns = [
+    /^\/(collections|collection)\b/i,
+    /^\/(blogs|blog|posts|post)\b/i,
+    /^\/(pages|page)\b/i,
+    /^\/(cart|checkout|account|search)\b/i,
+    /^\/(policies|privacy|terms)\b/i,
+  ];
+  if (nonPdpPatterns.some((pattern) => pattern.test(pathname))) {
+    return {
+      isVerifiedPdp: false,
+      destinationVerificationStatus: "NON_PDP_PAGE",
+      finalDestination: null,
+      normalizedProductUrl: null,
+      extractedHandle: null,
+      reason: `Destination path '${pathname}' is a collection, blog, or non-product utility page.`,
+    };
+  }
+
+  const handleMatch = pathname.match(/\/products\/([a-z0-9-_]+)/i);
+  if (!handleMatch || !handleMatch[1]) {
+    return {
+      isVerifiedPdp: false,
+      destinationVerificationStatus: "NON_PDP_PAGE",
+      finalDestination: null,
+      normalizedProductUrl: null,
+      extractedHandle: null,
+      reason: `Destination path '${pathname}' is not a recognized /products/<handle> product detail page.`,
+    };
+  }
+
+  const evHandle = handleMatch[1].toLowerCase();
+
+  // Check handle conflict against candidate canonical product URL
+  if (candidate.canonicalProductUrl) {
+    const candHandleMatch = String(candidate.canonicalProductUrl).match(/\/products\/([a-z0-9-_]+)/i);
+    const candHandle = candHandleMatch && candHandleMatch[1] ? candHandleMatch[1].toLowerCase() : null;
+    if (candHandle && candHandle !== evHandle) {
+      return {
+        isVerifiedPdp: false,
+        destinationVerificationStatus: "PRODUCT_HANDLE_CONFLICT",
+        finalDestination: null,
+        normalizedProductUrl: null,
+        extractedHandle: evHandle,
+        reason: `Destination product handle '${evHandle}' conflicts with candidate product handle '${candHandle}'.`,
+      };
+    }
+  }
+
+  // Clean canonical PDP URL (origin + pathname)
+  const cleanUrl = `${parsed.origin}${parsed.pathname}`;
+  return {
+    isVerifiedPdp: true,
+    destinationVerificationStatus: "CONFIRMED_MERCHANT_PDP",
+    finalDestination: cleanUrl,
+    normalizedProductUrl: cleanUrl,
+    extractedHandle: evHandle,
+    reason: `Verified merchant product detail page '${cleanUrl}'.`,
+  };
 }
 
 const MUTUALLY_EXCLUSIVE_PRODUCT_GROUPS: string[][] = [
