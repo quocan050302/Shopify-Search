@@ -1,0 +1,97 @@
+{
+  "version": "12.4.3.7.18.1",
+  "evaluatedAt": "2026-11-05T22:45:00+07:00",
+  "module": "src/services/kh02/demand/demandObservationBatchImport.ts",
+  "testedCodeCommitSha": "25b9be5617f1b238ded64b7a599c7aae8aa297f2",
+  "retryAndConflictInvariants": {
+    "maxDbAttempts": 5,
+    "lockContentionCodes": [
+      "SQLITE_BUSY",
+      "P1008",
+      "P2002",
+      "P2028",
+      "P2034"
+    ],
+    "exhaustionHandling": {
+      "statusCode": 503,
+      "errorCode": "DATABASE_BUSY_RETRY_EXHAUSTED",
+      "guarantee": "Zero phantom success on SQLite write-lock exhaustion; returns clean 503"
+    },
+    "postCommitVerification": {
+      "enforced": true,
+      "method": "prisma.productDemandObservation.count({ where: { productId } }) >= insertedCount",
+      "failureCode": "READBACK_VERIFICATION_FAILED"
+    },
+    "conflictingDuplicateDetection": {
+      "function": "assertIdenticalOrThrowConflict(existing, pt, productId)",
+      "fieldsChecked": [
+        "demandValue (null vs numeric, or numerical discrepancy > 0.001)",
+        "evidenceReference (differing non-empty provenance strings)",
+        "periodEnd (diverging date range)",
+        "methodologyVersion (diverging methodology versions)"
+      ],
+      "conflictResponse": {
+        "statusCode": 409,
+        "errorCode": "CONFLICTING_DUPLICATE_OBSERVATION"
+      },
+      "idempotentIdenticalResponse": {
+        "statusCode": 200,
+        "insertedCount": 0,
+        "skippedCount": 50
+      }
+    }
+  },
+  "scenariosVerified": [
+    {
+      "testId": "B01",
+      "description": "Force SQLITE_BUSY on all 5 attempts",
+      "attemptsObserved": 5,
+      "statusCode": 503,
+      "errorCode": "DATABASE_BUSY_RETRY_EXHAUSTED",
+      "persistedRows": 0,
+      "status": "PASS"
+    },
+    {
+      "testId": "B02",
+      "description": "Force Prisma P1008 on all 5 attempts",
+      "attemptsObserved": 5,
+      "statusCode": 503,
+      "errorCode": "DATABASE_BUSY_RETRY_EXHAUSTED",
+      "persistedRows": 0,
+      "status": "PASS"
+    },
+    {
+      "testId": "B03",
+      "description": "Attempts 1-4 throw SQLITE_BUSY, attempt 5 succeeds",
+      "attemptsObserved": 5,
+      "statusCode": 200,
+      "insertedCount": 3,
+      "persistedRows": 3,
+      "status": "PASS"
+    },
+    {
+      "testId": "C01",
+      "description": "Two OS child processes insert identical rows concurrently",
+      "process1Exit": 0,
+      "process2Exit": 0,
+      "totalDbRows": 50,
+      "status": "PASS"
+    },
+    {
+      "testId": "C02",
+      "description": "Two OS child processes insert conflicting values (30 vs 80)",
+      "process1Exit": 0,
+      "process2Exit": 1,
+      "process2StderrContains": "CONFLICTING_DUPLICATE_OBSERVATION",
+      "totalDbRows": 50,
+      "status": "PASS"
+    },
+    {
+      "testId": "C08",
+      "description": "Four OS child processes concurrently import 4 distinct products (50 rows each)",
+      "totalProducts": 4,
+      "totalDbRows": 200,
+      "status": "PASS"
+    }
+  ]
+}

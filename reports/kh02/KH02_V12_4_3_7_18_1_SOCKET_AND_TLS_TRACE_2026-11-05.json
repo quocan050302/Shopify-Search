@@ -1,0 +1,110 @@
+{
+  "version": "12.4.3.7.18.1",
+  "evaluatedAt": "2026-11-05T22:45:00+07:00",
+  "module": "src/services/kh02/identity/verifiedMerchantPdpResolver.ts",
+  "testedCodeCommitSha": "25b9be5617f1b238ded64b7a599c7aae8aa297f2",
+  "socketTrustInvariants": {
+    "pinnedIpPreflightCheck": {
+      "ssrfValidation": "MANDATORY_BEFORE_DIAL",
+      "dnsResolutionMembership": "MANDATORY (caller-supplied IP must be present in vetted DNS lookup results)",
+      "violationCodes": ["BLOCKED_PRIVATE_HOST", "SOCKET_PEER_MISMATCH"]
+    },
+    "directSocketPeerVerification": {
+      "source": "tlsSocket.remoteAddress directly read from connected OS socket",
+      "rebindingDefense": "Asserts socket remoteAddress byte-for-byte matches vetted pinnedIp; throws SOCKET_PEER_MISMATCH if diverged",
+      "sniHostIntegrity": "Dials pinnedIp while preserving target merchant hostname in servername"
+    },
+    "tlsAuthorizationEnforcement": {
+      "caAuthorizedCheck": "tlsSocket.authorized === true required in production",
+      "selfSignedRejection": "Disallowed unless explicitly permitted by allowSelfSignedTestCert in test mode",
+      "urlFallbackEliminated": "Boolean(isRealSocketConnection && observedTlsAuthorized && !options?.allowSelfSignedTestCert); zero fallback to URL protocol"
+    },
+    "testOverrideIsolation": {
+      "detectedOverrides": [
+        "fetchFn",
+        "dnsLookupFn",
+        "allowSelfSignedTestCert",
+        "allowLoopbackForTest",
+        "simulateFinalUrl",
+        "simulateConnectedPeerIp",
+        "pinnedIp",
+        "transportMode === 'TEST_SIMULATION'",
+        "transportMode === 'TEST_ONLY'"
+      ],
+      "immutableGuarantee": "hasTestOverrides === true unconditionally forces isLiveExternalProof: false and verificationSource: 'TEST_VERIFIED_ONLY'",
+      "failureSanitization": "isVerifiedPdp === false unconditionally strips tlsVerified to false and isLiveExternalProof to false"
+    }
+  },
+  "scenariosVerified": [
+    {
+      "testId": "A01",
+      "description": "Caller injected mock fetchFn",
+      "isVerifiedPdp": true,
+      "isLiveExternalProof": false,
+      "tlsVerified": false,
+      "status": "PASS"
+    },
+    {
+      "testId": "A02",
+      "description": "Caller injected mock dnsLookupFn",
+      "isVerifiedPdp": true,
+      "isLiveExternalProof": false,
+      "tlsVerified": false,
+      "status": "PASS"
+    },
+    {
+      "testId": "A03",
+      "description": "allowLoopbackForTest: true with 127.0.0.1",
+      "isVerifiedPdp": true,
+      "isLiveExternalProof": false,
+      "tlsVerified": false,
+      "status": "PASS"
+    },
+    {
+      "testId": "A04",
+      "description": "Caller injected pinnedIp matching DNS",
+      "isVerifiedPdp": true,
+      "isLiveExternalProof": false,
+      "tlsVerified": false,
+      "status": "PASS"
+    },
+    {
+      "testId": "A05",
+      "description": "Caller injected pinnedIp NOT matching DNS",
+      "isVerifiedPdp": false,
+      "verificationStatus": "SOCKET_PEER_MISMATCH",
+      "isLiveExternalProof": false,
+      "status": "PASS"
+    },
+    {
+      "testId": "A06",
+      "description": "Caller injected pinnedIp with private IP",
+      "isVerifiedPdp": false,
+      "verificationStatus": "BLOCKED_PRIVATE_HOST",
+      "status": "PASS"
+    },
+    {
+      "testId": "A07",
+      "description": "Reconciles V17 A24 gap: mock fetch never sets tlsVerified=true",
+      "tlsVerified": false,
+      "isLiveExternalProof": false,
+      "status": "PASS"
+    },
+    {
+      "testId": "A08",
+      "description": "HTTPS failure sets isVerifiedPdp=false, tlsVerified=false, isLiveExternalProof=false",
+      "isVerifiedPdp": false,
+      "tlsVerified": false,
+      "isLiveExternalProof": false,
+      "status": "PASS"
+    },
+    {
+      "testId": "A15",
+      "description": "Real local HTTPS server with self-signed cert",
+      "isVerifiedPdp": true,
+      "isLiveExternalProof": false,
+      "tlsVerified": false,
+      "status": "PASS"
+    }
+  ]
+}

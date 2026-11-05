@@ -1,0 +1,109 @@
+{
+  "version": "12.4.3.7.18.1",
+  "evaluatedAt": "2026-11-05T22:45:00+07:00",
+  "modules": [
+    "src/services/kh02/demand/demandObservationBatchImport.ts",
+    "src/services/kh02/demand/googleTrendsCsvValidator.ts",
+    "src/services/kh02/demand/temporalDemandEngine.ts"
+  ],
+  "testedCodeCommitSha": "25b9be5617f1b238ded64b7a599c7aae8aa297f2",
+  "sourceProvenanceInvariants": {
+    "googleTrendsCsvVerification": {
+      "mandatoryRef": "evidenceReference is required unconditionally, even if strictProvenance is false or omitted",
+      "formatEnforcement": "Requires 64-hex SHA-256 matching stored CSV file",
+      "rowLevelAttestation": "verifyDemandObservationAgainstRawCsv must match keyword, region, periodStart, and demandValue",
+      "unbackedRejection": "Throws 422 EVIDENCE_REFERENCE_REQUIRED, KEYWORD_MISMATCH, REGION_MISMATCH, ROW_NOT_IN_CSV, or VALUE_MISMATCH"
+    },
+    "providerApiVerification": {
+      "mandatoryRef": "evidenceReference is required unconditionally",
+      "receiptAuthentication": "resolveVerifiedDemandEvidence checks disk artifact and receipt descriptor",
+      "unbackedRejection": "Throws 422 PROVIDER_RECEIPT_REQUIRED"
+    },
+    "pureCsvBytesParsing": {
+      "function": "parseGoogleTrendsCsvBytes(rawCsv, options)",
+      "sideEffects": "Zero disk writes, zero file mutation, pure in-memory parser",
+      "idempotency": "Bitwise identical sha256Checksum and dataPoints across cold process executions"
+    },
+    "businessLineageDemotion": {
+      "userManual": "Demoted to CACHED_UNVERIFIED / ESTIMATED_OR_PROXY; ineligible for G15",
+      "csvByteIntegrity": "Grants HISTORICAL_SOURCE_VERIFIED and LOCAL_INTEGRITY_ONLY; does NOT grant external provider issuance",
+      "crossTenant": "Tenant-scoped queries prevent cross-workspace demand leakage"
+    }
+  },
+  "scenariosVerified": [
+    {
+      "testId": "D01",
+      "description": "CSV missing evidenceReference and strictProvenance omitted",
+      "statusCode": 422,
+      "errorCode": "EVIDENCE_REFERENCE_REQUIRED",
+      "rowsInserted": 0,
+      "status": "PASS"
+    },
+    {
+      "testId": "D02",
+      "description": "CSV missing evidenceReference with strictProvenance: false",
+      "statusCode": 422,
+      "errorCode": "EVIDENCE_REFERENCE_REQUIRED",
+      "rowsInserted": 0,
+      "status": "PASS"
+    },
+    {
+      "testId": "D03",
+      "description": "Row mismatch checks against stored CSV",
+      "wrongKeywordCode": "KEYWORD_MISMATCH",
+      "wrongRegionCode": "REGION_MISMATCH",
+      "wrongDateCode": "ROW_NOT_IN_CSV",
+      "wrongValueCode": "VALUE_MISMATCH",
+      "status": "PASS"
+    },
+    {
+      "testId": "D04",
+      "description": "Tampered/non-existent CSV SHA-256 in reference",
+      "lineageVerified": false,
+      "sourceAuthority": "CACHED_UNVERIFIED",
+      "status": "PASS"
+    },
+    {
+      "testId": "D06",
+      "description": "Provider row with fake receipt reference",
+      "statusCode": 422,
+      "errorCode": "PROVIDER_RECEIPT_REQUIRED",
+      "status": "PASS"
+    },
+    {
+      "testId": "D10",
+      "description": "Authentic CSV exact row match",
+      "statusCode": 200,
+      "rowsInserted": 1,
+      "status": "PASS"
+    },
+    {
+      "testId": "D11",
+      "description": "USER_MANUAL writes successfully but is ineligible for G15",
+      "authority": "CACHED_UNVERIFIED",
+      "status": "PASS"
+    },
+    {
+      "testId": "D12",
+      "description": "Mixed-source batch rejected before any DB write",
+      "statusCode": 422,
+      "errorCode": "MIXED_SOURCE_BATCH_REJECTED",
+      "status": "PASS"
+    },
+    {
+      "testId": "D13",
+      "description": "Raw CSV verification preserves file bytes, SHA and mtime",
+      "byteComparison": 0,
+      "mtimePreserved": true,
+      "status": "PASS"
+    },
+    {
+      "testId": "D14",
+      "description": "Pure CSV bytes parser bitwise identical across calls",
+      "valid": true,
+      "hashesMatch": true,
+      "rowCountMatch": true,
+      "status": "PASS"
+    }
+  ]
+}

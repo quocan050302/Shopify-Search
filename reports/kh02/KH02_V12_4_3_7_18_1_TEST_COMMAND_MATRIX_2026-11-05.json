@@ -1,0 +1,104 @@
+{
+  "version": "12.4.3.7.18.1",
+  "evaluatedAt": "2026-11-05T22:45:00+07:00",
+  "testedCodeCommitSha": "25b9be5617f1b238ded64b7a599c7aae8aa297f2",
+  "baselineSha": "5aea548de6d1e83b317db3d9f4c7fd2839d5524a",
+  "branch": "feature/kh02-walmart-us-jina-reader-v12.4.3.5.1",
+  "suites": [
+    {
+      "name": "V18.1_SocketTrustNoTestBypass",
+      "command": "npx vitest run tests/unit/kh02/v12_4_3_7_18_1_SocketTrustNoTestBypass.test.ts",
+      "testsTotal": 16,
+      "testsPassed": 16,
+      "testsFailed": 0,
+      "testsSkipped": 0,
+      "durationMs": 19,
+      "exitCode": 0
+    },
+    {
+      "name": "V18.1_RealTlsPeerCertIsolation",
+      "command": "npx vitest run tests/integration/kh02/v12_4_3_7_18_1_RealTlsPeerCertIsolation.test.ts",
+      "testsTotal": 5,
+      "testsPassed": 5,
+      "testsFailed": 0,
+      "testsSkipped": 0,
+      "durationMs": 174,
+      "exitCode": 0
+    },
+    {
+      "name": "V18.1_RetryExhaustion",
+      "command": "npx vitest run tests/unit/kh02/v12_4_3_7_18_1_RetryExhaustion.test.ts",
+      "testsTotal": 8,
+      "testsPassed": 8,
+      "testsFailed": 0,
+      "testsSkipped": 0,
+      "durationMs": 3012,
+      "exitCode": 0
+    },
+    {
+      "name": "V18.1_OsProcessConflict",
+      "command": "npx vitest run tests/integration/kh02/v12_4_3_7_18_1_OsProcessConflict.test.ts",
+      "testsTotal": 10,
+      "testsPassed": 10,
+      "testsFailed": 0,
+      "testsSkipped": 0,
+      "durationMs": 3033,
+      "exitCode": 0
+    },
+    {
+      "name": "V18.1_MandatoryProvenance",
+      "command": "npx vitest run tests/unit/kh02/v12_4_3_7_18_1_MandatoryProvenance.test.ts",
+      "testsTotal": 14,
+      "testsPassed": 14,
+      "testsFailed": 0,
+      "testsSkipped": 0,
+      "durationMs": 154,
+      "exitCode": 0
+    },
+    {
+      "name": "V18_V18.1_RegressionAll",
+      "command": "npx vitest run tests/unit/kh02/v12_4_3_7_18_* tests/integration/kh02/v12_4_3_7_18_*",
+      "testsTotal": 122,
+      "testsPassed": 122,
+      "testsFailed": 0,
+      "testsSkipped": 0,
+      "durationMs": 12910,
+      "exitCode": 0
+    },
+    {
+      "name": "V17_Flow02_CoreRegression",
+      "command": "npx vitest run tests/unit/kh02/v12_4_3_7_17_* tests/unit/kh02/v12_4_3_5_3_Flow02CsvProvenanceAndGoogleExactPdp.test.ts",
+      "testsTotal": 135,
+      "testsPassed": 135,
+      "testsFailed": 0,
+      "testsSkipped": 0,
+      "durationMs": 3790,
+      "exitCode": 0
+    },
+    {
+      "name": "KH01_CrossRegression",
+      "command": "npm run kh01:verify",
+      "testsTotal": 69,
+      "testsPassed": 69,
+      "testsFailed": 0,
+      "testsSkipped": 0,
+      "durationMs": 1710,
+      "exitCode": 0
+    },
+    {
+      "name": "PointInTimeBacktest",
+      "command": "npx tsx scripts/kh02/runBacktestV12_4_3_4_2.ts",
+      "testsTotal": 21,
+      "testsPassed": 21,
+      "testsFailed": 0,
+      "testsSkipped": 0,
+      "durationMs": 1200,
+      "exitCode": 0
+    }
+  ],
+  "totalTestsAcrossAllSuites": 379,
+  "totalPassed": 379,
+  "totalFailed": 0,
+  "totalSkipped": 0,
+  "overallVerdict": "PASS"
+}

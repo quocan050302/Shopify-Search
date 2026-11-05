@@ -1,0 +1,52 @@
+{
+  "version": "12.4.3.7.18.1",
+  "auditDate": "2026-11-05T22:45:00+07:00",
+  "repository": "quocan050302/Shopify-Search",
+  "branch": "feature/kh02-walmart-us-jina-reader-v12.4.3.5.1",
+  "baselineSha": "5aea548de6d1e83b317db3d9f4c7fd2839d5524a",
+  "testedCodeCommitSha": "25b9be5617f1b238ded64b7a599c7aae8aa297f2",
+  "engineeringVerdict": "PASS",
+  "engineeringGates": {
+    "S0_typeScriptAndWhitespace": "PASS (tsc 0 errors, git diff --check 0 warnings)",
+    "S1_v18_1_TargetedSuites": "PASS (53/53 across 5 test suites in ~6.5s)",
+    "S2_v18_v18_1_Regression": "PASS (122/122 across 11 test suites in 12.91s)",
+    "S3_v17_flow02_CoreRegression": "PASS (135/135 across 6 test suites in 3.79s)",
+    "S5_kh01CrossRegression": "PASS (69/69 across 5 test suites in 1.71s)",
+    "S6_backtestPolicyReplay": "PASS (Exit 0, Policy=PASS, Dev=INSUFFICIENT, Holdout=INSUFFICIENT, zero lookahead leakage)"
+  },
+  "sentinelHashes": {
+    "receipt_04f4d039_sha256": "04f4d039cdd4a884134914fdb9d2ed86ebbfa353991d714b78df545a96fd4b14",
+    "receipt_3440f190_sha256": "3440f19057ac7d1ac535150d1bbcc9a3078e0b7a5d46ad3f4bbd2c46235f61c8",
+    "receipt_366cfeb1_sha256": "366cfeb156347d783c227be3fd7e10e397c8cd00c49c909673fc5208f36b841f",
+    "bitwiseIntegrityPreserved": true
+  },
+  "backtestVerdicts": {
+    "policyScenarioVerdict": "PASS",
+    "pointInTimeIntegrityVerdict": "PASS",
+    "historicalDevVerdict": "INSUFFICIENT_HISTORICAL_EVIDENCE",
+    "historicalHoldoutVerdict": "INSUFFICIENT_HISTORICAL_EVIDENCE",
+    "overallHistoricalBacktestVerdict": "INSUFFICIENT_HISTORICAL_EVIDENCE"
+  },
+  "businessGates": {
+    "G06_GoogleAds": "TRANSPORT_READY_NOT_VERIFIED",
+    "G07_TikTokAds": "BLOCKED",
+    "G15_LongitudinalDemand": "INSUFFICIENT_EVIDENCE",
+    "G16_Top3WinningProducts": "INSUFFICIENT_EVIDENCE"
+  },
+  "workstreamGuarantees": {
+    "workstreamA_pinnedIpVettedDnsResolution": true,
+    "workstreamA_socketDirectRemoteAddressMatch": true,
+    "workstreamA_tlsCertificateAuthorityInspection": true,
+    "workstreamA_urlProtocolFallbackEliminated": true,
+    "workstreamA_testOverridesRefuseLiveExternalProof": true,
+    "workstreamB_explicitMaxDbAttempts5": true,
+    "workstreamB_sqliteBusyExhaustionMapsTo503": true,
+    "workstreamB_postCommitReadbackVerification": true,
+    "workstreamC_conflictingDuplicateObservation409": true,
+    "workstreamC_osProcessConcurrencyConflictVerified": true,
+    "workstreamD_mandatoryEvidenceReferenceCsvAndApi": true,
+    "workstreamD_pureCsvBytesParsingZeroDiskMutation": true,
+    "workstreamD_unbackedRowFailClosedDemotion": true,
+    "workstreamD_honestBusinessGateStatuses": true
+  }
+}
