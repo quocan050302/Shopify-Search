@@ -615,8 +615,9 @@ describe("KH-02 Final Evidence-Flow Closure — Flow 02 Test Matrix (A01–A16, 
       const exactUrl = "https://uahpet.com/products/uahpet-fresh-food-automatic-pet-feeder";
       const dest = classifyVerifiedGoogleMerchantDestination(exactUrl, candidateUahpet);
 
-      expect(dest.isVerifiedPdp).toBe(true);
-      expect(dest.destinationVerificationStatus).toBe("CONFIRMED_MERCHANT_PDP");
+      expect(dest.urlStructureValid).toBe(true);
+      expect(dest.isVerifiedPdp).toBe(false);
+      expect(dest.destinationVerificationStatus).toBe("PDP_URL_STRUCTURE_VALID");
       expect(dest.finalDestination).toBe(exactUrl);
       expect(dest.normalizedProductUrl).toBe(exactUrl);
 

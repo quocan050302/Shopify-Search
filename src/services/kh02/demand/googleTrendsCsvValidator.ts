@@ -15,6 +15,7 @@ import fs from "fs";
 import path from "path";
 import { prisma } from "@/lib/db";
 import { DemandDataPoint } from "./temporalDemandEngine";
+import { executeDemandObservationBatchImport } from "./demandObservationBatchImport";
 
 export const GOOGLE_TRENDS_CSV_STORAGE_DIR = path.resolve(
   process.cwd(),
@@ -414,51 +415,40 @@ export async function importGoogleTrendsCsvToDatabase(
     };
   }
 
-  let insertedCount = 0;
-  let skippedCount = 0;
-
-  for (const pt of validation.dataPoints) {
-    const existing = await prisma.productDemandObservation.findFirst({
-      where: {
-        productId,
+  try {
+    const importRes = await executeDemandObservationBatchImport({
+      productId,
+      source: "GOOGLE_TRENDS_CSV",
+      region: validation.region || options.region || "US",
+      evidenceReference: validation.evidenceReference,
+      methodologyVersion: options.methodologyVersion || "google_trends_csv_v1",
+      points: validation.dataPoints.map((pt) => ({
         keyword: pt.keyword,
         region: pt.region,
-        periodStart: new Date(pt.periodStart),
-      },
+        periodStart: pt.periodStart,
+        periodEnd: pt.periodEnd,
+        demandValue: pt.demandValue,
+        evidenceReference: validation.evidenceReference,
+        methodologyVersion: options.methodologyVersion || "google_trends_csv_v1",
+      })),
     });
 
-    if (existing) {
-      skippedCount++;
-      continue;
-    }
-
-    try {
-      await prisma.productDemandObservation.create({
-        data: {
-          productId,
-          source: "GOOGLE_TRENDS_CSV",
-          region: pt.region,
-          keyword: pt.keyword,
-          periodStart: new Date(pt.periodStart),
-          periodEnd: new Date(pt.periodEnd),
-          demandValue: pt.demandValue,
-          valueType: "RELATIVE_INTEREST",
-          evidenceReference: validation.evidenceReference,
-          methodologyVersion: options.methodologyVersion || "google_trends_csv_v1",
-        },
-      });
-      insertedCount++;
-    } catch {
-      skippedCount++;
-    }
+    return {
+      success: true,
+      insertedCount: importRes.insertedCount,
+      skippedCount: importRes.skippedCount,
+      evidenceReference: validation.evidenceReference,
+      sha256Checksum: validation.sha256Checksum,
+      errors: [],
+    };
+  } catch (err: any) {
+    return {
+      success: false,
+      insertedCount: 0,
+      skippedCount: 0,
+      evidenceReference: validation.evidenceReference,
+      sha256Checksum: validation.sha256Checksum,
+      errors: [err?.message || String(err)],
+    };
   }
-
-  return {
-    success: true,
-    insertedCount,
-    skippedCount,
-    evidenceReference: validation.evidenceReference,
-    sha256Checksum: validation.sha256Checksum,
-    errors: [],
-  };
 }

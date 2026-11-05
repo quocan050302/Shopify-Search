@@ -53,6 +53,7 @@ import {
   matchCrossPlatformProductEvidence,
   classifyVerifiedGoogleMerchantDestination,
 } from "./identity/crossPlatformProductMatcher";
+import { verifyLiveMerchantProductPageDestination } from "./identity/verifiedMerchantPdpResolver";
 import {
   loadProductHistoricalDemand,
   DemandDataPoint,
@@ -1609,7 +1610,18 @@ export async function runEvergreenProductResearch(
           match.associationClassification === "EXACT_PRODUCT_MATCH" &&
           match.isProductSpecificEvidence !== false
         ) {
-          if (destCheck.isVerifiedPdp) {
+          let livePdpCheck = null;
+          if (destCheck.urlStructureValid && obs.landingPageUrl) {
+            livePdpCheck = await verifyLiveMerchantProductPageDestination({
+              creative: { creativeId: cId, landingPageUrl: obs.landingPageUrl },
+              candidate,
+              options: {
+                transportMode: process.env.ENABLE_LIVE_NETWORK_FETCHER ? "LIVE_NATIVE" : "DISABLED",
+              },
+            });
+          }
+
+          if (livePdpCheck?.isVerifiedPdp && livePdpCheck?.isLiveExternalProof) {
             bestVerdict = "EXACT_PRODUCT_MATCH";
             bestClassification = match.confidence;
             bestEvidence =
@@ -1618,20 +1630,20 @@ export async function runEvergreenProductResearch(
             bestCandidateId = candidate.candidateId;
             bestRejectionReason = null;
             verifiedMerchantPdp = true;
-            finalDestUrl = destCheck.finalDestination;
-            normalizedPdpUrl = destCheck.normalizedProductUrl;
-            destinationStatus = destCheck.destinationVerificationStatus;
-            destinationReason = destCheck.reason;
+            finalDestUrl = livePdpCheck.finalUrl || destCheck.finalDestination;
+            normalizedPdpUrl = livePdpCheck.finalUrl || destCheck.normalizedProductUrl;
+            destinationStatus = livePdpCheck.verificationStatus;
+            destinationReason = livePdpCheck.reason || "Live PDP verified";
             break; // Highest verified tier reached
           } else {
             // Downgrade to PROBABLE_PRODUCT_MATCH because destination PDP is not confirmed
             bestVerdict = "PROBABLE_PRODUCT_MATCH";
             bestClassification = "PROBABLE";
-            bestEvidence = `${(match.matchReasons || []).join("; ")}; Downgraded from EXACT: ${destCheck.reason}`;
+            bestEvidence = `${(match.matchReasons || []).join("; ")}; Downgraded from EXACT: ${livePdpCheck?.reason || destCheck.reason}`;
             bestCandidateId = candidate.candidateId;
             bestRejectionReason = null;
-            destinationStatus = destCheck.destinationVerificationStatus;
-            destinationReason = destCheck.reason;
+            destinationStatus = livePdpCheck?.verificationStatus || destCheck.destinationVerificationStatus;
+            destinationReason = livePdpCheck?.reason || destCheck.reason;
           }
         } else if (
           match.associationClassification === "PROBABLE_PRODUCT_MATCH" &&

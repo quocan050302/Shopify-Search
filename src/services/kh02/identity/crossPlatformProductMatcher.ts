@@ -45,8 +45,10 @@ export function extractProductHandleFromUrl(url?: string | null): string | null 
 }
 
 export interface VerifiedGoogleMerchantDestinationResult {
+  urlStructureValid?: boolean;
   isVerifiedPdp: boolean;
   destinationVerificationStatus:
+    | "PDP_URL_STRUCTURE_VALID"
     | "CONFIRMED_MERCHANT_PDP"
     | "MISSING_DESTINATION"
     | "TRANSPARENCY_ONLY"
@@ -72,6 +74,7 @@ export function classifyVerifiedGoogleMerchantDestination(
 ): VerifiedGoogleMerchantDestinationResult {
   if (!rawUrl || typeof rawUrl !== "string" || !rawUrl.trim()) {
     return {
+      urlStructureValid: false,
       isVerifiedPdp: false,
       destinationVerificationStatus: "MISSING_DESTINATION",
       finalDestination: null,
@@ -86,6 +89,7 @@ export function classifyVerifiedGoogleMerchantDestination(
     parsed = new URL(rawUrl.trim());
   } catch {
     return {
+      urlStructureValid: false,
       isVerifiedPdp: false,
       destinationVerificationStatus: "INVALID_URL_SCHEME",
       finalDestination: null,
@@ -97,6 +101,7 @@ export function classifyVerifiedGoogleMerchantDestination(
 
   if (parsed.protocol !== "https:") {
     return {
+      urlStructureValid: false,
       isVerifiedPdp: false,
       destinationVerificationStatus: "INVALID_URL_SCHEME",
       finalDestination: null,
@@ -115,6 +120,7 @@ export function classifyVerifiedGoogleMerchantDestination(
     parsed.pathname.includes("/advertiser/")
   ) {
     return {
+      urlStructureValid: false,
       isVerifiedPdp: false,
       destinationVerificationStatus: "TRANSPARENCY_ONLY",
       finalDestination: null,
@@ -133,6 +139,7 @@ export function classifyVerifiedGoogleMerchantDestination(
     hostname.includes("doubleclick.net")
   ) {
     return {
+      urlStructureValid: false,
       isVerifiedPdp: false,
       destinationVerificationStatus: "GENERIC_GOOGLE_URL",
       finalDestination: null,
@@ -155,6 +162,7 @@ export function classifyVerifiedGoogleMerchantDestination(
   ];
   if (shortenerDomains.includes(hostname) || shortenerDomains.some((d) => hostname.endsWith("." + d))) {
     return {
+      urlStructureValid: false,
       isVerifiedPdp: false,
       destinationVerificationStatus: "REDIRECTOR_OR_SHORTENER",
       finalDestination: null,
@@ -171,6 +179,7 @@ export function classifyVerifiedGoogleMerchantDestination(
       const val = parsed.searchParams.get(p);
       if (val && /^https?:\/\//i.test(val)) {
         return {
+          urlStructureValid: false,
           isVerifiedPdp: false,
           destinationVerificationStatus: "REDIRECTOR_OR_SHORTENER",
           finalDestination: null,
@@ -188,6 +197,7 @@ export function classifyVerifiedGoogleMerchantDestination(
     const evRegDomain = extractRegistrableDomain(hostname);
     if (!candRegDomain || !evRegDomain || candRegDomain !== evRegDomain) {
       return {
+        urlStructureValid: false,
         isVerifiedPdp: false,
         destinationVerificationStatus: "STORE_DOMAIN_MISMATCH",
         finalDestination: null,
@@ -202,6 +212,7 @@ export function classifyVerifiedGoogleMerchantDestination(
   const pathname = parsed.pathname;
   if (!pathname || pathname === "/" || pathname === "") {
     return {
+      urlStructureValid: false,
       isVerifiedPdp: false,
       destinationVerificationStatus: "NON_PDP_PAGE",
       finalDestination: null,
@@ -220,6 +231,7 @@ export function classifyVerifiedGoogleMerchantDestination(
   ];
   if (nonPdpPatterns.some((pattern) => pattern.test(pathname))) {
     return {
+      urlStructureValid: false,
       isVerifiedPdp: false,
       destinationVerificationStatus: "NON_PDP_PAGE",
       finalDestination: null,
@@ -232,6 +244,7 @@ export function classifyVerifiedGoogleMerchantDestination(
   const handleMatch = pathname.match(/\/products\/([a-z0-9-_]+)/i);
   if (!handleMatch || !handleMatch[1]) {
     return {
+      urlStructureValid: false,
       isVerifiedPdp: false,
       destinationVerificationStatus: "NON_PDP_PAGE",
       finalDestination: null,
@@ -249,6 +262,7 @@ export function classifyVerifiedGoogleMerchantDestination(
     const candHandle = candHandleMatch && candHandleMatch[1] ? candHandleMatch[1].toLowerCase() : null;
     if (candHandle && candHandle !== evHandle) {
       return {
+        urlStructureValid: false,
         isVerifiedPdp: false,
         destinationVerificationStatus: "PRODUCT_HANDLE_CONFLICT",
         finalDestination: null,
@@ -262,12 +276,13 @@ export function classifyVerifiedGoogleMerchantDestination(
   // Clean canonical PDP URL (origin + pathname)
   const cleanUrl = `${parsed.origin}${parsed.pathname}`;
   return {
-    isVerifiedPdp: true,
-    destinationVerificationStatus: "CONFIRMED_MERCHANT_PDP",
+    urlStructureValid: true,
+    isVerifiedPdp: false,
+    destinationVerificationStatus: "PDP_URL_STRUCTURE_VALID",
     finalDestination: cleanUrl,
     normalizedProductUrl: cleanUrl,
     extractedHandle: evHandle,
-    reason: `Verified merchant product detail page '${cleanUrl}'.`,
+    reason: `Merchant product page URL structure is valid ('${cleanUrl}'); requires verified HTTP fetch to confirm live PDP.`,
   };
 }
 

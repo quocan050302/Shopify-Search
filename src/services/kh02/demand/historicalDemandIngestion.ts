@@ -46,6 +46,14 @@ export interface ProductDemandResolution {
   coverageGaps: string[];
   assessment: DemandHistoryAssessment;
   dataPoints: DemandDataPoint[];
+  observations?: Array<{
+    productId?: string | null;
+    keyword?: string | null;
+    region?: string | null;
+    periodStart?: Date | string;
+    demandValue?: number | null;
+    [key: string]: any;
+  }>;
   sourceStatus: "PRODUCT_HISTORY_VERIFIED" | "INSUFFICIENT_HISTORY" | "ENGINE_READY";
   cacheClassification?: DemandCacheAuthorityClassification;
   providerAttempted?: boolean;
@@ -125,11 +133,13 @@ export function normalizeDemandQueryTerm(rawTerm: string): {
  * Strictly respects workspace authorization and never merges unrelated product series.
  */
 export async function resolveProductDemandHistory(
-  candidate: {
-    productId?: string | null;
-    canonicalName: string;
-    category?: string | null;
-  },
+  candidate:
+    | string
+    | {
+        productId?: string | null;
+        canonicalName?: string;
+        category?: string | null;
+      },
   options: {
     lookbackDays?: number;
     region?: string;
@@ -138,17 +148,21 @@ export async function resolveProductDemandHistory(
     queryId?: string;
   } = {}
 ): Promise<ProductDemandResolution> {
+  const candidateObj =
+    typeof candidate === "string"
+      ? { productId: candidate, canonicalName: "", category: null }
+      : candidate;
   const region = options.region || "US";
   const requestedLookbackDays = options.lookbackDays || 90;
-  const rawTerm = candidate.canonicalName || "";
-  const searchTerm = normalizeProductSearchTerm(rawTerm);
+  const rawTerm = candidateObj.canonicalName || "";
+  const searchTerm = rawTerm ? normalizeProductSearchTerm(rawTerm) : "";
   const mappingReason =
-    searchTerm !== rawTerm.trim()
+    rawTerm && searchTerm !== rawTerm.trim()
       ? `Normalized '${rawTerm}' -> '${searchTerm}' (stripped promotional suffixes/capacities for clean product demand query)`
       : `Used clean product name '${searchTerm}' directly`;
 
   let rawRecords: any[] = [];
-  let targetProductId = candidate.productId || null;
+  let targetProductId = candidateObj.productId || null;
 
   // 1. First check if candidate has an existing linked ResearchProduct with demand observations
   if (targetProductId) {
@@ -165,7 +179,7 @@ export async function resolveProductDemandHistory(
   // 2. If not found by productId, check if observations exist matching a single canonical product
   // CRITICAL: NEVER merge multiple distinct products into one time series
   // If candidate already has an explicit productId, do NOT fall back to arbitrary substring matches
-  if (rawRecords.length === 0 && !candidate.productId && searchTerm.length > 2) {
+  if (rawRecords.length === 0 && !candidateObj.productId && searchTerm.length > 2) {
     const candidateProducts = await prisma.researchProduct.findMany({
       where: {
         AND: [
@@ -183,7 +197,7 @@ export async function resolveProductDemandHistory(
       take: 5,
     });
 
-    const candFamily = detectSpecificProductFamily(candidate.canonicalName);
+    const candFamily = detectSpecificProductFamily(candidateObj.canonicalName || "");
     const matchingProduct = candidateProducts.find((mp) => {
       const mpFamily = detectSpecificProductFamily(mp.title);
       if (candFamily && mpFamily && candFamily !== mpFamily) return false;
@@ -263,7 +277,7 @@ export async function resolveProductDemandHistory(
 
     return {
       productId: targetProductId,
-      canonicalName: candidate.canonicalName,
+      canonicalName: candidateObj.canonicalName || "",
       rawTerm,
       normalizedTerm: searchTerm,
       searchTermUsed: searchTerm,
@@ -274,6 +288,10 @@ export async function resolveProductDemandHistory(
       coverageGaps,
       assessment,
       dataPoints,
+      observations: rawRecords.map((r) => ({
+        ...r,
+        productId: r.productId || targetProductId,
+      })),
       sourceStatus,
       cacheClassification: resolutionMeta?.cacheClassification,
       providerAttempted: resolutionMeta?.providerAttempted,
@@ -322,12 +340,12 @@ export async function resolveProductDemandHistory(
     minimumDataPoints: 3,
     minimumCoveredDays: requestedLookbackDays,
     requiredRegion: region,
-    candidateCanonicalName: candidate.canonicalName,
+    candidateCanonicalName: candidateObj.canonicalName || "",
     searchTermUsed: searchTerm,
   });
 
   const initialAuth = evaluateDemandSourceAuthority(currentPoints, {
-    candidateCanonicalName: candidate.canonicalName,
+    candidateCanonicalName: candidateObj.canonicalName || "",
     searchTermUsed: searchTerm,
   });
 
@@ -382,7 +400,7 @@ export async function resolveProductDemandHistory(
 
         const seriesResult = await defaultDemandProvider.fetchSeries({
           term: searchTerm,
-          canonicalProductName: candidate.canonicalName,
+          canonicalProductName: candidateObj.canonicalName || "",
           productId: targetProductId || undefined,
           region,
           startDate,
@@ -534,7 +552,7 @@ export async function resolveProductDemandHistory(
     minimumDataPoints: 3,
     minimumCoveredDays: 60,
     requiredRegion: region,
-    candidateCanonicalName: candidate.canonicalName,
+    candidateCanonicalName: candidateObj.canonicalName || "",
     searchTermUsed: searchTerm,
   });
 

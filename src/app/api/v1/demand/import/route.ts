@@ -12,6 +12,10 @@ import {
   verifyStoredCsvFile,
 } from "@/services/kh02/demand/googleTrendsCsvValidator";
 import {
+  executeDemandObservationBatchImport,
+  BatchImportError,
+} from "@/services/kh02/demand/demandObservationBatchImport";
+import {
   resolveAuthorizedResearchContext,
   ResearchAuthError,
 } from "@/services/research/researchAuthService";
@@ -100,55 +104,23 @@ export async function POST(request: NextRequest) {
         );
       }
 
-      let insertedCount = 0;
-      let skippedCount = 0;
-      for (const pt of validation.dataPoints) {
-        const existing = await prisma.productDemandObservation.findFirst({
-          where: {
-            productId: body.productId,
-            keyword: pt.keyword,
-            region: pt.region,
-            periodStart: new Date(pt.periodStart),
-          },
-        });
-
-        if (existing) {
-          if (
-            existing.demandValue !== null &&
-            pt.demandValue !== null &&
-            Math.abs(existing.demandValue - pt.demandValue) > 0.001
-          ) {
-            return NextResponse.json(
-              {
-                success: false,
-                error: {
-                  code: "CONFLICTING_DUPLICATE_OBSERVATION",
-                  message: `Conflicting duplicate demand observation for product '${body.productId}' at '${pt.periodStart}': existing=${existing.demandValue}, incoming=${pt.demandValue}`,
-                },
-              },
-              { status: 409 }
-            );
-          }
-          skippedCount++;
-          continue;
-        }
-
-        await prisma.productDemandObservation.create({
-          data: {
-            productId: body.productId,
-            source: "GOOGLE_TRENDS_CSV",
-            region: pt.region,
-            keyword: pt.keyword,
-            periodStart: new Date(pt.periodStart),
-            periodEnd: new Date(pt.periodEnd),
-            demandValue: pt.demandValue,
-            valueType: "RELATIVE_INTEREST",
-            evidenceReference: validation.evidenceReference,
-            methodologyVersion: "google_trends_explore_csv_v1",
-          },
-        });
-        insertedCount++;
-      }
+      const importRes = await executeDemandObservationBatchImport({
+        productId: body.productId,
+        workspaceId,
+        source: "GOOGLE_TRENDS_CSV",
+        region: validation.region || "US",
+        evidenceReference: validation.evidenceReference,
+        methodologyVersion: "google_trends_explore_csv_v1",
+        points: validation.dataPoints.map((pt) => ({
+          keyword: pt.keyword,
+          region: pt.region,
+          periodStart: pt.periodStart,
+          periodEnd: pt.periodEnd,
+          demandValue: pt.demandValue,
+          evidenceReference: validation.evidenceReference,
+          methodologyVersion: "google_trends_explore_csv_v1",
+        })),
+      });
 
       return NextResponse.json({
         success: true,
@@ -162,8 +134,8 @@ export async function POST(request: NextRequest) {
           startDate: validation.startDate,
           endDate: validation.endDate,
           totalRows: validation.dataPointsCount,
-          insertedCount,
-          skippedCount,
+          insertedCount: importRes.insertedCount,
+          skippedCount: importRes.skippedCount,
         },
         meta: {
           timestamp: new Date().toISOString(),
@@ -271,41 +243,23 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Insert observations (skip duplicates by keyword+region+periodStart)
-    let insertedCount = 0;
-    let skippedCount = 0;
-
-    for (const row of validRows) {
-      const existing = await prisma.productDemandObservation.findFirst({
-        where: {
-          productId: body.productId,
-          keyword: row.keyword.trim(),
-          region: row.region.trim().toUpperCase(),
-          periodStart: new Date(row.periodStart),
-        },
-      });
-
-      if (existing) {
-        skippedCount++;
-        continue;
-      }
-
-      await prisma.productDemandObservation.create({
-        data: {
-          productId: body.productId,
-          source: row.source,
-          region: row.region.trim().toUpperCase(),
-          keyword: row.keyword.trim(),
-          periodStart: new Date(row.periodStart),
-          periodEnd: new Date(row.periodEnd),
-          demandValue: row.demandValue ?? null,
-          valueType: "RELATIVE_INTEREST",
-          evidenceReference: row.evidenceReference ?? null,
-          methodologyVersion: body.methodologyVersion ?? "1.0",
-        },
-      });
-      insertedCount++;
-    }
+    // Transactional insert observations via executeDemandObservationBatchImport
+    const importRes = await executeDemandObservationBatchImport({
+      productId: body.productId,
+      workspaceId,
+      source: validRows[0]?.source || "USER_MANUAL",
+      region: validRows[0]?.region || "US",
+      methodologyVersion: body.methodologyVersion ?? "1.0",
+      points: validRows.map((r) => ({
+        keyword: r.keyword,
+        region: r.region,
+        periodStart: r.periodStart,
+        periodEnd: r.periodEnd,
+        demandValue: r.demandValue,
+        evidenceReference: r.evidenceReference,
+        methodologyVersion: body.methodologyVersion ?? "1.0",
+      })),
+    });
 
     return NextResponse.json({
       success: true,
@@ -313,8 +267,8 @@ export async function POST(request: NextRequest) {
         productId: body.productId,
         totalRows: body.rows.length,
         validRows: validRows.length,
-        insertedCount,
-        skippedCount,
+        insertedCount: importRes.insertedCount,
+        skippedCount: importRes.skippedCount,
         errorCount: body.rows.length - validRows.length,
       },
       meta: {
@@ -329,6 +283,12 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         { success: false, error: { code: error.code, message: error.message } },
         { status: error.statusCode || 401 }
+      );
+    }
+    if (error instanceof BatchImportError) {
+      return NextResponse.json(
+        { success: false, error: { code: error.code, message: error.message, details: error.details } },
+        { status: error.statusCode }
       );
     }
     return NextResponse.json(

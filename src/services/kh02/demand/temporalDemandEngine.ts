@@ -1306,20 +1306,44 @@ async function mintInternalLiveTransportAttestation(
     };
   }
 
-  // Register in trusted invocations registry for live origin
-  const regKey = attestation.upstreamRequestId || attestation.attestationId;
+  // Mandatory post-write readback verification from disk before granting in-memory registration
+  const readbackAttestation = loadDurableTransportAttestationSync(reqId, {
+    provider: params.provider,
+    region: params.region,
+  });
+  if (
+    !readbackAttestation ||
+    readbackAttestation.schemaVersion !== "2.0" ||
+    readbackAttestation.issuerKeyId !== signingSecret.keyId ||
+    readbackAttestation.captureMethod !== "NATIVE_HTTPS_FETCH" ||
+    readbackAttestation.testOrSimulated !== false ||
+    readbackAttestation.rawResponseSha256.toLowerCase() !== normSha ||
+    readbackAttestation.rawByteCount !== params.rawBytes.length ||
+    readbackAttestation.upstreamRequestId !== reqId ||
+    !verifyTransportAttestationSignature(readbackAttestation, signingSecret.secret)
+  ) {
+    activeTrustedInvocationProofs.delete(invocationProof._proofNonce);
+    return {
+      success: false,
+      errorCode: "ATTESTATION_READBACK_FAILED",
+      error: "Mandatory post-write durable attestation readback verification failed.",
+    };
+  }
+
+  // Register in trusted invocations registry for live origin ONLY after successful readback
+  const regKey = readbackAttestation.upstreamRequestId || readbackAttestation.attestationId;
   trustedInvocationsRegistry.set(regKey, {
     receiptId: regKey,
     rawResponseSha256: normSha,
-    provider: attestation.provider,
-    endpoint: attestation.canonicalSanitizedUrl,
-    requestFingerprint: attestation.requestFingerprint,
+    provider: readbackAttestation.provider,
+    endpoint: readbackAttestation.canonicalSanitizedUrl,
+    requestFingerprint: readbackAttestation.requestFingerprint,
     verifiedAt: nowIso,
   });
 
   return {
     success: true,
-    attestation,
+    attestation: readbackAttestation,
   };
 }
 
@@ -2286,6 +2310,8 @@ export async function persistCollectorReceiptAtomically(
       receiptId: receipt?.receiptId || "unknown",
       persistedAt: new Date().toISOString(),
       eligible: false,
+      originVerified: false,
+      originKind: "UNVERIFIED",
       dbCommitted: false,
       dbReadbackVerified: false,
       artifactVerified: false,
@@ -2302,6 +2328,8 @@ export async function persistCollectorReceiptAtomically(
       receiptId: receipt.receiptId,
       persistedAt: new Date().toISOString(),
       eligible: false,
+      originVerified: false,
+      originKind: "UNVERIFIED",
       dbCommitted: false,
       dbReadbackVerified: false,
       artifactVerified: false,
@@ -2330,6 +2358,8 @@ export async function persistCollectorReceiptAtomically(
       receiptId: receipt.receiptId,
       persistedAt: new Date().toISOString(),
       eligible: false,
+      originVerified: false,
+      originKind: "UNVERIFIED",
       dbCommitted: false,
       dbReadbackVerified: false,
       artifactVerified: false,
@@ -2340,43 +2370,46 @@ export async function persistCollectorReceiptAtomically(
   }
   const resolvedArtifactPath = artifactCheck.resolvedPath!;
 
-  // P0-A & Patch B: Check if genuine internal trusted invocation proof or durable transport attestation is verified
+  // P0-A & V12.4.3.7.16: Mandatory durable transport attestation verification from disk
   let isGenuineTrustedProof = false;
   let isTestSimulationProof = false;
 
-  // 1. Check if durable transport attestation was provided or exists on disk
-  const loadedAttestation = attestation || (await loadDurableTransportAttestation(receipt.receiptId, receipt));
-  if (loadedAttestation) {
-    const rawBytesForCheck = fs.readFileSync(resolvedArtifactPath);
-    const attestVerify = verifyDurableTransportAttestation(
-      loadedAttestation,
-      receipt,
-      rawBytesForCheck
-    );
-    if (attestVerify.verified && !attestVerify.isTestSimulation) {
-      isGenuineTrustedProof = true;
-    } else if (attestVerify.isTestSimulation) {
-      isTestSimulationProof = true;
+  // Fresh disk readback for attestation (cannot be in-memory object alone)
+  const diskAttestation = loadDurableTransportAttestationSync(receipt.receiptId, receipt);
+  if (diskAttestation) {
+    if (attestation && (attestation.signature !== diskAttestation.signature || attestation.captureMethod !== diskAttestation.captureMethod)) {
+      // In-memory attestation contradicts disk or has uncommitted modifications -> no live authority
+      if (attestation.testOrSimulated || (attestation.captureMethod as string) === "SIMULATED" || attestation.captureMethod === "SIMULATED_TEST_TRANSPORT") {
+        isTestSimulationProof = true;
+      }
+    } else {
+      const rawBytesForCheck = fs.readFileSync(resolvedArtifactPath);
+      const attestVerify = verifyDurableTransportAttestation(
+        diskAttestation,
+        receipt,
+        rawBytesForCheck
+      );
+      if (
+        attestVerify.verified &&
+        !attestVerify.isTestSimulation &&
+        !diskAttestation.testOrSimulated &&
+        diskAttestation.captureMethod === "NATIVE_HTTPS_FETCH" &&
+        (!attestation || (attestation.captureMethod === "NATIVE_HTTPS_FETCH" && !attestation.testOrSimulated))
+      ) {
+        isGenuineTrustedProof = true;
+      } else if (attestVerify.isTestSimulation || diskAttestation.testOrSimulated || (attestation?.captureMethod as string) === "SIMULATED" || attestation?.captureMethod === "SIMULATED_TEST_TRANSPORT") {
+        isTestSimulationProof = true;
+      }
     }
   }
 
-  // 2. Check in-memory proof if supplied (from same-process real transport execution)
-  if (!isGenuineTrustedProof && proof && proof._proofNonce) {
+  // 2. Consume in-memory proof if supplied; in-memory proof alone can NEVER grant live authority without durable attestation on disk
+  if (proof && proof._proofNonce) {
     const registered = activeTrustedInvocationProofs.get(proof._proofNonce);
-    if (
-      registered &&
-      !registered.isTestSimulation &&
-      registered.proofKind === "TRUSTED_TRANSPORT" &&
-      registered.receiptId === receipt.receiptId &&
-      registered.rawResponseSha256.toLowerCase() === normSha &&
-      registered.provider === receipt.provider
-    ) {
-      isGenuineTrustedProof = true;
-      activeTrustedInvocationProofs.delete(proof._proofNonce);
-    } else if (registered && (registered.isTestSimulation || registered.proofKind === "TEST_SIMULATION")) {
+    if (registered && (registered.isTestSimulation || registered.proofKind === "TEST_SIMULATION")) {
       isTestSimulationProof = true;
-      activeTrustedInvocationProofs.delete(proof._proofNonce);
     }
+    activeTrustedInvocationProofs.delete(proof._proofNonce);
   }
 
   const isFixtureSha =
@@ -2408,6 +2441,8 @@ export async function persistCollectorReceiptAtomically(
       receiptId: receipt.receiptId,
       persistedAt: new Date().toISOString(),
       eligible: false,
+      originVerified: false,
+      originKind: effectiveOrigin,
       dbCommitted: false,
       dbReadbackVerified: false,
       artifactVerified: true,
@@ -2740,7 +2775,7 @@ export async function persistCollectorReceiptAtomically(
         rawResponseSha256: normSha,
         provider: receipt.provider,
         endpoint: "https://serpapi.com/search.json",
-        requestFingerprint: proof?.requestFingerprint || loadedAttestation?.requestFingerprint || `fp_${receipt.receiptId}`,
+        requestFingerprint: proof?.requestFingerprint || diskAttestation?.requestFingerprint || `fp_${receipt.receiptId}`,
         verifiedAt: verifiedAtIso,
       });
     } else {
@@ -3180,9 +3215,20 @@ export async function executeTrustedSerpApiDemandRequest(params: {
       },
       invocationProof
     );
-    if (attestRes.success && attestRes.attestation) {
-      transportAttestation = attestRes.attestation;
+    if (!attestRes.success || !attestRes.attestation) {
+      if (invocationProof?._proofNonce) {
+        activeTrustedInvocationProofs.delete(invocationProof._proofNonce);
+      }
+      trustedInvocationsRegistry.delete(upstreamReceiptId.trim());
+      return {
+        success: false,
+        receipt,
+        data,
+        errorCode: attestRes.errorCode || "ATTESTATION_WRITE_FAILED",
+        error: attestRes.error || "Failed to mint and verify durable transport attestation for live SerpApi collector.",
+      };
     }
+    transportAttestation = attestRes.attestation;
   } else {
     const simAttest = await issueTrustedTransportAttestation({
       attemptId: params.attemptId,
@@ -3876,58 +3922,65 @@ export function isAuthenticProviderReceiptDescriptor(
   }
 
   const effectiveRunId = descriptor.researchRunId || ledger?.researchRunId;
-  if (context.researchRunId && effectiveRunId && context.researchRunId !== effectiveRunId) {
-    return { authentic: false, reason: `Descriptor researchRunId '${effectiveRunId}' does not match context '${context.researchRunId}'.`, errorCode: "RUN_MISMATCH" };
+  if (context.researchRunId) {
+    if (!effectiveRunId || context.researchRunId !== effectiveRunId) {
+      return { authentic: false, reason: `Descriptor researchRunId '${effectiveRunId || "MISSING"}' does not match context '${context.researchRunId}'.`, errorCode: "RUN_MISMATCH" };
+    }
   }
   const effectiveWorkspaceId = descriptor.workspaceId || ledger?.workspaceId;
-  if (context.workspaceId && effectiveWorkspaceId && context.workspaceId !== effectiveWorkspaceId) {
-    return { authentic: false, reason: `Descriptor workspaceId '${effectiveWorkspaceId}' does not match context '${context.workspaceId}'.`, errorCode: "RUN_MISMATCH" };
+  if (context.workspaceId) {
+    if (!effectiveWorkspaceId || context.workspaceId !== effectiveWorkspaceId) {
+      return { authentic: false, reason: `Descriptor workspaceId '${effectiveWorkspaceId || "MISSING"}' does not match context '${context.workspaceId}'.`, errorCode: "RUN_MISMATCH" };
+    }
   }
   const effectiveProductId = descriptor.productId || ledger?.productId;
-  if (context.productId && effectiveProductId && context.productId !== effectiveProductId) {
-    return { authentic: false, reason: `Descriptor productId '${effectiveProductId}' does not match context '${context.productId}'.`, errorCode: "PRODUCT_MISMATCH" };
+  if (context.productId) {
+    if (!effectiveProductId || context.productId !== effectiveProductId) {
+      return { authentic: false, reason: `Descriptor productId '${effectiveProductId || "MISSING"}' does not match context '${context.productId}'.`, errorCode: "PRODUCT_MISMATCH" };
+    }
   }
 
   const effectiveOrigin = ledger?.originKind || (isFixtureSha ? "UNIT_FIXTURE" : "LOCAL_INTEGRITY_ONLY");
   const isFixture = effectiveOrigin === "UNIT_FIXTURE";
-  const regEntry = trustedInvocationsRegistry.get(cleanReqId);
-  let isRegisteredAuthentic = Boolean(
-    regEntry && regEntry.rawResponseSha256.toLowerCase() === normSha
-  );
+  let isRegisteredAuthentic = false;
 
-  // If not in in-memory registry, check if durable attestation exists on disk
-  if (!isRegisteredAuthentic) {
-    const storageDir = getProviderReceiptStorageDir();
-    const idValidation = validateAndSanitizeAttestationId(cleanReqId);
-    if (idValidation.valid && idValidation.sanitizedId) {
-      const pathResolution = resolveSafeAttestationPath(storageDir, idValidation.sanitizedId);
-      if (pathResolution.safePath && fs.existsSync(pathResolution.safePath)) {
-        try {
-          const raw = fs.readFileSync(pathResolution.safePath, "utf-8");
-          const att: ProviderTransportAttestationV1 = JSON.parse(raw);
-          const signingSecret = getInternalProvenanceSigningSecret();
-          if (
-            signingSecret &&
-            att.schemaVersion === "2.0" &&
-            att.issuerKeyId === signingSecret.keyId &&
-            verifyTransportAttestationSignature(att, signingSecret.secret) &&
-            att.rawResponseSha256.toLowerCase() === normSha &&
-            att.upstreamRequestId === cleanReqId &&
-            !att.testOrSimulated &&
-            att.captureMethod === "NATIVE_HTTPS_FETCH"
-          ) {
-            isRegisteredAuthentic = true;
-            trustedInvocationsRegistry.set(cleanReqId, {
-              receiptId: cleanReqId,
-              rawResponseSha256: normSha,
-              provider: att.provider,
-              endpoint: att.canonicalSanitizedUrl,
-              requestFingerprint: att.requestFingerprint,
-              verifiedAt: att.issuedAt,
-            });
-          }
-        } catch {}
+  // Always verify durable attestation on disk (cannot rely on in-memory cache alone if file tampered/deleted)
+  const storageDir = getProviderReceiptStorageDir();
+  const idValidation = validateAndSanitizeAttestationId(cleanReqId);
+  if (idValidation.valid && idValidation.sanitizedId) {
+    const pathResolution = resolveSafeAttestationPath(storageDir, idValidation.sanitizedId);
+    if (pathResolution.safePath && fs.existsSync(pathResolution.safePath)) {
+      try {
+        const raw = fs.readFileSync(pathResolution.safePath, "utf-8");
+        const att: ProviderTransportAttestationV1 = JSON.parse(raw);
+        const signingSecret = getInternalProvenanceSigningSecret();
+        if (
+          signingSecret &&
+          att.schemaVersion === "2.0" &&
+          att.issuerKeyId === signingSecret.keyId &&
+          verifyTransportAttestationSignature(att, signingSecret.secret) &&
+          att.rawResponseSha256.toLowerCase() === normSha &&
+          att.upstreamRequestId === cleanReqId &&
+          !att.testOrSimulated &&
+          att.captureMethod === "NATIVE_HTTPS_FETCH"
+        ) {
+          isRegisteredAuthentic = true;
+          trustedInvocationsRegistry.set(cleanReqId, {
+            receiptId: cleanReqId,
+            rawResponseSha256: normSha,
+            provider: att.provider,
+            endpoint: att.canonicalSanitizedUrl,
+            requestFingerprint: att.requestFingerprint,
+            verifiedAt: att.issuedAt,
+          });
+        } else {
+          trustedInvocationsRegistry.delete(cleanReqId);
+        }
+      } catch {
+        trustedInvocationsRegistry.delete(cleanReqId);
       }
+    } else {
+      trustedInvocationsRegistry.delete(cleanReqId);
     }
   }
 
@@ -4614,6 +4667,7 @@ export async function resolveVerifiedDemandEvidence(
     return {
       verified: false,
       eligible: false,
+      verifiedOrigin: false,
       commitState: "RECOVERY_REQUIRED",
       rejectionReason: artifactCheck.reason || `No raw response artifact found on disk matching SHA-256 digest '${contentSha}'.`,
       errorCode: artifactCheck.errorCode || "MISSING_ARTIFACT",
@@ -4627,6 +4681,7 @@ export async function resolveVerifiedDemandEvidence(
     return {
       verified: false,
       eligible: false,
+      verifiedOrigin: false,
       commitState: trustedReceipt.commitState || "RECOVERY_REQUIRED",
       originKind: trustedReceipt.originKind || "UNVERIFIED",
       providerOriginVerified: false,
@@ -4644,6 +4699,7 @@ export async function resolveVerifiedDemandEvidence(
     return {
       verified: false,
       eligible: false,
+      verifiedOrigin: false,
       commitState: "RECOVERY_REQUIRED",
       originKind: "UNVERIFIED",
       providerOriginVerified: false,
@@ -4671,6 +4727,7 @@ export async function resolveVerifiedDemandEvidence(
       return {
         verified: false,
         eligible: false,
+        verifiedOrigin: false,
         commitState: "RECOVERY_REQUIRED",
         originKind: "UNVERIFIED",
         providerOriginVerified: false,
@@ -4686,6 +4743,7 @@ export async function resolveVerifiedDemandEvidence(
       return {
         verified: false,
         eligible: false,
+        verifiedOrigin: false,
         commitState: "RECOVERY_REQUIRED",
         originKind: "UNVERIFIED",
         providerOriginVerified: false,
@@ -4703,6 +4761,7 @@ export async function resolveVerifiedDemandEvidence(
     return {
       verified: false,
       eligible: false,
+      verifiedOrigin: false,
       rejectionReason: `Provider request recorded non-200 status (${effectiveStatus}).`,
       errorCode: "RESPONSE_STATUS_INVALID",
     };
@@ -4715,6 +4774,7 @@ export async function resolveVerifiedDemandEvidence(
     return {
       verified: false,
       eligible: false,
+      verifiedOrigin: false,
       rejectionReason: `Receipt '${trustedReceipt.receiptId}' lacks a valid capturedAt timestamp.`,
       errorCode: "ORIGIN_UNVERIFIED",
     };
@@ -4865,36 +4925,42 @@ export async function resolveVerifiedDemandEvidence(
 
   // Cross-tenant, Run & Product Scope Verification
   const effectiveWorkspace = trustedReceipt.workspaceId || dbMatch?.workspaceId || parsedObs?.workspaceId || null;
-  if (context.workspaceId && effectiveWorkspace && context.workspaceId !== effectiveWorkspace) {
-    return {
-      verified: false,
-      eligible: false,
-      verifiedOrigin: false,
-      rejectionReason: `Cross-tenant violation: evidence workspace '${effectiveWorkspace}' does not match context '${context.workspaceId}'.`,
-      errorCode: "RUN_MISMATCH",
-    };
+  if (context.workspaceId) {
+    if (!effectiveWorkspace || context.workspaceId !== effectiveWorkspace) {
+      return {
+        verified: false,
+        eligible: false,
+        verifiedOrigin: false,
+        rejectionReason: `Cross-tenant violation: evidence workspace '${effectiveWorkspace || "MISSING"}' does not match context '${context.workspaceId}'.`,
+        errorCode: "RUN_MISMATCH",
+      };
+    }
   }
 
   const effectiveRun = trustedReceipt.researchRunId || parsedObs?.researchRunId || null;
-  if (context.researchRunId && effectiveRun && context.researchRunId !== effectiveRun) {
-    return {
-      verified: false,
-      eligible: false,
-      verifiedOrigin: false,
-      rejectionReason: `Cross-run violation: evidence researchRunId '${effectiveRun}' does not match context '${context.researchRunId}'.`,
-      errorCode: "RUN_MISMATCH",
-    };
+  if (context.researchRunId) {
+    if (!effectiveRun || context.researchRunId !== effectiveRun) {
+      return {
+        verified: false,
+        eligible: false,
+        verifiedOrigin: false,
+        rejectionReason: `Cross-run violation: evidence researchRunId '${effectiveRun || "MISSING"}' does not match context '${context.researchRunId}'.`,
+        errorCode: "RUN_MISMATCH",
+      };
+    }
   }
 
   const effectiveProduct = trustedReceipt.productId || dbMatch?.productId || parsedObs?.productId || null;
-  if (context.productId && effectiveProduct && context.productId !== effectiveProduct) {
-    return {
-      verified: false,
-      eligible: false,
-      verifiedOrigin: false,
-      rejectionReason: `Product mismatch: evidence product '${effectiveProduct}' does not match context '${context.productId}'.`,
-      errorCode: "PRODUCT_MISMATCH",
-    };
+  if (context.productId) {
+    if (!effectiveProduct || context.productId !== effectiveProduct) {
+      return {
+        verified: false,
+        eligible: false,
+        verifiedOrigin: false,
+        rejectionReason: `Product mismatch: evidence product '${effectiveProduct || "MISSING"}' does not match context '${context.productId}'.`,
+        errorCode: "PRODUCT_MISMATCH",
+      };
+    }
   }
 
   const effectiveRegion = (trustedReceipt.region || parsedObs?.region || "").toUpperCase();
@@ -4922,38 +4988,37 @@ export async function resolveVerifiedDemandEvidence(
   }
 
   const effectiveOrigin: EvidenceOriginKind = trustedReceipt.originKind;
-  const regEntry = trustedInvocationsRegistry.get(trustedReceipt.receiptId);
-  let isRegisteredAuthentic = Boolean(
-    regEntry && regEntry.rawResponseSha256.toLowerCase() === contentSha
-  );
+  let isRegisteredAuthentic = false;
 
-  // If not in in-memory registry, load and verify durable transport attestation from disk
-  if (!isRegisteredAuthentic) {
-    const attestation = await loadDurableTransportAttestation(trustedReceipt.receiptId, trustedReceipt);
-    if (attestation) {
-      const attestVerify = verifyDurableTransportAttestation(
-        attestation,
-        trustedReceipt,
-        rawBytes,
-        {
-          targetKeyword: context.keyword || undefined,
-          region: context.region || undefined,
-          asOf: context.asOfTimestamp ? String(context.asOfTimestamp) : undefined,
-          strictLiveOrigin: context.strictLiveOrigin,
-        }
-      );
-      if (attestVerify.verified && !attestVerify.isTestSimulation) {
-        isRegisteredAuthentic = true;
-        trustedInvocationsRegistry.set(trustedReceipt.receiptId, {
-          receiptId: trustedReceipt.receiptId,
-          rawResponseSha256: contentSha,
-          provider: attestation.provider,
-          endpoint: attestation.canonicalSanitizedUrl,
-          requestFingerprint: attestation.requestFingerprint,
-          verifiedAt: attestation.issuedAt,
-        });
+  // Fresh disk attestation verification on security-critical read
+  const attestation = await loadDurableTransportAttestation(trustedReceipt.receiptId, trustedReceipt);
+  if (attestation) {
+    const attestVerify = verifyDurableTransportAttestation(
+      attestation,
+      trustedReceipt,
+      rawBytes,
+      {
+        targetKeyword: context.keyword || undefined,
+        region: context.region || undefined,
+        asOf: context.asOfTimestamp ? String(context.asOfTimestamp) : undefined,
+        strictLiveOrigin: context.strictLiveOrigin,
       }
+    );
+    if (attestVerify.verified && !attestVerify.isTestSimulation) {
+      isRegisteredAuthentic = true;
+      trustedInvocationsRegistry.set(trustedReceipt.receiptId, {
+        receiptId: trustedReceipt.receiptId,
+        rawResponseSha256: contentSha,
+        provider: attestation.provider,
+        endpoint: attestation.canonicalSanitizedUrl,
+        requestFingerprint: attestation.requestFingerprint,
+        verifiedAt: attestation.issuedAt,
+      });
+    } else {
+      trustedInvocationsRegistry.delete(trustedReceipt.receiptId);
     }
+  } else {
+    trustedInvocationsRegistry.delete(trustedReceipt.receiptId);
   }
 
   if (context.strictLiveOrigin) {
