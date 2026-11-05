@@ -36,7 +36,7 @@ export interface LivePdpVerificationParams {
     handle?: string | null;
   };
   options?: {
-    transportMode?: "LIVE_NATIVE" | "TEST_SIMULATION" | "DISABLED";
+    transportMode?: "LIVE_NATIVE" | "TEST_SIMULATION" | "TEST_ONLY" | "DISABLED";
     fetchFn?: typeof fetch;
     dnsLookupFn?: (hostname: string) => Promise<Array<{ address: string; family: number }>>;
     simulateFinalUrl?: string;
@@ -95,6 +95,10 @@ export interface LivePdpVerificationResult {
   statusCode?: number;
   reason?: string;
   title?: string;
+  liveEligibilityAudit?: {
+    isLiveEligible: boolean;
+    auditReasons: string[];
+  };
 }
 
 export const MAX_BODY_BYTES = 2 * 1024 * 1024; // 2MB
@@ -147,7 +151,7 @@ export function parseIpv4ToNumber(host: string): number | null {
 /**
  * Robust SSRF check covering both IPv4 CIDRs, IPv6, loopback, private ranges, link-local, and cloud metadata.
  */
-export function isBlockedIpAddress(rawIp: string): boolean {
+export function isBlockedIpAddress(rawIp: string, allowLoopback: boolean = false): boolean {
   if (!rawIp || typeof rawIp !== "string") return true;
   let ip = rawIp.trim().toLowerCase();
   if (ip.startsWith("[") && ip.endsWith("]")) {
@@ -155,6 +159,10 @@ export function isBlockedIpAddress(rawIp: string): boolean {
   }
   // Reject zone IDs in IPv6
   if (ip.includes("%")) return true;
+
+  if (allowLoopback && (ip === "127.0.0.1" || ip === "::1" || ip === "::ffff:127.0.0.1")) {
+    return false;
+  }
 
   // IPv4 or IPv4-like numeric
   const v4Num = parseIpv4ToNumber(ip);
@@ -417,9 +425,56 @@ async function defaultDnsLookup(hostname: string): Promise<Array<{ address: stri
 }
 
 /**
+ * Single auditable predicate evaluating whether a PDP resolution satisfies
+ * all criteria for live external proof authority.
+ */
+export function evaluateLivePdpEligibility(params: {
+  isVerifiedPdp: boolean;
+  hasTestOverrides: boolean;
+  isRealSocketConnection: boolean;
+  observedTlsAuthorized: boolean;
+  observedActualPeerIp: string;
+  pinnedIp: string;
+  hasProductContentProof: boolean;
+  hasMerchantDomainMatch: boolean;
+  envLiveEnabled: boolean;
+}): { isLiveEligible: boolean; auditReasons: string[] } {
+  const auditReasons: string[] = [];
+  if (!params.isVerifiedPdp) auditReasons.push("NOT_A_VERIFIED_PDP");
+  if (!params.envLiveEnabled) auditReasons.push("ENV_LIVE_NETWORK_FETCHER_NOT_TRUE");
+  if (params.hasTestOverrides) auditReasons.push("TEST_OVERRIDES_OR_SIMULATION_DETECTED");
+  if (!params.isRealSocketConnection) auditReasons.push("REAL_SOCKET_CONNECTION_ABSENT");
+  if (!params.observedTlsAuthorized) auditReasons.push("TLS_SOCKET_NOT_AUTHORIZED");
+  if (!params.observedActualPeerIp) auditReasons.push("PEER_IP_NOT_OBSERVED");
+  if (!params.observedActualPeerIp || !isIpEqual(params.observedActualPeerIp, params.pinnedIp)) {
+    auditReasons.push("PEER_PIN_MISMATCH");
+  }
+  if (!params.hasProductContentProof) auditReasons.push("PRODUCT_CONTENT_PROOF_MISSING");
+  if (!params.hasMerchantDomainMatch) auditReasons.push("MERCHANT_DOMAIN_MISMATCH");
+
+  return {
+    isLiveEligible: auditReasons.length === 0,
+    auditReasons,
+  };
+}
+
+/**
  * Main PDP Destination Verification Resolver.
  */
 export async function verifyLiveMerchantProductPageDestination(
+  params: LivePdpVerificationParams
+): Promise<LivePdpVerificationResult> {
+  const result = await internalVerifyLiveMerchantProductPageDestination(params);
+  if (!result.isVerifiedPdp) {
+    result.isLiveExternalProof = false;
+    if (result.tlsVerified === undefined) {
+      result.tlsVerified = false;
+    }
+  }
+  return result;
+}
+
+async function internalVerifyLiveMerchantProductPageDestination(
   params: LivePdpVerificationParams
 ): Promise<LivePdpVerificationResult> {
   const { creative, candidate, options } = params;
@@ -574,7 +629,19 @@ export async function verifyLiveMerchantProductPageDestination(
     };
   }
 
-  const isTestSimulation = Boolean(options?.fetchFn || options?.transportMode === "TEST_SIMULATION");
+  const hasTestOverrides = Boolean(
+    options?.fetchFn !== undefined ||
+    options?.dnsLookupFn !== undefined ||
+    options?.allowSelfSignedTestCert === true ||
+    options?.allowLoopbackForTest === true ||
+    options?.simulateFinalUrl !== undefined ||
+    options?.simulateConnectedPeerIp !== undefined ||
+    options?.pinnedIp !== undefined ||
+    options?.transportMode === "TEST_SIMULATION" ||
+    options?.transportMode === "TEST_ONLY"
+  );
+
+  const isTestSimulation = Boolean(options?.fetchFn || options?.transportMode === "TEST_SIMULATION" || options?.transportMode === "TEST_ONLY");
   const dnsLookupImpl = options?.dnsLookupFn || defaultDnsLookup;
 
   if (!isTestSimulation && !options?.allowLoopbackForTest && process.env.ENABLE_LIVE_NETWORK_FETCHER !== "true") {
@@ -600,6 +667,7 @@ export async function verifyLiveMerchantProductPageDestination(
   let observedActualPeerIp = "";
   let observedTlsAuthorized = false;
   let isRealSocketConnection = false;
+  let pinnedIp = "";
 
   const overallController = new AbortController();
   const timeoutId = setTimeout(() => overallController.abort(), timeoutMs);
@@ -696,7 +764,7 @@ export async function verifyLiveMerchantProductPageDestination(
       // DNS Rebinding verification against simulated or connected peer IP
       if (options?.simulateConnectedPeerIp) {
         if (
-          isBlockedIpAddress(options.simulateConnectedPeerIp) ||
+          isBlockedIpAddress(options.simulateConnectedPeerIp, options?.allowLoopbackForTest) ||
           !validatedPeerIps.some((ip) => isIpEqual(ip, options.simulateConnectedPeerIp))
         ) {
           return {
@@ -707,7 +775,25 @@ export async function verifyLiveMerchantProductPageDestination(
         }
       }
 
-      const pinnedIp = options?.pinnedIp || validatedPeerIps[0];
+      // Check caller-supplied pinnedIp against SSRF and vetted DNS results
+      if (options?.pinnedIp) {
+        if (isBlockedIpAddress(options.pinnedIp, options?.allowLoopbackForTest)) {
+          return {
+            isVerifiedPdp: false,
+            verificationStatus: "BLOCKED_PRIVATE_HOST",
+            reason: `Caller-supplied pinned IP '${options.pinnedIp}' violates SSRF rules.`,
+          };
+        }
+        if (!validatedPeerIps.some((ip) => isIpEqual(ip, options.pinnedIp))) {
+          return {
+            isVerifiedPdp: false,
+            verificationStatus: "SOCKET_PEER_MISMATCH",
+            reason: `Caller-supplied pinned IP '${options.pinnedIp}' is not present in vetted DNS resolution results.`,
+          };
+        }
+      }
+
+      pinnedIp = options?.pinnedIp || validatedPeerIps[0];
 
       // Perform single-hop fetch
       let hopStatusCode = 0;
@@ -740,7 +826,7 @@ export async function verifyLiveMerchantProductPageDestination(
         hopLocation = fetchResp.headers.get("location");
         finalContentType = fetchResp.headers.get("content-type") || "text/html";
         observedActualPeerIp = options?.simulateConnectedPeerIp || pinnedIp;
-        observedTlsAuthorized = !isTestSimulation;
+        observedTlsAuthorized = false; // Mock fetch does NOT perform CA TLS authentication
 
         if ([301, 302, 303, 307, 308].includes(hopStatusCode)) {
           if (hop === maxRedirects) {
@@ -1075,24 +1161,66 @@ export async function verifyLiveMerchantProductPageDestination(
       };
     }
 
-    const isLiveSuccess =
-      !isTestSimulation &&
-      !options?.allowLoopbackForTest &&
+    const isLiveAuthorized = Boolean(
+      process.env.ENABLE_LIVE_NETWORK_FETCHER === "true" &&
+      !hasTestOverrides &&
       isRealSocketConnection &&
-      Boolean(process.env.ENABLE_LIVE_NETWORK_FETCHER);
+      observedTlsAuthorized &&
+      Boolean(observedActualPeerIp) &&
+      isIpEqual(observedActualPeerIp, pinnedIp) &&
+      !options?.allowSelfSignedTestCert &&
+      !options?.allowLoopbackForTest
+    );
+
+    const tlsVerified = Boolean(
+      isRealSocketConnection &&
+      observedTlsAuthorized &&
+      !options?.allowSelfSignedTestCert
+    );
+
+    let verificationStatus: MerchantPdpVerificationStatus = "FETCHED_PDP_VERIFIED";
+    let verificationSource: "LIVE_PROVIDER" | "TEST_VERIFIED_ONLY" | "UNVERIFIED" = "UNVERIFIED";
+
+    if (isLiveAuthorized) {
+      verificationStatus = "LIVE_PDP_VERIFIED";
+      verificationSource = "LIVE_PROVIDER";
+    } else if (hasTestOverrides) {
+      if (options?.transportMode === "TEST_SIMULATION") {
+        verificationStatus = "FETCHED_PDP_VERIFIED";
+      } else {
+        verificationStatus = "TEST_ONLY";
+      }
+      verificationSource = "TEST_VERIFIED_ONLY";
+    } else {
+      verificationStatus = "FETCHED_PDP_VERIFIED";
+      verificationSource = "UNVERIFIED";
+    }
+
+    const liveEligibilityAudit = evaluateLivePdpEligibility({
+      isVerifiedPdp: true,
+      hasTestOverrides,
+      isRealSocketConnection,
+      observedTlsAuthorized,
+      observedActualPeerIp,
+      pinnedIp,
+      hasProductContentProof: Boolean(hasSemanticProductProof || hasCompatibleTitle),
+      hasMerchantDomainMatch: true,
+      envLiveEnabled: process.env.ENABLE_LIVE_NETWORK_FETCHER === "true",
+    });
 
     return {
       isVerifiedPdp: true,
-      verificationStatus: isLiveSuccess ? "LIVE_PDP_VERIFIED" : "FETCHED_PDP_VERIFIED",
-      verificationSource: isLiveSuccess ? "LIVE_PROVIDER" : "TEST_VERIFIED_ONLY",
-      isLiveExternalProof: isLiveSuccess,
+      verificationStatus,
+      verificationSource,
+      isLiveExternalProof: isLiveAuthorized,
       finalUrl,
       redirectChain,
       contentSha256,
-      verifiedPeerIp: observedActualPeerIp || validatedPeerIps[0],
-      tlsVerified: observedTlsAuthorized || Boolean(new URL(finalUrl).protocol === "https:"),
+      verifiedPeerIp: observedActualPeerIp || (hasTestOverrides ? validatedPeerIps[0] : undefined),
+      tlsVerified,
       statusCode: finalStatusCode,
       title: extractedTitle,
+      liveEligibilityAudit,
     };
   } finally {
     clearTimeout(timeoutId);

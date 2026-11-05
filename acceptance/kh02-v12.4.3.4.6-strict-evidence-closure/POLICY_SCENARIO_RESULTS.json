@@ -1,6 +1,6 @@
 {
   "version": "12.4.3.4.3",
-  "evaluatedAt": "2026-11-05T14:52:17.102Z",
+  "evaluatedAt": "2026-11-05T15:48:18.574Z",
   "verdict": "PASS",
   "totalScenarios": 21,
   "devScenariosCount": 9,
@@ -152,7 +152,7 @@
       "assertion": "res.status === 'INSUFFICIENT_DATA' && res.error.includes('INSUFFICIENT_COVERAGE')",
       "observed": {
         "status": "INSUFFICIENT_DATA",
-        "error": "INSUFFICIENT_COVERAGE: Keyword 'nano ultrasonic pet water fountain' not found in Google Trends public BigQuery top terms dataset for US (checked bigquery-public-data.google_trends.top_terms, jobId: mock_bqjob_1793890337058, bytesProcessed: 1048576). Public dataset tracks selected top terms, not arbitrary niche products. Official Explore CSV export can provide verified coverage."
+        "error": "INSUFFICIENT_COVERAGE: Keyword 'nano ultrasonic pet water fountain' not found in Google Trends public BigQuery top terms dataset for US (checked bigquery-public-data.google_trends.top_terms, jobId: mock_bqjob_1793893698534, bytesProcessed: 1048576). Public dataset tracks selected top terms, not arbitrary niche products. Official Explore CSV export can provide verified coverage."
       },
       "detail": "Status=INSUFFICIENT_DATA; error=INSUFFICIENT_COVERAGE: Keyword 'nano ultrasonic pet water fountain' not found in..."
     },

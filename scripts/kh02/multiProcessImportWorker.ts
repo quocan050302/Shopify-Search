@@ -26,11 +26,12 @@ async function main() {
   const evidenceReference = options.evidenceReference || null;
   const strictProvenance = options.strict === "true";
 
+  const valueFixed = options.valueFixed !== undefined ? parseInt(options.valueFixed, 10) : null;
   const points = [];
   const baseEpoch = Date.UTC(2025, 0, 5); // 2025-01-05
   for (let i = 0; i < count; i++) {
     const periodStart = new Date(baseEpoch + (offset + i) * 7 * 86400000).toISOString().slice(0, 10);
-    const demandValue = (offset + i) % 100;
+    const demandValue = valueFixed !== null ? valueFixed : (offset + i) % 100;
     points.push({
       periodStart,
       demandValue,

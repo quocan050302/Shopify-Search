@@ -364,6 +364,6 @@ describe("KH-02 V12.4.3.7.17 Group B: PDP Content, Extractor & Creative Provenan
     expect(res.contentSha256).toBeDefined();
     expect(res.contentSha256?.length).toBe(64);
     expect(res.verifiedPeerIp).toBe("93.184.216.34");
-    expect(res.tlsVerified).toBe(true);
+    expect(res.tlsVerified).toBe(false); // V18.1: Mock fetch does NOT perform real TLS verification
   });
 });

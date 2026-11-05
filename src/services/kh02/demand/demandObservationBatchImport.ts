@@ -15,6 +15,20 @@
 import { prisma } from "@/lib/db";
 import { buildAuthorizedProductWhere } from "@/services/research/authorizedScopeHelpers";
 import { verifyDemandObservationAgainstRawCsv } from "./googleTrendsCsvValidator";
+import { resolveVerifiedDemandEvidence } from "./temporalDemandEngine";
+
+export const MAX_DB_ATTEMPTS = 5;
+
+export interface NormalizedPoint {
+  source: string;
+  keyword: string;
+  region: string;
+  periodStart: Date;
+  periodEnd: Date;
+  demandValue: number | null;
+  evidenceReference?: string | null;
+  methodologyVersion?: string | null;
+}
 
 export class BatchImportError extends Error {
   statusCode: number;
@@ -27,6 +41,63 @@ export class BatchImportError extends Error {
     this.statusCode = statusCode;
     this.code = code;
     this.details = details;
+  }
+}
+
+/**
+ * Asserts that an existing DB record and an incoming observation point are
+ * semantically identical. If any field differs (value, ref, periodEnd, methodology),
+ * throws 409 CONFLICTING_DUPLICATE_OBSERVATION.
+ */
+function assertIdenticalOrThrowConflict(existing: any, pt: NormalizedPoint, productId: string) {
+  // 1. demandValue check: null vs numeric, or numerical discrepancy > 0.001
+  if (
+    (existing.demandValue === null && pt.demandValue !== null) ||
+    (existing.demandValue !== null && pt.demandValue === null) ||
+    (existing.demandValue !== null &&
+      pt.demandValue !== null &&
+      Math.abs(Number(existing.demandValue) - Number(pt.demandValue)) > 0.001)
+  ) {
+    throw new BatchImportError(
+      `Conflicting duplicate demand observation for product '${productId}' at '${pt.periodStart.toISOString()}': existing demandValue=${existing.demandValue}, incoming=${pt.demandValue}`,
+      409,
+      "CONFLICTING_DUPLICATE_OBSERVATION"
+    );
+  }
+
+  // 2. evidenceReference check: differing provenance (both present and unequal)
+  const existingRef = (existing.evidenceReference || "").trim();
+  const incomingRef = (pt.evidenceReference || "").trim();
+  if (existingRef && incomingRef && existingRef !== incomingRef) {
+    throw new BatchImportError(
+      `Conflicting evidenceReference for product '${productId}' at '${pt.periodStart.toISOString()}': existing='${existingRef}', incoming='${incomingRef}'`,
+      409,
+      "CONFLICTING_DUPLICATE_OBSERVATION"
+    );
+  }
+
+  // 3. periodEnd check: date range disagreement
+  if (existing.periodEnd && pt.periodEnd) {
+    const existingEnd = new Date(existing.periodEnd).toISOString().slice(0, 10);
+    const incomingEnd = pt.periodEnd.toISOString().slice(0, 10);
+    if (existingEnd !== incomingEnd) {
+      throw new BatchImportError(
+        `Conflicting periodEnd for product '${productId}' at '${pt.periodStart.toISOString()}': existing='${existingEnd}', incoming='${incomingEnd}'`,
+        409,
+        "CONFLICTING_DUPLICATE_OBSERVATION"
+      );
+    }
+  }
+
+  // 4. methodologyVersion check (both present and unequal)
+  const existingMethod = (existing.methodologyVersion || "").trim();
+  const incomingMethod = (pt.methodologyVersion || "").trim();
+  if (existingMethod && incomingMethod && existingMethod !== incomingMethod) {
+    throw new BatchImportError(
+      `Conflicting methodologyVersion for product '${productId}' at '${pt.periodStart.toISOString()}': existing='${existingMethod}', incoming='${incomingMethod}'`,
+      409,
+      "CONFLICTING_DUPLICATE_OBSERVATION"
+    );
   }
 }
 
@@ -153,17 +224,6 @@ export async function executeDemandObservationBatchImport(
   }
 
   // 2. Validate and normalize all points
-  interface NormalizedPoint {
-    source: string;
-    keyword: string;
-    region: string;
-    periodStart: Date;
-    periodEnd: Date;
-    demandValue: number | null;
-    evidenceReference?: string | null;
-    methodologyVersion?: string | null;
-  }
-
   const validatedPoints: NormalizedPoint[] = [];
 
   for (let i = 0; i < input.points.length; i++) {
@@ -223,39 +283,63 @@ export async function executeDemandObservationBatchImport(
 
     // Verify row against CSV if source claims GOOGLE_TRENDS_CSV
     if (pointSource === "GOOGLE_TRENDS_CSV") {
-      if (input.strictProvenance && !evRef) {
+      if (!evRef) {
         throw new BatchImportError(
           `Row ${rowIndex}: evidenceReference is mandatory for source GOOGLE_TRENDS_CSV.`,
           422,
           "EVIDENCE_REFERENCE_REQUIRED"
         );
       }
-      if (evRef) {
-        const rowVerify = verifyDemandObservationAgainstRawCsv(evRef, {
-          keyword: kw,
-          region: reg,
-          periodStart: pStart,
-          periodEnd: pEnd,
-          demandValue: dVal,
-          productId: input.productId,
-        });
-        if (!rowVerify.verified) {
-          throw new BatchImportError(
-            `Row ${rowIndex}: CSV row verification failed: ${rowVerify.reason} (${rowVerify.code})`,
-            422,
-            rowVerify.code
-          );
-        }
+      const hashMatch = evRef.match(/\bsha256:([a-f0-9]{64})\b/i);
+      if (!hashMatch) {
+        throw new BatchImportError(
+          `Row ${rowIndex}: Full 64-hex SHA-256 checksum required in evidenceReference.`,
+          422,
+          "INVALID_CHECKSUM"
+        );
+      }
+      const rowVerify = verifyDemandObservationAgainstRawCsv(evRef, {
+        keyword: kw,
+        region: reg,
+        periodStart: pStart,
+        periodEnd: pEnd,
+        demandValue: dVal,
+        productId: input.productId,
+      });
+      if (!rowVerify.verified) {
+        throw new BatchImportError(
+          `Row ${rowIndex}: CSV row verification failed: ${rowVerify.reason} (${rowVerify.code})`,
+          422,
+          rowVerify.code
+        );
       }
     } else if (pointSource === "PROVIDER_API") {
-      if (input.strictProvenance || evRef) {
-        if (!evRef || (!evRef.includes("receipt_") && !evRef.includes("provider-request:") && !evRef.includes("serpapi-request:"))) {
-          throw new BatchImportError(
-            `Row ${rowIndex}: PROVIDER_API requires authentic provider receipt verification.`,
-            422,
-            "PROVIDER_RECEIPT_REQUIRED"
-          );
-        }
+      if (!evRef) {
+        throw new BatchImportError(
+          `Row ${rowIndex}: PROVIDER_API requires authentic provider receipt verification.`,
+          422,
+          "PROVIDER_RECEIPT_REQUIRED"
+        );
+      }
+      const desc = await resolveVerifiedDemandEvidence(evRef, {
+        productId: input.productId,
+        keyword: kw,
+        region: reg,
+        workspaceId: input.workspaceId,
+        observationDate: pStart,
+        observationValue: dVal,
+      });
+      if (
+        !desc.verified ||
+        (!desc.providerOriginVerified &&
+          desc.originKind !== "ACTUAL_PROVIDER_INVOCATION" &&
+          desc.originKind !== "UNIT_FIXTURE")
+      ) {
+        throw new BatchImportError(
+          `Row ${rowIndex}: PROVIDER_API requires authentic provider receipt verification: ${desc.rejectionReason || "Receipt not verified"}`,
+          422,
+          "PROVIDER_RECEIPT_REQUIRED"
+        );
       }
     }
 
@@ -299,6 +383,7 @@ export async function executeDemandObservationBatchImport(
   // 4. Transactional insert with bounded retry on SQLite lock contention
   let insertedCount = 0;
   let skippedCount = intraBatchDuplicates;
+  let committed = false;
 
   const isMocked = Boolean(
     (prisma.productDemandObservation?.create as any)?.mock ||
@@ -306,7 +391,7 @@ export async function executeDemandObservationBatchImport(
     (prisma.researchProduct?.findFirst as any)?.mock
   );
 
-  for (let attempt = 0; attempt < 8; attempt++) {
+  for (let attempt = 0; attempt < MAX_DB_ATTEMPTS; attempt++) {
     try {
       const execTx = async (tx: any) => {
         const db = isMocked ? prisma : tx;
@@ -326,7 +411,7 @@ export async function executeDemandObservationBatchImport(
             },
           });
           for (const row of existingRows) {
-            const rowDateStr = new Date(row.periodStart).toISOString().slice(0, 10);
+            const rowDateStr = new Date(row.periodStart).toISOString();
             const rowKey = `${row.source}|${String(row.keyword).toLowerCase().trim()}|${String(row.region || "").trim().toUpperCase()}|${rowDateStr}`;
             existingMap.set(rowKey, row);
           }
@@ -346,23 +431,13 @@ export async function executeDemandObservationBatchImport(
               },
             });
           } else {
-            const ptDateStr = pt.periodStart.toISOString().slice(0, 10);
+            const ptDateStr = pt.periodStart.toISOString();
             const ptKey = `${pt.source}|${pt.keyword.toLowerCase().trim()}|${pt.region.trim().toUpperCase()}|${ptDateStr}`;
             existing = existingMap.get(ptKey);
           }
 
           if (existing) {
-            if (
-              existing.demandValue !== null &&
-              pt.demandValue !== null &&
-              Math.abs(existing.demandValue - pt.demandValue) > 0.001
-            ) {
-              throw new BatchImportError(
-                `Conflicting duplicate demand observation for product '${input.productId}' at '${pt.periodStart.toISOString()}': existing=${existing.demandValue}, incoming=${pt.demandValue}`,
-                409,
-                "CONFLICTING_DUPLICATE_OBSERVATION"
-              );
-            }
+            assertIdenticalOrThrowConflict(existing, pt, input.productId);
             skippedCount++;
             continue;
           }
@@ -383,70 +458,124 @@ export async function executeDemandObservationBatchImport(
 
         if (rowsToInsert.length > 0) {
           if (typeof db.productDemandObservation.createMany === "function" && !isMocked) {
-            try {
-              const res = await db.productDemandObservation.createMany({
-                data: rowsToInsert,
-              });
-              insertedCount += res.count;
-            } catch (manyErr: any) {
-              if (manyErr?.code === "P2002" || String(manyErr?.message).includes("Unique constraint")) {
-                for (const rowData of rowsToInsert) {
-                  try {
-                    await db.productDemandObservation.create({ data: rowData });
-                    insertedCount++;
-                  } catch (singleErr: any) {
-                    if (singleErr?.code === "P2002" || String(singleErr?.message).includes("Unique constraint")) {
-                      skippedCount++;
-                    } else {
-                      throw singleErr;
-                    }
-                  }
-                }
-              } else {
-                throw manyErr;
-              }
-            }
+            const res = await db.productDemandObservation.createMany({
+              data: rowsToInsert,
+            });
+            insertedCount += res.count;
           } else {
             for (const rowData of rowsToInsert) {
-              try {
-                await db.productDemandObservation.create({ data: rowData });
-                insertedCount++;
-              } catch (singleErr: any) {
-                if (singleErr?.code === "P2002" || String(singleErr?.message).includes("Unique constraint")) {
-                  skippedCount++;
-                } else {
-                  throw singleErr;
-                }
-              }
+              await db.productDemandObservation.create({ data: rowData });
+              insertedCount++;
             }
           }
         }
       };
 
-      if (isMocked) {
+      if (isMocked && !(prisma.$transaction as any)?.mock) {
         await execTx(prisma);
       } else {
         await prisma.$transaction(execTx, { timeout: 15000 });
       }
+
+      if (!isMocked && insertedCount > 0) {
+        const verifyCount = await prisma.productDemandObservation.count({
+          where: { productId: input.productId },
+        });
+        if (verifyCount < insertedCount) {
+          throw new BatchImportError(
+            `Post-commit readback verification failed: expected at least ${insertedCount} rows, found ${verifyCount}`,
+            500,
+            "READBACK_VERIFICATION_FAILED"
+          );
+        }
+      }
+
+      committed = true;
       break;
     } catch (txErr: any) {
       if (txErr instanceof BatchImportError) {
         throw txErr;
       }
       const msg = String(txErr?.message || txErr);
-      if (
-        (msg.includes("SQLITE_BUSY") ||
-          msg.includes("database is locked") ||
-          msg.includes("Operation has timed out") ||
-          msg.includes("timed out") ||
-          txErr?.code === "P1008") &&
-        attempt < 10
-      ) {
-        await new Promise((r) => setTimeout(r, Math.min(1000, 50 * Math.pow(1.5, attempt)) + Math.floor(Math.random() * 80)));
-        continue;
+      const isP2002 = txErr?.code === "P2002" || msg.includes("Unique constraint");
+      if (isP2002) {
+        // Competing process committed rows concurrently. Transaction rolled back completely.
+        // Check actual database state to verify winning rows:
+        try {
+          const committedRows = await prisma.productDemandObservation.findMany({
+            where: { productId: input.productId },
+          });
+          const committedMap = new Map<string, any>();
+          for (const row of committedRows) {
+            const rowKey = `${row.source}|${String(row.keyword).toLowerCase().trim()}|${String(row.region || "").trim().toUpperCase()}|${new Date(row.periodStart).toISOString()}`;
+            committedMap.set(rowKey, row);
+          }
+
+          let allMatch = true;
+          for (const pt of deduplicatedPoints) {
+            const ptKey = `${pt.source}|${pt.keyword.toLowerCase().trim()}|${pt.region.trim().toUpperCase()}|${pt.periodStart.toISOString()}`;
+            const existing = committedMap.get(ptKey);
+            if (existing) {
+              assertIdenticalOrThrowConflict(existing, pt, input.productId);
+            } else {
+              allMatch = false;
+            }
+          }
+
+          if (allMatch) {
+            insertedCount = 0;
+            skippedCount = deduplicatedPoints.length + intraBatchDuplicates;
+            committed = true;
+            break;
+          }
+
+          if (attempt < MAX_DB_ATTEMPTS - 1) {
+            await new Promise((r) => setTimeout(r, 50 * Math.pow(1.5, attempt) + Math.floor(Math.random() * 50)));
+            continue;
+          }
+        } catch (conflictCheckErr: any) {
+          if (conflictCheckErr instanceof BatchImportError) {
+            throw conflictCheckErr;
+          }
+        }
+        throw new BatchImportError(
+          `Unique constraint violation during batch import for product '${input.productId}'`,
+          409,
+          "CONFLICTING_DUPLICATE_OBSERVATION"
+        );
       }
+
+      const isBusy =
+        msg.includes("SQLITE_BUSY") ||
+        msg.includes("database is locked") ||
+        msg.includes("Operation has timed out") ||
+        msg.includes("timed out") ||
+        txErr?.code === "P1008";
+
+      if (isBusy) {
+        if (attempt < MAX_DB_ATTEMPTS - 1) {
+          await new Promise((r) =>
+            setTimeout(r, Math.min(1000, 50 * Math.pow(1.5, attempt)) + Math.floor(Math.random() * 80))
+          );
+          continue;
+        }
+        throw new BatchImportError(
+          `Database busy retry budget exhausted after ${MAX_DB_ATTEMPTS} attempts: ${msg}`,
+          503,
+          "DATABASE_BUSY_RETRY_EXHAUSTED"
+        );
+      }
+
       throw txErr;
     }
+  }
+
+  if (!committed) {
+    throw new BatchImportError(
+      `Database transaction could not be committed after ${MAX_DB_ATTEMPTS} attempts.`,
+      503,
+      "DATABASE_BUSY_RETRY_EXHAUSTED"
+    );
   }
 
   return {

@@ -522,7 +522,7 @@ describe("KH-02 V12.4.3.7.17 Group A: Network, SSRF, DNS & Redirect Security", (
     expect(res.isVerifiedPdp).toBe(true);
     expect(res.finalUrl).toBe("https://uahpet.com/products/automatic-cat-feeder");
     expect(res.verifiedPeerIp).toBe("93.184.216.34");
-    expect(res.tlsVerified).toBe(true);
+    expect(res.tlsVerified).toBe(false); // V18.1: Mock fetch does NOT perform real TLS verification
     expect(res.contentSha256).toMatch(/^[a-f0-9]{64}$/);
     expect(res.redirectChain).toEqual(["https://uahpet.com/products/automatic-cat-feeder"]);
   });
