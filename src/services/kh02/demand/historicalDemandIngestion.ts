@@ -93,6 +93,13 @@ export function normalizeProductSearchTerm(productTitle: string): string {
     cleaned = words.slice(0, 8).join(" ");
   }
 
+  // Strip trailing punctuation, symbols, and dangling conjunctions/prepositions
+  cleaned = cleaned
+    .replace(/[\s&+\-–—/]+$/, "")
+    .replace(/\b(?:with|and|or|for|by|in|on|of)\b$/i, "")
+    .replace(/[\s&+\-–—/]+$/, "")
+    .trim();
+
   return cleaned || productTitle.trim();
 }
 
@@ -188,6 +195,7 @@ export async function resolveProductDemandHistory(
         where: {
           productId: matchingProduct.id,
           region,
+          ...(options.workspaceId ? { product: buildAuthorizedProductWhere(options.workspaceId) } : {}),
         },
         orderBy: { periodStart: "asc" },
       });

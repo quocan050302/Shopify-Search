@@ -1590,6 +1590,23 @@ export async function runEvergreenProductResearch(
           bestRejectionReason = null;
           break; // Highest tier reached
         } else if (
+          match.associationClassification === "BRAND_ONLY_MATCH" ||
+          (!match.isProductSpecificEvidence &&
+            obs.advertiserDomain &&
+            candidate.storeDomain &&
+            extractRegistrableDomain(obs.advertiserDomain) ===
+              extractRegistrableDomain(candidate.storeDomain))
+        ) {
+          if (bestVerdict === "UNMATCHED") {
+            bestVerdict = "BRAND_ONLY_MATCH";
+            bestClassification = "BRAND_DOMAIN_MATCH";
+            bestEvidence =
+              (match.matchReasons || []).join("; ") ||
+              `Domain match (${obs.advertiserDomain}) without product-specific headline/URL alignment`;
+            bestCandidateId = candidate.candidateId;
+          }
+        } else if (
+          match.isProductSpecificEvidence !== false &&
           match.confidence === "PROBABLE" &&
           bestVerdict !== "PROBABLE_PRODUCT_MATCH"
         ) {
@@ -1600,16 +1617,11 @@ export async function runEvergreenProductResearch(
             `Probable product match with candidate ${candidate.candidateId}`;
           bestCandidateId = candidate.candidateId;
         } else if (
-          obs.advertiserDomain &&
-          candidate.storeDomain &&
-          extractRegistrableDomain(obs.advertiserDomain) ===
-            extractRegistrableDomain(candidate.storeDomain) &&
+          match.associationClassification === "REJECTED_UNRELATED_CREATIVE" &&
           bestVerdict === "UNMATCHED"
         ) {
-          bestVerdict = "BRAND_ONLY_MATCH";
-          bestClassification = "BRAND_DOMAIN_MATCH";
-          bestEvidence = `Domain match (${obs.advertiserDomain}) without product-specific headline/URL alignment`;
-          bestCandidateId = candidate.candidateId;
+          bestRejectionReason =
+            (match.matchReasons || []).join("; ") || "Creative rejected: unrelated or conflicting product";
         } else if (bestVerdict === "UNMATCHED") {
           bestRejectionReason =
             (match.matchReasons || []).join("; ") || "Low cross-platform text/URL similarity";
@@ -1651,8 +1663,16 @@ export async function runEvergreenProductResearch(
       advertiserDomain: obs.advertiserDomain || null,
       sourceMarket: (obs as any).region || (obs as any).targetCountry || "US",
       rawLandingUrl: obs.landingPageUrl || obs.sourceUrl || null,
-      finalDestination: obs.landingPageUrl || null,
-      normalizedProductUrl: null,
+      finalDestination:
+        obs.landingPageUrl && !obs.landingPageUrl.includes("adstransparency.google.com")
+          ? obs.landingPageUrl
+          : null,
+      normalizedProductUrl:
+        bestVerdict === "EXACT_PRODUCT_MATCH" &&
+        obs.landingPageUrl &&
+        !obs.landingPageUrl.includes("adstransparency.google.com")
+          ? obs.landingPageUrl
+          : null,
       creativeTitle: obs.title || null,
       candidateIdsEvaluated: candidates.map((c) => c.candidateId),
       matchedCandidateId:

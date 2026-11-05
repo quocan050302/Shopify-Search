@@ -341,12 +341,14 @@ export class GoogleTrendsCsvImportProvider implements HistoricalDemandProvider {
           source: "GOOGLE_TRENDS_CSV",
           region: query.region || "US",
           keyword: { contains: query.term.trim() },
+          ...(query.productId ? { productId: query.productId } : {}),
         },
         orderBy: { periodStart: "asc" },
       });
 
       const verifiedPoints: DemandDataPointResult[] = [];
       for (const r of records) {
+        if (query.productId && r.productId !== query.productId) continue;
         const lineage = hasVerifiableCsvOrProviderLineage(r.evidenceReference);
         if (!lineage.hasValidFileChecksum || !lineage.rawCsvFileExists) continue;
         if (r.demandValue === null || typeof r.demandValue !== "number") continue;

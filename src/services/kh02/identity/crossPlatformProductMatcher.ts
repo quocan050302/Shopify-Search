@@ -61,6 +61,7 @@ const MUTUALLY_EXCLUSIVE_PRODUCT_GROUPS: string[][] = [
   ["sharpener", "knife"],
   ["sealer", "vacuum"],
   ["thermometer", "probe"],
+  ["purifier", "air cleaner", "filter"],
 ];
 
 function hasConflictingProductCategory(textA: string, textB: string): boolean {
