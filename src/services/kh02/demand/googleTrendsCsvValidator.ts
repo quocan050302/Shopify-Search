@@ -165,9 +165,10 @@ export interface GoogleTrendsCsvValidationResult {
 }
 
 /**
- * Validates and parses raw text content of an official Google Trends Explore CSV export.
+ * Pure parser for Google Trends CSV bytes with ZERO disk mutation side effects.
+ * Computes sha256Checksum, validates headers, parses data rows, and returns parsed points.
  */
-export function validateAndParseGoogleTrendsCsv(
+export function parseGoogleTrendsCsvBytes(
   csvContent: string,
   options: {
     expectedKeyword?: string;
@@ -177,7 +178,7 @@ export function validateAndParseGoogleTrendsCsv(
   } = {}
 ): GoogleTrendsCsvValidationResult {
   const errors: string[] = [];
-  const sha256Checksum = createHash("sha256").update(csvContent, "utf8").digest("hex");
+  const sha256Checksum = createHash("sha256").update(csvContent || "", "utf8").digest("hex");
   const importedAt = options.importedAt || new Date().toISOString();
   const effectiveExpectedKeyword = options.expectedKeyword || options.canonicalProductName;
 
@@ -352,23 +353,12 @@ export function validateAndParseGoogleTrendsCsv(
 
   const safeKeywordTag = encodeURIComponent(extractedKeyword.toLowerCase().replace(/\s+/g, "_"));
   const safeGeoTag = extractedRegion || "UNKNOWN";
-  let evidenceReference = valid
+  const evidenceReference = valid
     ? `csv-import:google-trends-explore:sha256:${sha256Checksum}:q=${safeKeywordTag}:geo=${safeGeoTag}:start=${startDate?.slice(0, 10)}:end=${endDate?.slice(0, 10)}:imported=${importedAt}`
     : null;
 
-  if (valid) {
-    try {
-      saveOriginalGoogleTrendsCsvFile(csvContent, sha256Checksum);
-    } catch (saveErr: any) {
-      errors.push(`Failed to persist raw Google Trends CSV to storage: ${saveErr.message}`);
-      evidenceReference = null;
-    }
-  }
-
-  const effectiveValid = valid && errors.length === 0 && evidenceReference !== null;
-
   return {
-    valid: effectiveValid,
+    valid: valid && errors.length === 0,
     sha256Checksum,
     keyword: extractedKeyword || null,
     region: extractedRegion,
@@ -380,6 +370,35 @@ export function validateAndParseGoogleTrendsCsv(
     evidenceReference,
     errors,
   };
+}
+
+/**
+ * Validates and parses raw text content of an official Google Trends Explore CSV export.
+ * Persists to disk storage unless persist === false.
+ */
+export function validateAndParseGoogleTrendsCsv(
+  csvContent: string,
+  options: {
+    expectedKeyword?: string;
+    canonicalProductName?: string;
+    expectedRegion?: string;
+    importedAt?: string;
+    persist?: boolean;
+  } = {}
+): GoogleTrendsCsvValidationResult {
+  const result = parseGoogleTrendsCsvBytes(csvContent, options);
+
+  if (result.valid && options.persist !== false) {
+    try {
+      saveOriginalGoogleTrendsCsvFile(csvContent, result.sha256Checksum);
+    } catch (saveErr: any) {
+      result.errors.push(`Failed to persist raw Google Trends CSV to storage: ${saveErr.message}`);
+      result.valid = false;
+      result.evidenceReference = null;
+    }
+  }
+
+  return result;
 }
 
 export type DemandRowVerificationCode =
@@ -494,7 +513,7 @@ export function verifyDemandObservationAgainstRawCsv(
     };
   }
 
-  const parsed = validateAndParseGoogleTrendsCsv(rawCsv);
+  const parsed = parseGoogleTrendsCsvBytes(rawCsv);
   if (!parsed.valid || !parsed.dataPoints || parsed.dataPoints.length === 0) {
     return {
       verified: false,

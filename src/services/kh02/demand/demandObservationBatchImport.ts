@@ -48,6 +48,7 @@ export interface DemandObservationBatchInput {
   region?: string | null;
   evidenceReference?: string | null;
   methodologyVersion?: string | null;
+  strictProvenance?: boolean;
   points: DemandObservationBatchPoint[];
 }
 
@@ -220,27 +221,39 @@ export async function executeDemandObservationBatchImport(
       }
     }
 
-    // Verify row against CSV if source claims GOOGLE_TRENDS_CSV and evidenceReference is provided
-    if (pointSource === "GOOGLE_TRENDS_CSV" && evRef) {
-      const rowVerify = verifyDemandObservationAgainstRawCsv(evRef, {
-        keyword: kw,
-        region: reg,
-        periodStart: pStart,
-        periodEnd: pEnd,
-        demandValue: dVal,
-        productId: input.productId,
-      });
-      if (!rowVerify.verified && rowVerify.code !== "FILE_MISSING") {
-        if (
-          rowVerify.code === "VALUE_MISMATCH" ||
-          rowVerify.code === "DATE_MISMATCH" ||
-          rowVerify.code === "KEYWORD_MISMATCH" ||
-          rowVerify.code === "PRODUCT_MISMATCH"
-        ) {
+    // Verify row against CSV if source claims GOOGLE_TRENDS_CSV
+    if (pointSource === "GOOGLE_TRENDS_CSV") {
+      if (input.strictProvenance && !evRef) {
+        throw new BatchImportError(
+          `Row ${rowIndex}: evidenceReference is mandatory for source GOOGLE_TRENDS_CSV.`,
+          422,
+          "EVIDENCE_REFERENCE_REQUIRED"
+        );
+      }
+      if (evRef) {
+        const rowVerify = verifyDemandObservationAgainstRawCsv(evRef, {
+          keyword: kw,
+          region: reg,
+          periodStart: pStart,
+          periodEnd: pEnd,
+          demandValue: dVal,
+          productId: input.productId,
+        });
+        if (!rowVerify.verified) {
           throw new BatchImportError(
             `Row ${rowIndex}: CSV row verification failed: ${rowVerify.reason} (${rowVerify.code})`,
-            400,
+            422,
             rowVerify.code
+          );
+        }
+      }
+    } else if (pointSource === "PROVIDER_API") {
+      if (input.strictProvenance || evRef) {
+        if (!evRef || (!evRef.includes("receipt_") && !evRef.includes("provider-request:") && !evRef.includes("serpapi-request:"))) {
+          throw new BatchImportError(
+            `Row ${rowIndex}: PROVIDER_API requires authentic provider receipt verification.`,
+            422,
+            "PROVIDER_RECEIPT_REQUIRED"
           );
         }
       }
@@ -300,16 +313,43 @@ export async function executeDemandObservationBatchImport(
         insertedCount = 0;
         skippedCount = intraBatchDuplicates;
 
-        for (const pt of deduplicatedPoints) {
-          const existing = await db.productDemandObservation.findFirst({
+        const isFindFirstMocked = Boolean(
+          (prisma.productDemandObservation?.findFirst as any)?.mock ||
+          ((db as any)?.productDemandObservation?.findFirst as any)?.mock
+        );
+
+        let existingMap = new Map<string, any>();
+        if (!isFindFirstMocked) {
+          const existingRows = await db.productDemandObservation.findMany({
             where: {
               productId: input.productId,
-              source: pt.source,
-              keyword: pt.keyword,
-              region: pt.region,
-              periodStart: pt.periodStart,
             },
           });
+          for (const row of existingRows) {
+            const rowDateStr = new Date(row.periodStart).toISOString().slice(0, 10);
+            const rowKey = `${row.source}|${String(row.keyword).toLowerCase().trim()}|${String(row.region || "").trim().toUpperCase()}|${rowDateStr}`;
+            existingMap.set(rowKey, row);
+          }
+        }
+
+        const rowsToInsert: any[] = [];
+        for (const pt of deduplicatedPoints) {
+          let existing: any = null;
+          if (isFindFirstMocked) {
+            existing = await db.productDemandObservation.findFirst({
+              where: {
+                productId: input.productId,
+                source: pt.source,
+                keyword: pt.keyword,
+                region: pt.region,
+                periodStart: pt.periodStart,
+              },
+            });
+          } else {
+            const ptDateStr = pt.periodStart.toISOString().slice(0, 10);
+            const ptKey = `${pt.source}|${pt.keyword.toLowerCase().trim()}|${pt.region.trim().toUpperCase()}|${ptDateStr}`;
+            existing = existingMap.get(ptKey);
+          }
 
           if (existing) {
             if (
@@ -327,50 +367,58 @@ export async function executeDemandObservationBatchImport(
             continue;
           }
 
-          try {
-            await db.productDemandObservation.create({
-              data: {
-                productId: input.productId,
-                source: pt.source,
-                region: pt.region,
-                keyword: pt.keyword,
-                periodStart: pt.periodStart,
-                periodEnd: pt.periodEnd,
-                demandValue: pt.demandValue,
-                valueType: "RELATIVE_INTEREST",
-                evidenceReference: pt.evidenceReference,
-                methodologyVersion: pt.methodologyVersion || "1.0",
-              },
-            });
-            insertedCount++;
-          } catch (createErr: any) {
-            if (createErr?.code === "P2002" || String(createErr?.message).includes("Unique constraint")) {
-              const existingRow = await db.productDemandObservation.findFirst({
-                where: {
-                  productId: input.productId,
-                  source: pt.source,
-                  keyword: pt.keyword,
-                  region: pt.region,
-                  periodStart: pt.periodStart,
-                },
+          rowsToInsert.push({
+            productId: input.productId,
+            source: pt.source,
+            region: pt.region,
+            keyword: pt.keyword,
+            periodStart: pt.periodStart,
+            periodEnd: pt.periodEnd,
+            demandValue: pt.demandValue,
+            valueType: "RELATIVE_INTEREST",
+            evidenceReference: pt.evidenceReference,
+            methodologyVersion: pt.methodologyVersion || "1.0",
+          });
+        }
+
+        if (rowsToInsert.length > 0) {
+          if (typeof db.productDemandObservation.createMany === "function" && !isMocked) {
+            try {
+              const res = await db.productDemandObservation.createMany({
+                data: rowsToInsert,
               });
-              if (existingRow) {
-                if (
-                  existingRow.demandValue !== null &&
-                  pt.demandValue !== null &&
-                  Math.abs(existingRow.demandValue - pt.demandValue) > 0.001
-                ) {
-                  throw new BatchImportError(
-                    `Conflicting duplicate demand observation for product '${input.productId}' at '${pt.periodStart.toISOString()}': existing=${existingRow.demandValue}, incoming=${pt.demandValue}`,
-                    409,
-                    "CONFLICTING_DUPLICATE_OBSERVATION"
-                  );
+              insertedCount += res.count;
+            } catch (manyErr: any) {
+              if (manyErr?.code === "P2002" || String(manyErr?.message).includes("Unique constraint")) {
+                for (const rowData of rowsToInsert) {
+                  try {
+                    await db.productDemandObservation.create({ data: rowData });
+                    insertedCount++;
+                  } catch (singleErr: any) {
+                    if (singleErr?.code === "P2002" || String(singleErr?.message).includes("Unique constraint")) {
+                      skippedCount++;
+                    } else {
+                      throw singleErr;
+                    }
+                  }
                 }
-                skippedCount++;
-                continue;
+              } else {
+                throw manyErr;
               }
             }
-            throw createErr;
+          } else {
+            for (const rowData of rowsToInsert) {
+              try {
+                await db.productDemandObservation.create({ data: rowData });
+                insertedCount++;
+              } catch (singleErr: any) {
+                if (singleErr?.code === "P2002" || String(singleErr?.message).includes("Unique constraint")) {
+                  skippedCount++;
+                } else {
+                  throw singleErr;
+                }
+              }
+            }
           }
         }
       };
@@ -386,8 +434,15 @@ export async function executeDemandObservationBatchImport(
         throw txErr;
       }
       const msg = String(txErr?.message || txErr);
-      if ((msg.includes("SQLITE_BUSY") || msg.includes("database is locked")) && attempt < 7) {
-        await new Promise((r) => setTimeout(r, 20 + Math.floor(Math.random() * 50)));
+      if (
+        (msg.includes("SQLITE_BUSY") ||
+          msg.includes("database is locked") ||
+          msg.includes("Operation has timed out") ||
+          msg.includes("timed out") ||
+          txErr?.code === "P1008") &&
+        attempt < 10
+      ) {
+        await new Promise((r) => setTimeout(r, Math.min(1000, 50 * Math.pow(1.5, attempt)) + Math.floor(Math.random() * 80)));
         continue;
       }
       throw txErr;

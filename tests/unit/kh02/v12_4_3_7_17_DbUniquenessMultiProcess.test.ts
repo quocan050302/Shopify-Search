@@ -224,7 +224,7 @@ describe("KH-02 V12.4.3.7.17 Group D: Database Uniqueness & Concurrency", () => 
     expect(total).toBe(1); // Only the initial existing row
   });
 
-  it("D06: multi-process concurrency: 2 concurrent promises inserting demand rows yield no duplicate rows", async () => {
+  it("D06: single-process concurrency: 2 concurrent promises inserting demand rows yield no duplicate rows", async () => {
     const points1 = [
       { keyword: "cat feeder", region: "US", periodStart: "2026-08-01T00:00:00.000Z", periodEnd: "2026-08-07T00:00:00.000Z", demandValue: 40 },
     ];
@@ -256,7 +256,7 @@ describe("KH-02 V12.4.3.7.17 Group D: Database Uniqueness & Concurrency", () => 
     expect(count).toBe(1);
   });
 
-  it("D07: multi-process with conflicting values for same timestamp: one commits, other rejected; zero partial state", async () => {
+  it("D07: single-process concurrency with conflicting values for same timestamp: one commits, other rejected; zero partial state", async () => {
     const dt = "2026-08-08T00:00:00.000Z";
     const p1 = [{ keyword: "cat feeder", region: "US", periodStart: dt, periodEnd: "2026-08-14T00:00:00.000Z", demandValue: 30 }];
     const p2 = [{ keyword: "cat feeder", region: "US", periodStart: dt, periodEnd: "2026-08-14T00:00:00.000Z", demandValue: 80 }];
@@ -314,7 +314,7 @@ describe("KH-02 V12.4.3.7.17 Group D: Database Uniqueness & Concurrency", () => 
     expect(postCount).toBe(preCount);
   });
 
-  it("D09: multi-process high-load import (4 concurrent distinct batches): all valid points committed", async () => {
+  it("D09: single-process high-load import (4 concurrent distinct batches): all valid points committed", async () => {
     const batches = [1, 2, 3, 4].map((batchNum) => ({
       productId: testProductId,
       workspaceId: testWorkspaceId,

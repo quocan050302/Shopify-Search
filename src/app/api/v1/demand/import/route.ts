@@ -112,6 +112,7 @@ export async function POST(request: NextRequest) {
         region: validation.region || "US",
         evidenceReference: validation.evidenceReference,
         methodologyVersion: "google_trends_explore_csv_v1",
+        strictProvenance: true,
         points: validation.dataPoints.map((pt) => ({
           keyword: pt.keyword,
           region: pt.region,
@@ -286,6 +287,7 @@ export async function POST(request: NextRequest) {
       source: validRows[0]?.source || "USER_MANUAL",
       region: validRows[0]?.region || "US",
       methodologyVersion: body.methodologyVersion ?? "1.0",
+      strictProvenance: true,
       points: validRows.map((r) => ({
         source: r.source,
         keyword: r.keyword,

@@ -4091,6 +4091,8 @@ export function hasVerifiableCsvOrProviderLineage(
     targetKeyword?: string | null;
     targetProduct?: string | null;
     region?: string | null;
+    periodStart?: string | Date | null;
+    observationDate?: string | Date | null;
     observationValue?: number | null;
     allowUnitFixtures?: boolean;
     strictLiveOrigin?: boolean;
@@ -4135,28 +4137,22 @@ export function hasVerifiableCsvOrProviderLineage(
     } else if (
       context.observationValue !== undefined &&
       context.observationValue !== null &&
-      ((context as any).periodStart || (context as any).observationDate)
+      (context.periodStart || context.observationDate)
     ) {
       const rowCheck = verifyDemandObservationAgainstRawCsv(ref, {
         keyword: context.targetKeyword,
         region: context.region,
-        periodStart: (context as any).periodStart || (context as any).observationDate,
+        periodStart: (context.periodStart || context.observationDate) as any,
         demandValue: context.observationValue,
       }, {
         expectedKeyword: context.targetKeyword,
         candidateTitle: context.targetProduct,
       });
       if (!rowCheck.verified) {
-        if (
-          rowCheck.code === "VALUE_MISMATCH" ||
-          rowCheck.code === "DATE_MISMATCH" ||
-          rowCheck.code === "PRODUCT_MISMATCH" ||
-          rowCheck.code === "ROW_NOT_IN_CSV"
-        ) {
-          rawCsvFileExists = false;
-          contentIntegrityVerified = false;
-          verificationReason = `Observation value/date does not match stored CSV: ${rowCheck.reason} (${rowCheck.code})`;
-        }
+        rawCsvFileExists = false;
+        hasValidFileChecksum = false;
+        contentIntegrityVerified = false;
+        verificationReason = `Observation does not match stored CSV: ${rowCheck.reason} (${rowCheck.code})`;
       }
     }
   }
@@ -4174,9 +4170,12 @@ export function hasVerifiableCsvOrProviderLineage(
   let providerOriginVerified = false;
   let fixtureOnly = false;
   let businessLineageEligible = false;
-  let sourceAuthority: DemandSourceAuthority = rawCsvFileExists && hasValidFileChecksum ? "HISTORICAL_SOURCE_VERIFIED" : "UNKNOWN_SOURCE";
+  let sourceAuthority: DemandSourceAuthority =
+    rawCsvFileExists && hasValidFileChecksum && contentIntegrityVerified
+      ? "HISTORICAL_SOURCE_VERIFIED"
+      : "CACHED_UNVERIFIED";
 
-  if (descriptor) {
+  if (descriptor && descriptor.source !== "GOOGLE_TRENDS_CSV") {
     const authCheck = isAuthenticProviderReceiptDescriptor(descriptor, context);
     fixtureOnly = Boolean(authCheck.isFixture);
     contentIntegrityVerified = Boolean(authCheck.contentIntegrityVerified);
@@ -4200,7 +4199,7 @@ export function hasVerifiableCsvOrProviderLineage(
   }
 
   const lineagePresent = Boolean(hashMatch || hasProviderClaimString);
-  const lineageVerified = (rawCsvFileExists && hasValidFileChecksum) || (hasProviderRequestLineage && providerOriginVerified);
+  const lineageVerified = (rawCsvFileExists && hasValidFileChecksum && contentIntegrityVerified) || (hasProviderRequestLineage && providerOriginVerified);
 
   return {
     rawCsvFileExists,
@@ -4383,9 +4382,9 @@ export function evaluateDemandSourceAuthority(
 
     if (/google_trends_csv|historical_ingestion/i.test(src)) {
       normalizedSourceTypes.add("CSV");
-      if (!lineage.rawCsvFileExists || !lineage.hasValidFileChecksum) {
+      if (!lineage.rawCsvFileExists || !lineage.hasValidFileChecksum || !lineage.lineageVerified || lineage.sourceAuthority === "CACHED_UNVERIFIED") {
         hasUnbackedCsv = true;
-        reasons.push(`Observation ${idx + 1} (${src}) lacks a verified raw CSV file on disk matching sha256 checksum.`);
+        reasons.push(`Observation ${idx + 1} (${src}) lacks a verified raw CSV file on disk matching sha256 checksum or row data.`);
       }
     } else if (/google_trends_live|authoritative_api|provider_api|google_trends_api|Google Trends \(SerpApi\)/i.test(src)) {
       normalizedSourceTypes.add("LIVE");
