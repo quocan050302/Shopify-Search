@@ -1,0 +1,151 @@
+==========================================================================================
+KH-02 V12.4.3.7.16 — MANDATORY DURABLE ATTESTATION + TRANSACTIONAL CSV IMPORT + REAL MERCHANT PDP VERIFICATION AUDIT
+Date: 2026-11-05 (Asia/Ho_Chi_Minh) | Repository: quocan050302/Shopify-Search
+Locked Branch: feature/kh02-walmart-us-jina-reader-v12.4.3.5.1
+Tested Code Commit SHA: 6b19e82cc7bdd04a4bc9683b5a3ef74151fb72b0
+==========================================================================================
+
+1. GIT BASELINE, BRANCH LOCK & COMMIT PARITY
+------------------------------------------------------------------------------------------
+- Repository: quocan050302/Shopify-Search
+- Working Root: /Users/macbook/Documents/Project_Github/Meta-Ads/Shopify-Search
+- Locked Branch: feature/kh02-walmart-us-jina-reader-v12.4.3.5.1
+- Observed Baseline Remote HEAD: 2db2ef03b38958f4eebd5f055069b86a82f332f9
+- Prior Substantive Code SHA: 51e7165466d114f36448f87e26453fa9bd4541d5
+- Tested Code Commit SHA: 6b19e82cc7bdd04a4bc9683b5a3ef74151fb72b0
+- Ancestry Verification: Direct continuation on locked branch (no merge, rebase, or reset)
+- Uncommitted Runtime Artifacts Staged: 0 (.lock, .tmp, temporary test imports cleaned)
+- Sentinel Provider Receipts Preserved: Bitwise identical to baseline
+
+2. ARCHITECTURAL VULNERABILITIES & PRODUCTION CODE FIXES (V12.4.3.7.16)
+------------------------------------------------------------------------------------------
+[WORKSTREAM A] SerpApi Demand Collector & Attestation Invariants
+- Vulnerability / Risk:
+  In-memory ephemeral proofs could grant live origin claims without confirming that a durable HMAC-SHA256
+  attestation was successfully committed and verified on disk. If attestation writing crashed or was delayed,
+  in-memory state could allow unverified or forged proofs to elevate evidence eligibility.
+- Production Code Fix:
+  1) Mandatory Durable Attestation Verification on Disk:
+     `persistCollectorReceiptAtomically` strictly enforces that a valid `diskAttestation` (`ProviderTransportAttestationV1`)
+     exists on disk and passes cryptographic signature verification before setting `originVerified = true` or granting
+     authoritative live origin.
+  2) In-Memory Mutation Fence:
+     If an in-memory attestation object is provided, its signature and `captureMethod` must strictly match the disk
+     attestation. Any divergent in-memory attestation (e.g. `captureMethod: "SIMULATED"`) is immediately demoted
+     to simulated proof without live authority.
+  3) Readback Verification & Tamper Eviction:
+     In `resolveVerifiedDemandEvidence` and canonical descriptors, attestation is re-verified from disk readback.
+     If an attestation is deleted or tampered with on disk, the in-memory cache is evicted and evidence resolves
+     fail-closed as `ORIGIN_UNVERIFIED` / `INSUFFICIENT_EVIDENCE`.
+  4) Exact Scope Binding:
+     `requestFingerprint` and attestation parameters bind exact `workspaceId`, `productId`, and `researchRunId`.
+
+[WORKSTREAM B] Transactional All-or-Nothing Database Import (CSV & Pre-Parsed Rows)
+- Vulnerability / Risk:
+  Sequential database inserts could partially succeed when importing Google Trends demand series, leaving orphaned
+  or corrupted partial records. Errors were previously swallowed into `skippedCount++`, masking failures.
+- Production Code Fix:
+  1) Shared Atomic Import Service (`executeDemandObservationBatchImport`):
+     Created unified service used by both `POST /api/v1/demand/import` and `importGoogleTrendsCsvToDatabase`.
+  2) All-or-Nothing `$transaction` Persistence:
+     All rows in a batch are committed inside `prisma.$transaction`. If any row fails validation, encounters a
+     database constraint violation, or creates an unresolvable duplicate with conflicting values, the ENTIRE batch
+     rolls back: 0 new rows written to database.
+  3) Concurrency & Duplicate Handling:
+     Intra-batch and database duplicate checks: identical duplicates are safely deduplicated (skipped); conflicting
+     demand values for the same timestamp trigger immediate `409 CONFLICTING_DUPLICATE_OBSERVATION` rollback.
+  4) Tenant and Product Boundary Enforcement:
+     Enforces tenant isolation via `buildAuthorizedProductWhere` and validates that `productId` exists before import.
+     Rejects non-existent products with `404 PRODUCT_NOT_FOUND` and unauthorized tenants with `403 FORBIDDEN_WORKSPACE_PRODUCT`.
+  5) Strict 64-Hex SHA-256 Provenance Check:
+     Rejects fake or truncated hashes; requires authentic 64-character hex checksums for official CSV provenance.
+
+[WORKSTREAM C] Real Google Ads Merchant PDP Destination Verification
+- Vulnerability / Risk:
+  Pure URL syntax matching was conflated with true merchant product page verification, allowing landing pages or
+  brand homepages without verified product content to be marked as exact product matches.
+- Production Code Fix:
+  1) URL Syntax Pre-Screen Isolation:
+     `classifyVerifiedGoogleMerchantDestination` performs pure URL structure validation, returning
+     `urlStructureValid: true`, `destinationVerificationStatus: "PDP_URL_STRUCTURE_VALID"`, and `isVerifiedPdp: false`.
+  2) Live Merchant PDP Resolver (`verifyLiveMerchantProductPageDestination`):
+     Performs actual live destination verification with:
+     - SSRF preflight protection: rejects loopback (127.0.0.1, localhost), private IP ranges (10.*, 172.16-31.*, 192.168.*),
+       and cloud metadata endpoints (169.254.169.254).
+     - Bounded redirect traversal (maximum 5 hops).
+     - HTTP response status 2xx check and strict response size cap (2 MB limit).
+     - 10-second bounded timeout with `AbortSignal`.
+     - Store domain match and product handle path alignment.
+     - Body inspection for product schema markup (JSON-LD `Product`, OpenGraph `og:type` product, or product title match).
+  3) Simulation Fence:
+     When invoked with a test injection `fetchFn`, destination verification marks `isLiveExternalProof: false`
+     and `verificationMode: "TEST_VERIFIED_ONLY"`. Live G16 elevation is strictly prohibited without genuine live HTTP proof.
+  4) Orchestrator Integration:
+     `runEvergreenProductResearch` strictly gates `EXACT_PRODUCT_MATCH` on `isVerifiedPdp && isLiveExternalProof`.
+     Historical UAHPET 9 Google creatives preserved: exact=0, brand=8, unrelated=1.
+
+3. VERIFICATION MATRIX & TEST EXECUTION RESULTS
+------------------------------------------------------------------------------------------
+Gate S0: Static Analysis & Clean Hygiene
+- `npx tsc --noEmit`: PASS (0 errors, clean build)
+- Working tree status: Clean, zero untracked artifacts
+
+Gate S1: Targeted V16 Test Suites (3 new suites, 74 tests)
+- Suite 1: `tests/unit/kh02/v12_4_3_7_16_MandatoryDurableAttestation.test.ts`
+  Result: PASS (26/26 tests, 18.25s) — A01-A24, D01-D02
+- Suite 2: `tests/unit/kh02/v12_4_3_7_16_TransactionalDemandImport.test.ts`
+  Result: PASS (21/21 tests, 458ms) — B01-B20, D03
+- Suite 3: `tests/unit/kh02/v12_4_3_7_16_RealPdpVerification.test.ts`
+  Result: PASS (27/27 tests, 71ms) — C01-C20, D04-D10
+- Total Targeted V16: 74/74 PASS (100%)
+
+Gate S2: Regression Against Flow02, V15 & V14 Core Suites
+- `v12_4_3_5_3_Flow02CsvProvenanceAndGoogleExactPdp.test.ts`: PASS (33/33 tests)
+- `v12_4_3_7_15_HmacTrustPathHardening.test.ts`: PASS (35/35 tests)
+- `v12_4_3_7_14_TrustedProofIsolationDurableRecovery.test.ts`: PASS (60/60 tests)
+- Total Core Regression: 128/128 PASS (100%)
+
+Gate S3: Full KH-02 Unit Test Suite (72 files)
+- Command: `npx vitest run tests/unit/kh02`
+- Result: PASS (1695/1695 tests across 72 files, 119.89s)
+- Failed: 0, Skipped: 0
+
+Gate S4: Full KH-02 Integration Suite (9 files)
+- Command: `npx vitest run tests/integration/kh02`
+- Result: PASS (33/33 tests across 9 files, 49.57s)
+  - `kh02BrowserAcceptance.test.ts`: PASS (1/1 Chromium E2E)
+  - `kh02HttpServerE2E.test.ts`: PASS (6/6 HTTP route handlers)
+  - `kh02WalmartUsJinaIntegrationV12_4_3_5_1.test.ts`: PASS (6/6)
+  - `kh02V12_1_3_Acceptance.test.ts`: PASS (4/4)
+  - `geminiWorkerPipeline.test.ts`: PASS (2/2)
+  - `kh02V12_1_4_2_LongResearch.test.ts`: PASS (3/3)
+  - `kh02V12_1_Persistence.test.ts`: PASS (4/4)
+  - `kh02V12_1_4_1_LegacyMigration.test.ts`: PASS (2/2)
+  - `kh02ResearchApi.test.ts`: PASS (5/5)
+
+Gate S5: KH-01 Cross-System Regression
+- Command: `npm run kh01:verify`
+- Result: PASS (69/69 tests across 5 files, 1.49s)
+
+Gate S6: Point-in-Time Backtest Policy Replay
+- Command: `npx tsx scripts/kh02/runBacktestV12_4_3_4_2.ts`
+- Result: PASS (Exit code 0, Policy=PASS, Dev=INSUFFICIENT, Holdout=INSUFFICIENT, zero lookahead leakage)
+
+Sentinel Provider Receipts Integrity Baseline:
+- `.fixture_manifest.json`: 982CFDB5F6D15E391FC14D994B1E70C9A840B6974343C20E316DA70BFAD39C04 (BITWISE IDENTICAL)
+- `04f4d039cdd4a884134914fdb9d2ed86ebbfa353991d714b78df545a96fd4b14.json`: 04F4D039CDD4A884134914FDB9D2ED86EBBFA353991D714B78DF545A96FD4B14 (BITWISE IDENTICAL)
+- `3440f19057ac7d1ac535150d1bbcc9a3078e0b7a5d46ad3f4bbd2c46235f61c8.json`: 3440F19057AC7D1AC535150D1BBCC9A3078E0B7A5D46AD3F4BBD2C46235F61C8 (BITWISE IDENTICAL)
+- `366cfeb156347d783c227be3fd7e10e397c8cd00c49c909673fc5208f36b841f.json`: 366CFEB156347D783C227BE3FD7E10E397C8CD00C49C909673FC5208F36B841F (BITWISE IDENTICAL)
+- Zero mutations, zero file additions, zero deletions in data/provider_receipts/
+
+4. BUSINESS GATES STATUS & FAIL-CLOSED ENFORCEMENT
+------------------------------------------------------------------------------------------
+- G06 (Google Ads): TRANSPORT_READY_NOT_VERIFIED
+- G07 (TikTok Ads): BLOCKED
+- G15 (Longitudinal Demand Evidence): INSUFFICIENT_EVIDENCE
+- G16 (Top-3 Winning Products): INSUFFICIENT_EVIDENCE
+All business gates strictly maintain fail-closed postures. No external live data is fabricated.
+
+==========================================================================================
+AUDIT VERDICT: PASS (ALL ENGINEERING GATES S0 - S6 SATISFIED)
+==========================================================================================
