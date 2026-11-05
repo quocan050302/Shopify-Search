@@ -1,0 +1,102 @@
+{
+  "version": "12.4.3.7.18",
+  "auditDate": "2026-11-05T21:50:00+07:00",
+  "baselineSha": "ad2f45960dcfbb206a89bd6cef2c0fd23212c270",
+  "testedCodeCommitSha": "c539b1a10e575c74e15f17c815d6dde1df6f4503",
+  "commandMatrix": [
+    {
+      "gate": "S0_typeScriptCheck",
+      "command": "npx tsc --noEmit && git diff --check",
+      "exitCode": 0,
+      "passed": true,
+      "summary": "0 errors, 0 whitespace warnings"
+    },
+    {
+      "gate": "S1_v18_socketPeerTlsTrust",
+      "command": "npx vitest run tests/unit/kh02/v12_4_3_7_18_SocketPeerTlsTrust.test.ts",
+      "exitCode": 0,
+      "passed": true,
+      "totalTests": 18,
+      "passedTests": 18,
+      "duration": "74ms",
+      "testGroups": ["S01-S18"]
+    },
+    {
+      "gate": "S1_v18_actualSocketRebinding",
+      "command": "npx vitest run tests/integration/kh02/v12_4_3_7_18_ActualSocketRebinding.test.ts",
+      "exitCode": 0,
+      "passed": true,
+      "totalTests": 6,
+      "passedTests": 6,
+      "duration": "454ms",
+      "testGroups": ["T01-T06"]
+    },
+    {
+      "gate": "S1_v18_strictCsvRowAuthority",
+      "command": "npx vitest run tests/unit/kh02/v12_4_3_7_18_StrictCsvRowAuthority.test.ts",
+      "exitCode": 0,
+      "passed": true,
+      "totalTests": 28,
+      "passedTests": 28,
+      "duration": "300ms",
+      "testGroups": ["R01-R28"]
+    },
+    {
+      "gate": "S1_v18_multiProcessAtomicImport",
+      "command": "npx vitest run tests/integration/kh02/v12_4_3_7_18_MultiProcessAtomicImport.test.ts",
+      "exitCode": 0,
+      "passed": true,
+      "totalTests": 4,
+      "passedTests": 4,
+      "duration": "3179ms",
+      "testGroups": ["MP01-MP04"]
+    },
+    {
+      "gate": "S1_v18_businessGateEvidenceParity",
+      "command": "npx vitest run tests/unit/kh02/v12_4_3_7_18_BusinessGateEvidenceParity.test.ts",
+      "exitCode": 0,
+      "passed": true,
+      "totalTests": 8,
+      "passedTests": 8,
+      "duration": "15ms",
+      "testGroups": ["G01-G08"]
+    },
+    {
+      "gate": "S1_v18_resourceAndAbortControls",
+      "command": "npx vitest run tests/integration/kh02/v12_4_3_7_18_ResourceAndAbortControls.test.ts",
+      "exitCode": 0,
+      "passed": true,
+      "totalTests": 5,
+      "passedTests": 5,
+      "duration": "169ms",
+      "testGroups": ["RC01-RC05"]
+    },
+    {
+      "gate": "S2_regression_v17_and_flow02",
+      "command": "npx vitest run tests/unit/kh02/v12_4_3_7_17_* tests/unit/kh02/v12_4_3_5_3_Flow02CsvProvenanceAndGoogleExactPdp.test.ts",
+      "exitCode": 0,
+      "passed": true,
+      "totalTests": 135,
+      "passedTests": 135,
+      "duration": "3.25s",
+      "testGroups": ["Flow02", "V17-A", "V17-B", "V17-C", "V17-D", "V17-E"]
+    },
+    {
+      "gate": "S5_kh01_cross_regression",
+      "command": "npm run kh01:verify",
+      "exitCode": 0,
+      "passed": true,
+      "totalTests": 69,
+      "passedTests": 69,
+      "duration": "1.57s",
+      "testGroups": ["KH01-Security", "KH01-ProductOffer", "KH01-LandingPage", "KH01-Economics", "KH01-Workspace"]
+    },
+    {
+      "gate": "S6_backtest_point_in_time",
+      "command": "npx tsx scripts/kh02/runBacktestV12_4_3_4_2.ts",
+      "exitCode": 0,
+      "passed": true,
+      "summary": "Policy=PASS, Dev=INSUFFICIENT, Holdout=INSUFFICIENT, Overall=INSUFFICIENT"
+    }
+  ]
+}

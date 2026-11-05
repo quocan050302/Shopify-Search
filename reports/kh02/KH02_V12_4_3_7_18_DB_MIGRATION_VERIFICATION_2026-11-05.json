@@ -1,0 +1,30 @@
+{
+  "version": "12.4.3.7.18",
+  "auditDate": "2026-11-05T21:50:00+07:00",
+  "testedCodeCommitSha": "c539b1a10e575c74e15f17c815d6dde1df6f4503",
+  "databaseIntegrity": {
+    "compositeUniqueConstraint": [
+      "productId",
+      "source",
+      "keyword",
+      "region",
+      "periodStart"
+    ],
+    "sqliteIndexName": "product_demand_observations_productId_source_keyword_region_periodStart_key",
+    "journalMode": "WAL",
+    "busyTimeoutMs": 15000,
+    "concurrencyGuarantees": {
+      "sqliteWalReaderWriterConcurrency": true,
+      "inMemoryPreAggregationBatchInsertion": true,
+      "transactionLockHoldDuration": "~10ms",
+      "retryWithBackoffOnBusy": true,
+      "maxBusyRetries": 10
+    },
+    "verificationSummary": {
+      "multiProcessRaceTested": true,
+      "zeroDuplicateObservationsInserted": true,
+      "allOrNothingAtomicRollback": true,
+      "foreignKeyIntegrity": "ok"
+    }
+  }
+}

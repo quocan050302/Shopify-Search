@@ -1,0 +1,84 @@
+{
+  "version": "12.4.3.7.18",
+  "auditDate": "2026-11-05T21:50:00+07:00",
+  "testedCodeCommitSha": "c539b1a10e575c74e15f17c815d6dde1df6f4503",
+  "socketProofTrace": {
+    "module": "src/services/kh02/identity/verifiedMerchantPdpResolver.ts",
+    "dialMechanism": "performAuditedSecureTlsFetch",
+    "ipPinning": {
+      "strategy": "Preflight WHATWG SSRF validation resolves host to verified IP address",
+      "socketDial": "tls.connect({ host: pinnedIp, port: 443, servername: domain })",
+      "sniPreservation": "Preserved for non-IP hostnames to ensure strict TLS certificate validation",
+      "remoteAddressVerification": "Direct assertion that socket.remoteAddress === pinnedIp (SOCKET_PEER_MISMATCH on discrepancy)",
+      "dnsRebindingProtection": "Defeats TOCTOU DNS race conditions by pinning the pre-verified IP at TCP connect time"
+    },
+    "tlsTrust": {
+      "authorizedCheck": "tlsSocket.authorized === true verified in production",
+      "certificateValidation": "Rejects expired, self-signed, or unauthorized certificates fail-closed",
+      "testSimulationSeparation": "Mock / test fetches maintain tlsVerified: true for protocol while isLiveExternalProof is strictly false"
+    },
+    "streamingAndAbort": {
+      "streamBufferCap": 2097152,
+      "payloadTooLargeError": "BODY_TOO_LARGE",
+      "signalAbortHandler": "Destroys TLS socket and cleans up resources immediately upon AbortSignal"
+    }
+  },
+  "csvRowBindingTrace": {
+    "module": "src/services/kh02/demand/googleTrendsCsvValidator.ts",
+    "parserFunction": "parseGoogleTrendsCsvBytes",
+    "properties": {
+      "pureFunction": true,
+      "zeroDiskSideEffects": true,
+      "reproducibleMtime": true
+    },
+    "lineageDemotionRules": {
+      "temporalEngine": "src/services/kh02/demand/temporalDemandEngine.ts",
+      "demotedErrors": [
+        "KEYWORD_MISMATCH",
+        "REGION_MISMATCH",
+        "FILE_MISSING",
+        "SHA_MISMATCH",
+        "VALUE_MISMATCH",
+        "SOURCE_UNATTESTED"
+      ],
+      "demotedAuthority": "CACHED_UNVERIFIED",
+      "lineageVerified": false
+    },
+    "batchImportStrictProvenance": {
+      "module": "src/services/kh02/demand/demandObservationBatchImport.ts",
+      "strictMode": true,
+      "missingEvidenceRefAction": "422 EVIDENCE_REFERENCE_REQUIRED",
+      "missingProviderReceiptAction": "PROVIDER_RECEIPT_REQUIRED"
+    }
+  },
+  "childProcessConcurrencyTrace": {
+    "workerScript": "scripts/kh02/multiProcessImportWorker.ts",
+    "runner": "tests/integration/kh02/v12_4_3_7_18_MultiProcessAtomicImport.test.ts",
+    "walModeConfigured": true,
+    "busyTimeoutMs": 15000,
+    "concurrencyResults": {
+      "MP01_disjointProducts": {
+        "status": "PASS",
+        "worker1Points": 50,
+        "worker2Points": 50,
+        "totalInserted": 100
+      },
+      "MP02_simultaneousIdenticalProductRows": {
+        "status": "PASS",
+        "expectedTotalUniqueRows": 50,
+        "observedTotalUniqueRows": 50,
+        "duplicateCount": 0
+      },
+      "MP03_invalidWorkerRollback": {
+        "status": "PASS",
+        "validWorkerInserted": 50,
+        "invalidWorkerRolledBack": true
+      },
+      "MP04_rapidSequentialSpawns": {
+        "status": "PASS",
+        "iterations": 3,
+        "lingeringLockDetected": false
+      }
+    }
+  }
+}

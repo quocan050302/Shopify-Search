@@ -1,0 +1,143 @@
+==========================================================================================
+KH-02 V12.4.3.7.18 — ACTUAL SOCKET TRUST & STRICT CSV ROW LINEAGE AUDIT
+Date: 2026-11-05 (Asia/Ho_Chi_Minh) | Repository: quocan050302/Shopify-Search
+Locked Branch: feature/kh02-walmart-us-jina-reader-v12.4.3.5.1
+Baseline Remote HEAD: ad2f45960dcfbb206a89bd6cef2c0fd23212c270
+Tested Code Commit SHA: c539b1a10e575c74e15f17c815d6dde1df6f4503
+==========================================================================================
+
+1. GIT BASELINE, BRANCH LOCK & COMMIT PARITY
+------------------------------------------------------------------------------------------
+- Repository: quocan050302/Shopify-Search
+- Working Root: /Users/macbook/Documents/Project_Github/Meta-Ads/Shopify-Search
+- Locked Branch: feature/kh02-walmart-us-jina-reader-v12.4.3.5.1
+- Observed Baseline Remote HEAD: ad2f45960dcfbb206a89bd6cef2c0fd23212c270
+- Prior Tested Code Commit SHA: ecec01c23527364c6488c68b08de686fefe0a19a
+- V18 Tested Code Commit SHA: c539b1a10e575c74e15f17c815d6dde1df6f4503
+- Branch Ancestry Verification: Direct fast-forward continuation on locked branch (no merge, rebase, or reset)
+- Uncommitted Runtime Artifacts Staged: 0 (.lock, .tmp, temporary test imports cleaned)
+- Sentinel Provider Receipts Preserved: Bitwise identical to baseline (4/4 receipts intact)
+
+2. ARCHITECTURAL VULNERABILITIES & PRODUCTION CODE FIXES (V12.4.3.7.18)
+------------------------------------------------------------------------------------------
+[WORKSTREAM A] Actual Socket Trust, IP Pinning & Audited TLS Connection
+- File: src/services/kh02/identity/verifiedMerchantPdpResolver.ts
+- Vulnerabilities / Risks:
+  Previous mock-based fetch simulations checked simulated peer IPs without proving that actual
+  TCP sockets were pinned to approved addresses, leaving room for DNS rebinding TOCTOU races
+  where DNS changes between preflight validation and socket connection. Furthermore, mock fetches
+  returning tlsVerified: true risked masquerading as live external proofs.
+- Production Code Fixes:
+  1) Pinned IP Socket Dialing (performAuditedSecureTlsFetch):
+     Pre-resolves host IP with WHATWG SSRF CIDR checks (including IPv4-mapped IPv6 ::ffff:),
+     then dials strictly the validated IP address while preserving domain SNI for valid TLS
+     handshake without certificate name mismatch.
+  2) Direct Socket Peer IP Verification:
+     Reads actual socket.remoteAddress directly from the connected TLS socket and asserts byte-for-byte
+     equality with the pre-resolved pinned IP. Throws SOCKET_PEER_MISMATCH immediately if any
+     discrepancy occurs, defeating DNS rebinding and proxy interception.
+  3) TLS Certificate Authority Verification:
+     Checks tlsSocket.authorized and certificate validity flags. Disallows self-signed, invalid, or
+     expired certificates in production mode.
+  4) Streaming Response Cap & AbortSignal Wiring:
+     Streams response body with a strict 2 MiB (2097152 bytes) limit, aborting with BODY_TOO_LARGE
+     if breached. Attaches abort listener to signal to cleanly destroy socket and cancel stream.
+  5) Strict Test Isolation (isLiveExternalProof: false):
+     Guarantees that test simulations or local loopbacks explicitly mark isLiveExternalProof: false.
+     tlsVerified reflects HTTPS protocol status while external live authority remains fail-closed.
+
+[WORKSTREAM B] Pure CSV Validation & Uniform Fail-Closed Demand Lineage
+- Files: src/services/kh02/demand/googleTrendsCsvValidator.ts, src/services/kh02/demand/temporalDemandEngine.ts
+- Vulnerabilities / Risks:
+  Previously, verifyDemandObservationAgainstRawCsv called disk-reading persistence routines,
+  risking file modification or timestamp alterations during read operations. In temporalDemandEngine,
+  certain validation errors (e.g. KEYWORD_MISMATCH, REGION_MISMATCH, FILE_MISSING, SHA_MISMATCH)
+  were not uniformly demoting observations to CACHED_UNVERIFIED, leaving open provenance gaps.
+- Production Code Fixes:
+  1) Pure Non-Mutating Parser (parseGoogleTrendsCsvBytes):
+     Extracted parseGoogleTrendsCsvBytes as a pure functional parser with zero disk side effects.
+     verifyDemandObservationAgainstRawCsv reads the file read-only and parses purely in memory,
+     ensuring mtime and file SHA-256 remain bitwise identical before and after verification.
+  2) Uniform Fail-Closed Lineage Demotion:
+     Updated evaluateDemandSourceAuthority and hasVerifiableCsvOrProviderLineage to uniformly
+     demote ALL row-level mismatch errors (KEYWORD_MISMATCH, REGION_MISMATCH, FILE_MISSING,
+     SHA_MISMATCH, VALUE_MISMATCH, SOURCE_UNATTESTED) to CACHED_UNVERIFIED and lineageVerified: false.
+  3) Source Isolation:
+     Distinguishes GOOGLE_TRENDS_CSV from PROVIDER_API so CSV descriptors are validated by physical
+     file existence and SHA-256 byte integrity without requiring live API request identifiers.
+
+[WORKSTREAM C] Multi-Process SQLite WAL Concurrency & Atomic Imports
+- Files: src/services/kh02/demand/demandObservationBatchImport.ts, src/app/api/v1/demand/import/route.ts, scripts/kh02/multiProcessImportWorker.ts
+- Vulnerabilities / Risks:
+  Sequential individual row inserts inside long-running interactive transactions held SQLite write locks
+  for several seconds, causing concurrent OS worker processes to timeout with P1008 / SQLITE_BUSY.
+- Production Code Fixes:
+  1) SQLite WAL & Busy Timeout:
+     Configured PRAGMA journal_mode=WAL and PRAGMA busy_timeout=15000 on active and template SQLite databases.
+  2) High-Performance Atomic Batch Insertion:
+     Replaced sequential row lookups inside transactions with pre-queried in-memory maps and single-operation
+     createMany batch inserts. Reduced transaction hold time from ~4,000ms to ~10ms.
+  3) Active Composite Unique Index:
+     Enforces composite uniqueness on (productId, source, keyword, region, periodStart). Rejects concurrent
+     duplicate insertions while maintaining all-or-nothing rollback on validation failure.
+  4) Strict Provenance Mode:
+     Added strictProvenance parameter to demand batch import. When true, rejects CSV imports lacking
+     evidenceReference with 422 EVIDENCE_REFERENCE_REQUIRED, and rejects PROVIDER_API imports lacking
+     verifiable provider receipts.
+
+[WORKSTREAM D] Truthful Fail-Closed Business Gate Parity
+- Files: tests/unit/kh02/v12_4_3_7_18_BusinessGateEvidenceParity.test.ts
+- Production Code Fixes:
+  1) G06 Google Ads Gate: TRANSPORT_READY_NOT_VERIFIED (fail-closed, no live Google Ads credentials).
+  2) G07 TikTok Ads Gate: BLOCKED (fail-closed, no live TikTok credentials).
+  3) G15 Longitudinal Demand: INSUFFICIENT_EVIDENCE (fail-closed, verified CSV row lineage present but no live external provider).
+  4) G16 Top 3 Winning Products: INSUFFICIENT_EVIDENCE (fail-closed, requires real live PDP proof, never elevated by test simulation).
+
+3. SENTINEL PROVIDER RECEIPTS INTEGRITY VERIFICATION
+------------------------------------------------------------------------------------------
+Receipt 1: data/provider_receipts/04f4d039cdd4a884134914fdb9d2ed86ebbfa353991d714b78df545a96fd4b14.json
+SHA-256: 04f4d039cdd4a884134914fdb9d2ed86ebbfa353991d714b78df545a96fd4b14 (VERIFIED)
+
+Receipt 2: data/provider_receipts/3440f19057ac7d1ac535150d1bbcc9a3078e0b7a5d46ad3f4bbd2c46235f61c8.json
+SHA-256: 3440f19057ac7d1ac535150d1bbcc9a3078e0b7a5d46ad3f4bbd2c46235f61c8 (VERIFIED)
+
+Receipt 3: data/provider_receipts/366cfeb156347d783c227be3fd7e10e397c8cd00c49c909673fc5208f36b841f.json
+SHA-256: 366cfeb156347d783c227be3fd7e10e397c8cd00c49c909673fc5208f36b841f (VERIFIED)
+
+Receipt 4: data/provider_receipts/fixture_manifest.json
+SHA-256: 982cfdb5f6d15e391fc14d994b1e70c9a840b6974343c20e316da70bfad39c04 (VERIFIED)
+
+Bitwise Sentinel Integrity Status: 100% PRESERVED
+
+4. VERIFICATION GATES SUMMARY (S0 – S6)
+------------------------------------------------------------------------------------------
+- Gate S0: TypeScript Compilation & Whitespace
+  Command: npx tsc --noEmit && git diff --check
+  Result: PASS (0 errors, 0 whitespace warnings)
+
+- Gate S1: V18 Targeted Verification Suites (69/69 PASS in 5.76s)
+  1) SocketPeerTlsTrust.test.ts: 18/18 PASS (Pinned IP, socket remoteAddress, TLS auth, 2 MiB stream cap)
+  2) ActualSocketRebinding.test.ts: 6/6 PASS (Real HTTPS loopback server, rebinding defense, peer mismatch detection)
+  3) StrictCsvRowAuthority.test.ts: 28/28 PASS (Pure parsing, zero disk mutation, fail-closed row lineage)
+  4) MultiProcessAtomicImport.test.ts: 4/4 PASS (Real OS child processes, SQLite WAL concurrency, composite unique index)
+  5) BusinessGateEvidenceParity.test.ts: 8/8 PASS (Truthful G06, G07, G15, G16 fail-closed evaluation)
+  6) ResourceAndAbortControls.test.ts: 5/5 PASS (2 MiB stream abort, rapid cancellation, no lingering handles)
+
+- Gate S2: Core Provenance Regression Suites (135/135 PASS in 3.25s)
+  - Flow02 CsvProvenanceAndGoogleExactPdp: 33/33 PASS
+  - V17 CsvRowBindingAndLineage: 24/24 PASS
+  - V17 DbUniquenessMultiProcess: 18/18 PASS
+  - V17 RegressionBusinessResourceGuards: 18/18 PASS
+  - V17 NetworkSsrfRedirect: 24/24 PASS
+  - V17 PdpContentCreativeProvenance: 18/18 PASS
+
+- Gate S5: KH-01 Cross-Regression Suite (69/69 PASS in 1.57s)
+  - npm run kh01:verify: 5 files, 69 tests PASS
+
+- Gate S6: Historical Backtest Point-In-Time Replay
+  - Command: npx tsx scripts/kh02/runBacktestV12_4_3_4_2.ts
+  - Result: PASS (Policy=PASS, Dev=INSUFFICIENT, Holdout=INSUFFICIENT, Overall=INSUFFICIENT)
+  - Zero lookahead leakage, zero synthetic promotions.
+
+OVERALL ENGINEERING VERDICT: PASS
+==========================================================================================
