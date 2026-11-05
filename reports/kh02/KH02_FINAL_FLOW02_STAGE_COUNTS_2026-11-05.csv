@@ -1,0 +1,16 @@
+stage_key,input_count,accepted_count,rejected_count,stage_classification,authority_function,evidence_reference,cost_usd
+preflight_environment,0,0,0,GOOGLE_FREE_ONLY,resolveDemandProviderMode,null,0.00
+meta_primary_ads_live,25,25,0,LIVE_PROVIDER,executeMetaAdsLiveSearch,meta-ads-api:act_1212440541,0.00
+meta_primary_ads_cache,25,25,0,CACHED,resolveCachedMetaAds,discovery-run-ad:acceptance_v12_2_3_ws,0.00
+meta_primary_ads_total,50,50,0,AUTHORITATIVE_VERIFIED,reconcileResearchAcrossLayers,run:kh02_run_1793424091548_669k8,0.00
+google_creatives_retrieved,9,9,0,DISCOVERY_SIGNAL,executeGoogleAdsTransparencySearch,google-ads:adstransparency:us,0.00
+google_creatives_exact_pdp,9,0,9,NO_MERCHANT_PDP,classifyVerifiedGoogleMerchantDestination,null,0.00
+google_creatives_brand_only,9,8,1,BRAND_ONLY_MATCH,matchCrossPlatformProductEvidence,adstransparency.google.com/advertiser/AR09542566763567710209,0.00
+google_creatives_rejected_unrelated,9,1,8,REJECTED_UNRELATED_CREATIVE,matchCrossPlatformProductEvidence,pet-air-purifier-conflict,0.00
+google_trends_db_total,96,96,0,GLOBAL_IMPORT_INDEX,prisma.productDemandObservation,data/google_trends_imports,0.00
+uahpet_db_demand_points,6,0,6,CACHED_UNVERIFIED_TEMPLATED_SEQUENCE,evaluateDemandSourceAuthority,verified-merchant-demand:uahpet.com,0.00
+uahpet_g15_demand_verification,0,0,1,INSUFFICIENT_EVIDENCE,evaluateDemandHistoryEvidence,null,0.00
+g16_top3_verification,3,0,3,INSUFFICIENT_EVIDENCE,applyKH02EligibilityGates,null,0.00
+flow02_fixture_demand_provenance,13,13,0,HISTORICAL_SOURCE_VERIFIED,GoogleTrendsCsvImportProvider.fetchSeries,csv-import:google-trends-explore:sha256,0.00
+flow02_fixture_g15_test_pass,13,13,0,TEST_ONLY_FIXTURE_PASS,evaluateDemandHistoryEvidence,test-fixture:uahpet-feeder-13w,0.00
+ui_products_replay,59,59,0,SNAPSHOT_PARITY_VERIFIED,kh02_run_1793424091548_669k8,null,0.00

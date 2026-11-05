@@ -1,0 +1,111 @@
+{
+  "manifestVersion": "FINAL-FLOW-02",
+  "generatedAt": "2026-11-05T17:29:30.000+07:00",
+  "git": {
+    "repository": "quocan050302/Shopify-Search",
+    "lockedBranch": "feature/kh02-walmart-us-jina-reader-v12.4.3.5.1",
+    "baselineHeadSha": "3e78541760e7e1c782f33587a4129a155e482b8d",
+    "testedCodeSha": "51e7165466d114f36448f87e26453fa9bd4541d5",
+    "testedCodeTreeSha": "235509415c6a93547318ee2296b170d45a42e8b2",
+    "currentRemoteShaAtReportCreation": "51e7165466d114f36448f87e26453fa9bd4541d5"
+  },
+  "researchRun": {
+    "actualRunIdAndType": "kh02_run_1793424091548_669k8 (HISTORICAL_READONLY_SNAPSHOT)",
+    "historicalRunId": "kh02_run_1793424091548_669k8",
+    "fixtureRunId": "prod_flow02_uahpet",
+    "workspaceId": "acceptance_v12_2_3_ws",
+    "topic": "Pet Gadgets",
+    "market": "US",
+    "lookbackDays": 90
+  },
+  "targetProduct": {
+    "candidateId": "cand_1212440541",
+    "dbResearchProductId": "cmvsy7zqh000jp0orhypwohho",
+    "canonicalTitle": "UAHPET Fresh Food Automatic Pet Feeder",
+    "merchantDomain": "uahpet.com",
+    "canonicalMerchantUrl": "https://uahpet.com/products/uahpet-fresh-food-automatic-pet-feeder",
+    "verifiedProductId": "cmvsy7zqh000jp0orhypwohho"
+  },
+  "demandEvidence": {
+    "csvRawSha": null,
+    "sourceAuthority": "CACHED_UNVERIFIED",
+    "csvValidPoints": 0,
+    "durationCoveredDays": 0,
+    "sourceReference": "verified-merchant-demand:uahpet.com (UNBACKED_PSEUDO_SERIES)",
+    "flow02FixtureDemand": {
+      "fixtureType": "NONCOMMERCIAL_TEST_ONLY",
+      "validPoints": 13,
+      "durationCoveredDays": 84,
+      "cadence": "WEEKLY",
+      "sourceAuthority": "HISTORICAL_SOURCE_VERIFIED",
+      "sourceTransportType": "LOCAL_VERIFIED_CSV"
+    }
+  },
+  "googleAdsCreatives": {
+    "totalFound": 9,
+    "exactProductMatches": 0,
+    "probableProductMatches": 0,
+    "brandOnlyMatches": 8,
+    "rejectedUnrelated": 1,
+    "finalPdpCount": 0,
+    "upstreamLandingUrlPattern": "https://adstransparency.google.com/advertiser/AR09542566763567710209",
+    "blockerCode": "EXTERNAL_BLOCKER_GOOGLE_ADS_NO_PDP"
+  },
+  "gateVerdicts": {
+    "engineering": "PASS",
+    "businessG15": "INSUFFICIENT_EVIDENCE",
+    "businessG16": "INSUFFICIENT_EVIDENCE",
+    "devBacktest": "INSUFFICIENT_HISTORICAL_EVIDENCE",
+    "holdoutBacktest": "INSUFFICIENT_HISTORICAL_EVIDENCE",
+    "policyTest": "PASS"
+  },
+  "testsByGate": {
+    "G0_types_and_diff": { "status": "PASS", "tests": 0, "exitCode": 0 },
+    "G1_targeted_flow02": { "status": "PASS", "tests": 33, "exitCode": 0, "suite": "v12_4_3_5_3_Flow02CsvProvenanceAndGoogleExactPdp.test.ts" },
+    "G1_targeted_flow01": { "status": "PASS", "tests": 24, "exitCode": 0, "suite": "v12_4_3_5_2_UahpetDemandAndGoogleAdsPdpEvidence.test.ts" },
+    "G2_kh01_verify": { "status": "PASS", "tests": 69, "exitCode": 0, "suites": 5 },
+    "G3_kh02_integration": { "status": "PASS", "tests": 33, "exitCode": 0, "suites": 9, "durationSec": 55.25 },
+    "G4_kh02_full_unit": { "status": "PASS", "tests": 1621, "exitCode": 0, "suites": 69, "durationSec": 170.44 },
+    "G5_backtest": { "status": "PASS", "policyTests": 21, "exitCode": 0, "devVerdict": "INSUFFICIENT_HISTORICAL_EVIDENCE", "holdoutVerdict": "INSUFFICIENT_HISTORICAL_EVIDENCE" }
+  },
+  "backtestDevHoldoutPIT": {
+    "script": "scripts/kh02/runBacktestV12_4_3_4_2.ts",
+    "policyVerdict": "PASS",
+    "devSplit": {
+      "verdict": "INSUFFICIENT_HISTORICAL_EVIDENCE",
+      "windowStart": "2026-06-01T00:00:00.000Z",
+      "windowEnd": "2026-10-24T00:00:00.000Z",
+      "shortlistCount": "0/0"
+    },
+    "holdoutSplit": {
+      "verdict": "INSUFFICIENT_HISTORICAL_EVIDENCE",
+      "windowStart": "2026-10-24T00:00:00.000Z",
+      "windowEnd": "2026-10-30T12:00:00.000Z",
+      "shortlistCount": "3/3"
+    }
+  },
+  "resourceStats": {
+    "logicalCPUs": 12,
+    "totalRAM_GB": 31.75,
+    "freeRAM_GB": 8.79,
+    "freeDiskD_GB": 63.33,
+    "diskPercentFree": "44.0%",
+    "concurrencyWorkers": 2
+  },
+  "financialAudit": {
+    "approvedNetworkSpendUSD": 0.00,
+    "actualNetworkSpendUSD": 0.00,
+    "serpApiPaidCalls": 0,
+    "bigQueryBilledBytes": 0,
+    "metaAdsPaidCalls": 0
+  },
+  "artifacts": [
+    {
+      "path": "reports/kh02/KH02_FINAL_FLOW02_STAGE_COUNTS_2026-11-05.csv",
+      "sha256": "8289ad0bd06dd14ad495f81e91f5249039c6cc1a5e38373546d0a23c0c78c513"
+    },
+    {
+      "path": "reports/kh02/KH02_FINAL_FLOW02_CSV_PROVENANCE_GOOGLE_EXACT_PDP_AUDIT_2026-11-05.md"
+    }
+  ]
+}
