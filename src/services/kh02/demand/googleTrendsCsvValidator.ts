@@ -142,6 +142,14 @@ export function verifyStoredCsvFile(sha256Checksum: string): {
   }
 }
 
+export interface GoogleTrendsDataPoint {
+  periodStart: string;
+  periodEnd: string;
+  demandValue: number;
+  region: string;
+  keyword: string;
+}
+
 export interface GoogleTrendsCsvValidationResult {
   valid: boolean;
   sha256Checksum: string;
@@ -151,13 +159,7 @@ export interface GoogleTrendsCsvValidationResult {
   endDate: string | null;
   cadence?: "DAILY" | "WEEKLY" | "MONTHLY" | null;
   dataPointsCount: number;
-  dataPoints: Array<{
-    periodStart: string;
-    periodEnd: string;
-    demandValue: number;
-    region: string;
-    keyword: string;
-  }>;
+  dataPoints: GoogleTrendsDataPoint[];
   evidenceReference: string | null;
   errors: string[];
 }
@@ -377,6 +379,248 @@ export function validateAndParseGoogleTrendsCsv(
     dataPoints: parsedPoints,
     evidenceReference,
     errors,
+  };
+}
+
+export type DemandRowVerificationCode =
+  | "ROW_VERIFIED"
+  | "ROW_NOT_IN_CSV"
+  | "DATE_MISMATCH"
+  | "VALUE_MISMATCH"
+  | "REGION_MISMATCH"
+  | "KEYWORD_MISMATCH"
+  | "SHA_MISMATCH"
+  | "FILE_MISSING"
+  | "SOURCE_UNATTESTED"
+  | "PRODUCT_MISMATCH";
+
+export interface DemandRowVerificationResult {
+  verified: boolean;
+  code: DemandRowVerificationCode;
+  reason?: string;
+  sourceFileSha256?: string;
+  matchedRow?: GoogleTrendsDataPoint;
+}
+
+/**
+ * Validates that an individual product demand observation exists inside an authentic stored CSV file.
+ * Verifies exact 64-hex SHA checksum, parses the file, and confirms date, region, keyword, and demandValue match.
+ */
+export function verifyDemandObservationAgainstRawCsv(
+  evidenceRefOrObs: string | null | undefined | { evidenceReference?: string | null; [key: string]: any },
+  observation?: {
+    keyword?: string | null;
+    region?: string | null;
+    periodStart: string | Date;
+    periodEnd?: string | Date | null;
+    demandValue?: number | null;
+    productId?: string | null;
+  },
+  options: {
+    expectedKeyword?: string | null;
+    candidateTitle?: string | null;
+  } = {}
+): DemandRowVerificationResult {
+  let evidenceReference: string | null | undefined;
+  let obs: any;
+
+  if (evidenceRefOrObs && typeof evidenceRefOrObs === "object" && !observation) {
+    evidenceReference = (evidenceRefOrObs as any).evidenceReference;
+    obs = evidenceRefOrObs;
+  } else {
+    evidenceReference = typeof evidenceRefOrObs === "string" ? evidenceRefOrObs : null;
+    obs = observation;
+  }
+  const obsData: {
+    keyword?: string | null;
+    region?: string | null;
+    periodStart: string | Date;
+    periodEnd?: string | Date | null;
+    demandValue?: number | null;
+    productId?: string | null;
+  } = (observation || obs || {}) as any;
+
+  if (!evidenceReference || typeof evidenceReference !== "string") {
+    return {
+      verified: false,
+      code: "SOURCE_UNATTESTED",
+      reason: "No evidence reference provided.",
+    };
+  }
+
+  let sha256: string | null = null;
+  const hashMatch = evidenceReference.match(/\bsha256:([a-f0-9]{64})\b/i);
+  if (hashMatch) {
+    sha256 = hashMatch[1].toLowerCase();
+  } else if (/^[a-f0-9]{64}$/i.test(evidenceReference.trim())) {
+    sha256 = evidenceReference.trim().toLowerCase();
+  }
+
+  if (!sha256) {
+    return {
+      verified: false,
+      code: "SHA_MISMATCH",
+      reason: "Missing or invalid 64-hex SHA-256 in evidence reference.",
+    };
+  }
+  const fileCheck = verifyStoredCsvFile(sha256);
+  if (!fileCheck.exists) {
+    return {
+      verified: false,
+      code: "FILE_MISSING",
+      sourceFileSha256: sha256,
+      reason: `Stored CSV file for SHA '${sha256.slice(0, 12)}...' does not exist.`,
+    };
+  }
+
+  if (!fileCheck.validHash || !fileCheck.filePath) {
+    return {
+      verified: false,
+      code: "SHA_MISMATCH",
+      sourceFileSha256: sha256,
+      reason: "Stored CSV file content does not match claimed SHA-256 hash.",
+    };
+  }
+
+  let rawCsv = "";
+  try {
+    rawCsv = fs.readFileSync(fileCheck.filePath, "utf8");
+  } catch (err: any) {
+    return {
+      verified: false,
+      code: "FILE_MISSING",
+      sourceFileSha256: sha256,
+      reason: `Failed to read CSV file: ${err.message}`,
+    };
+  }
+
+  const parsed = validateAndParseGoogleTrendsCsv(rawCsv);
+  if (!parsed.valid || !parsed.dataPoints || parsed.dataPoints.length === 0) {
+    return {
+      verified: false,
+      code: "SOURCE_UNATTESTED",
+      sourceFileSha256: sha256,
+      reason: "Stored CSV failed parsing or contains no data points.",
+    };
+  }
+
+  // Check keyword alignment
+  const obsKw = (obsData.keyword || "").trim().toLowerCase();
+  const csvKw = (parsed.keyword || "").trim().toLowerCase();
+  const expKw = (options.expectedKeyword || options.candidateTitle || "").trim().toLowerCase();
+
+  if (expKw && csvKw) {
+    const normExp = expKw.replace(/[^a-z0-9]/g, " ");
+    const normCsv = csvKw.replace(/[^a-z0-9]/g, " ");
+    const expWords = new Set(normExp.split(/\s+/).filter((w) => w.length > 2));
+    const csvWords = new Set(normCsv.split(/\s+/).filter((w) => w.length > 2));
+    let common = 0;
+    for (const w of expWords) {
+      if (csvWords.has(w)) common++;
+    }
+    if (common === 0 && !normExp.includes(normCsv) && !normCsv.includes(normExp)) {
+      return {
+        verified: false,
+        code: "PRODUCT_MISMATCH",
+        sourceFileSha256: sha256,
+        reason: `CSV keyword '${parsed.keyword}' does not match expected candidate '${options.expectedKeyword || options.candidateTitle}'.`,
+      };
+    }
+  }
+
+  if (obsKw && csvKw) {
+    const normObs = obsKw.replace(/[^a-z0-9]/g, " ");
+    const normCsv = csvKw.replace(/[^a-z0-9]/g, " ");
+    if (normObs !== normCsv && !normObs.includes(normCsv) && !normCsv.includes(normObs)) {
+      return {
+        verified: false,
+        code: "KEYWORD_MISMATCH",
+        sourceFileSha256: sha256,
+        reason: `Observation keyword '${obsData.keyword}' does not match CSV keyword '${parsed.keyword}'.`,
+      };
+    }
+  }
+
+  // Match date and row values
+  const obsStartDateStr = new Date(obsData.periodStart).toISOString().slice(0, 10);
+  const matchedRow = parsed.dataPoints.find((pt) => {
+    const ptStartDateStr = new Date(pt.periodStart).toISOString().slice(0, 10);
+    return ptStartDateStr === obsStartDateStr;
+  });
+
+  if (!matchedRow) {
+    return {
+      verified: false,
+      code: "ROW_NOT_IN_CSV",
+      sourceFileSha256: sha256,
+      reason: `No row in CSV matches observation periodStart '${obsStartDateStr}'.`,
+    };
+  }
+
+  // Compare region
+  if (obsData.region) {
+    const obsReg = obsData.region.trim().toUpperCase();
+    const rowReg = (matchedRow.region || parsed.region || "US").trim().toUpperCase();
+    if (obsReg !== rowReg) {
+      return {
+        verified: false,
+        code: "REGION_MISMATCH",
+        sourceFileSha256: sha256,
+        matchedRow,
+        reason: `Observation region '${obsReg}' does not match CSV row region '${rowReg}'.`,
+      };
+    }
+  }
+
+  // Compare periodEnd if provided
+  if (obsData.periodEnd && matchedRow.periodEnd) {
+    const obsEndStr = new Date(obsData.periodEnd).toISOString().slice(0, 10);
+    const rowEndStr = new Date(matchedRow.periodEnd).toISOString().slice(0, 10);
+    const rowStartStr = new Date(matchedRow.periodStart).toISOString().slice(0, 10);
+    if (obsEndStr !== rowEndStr) {
+      const obsEndTime = new Date(obsData.periodEnd).getTime();
+      const rowStartTime = new Date(matchedRow.periodStart).getTime();
+      const diffDays = Math.round((obsEndTime - rowStartTime) / (1000 * 60 * 60 * 24));
+      // Allow weekly observation window (0 to 7 days) if CSV only had single start date
+      if (!(rowEndStr === rowStartStr && diffDays >= 0 && diffDays <= 7)) {
+        return {
+          verified: false,
+          code: "DATE_MISMATCH",
+          sourceFileSha256: sha256,
+          matchedRow,
+          reason: `Observation periodEnd '${obsEndStr}' does not match CSV row periodEnd '${rowEndStr}'.`,
+        };
+      }
+    }
+  }
+
+  // Compare demandValue
+  if (obsData.demandValue !== undefined && obsData.demandValue !== null) {
+    if (matchedRow.demandValue === null) {
+      return {
+        verified: false,
+        code: "VALUE_MISMATCH",
+        sourceFileSha256: sha256,
+        matchedRow,
+        reason: `CSV row value is null but observation has '${obsData.demandValue}'.`,
+      };
+    }
+    if (Math.abs(matchedRow.demandValue - obsData.demandValue) > 0.001) {
+      return {
+        verified: false,
+        code: "VALUE_MISMATCH",
+        sourceFileSha256: sha256,
+        matchedRow,
+        reason: `Observation value '${obsData.demandValue}' does not match CSV row value '${matchedRow.demandValue}'.`,
+      };
+    }
+  }
+
+  return {
+    verified: true,
+    code: "ROW_VERIFIED",
+    sourceFileSha256: sha256,
+    matchedRow,
   };
 }
 

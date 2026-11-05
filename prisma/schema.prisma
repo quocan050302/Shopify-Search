@@ -565,6 +565,7 @@ model ProductDemandObservation {
   methodologyVersion   String          @default("1.0")
   product              ResearchProduct @relation(fields: [productId], references: [id], onDelete: Cascade)
 
+  @@unique([productId, source, keyword, region, periodStart])
   @@index([productId, periodStart])
   @@index([keyword, region])
   @@map("product_demand_observations")

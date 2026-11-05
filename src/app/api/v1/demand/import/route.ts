@@ -10,6 +10,7 @@ import { prisma } from "@/lib/db";
 import {
   validateAndParseGoogleTrendsCsv,
   verifyStoredCsvFile,
+  verifyDemandObservationAgainstRawCsv,
 } from "@/services/kh02/demand/googleTrendsCsvValidator";
 import {
   executeDemandObservationBatchImport,
@@ -164,6 +165,21 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Reject mixed-source batch (P1-D & B06 requirement)
+    const sourcesInBatch = new Set(body.rows.map((r) => r.source));
+    if (sourcesInBatch.size > 1) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: {
+            code: "MIXED_SOURCE_BATCH_REJECTED",
+            message: "Heterogeneous per-row sources in a single import batch are not permitted.",
+          },
+        },
+        { status: 422 }
+      );
+    }
+
     // Validate and sanitize rows
     const errors: string[] = [];
     const validRows: DemandImportRow[] = [];
@@ -214,15 +230,35 @@ export async function POST(request: NextRequest) {
         continue;
       }
 
-      // Cryptographic disk verification for claimed CSV provenance (RC-04 & Negative Controls)
-      if (row.source === "GOOGLE_TRENDS_CSV" && row.evidenceReference) {
-        const hashMatch = row.evidenceReference.match(/\bsha256:([a-f0-9]{16,64})\b/i);
-        if (hashMatch) {
-          const verification = verifyStoredCsvFile(hashMatch[1]);
-          if (!verification.exists || !verification.validHash) {
-            errors.push(`Row ${rowIndex}: Stated sha256 checksum in evidenceReference does not match any verified stored CSV file on disk.`);
-            continue;
-          }
+      // Exact source-to-row CSV provenance check (B04 & B06 requirement)
+      if (row.source === "GOOGLE_TRENDS_CSV") {
+        if (!row.evidenceReference) {
+          errors.push(`Row ${rowIndex}: evidenceReference is required for GOOGLE_TRENDS_CSV.`);
+          continue;
+        }
+        const hashMatch = row.evidenceReference.match(/\bsha256:([a-f0-9]+)\b/i);
+        if (!hashMatch || hashMatch[1].length !== 64) {
+          errors.push(`Row ${rowIndex}: Full 64-hex SHA-256 checksum required in evidenceReference.`);
+          continue;
+        }
+        const rowVerify = verifyDemandObservationAgainstRawCsv(row.evidenceReference, {
+          keyword: row.keyword,
+          region: row.region,
+          periodStart: pStart,
+          periodEnd: pEnd,
+          demandValue: row.demandValue,
+          productId: body.productId,
+        });
+        if (!rowVerify.verified) {
+          errors.push(`Row ${rowIndex}: Raw CSV row verification failed: ${rowVerify.reason} (${rowVerify.code})`);
+          continue;
+        }
+      }
+
+      if (row.source === "PROVIDER_API") {
+        if (!row.evidenceReference || !/\b(provider-request|serpapi-request|trends-api-request):/i.test(row.evidenceReference)) {
+          errors.push(`Row ${rowIndex}: PROVIDER_API row requires verifiable collector receipt descriptor or evidence reference.`);
+          continue;
         }
       }
 
@@ -251,6 +287,7 @@ export async function POST(request: NextRequest) {
       region: validRows[0]?.region || "US",
       methodologyVersion: body.methodologyVersion ?? "1.0",
       points: validRows.map((r) => ({
+        source: r.source,
         keyword: r.keyword,
         region: r.region,
         periodStart: r.periodStart,

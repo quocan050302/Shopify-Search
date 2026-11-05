@@ -20,7 +20,11 @@ import path from "path";
 import os from "os";
 import crypto from "crypto";
 import { prisma } from "@/lib/db";
-import { GOOGLE_TRENDS_CSV_STORAGE_DIR, verifyStoredCsvFile } from "./googleTrendsCsvValidator";
+import {
+  GOOGLE_TRENDS_CSV_STORAGE_DIR,
+  verifyStoredCsvFile,
+  verifyDemandObservationAgainstRawCsv,
+} from "./googleTrendsCsvValidator";
 
 export const PROVIDER_RECEIPT_STORAGE_DIR = path.resolve(
   process.cwd(),
@@ -4116,16 +4120,44 @@ export function hasVerifiableCsvOrProviderLineage(
   const hashMatch = ref.match(/\bsha256:([a-f0-9]{64})\b/i);
   let rawCsvFileExists = false;
   let hasValidFileChecksum = false;
+  let contentIntegrityVerified = false;
   let verificationReason = "";
 
   if (hashMatch) {
     const verified = verifyStoredCsvFile(hashMatch[1]);
     rawCsvFileExists = verified.exists && verified.validHash;
     hasValidFileChecksum = verified.exists && verified.validHash;
+    contentIntegrityVerified = rawCsvFileExists && hasValidFileChecksum;
     if (!verified.exists) {
       verificationReason = `Referenced CSV file with checksum '${hashMatch[1].slice(0, 12)}...' not found in storage.`;
     } else if (!verified.validHash) {
       verificationReason = `Stored CSV file failed SHA-256 integrity verification.`;
+    } else if (
+      context.observationValue !== undefined &&
+      context.observationValue !== null &&
+      ((context as any).periodStart || (context as any).observationDate)
+    ) {
+      const rowCheck = verifyDemandObservationAgainstRawCsv(ref, {
+        keyword: context.targetKeyword,
+        region: context.region,
+        periodStart: (context as any).periodStart || (context as any).observationDate,
+        demandValue: context.observationValue,
+      }, {
+        expectedKeyword: context.targetKeyword,
+        candidateTitle: context.targetProduct,
+      });
+      if (!rowCheck.verified) {
+        if (
+          rowCheck.code === "VALUE_MISMATCH" ||
+          rowCheck.code === "DATE_MISMATCH" ||
+          rowCheck.code === "PRODUCT_MISMATCH" ||
+          rowCheck.code === "ROW_NOT_IN_CSV"
+        ) {
+          rawCsvFileExists = false;
+          contentIntegrityVerified = false;
+          verificationReason = `Observation value/date does not match stored CSV: ${rowCheck.reason} (${rowCheck.code})`;
+        }
+      }
     }
   }
 
@@ -4139,7 +4171,6 @@ export function hasVerifiableCsvOrProviderLineage(
 
   let hasProviderRequestLineage = false;
   let originKind: EvidenceOriginKind = rawCsvFileExists ? "LOCAL_INTEGRITY_ONLY" : "UNVERIFIED";
-  let contentIntegrityVerified = rawCsvFileExists && hasValidFileChecksum;
   let providerOriginVerified = false;
   let fixtureOnly = false;
   let businessLineageEligible = false;
@@ -4344,6 +4375,7 @@ export function evaluateDemandSourceAuthority(
       targetKeyword: obs.keyword,
       targetProduct: policy.candidateCanonicalName,
       region: policy.requiredRegion || obs.region,
+      periodStart: obs.periodStart || (obs as any).date,
       observationValue: obs.demandValue !== undefined ? obs.demandValue : (obs as any).value,
       allowUnitFixtures: policy.allowUnitFixtures ?? (policy.strictLiveOrigin !== true && process.env.NODE_ENV === "test"),
       strictLiveOrigin: policy.strictLiveOrigin === true,

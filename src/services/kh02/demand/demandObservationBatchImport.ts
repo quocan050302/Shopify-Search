@@ -14,6 +14,7 @@
 
 import { prisma } from "@/lib/db";
 import { buildAuthorizedProductWhere } from "@/services/research/authorizedScopeHelpers";
+import { verifyDemandObservationAgainstRawCsv } from "./googleTrendsCsvValidator";
 
 export class BatchImportError extends Error {
   statusCode: number;
@@ -30,6 +31,7 @@ export class BatchImportError extends Error {
 }
 
 export interface DemandObservationBatchPoint {
+  source?: "GOOGLE_TRENDS_CSV" | "USER_MANUAL" | "PROVIDER_API" | string;
   keyword?: string | null;
   region?: string | null;
   periodStart: string | Date;
@@ -100,6 +102,16 @@ export async function executeDemandObservationBatchImport(
     throw new BatchImportError(`Product ${input.productId} not found.`, 404, "PRODUCT_NOT_FOUND");
   }
 
+  // Reject mixed-source batches
+  const batchSources = new Set(input.points.map((p) => p.source || input.source));
+  if (batchSources.size > 1) {
+    throw new BatchImportError(
+      "Mixed-source batches are prohibited (MIXED_SOURCE_BATCH_REJECTED). All points must share the identical source authority.",
+      422,
+      "MIXED_SOURCE_BATCH_REJECTED"
+    );
+  }
+
   if (input.workspaceId) {
     const productWs = (product as any).workspaceId;
     if (productWs && productWs !== input.workspaceId) {
@@ -141,6 +153,7 @@ export async function executeDemandObservationBatchImport(
 
   // 2. Validate and normalize all points
   interface NormalizedPoint {
+    source: string;
     keyword: string;
     region: string;
     periodStart: Date;
@@ -155,6 +168,8 @@ export async function executeDemandObservationBatchImport(
   for (let i = 0; i < input.points.length; i++) {
     const pt = input.points[i];
     const rowIndex = i + 1;
+
+    const pointSource = pt.source || input.source;
 
     const kw = pt.keyword !== undefined && pt.keyword !== null ? String(pt.keyword).trim() : "";
     if (!kw) {
@@ -205,7 +220,34 @@ export async function executeDemandObservationBatchImport(
       }
     }
 
+    // Verify row against CSV if source claims GOOGLE_TRENDS_CSV and evidenceReference is provided
+    if (pointSource === "GOOGLE_TRENDS_CSV" && evRef) {
+      const rowVerify = verifyDemandObservationAgainstRawCsv(evRef, {
+        keyword: kw,
+        region: reg,
+        periodStart: pStart,
+        periodEnd: pEnd,
+        demandValue: dVal,
+        productId: input.productId,
+      });
+      if (!rowVerify.verified && rowVerify.code !== "FILE_MISSING") {
+        if (
+          rowVerify.code === "VALUE_MISMATCH" ||
+          rowVerify.code === "DATE_MISMATCH" ||
+          rowVerify.code === "KEYWORD_MISMATCH" ||
+          rowVerify.code === "PRODUCT_MISMATCH"
+        ) {
+          throw new BatchImportError(
+            `Row ${rowIndex}: CSV row verification failed: ${rowVerify.reason} (${rowVerify.code})`,
+            400,
+            rowVerify.code
+          );
+        }
+      }
+    }
+
     validatedPoints.push({
+      source: pointSource,
       keyword: kw,
       region: reg,
       periodStart: pStart,
@@ -223,7 +265,7 @@ export async function executeDemandObservationBatchImport(
 
   for (let i = 0; i < validatedPoints.length; i++) {
     const pt = validatedPoints[i];
-    const key = `${pt.keyword.toLowerCase()}|${pt.region}|${pt.periodStart.toISOString()}`;
+    const key = `${pt.source}|${pt.keyword.toLowerCase()}|${pt.region}|${pt.periodStart.toISOString()}`;
     if (seenBatchKeys.has(key)) {
       const prior = seenBatchKeys.get(key)!;
       if (prior.value !== pt.demandValue) {
@@ -262,6 +304,7 @@ export async function executeDemandObservationBatchImport(
           const existing = await db.productDemandObservation.findFirst({
             where: {
               productId: input.productId,
+              source: pt.source,
               keyword: pt.keyword,
               region: pt.region,
               periodStart: pt.periodStart,
@@ -284,21 +327,51 @@ export async function executeDemandObservationBatchImport(
             continue;
           }
 
-          await db.productDemandObservation.create({
-            data: {
-              productId: input.productId,
-              source: input.source,
-              region: pt.region,
-              keyword: pt.keyword,
-              periodStart: pt.periodStart,
-              periodEnd: pt.periodEnd,
-              demandValue: pt.demandValue,
-              valueType: "RELATIVE_INTEREST",
-              evidenceReference: pt.evidenceReference,
-              methodologyVersion: pt.methodologyVersion || "1.0",
-            },
-          });
-          insertedCount++;
+          try {
+            await db.productDemandObservation.create({
+              data: {
+                productId: input.productId,
+                source: pt.source,
+                region: pt.region,
+                keyword: pt.keyword,
+                periodStart: pt.periodStart,
+                periodEnd: pt.periodEnd,
+                demandValue: pt.demandValue,
+                valueType: "RELATIVE_INTEREST",
+                evidenceReference: pt.evidenceReference,
+                methodologyVersion: pt.methodologyVersion || "1.0",
+              },
+            });
+            insertedCount++;
+          } catch (createErr: any) {
+            if (createErr?.code === "P2002" || String(createErr?.message).includes("Unique constraint")) {
+              const existingRow = await db.productDemandObservation.findFirst({
+                where: {
+                  productId: input.productId,
+                  source: pt.source,
+                  keyword: pt.keyword,
+                  region: pt.region,
+                  periodStart: pt.periodStart,
+                },
+              });
+              if (existingRow) {
+                if (
+                  existingRow.demandValue !== null &&
+                  pt.demandValue !== null &&
+                  Math.abs(existingRow.demandValue - pt.demandValue) > 0.001
+                ) {
+                  throw new BatchImportError(
+                    `Conflicting duplicate demand observation for product '${input.productId}' at '${pt.periodStart.toISOString()}': existing=${existingRow.demandValue}, incoming=${pt.demandValue}`,
+                    409,
+                    "CONFLICTING_DUPLICATE_OBSERVATION"
+                  );
+                }
+                skippedCount++;
+                continue;
+              }
+            }
+            throw createErr;
+          }
         }
       };
 

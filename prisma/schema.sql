@@ -443,6 +443,7 @@ CREATE INDEX "competitor_ads_longevityCategory_idx" ON "competitor_ads"("longevi
 CREATE INDEX "ad_lifecycle_events_adId_occurredAt_idx" ON "ad_lifecycle_events"("adId", "occurredAt");
 CREATE INDEX "evergreen_scores_adId_createdAt_idx" ON "evergreen_scores"("adId", "createdAt");
 CREATE INDEX "evergreen_scores_totalScore_idx" ON "evergreen_scores"("totalScore");
+CREATE UNIQUE INDEX IF NOT EXISTS "product_demand_observations_productId_source_keyword_region_periodStart_key" ON "product_demand_observations"("productId", "source", "keyword", "region", "periodStart");
 CREATE INDEX "product_demand_observations_productId_periodStart_idx" ON "product_demand_observations"("productId", "periodStart");
 CREATE INDEX "product_demand_observations_keyword_region_idx" ON "product_demand_observations"("keyword", "region");
 CREATE INDEX "product_creative_variants_adId_idx" ON "product_creative_variants"("adId");
