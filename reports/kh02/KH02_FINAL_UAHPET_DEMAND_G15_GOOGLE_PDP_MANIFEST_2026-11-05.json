@@ -1,0 +1,238 @@
+{
+  "auditName": "KH02_FINAL_UAHPET_DEMAND_G15_GOOGLE_PDP_AUDIT_2026-11-05",
+  "date": "2026-11-05",
+  "branch": "feature/kh02-walmart-us-jina-reader-v12.4.3.5.1",
+  "baselineSha": "a8111de3f3b6af52469b35cb4156a6099c6331af",
+  "testedCodeSha": "57e8e15bc3ab8735c023e28d8874e059b3f7fc71",
+  "testedTreeSha": "b60301c419e03a8466873e37ef77b0bd9028cd95",
+  "finalCommitSha": "d842ed6970fe6f50c0c7d24254bbdf560ae41d18",
+  "remoteHeadSha": "d842ed6970fe6f50c0c7d24254bbdf560ae41d18",
+  "sourceMode": "GOOGLE_FREE_ONLY",
+  "runId": "kh02_run_1793424091548_669k8",
+  "workspaceId": "acceptance_v12_2_3_ws",
+  "actualResearchProductId": "cmvsy7zqh000jp0orhypwohho",
+  "candidateId": "cand_1212440541",
+  "keyword": "UAHPET Fresh Food Automatic Pet Feeder",
+  "asOf": "2026-10-31T05:21:47.505Z",
+  "evidence": {
+    "meta": {
+      "status": "PASSED",
+      "liveCount": 25,
+      "cachedCount": 25,
+      "totalCounts": 50,
+      "linkedDbIds": 50
+    },
+    "googleAds": {
+      "status": "PASSED",
+      "totalCreatives": 9,
+      "exactProductMatches": 0,
+      "probableProductMatches": 0,
+      "brandOnlyMatches": 8,
+      "rejectedCreatives": 1,
+      "missingDestination": 0,
+      "merchantPdpCount": 0
+    },
+    "googleTrends": {
+      "status": "INSUFFICIENT_EVIDENCE",
+      "historicalRunStatus": "SKIPPED",
+      "queryExecuted": false,
+      "sourceKind": "GOOGLE_FREE_ONLY",
+      "totalDbRows": 96,
+      "uahpetVerifiedPoints": 0,
+      "rawReceiptVerified": false
+    }
+  },
+  "funnel": {
+    "totalObservations": 59,
+    "candidateGroups": 19,
+    "relevantCandidates": 17,
+    "scoredCandidates": 10,
+    "provisionalCandidates": 6,
+    "verifiedEvergreen": 0,
+    "shortlistCandidates": 3
+  },
+  "gates": {
+    "G06": "INSUFFICIENT_EVIDENCE",
+    "G07": "INSUFFICIENT_EVIDENCE",
+    "G15": "INSUFFICIENT_EVIDENCE",
+    "G16": "INSUFFICIENT_EVIDENCE"
+  },
+  "diagnostics": [
+    {
+      "stage": "DEMAND_CSV_PROVIDER",
+      "firstBreak": "GoogleTrendsCsvImportProvider.fetchSeries query missing productId filter",
+      "reproduced": true,
+      "changed": true,
+      "reason": "Added query.productId filter and loop check to guarantee cross-product isolation."
+    },
+    {
+      "stage": "DEMAND_QUERY_NORMALIZATION",
+      "firstBreak": "normalizeProductSearchTerm leaving trailing conjunctions and punctuation",
+      "reproduced": true,
+      "changed": true,
+      "reason": "Stripped trailing punctuation and dangling prepositions/conjunctions (&, with, and)."
+    },
+    {
+      "stage": "GOOGLE_ADS_CREATIVE_MATCHING",
+      "firstBreak": "Orchestrator promoted BRAND_ONLY_MATCH to PROBABLE_PRODUCT_MATCH",
+      "reproduced": true,
+      "changed": true,
+      "reason": "Reordered classification checks so BRAND_ONLY_MATCH takes precedence over confidence=PROBABLE."
+    },
+    {
+      "stage": "GOOGLE_ADS_DESTINATION_DERIVATION",
+      "firstBreak": "Transparency URL populated into finalDestination and exactProductMatches summary mismatch",
+      "reproduced": true,
+      "changed": true,
+      "reason": "Quarantined adstransparency.google.com URLs so finalDestination and normalizedProductUrl remain null unless verified merchant PDP exists."
+    }
+  ],
+  "testsByGate": [
+    {
+      "id": "G0",
+      "command": "git diff --check && npx tsc --noEmit",
+      "sha": "57e8e15bc3ab8735c023e28d8874e059b3f7fc71",
+      "exitCode": 0,
+      "passed": 1,
+      "failed": 0,
+      "skipped": 0,
+      "status": "ENGINEERING_PASS",
+      "logPath": "reports/kh02/.runlogs/session_1793870179/01_init.log",
+      "durationMs": 5200
+    },
+    {
+      "id": "G1",
+      "command": "npx vitest run tests/unit/kh02/v12_4_3_5_2_UahpetDemandAndGoogleAdsPdpEvidence.test.ts tests/unit/kh02/v12_4_3_4_GoogleFreeDemandAndTikTokDisabled.test.ts tests/unit/kh02/v12_4_3_4_1_ZeroSpendGoogleFreeAutomation.test.ts --no-file-parallelism",
+      "sha": "57e8e15bc3ab8735c023e28d8874e059b3f7fc71",
+      "exitCode": 0,
+      "passed": 50,
+      "failed": 0,
+      "skipped": 0,
+      "status": "TEST_PASS",
+      "logPath": "reports/kh02/.runlogs/session_1793870179/g1.log",
+      "durationMs": 3230
+    },
+    {
+      "id": "G2",
+      "command": "npx vitest run tests/unit/kh02/v12_4_3_4_8_GoogleProvenanceAndRuntimeClosure.test.ts tests/unit/kh02/v12_4_3_3_1_MetaGoogleLiveIntegrity.test.ts tests/unit/kh02/v12_4_3_3_MetaGoogleRelevanceProvenance.test.ts --no-file-parallelism",
+      "sha": "57e8e15bc3ab8735c023e28d8874e059b3f7fc71",
+      "exitCode": 0,
+      "passed": 130,
+      "failed": 0,
+      "skipped": 0,
+      "status": "TEST_PASS",
+      "logPath": "reports/kh02/.runlogs/session_1793870179/g2.log",
+      "durationMs": 6520
+    },
+    {
+      "id": "G3",
+      "command": "npx vitest run tests/integration/kh02 --no-file-parallelism",
+      "sha": "57e8e15bc3ab8735c023e28d8874e059b3f7fc71",
+      "exitCode": 0,
+      "passed": 33,
+      "failed": 0,
+      "skipped": 0,
+      "status": "TEST_PASS",
+      "logPath": "reports/kh02/.runlogs/session_1793870179/g3.log",
+      "durationMs": 53980
+    },
+    {
+      "id": "G4a",
+      "command": "npx vitest run tests/unit/kh02 --no-file-parallelism",
+      "sha": "57e8e15bc3ab8735c023e28d8874e059b3f7fc71",
+      "exitCode": 0,
+      "passed": 1587,
+      "failed": 0,
+      "skipped": 0,
+      "status": "TEST_PASS",
+      "logPath": "reports/kh02/.runlogs/session_1793870179/g4a.log",
+      "durationMs": 158970
+    },
+    {
+      "id": "G4b",
+      "command": "npm run kh01:verify",
+      "sha": "57e8e15bc3ab8735c023e28d8874e059b3f7fc71",
+      "exitCode": 0,
+      "passed": 69,
+      "failed": 0,
+      "skipped": 0,
+      "status": "TEST_PASS",
+      "logPath": "reports/kh02/.runlogs/session_1793870179/g4b.log",
+      "durationMs": 3580
+    },
+    {
+      "id": "G5",
+      "command": "npx tsx scripts/kh02/runBacktestV12_4_3_4_2.ts",
+      "sha": "57e8e15bc3ab8735c023e28d8874e059b3f7fc71",
+      "exitCode": 0,
+      "passed": 21,
+      "failed": 0,
+      "skipped": 0,
+      "status": "ENGINEERING_PASS",
+      "logPath": "reports/kh02/.runlogs/session_1793870179/g5.log",
+      "durationMs": 2800
+    },
+    {
+      "id": "G6",
+      "command": "git diff --check",
+      "sha": "57e8e15bc3ab8735c023e28d8874e059b3f7fc71",
+      "exitCode": 0,
+      "passed": 1,
+      "failed": 0,
+      "skipped": 0,
+      "status": "ENGINEERING_PASS",
+      "logPath": "reports/kh02/.runlogs/session_1793870179/g6.log",
+      "durationMs": 800
+    }
+  ],
+  "backtest": {
+    "policy": "PASS",
+    "dev": "INSUFFICIENT_HISTORICAL_EVIDENCE",
+    "holdout": "INSUFFICIENT_HISTORICAL_EVIDENCE",
+    "pointInTime": "VERIFIED_ZERO_LOOKAHEAD",
+    "sourceSha": "a8111de3f3b6af52469b35cb4156a6099c6331af",
+    "datasetFingerprints": [
+      {
+        "split": "DEV",
+        "fingerprint": "9855ac11a972adc0a558c23b7608309f158301c12ad8dcb0de3e3a5fd65af6a4"
+      },
+      {
+        "split": "HOLDOUT",
+        "fingerprint": "26bcffb0d900f14f43614918e4f1102015fbb2b9308292c6461acf6e582650b3"
+      }
+    ]
+  },
+  "resources": {
+    "logicalCpus": 12,
+    "totalRamGb": 31.75,
+    "freeRamGb": 3.88,
+    "diskDFreeStartGb": 63.51,
+    "diskDPercentFree": 44.1,
+    "maxConcurrentProcesses": 1,
+    "zeroSpendEnforced": true
+  },
+  "artifactHashes": {
+    "markdownReportSha256": "277ea298fc48e7c1dae4711f5c3dfa1a836f457e110e285e9230da45ec830d78",
+    "dataFlowCountsCsvSha256": "d40422a557c8e069db6d0c3f5a322be1742bed442ab2b0672824871906e890e1"
+  },
+  "security": {
+    "originalSentinelsUnchanged": true,
+    "secretLeakage": false,
+    "credentialsProtected": true
+  },
+  "changes": [
+    "src/services/kh02/demand/demandProviderRegistry.ts",
+    "src/services/kh02/demand/historicalDemandIngestion.ts",
+    "src/services/kh02/evergreenResearchOrchestrator.ts",
+    "src/services/kh02/identity/crossPlatformProductMatcher.ts",
+    "tests/unit/kh02/v12_4_3_5_2_UahpetDemandAndGoogleAdsPdpEvidence.test.ts"
+  ],
+  "blockers": [
+    "EXTERNAL_BLOCKER_SOURCE_NO_PRODUCT_SERIES: Official Google Trends Explore CSV export for UAHPET US not present in storage.",
+    "EXTERNAL_BLOCKER_NO_CREDENTIALS: BigQuery GCP credentials and SerpApi key not configured under zero-spend policy.",
+    "EXTERNAL_BLOCKER_GOOGLE_ADS_NO_PDP: Google Ads Transparency upstream records do not expose merchant PDP URLs."
+  ],
+  "businessVerdict": "INSUFFICIENT_EVIDENCE",
+  "engineeringVerdict": "ENGINEERING_PASS",
+  "commitPushVerified": true
+}
