@@ -1,0 +1,139 @@
+{
+  "version": "12.4.3.7.19.3.2.7",
+  "testSuite": "tests/unit/kh02/v12_4_3_7_19_3_2_7_MutableRegistryAndRunnerTruth.test.ts",
+  "evaluatedCodeSha": "63555f847761dc96fa39042706007022fae56e00",
+  "evaluatedTreeSha": "3c5b78cb645ae75e0f639247418d8e319f77d627",
+  "allPassed": true,
+  "testsTotal": 18,
+  "testsPassed": 18,
+  "testsFailed": 0,
+  "testsSkipped": 0,
+  "matrix": [
+    {
+      "testId": "A01",
+      "name": "Stolen mutable lookup-record reference and mock->authentic promotion attempted across ALL CI paths",
+      "category": "IMMUTABLE_REGISTRY_REFERENCE",
+      "assertion": "Record returned by lookupVerifiedRemoteCiRun is frozen; mutating property fails or does not affect registry",
+      "verdict": "PASS"
+    },
+    {
+      "testId": "A02",
+      "name": "Direct signer export / testKey / old Symbol.for token / helper injection rejected",
+      "category": "SIGNER_ENCAPSULATION",
+      "assertion": "TRUSTED_ORCHESTRATOR_CAPABILITY and _privateMintCiAttestationToken are undefined; mintCiAttestationToken has no testKey parameter",
+      "verdict": "PASS"
+    },
+    {
+      "testId": "A03",
+      "name": "Forged valid-hex responseDigest + correct HMAC but no official run => CI_NOT_RUN",
+      "category": "FORGERY_PREVENTION",
+      "assertion": "HMAC token signed by test fixture signer fails verification in evaluateReleaseEvidence due to unregistered run",
+      "verdict": "PASS"
+    },
+    {
+      "testId": "A04",
+      "name": "Authenticated-looking customFetch and unit/mock origin remains quarantined",
+      "category": "CUSTOM_FETCH_QUARANTINE",
+      "assertion": "verifyRemoteGitHubActionsRun with customFetch forces isUnitTestMock: true and evaluator rejects with RELEASE_EVALUATOR_REJECTED_MOCK_CI",
+      "verdict": "PASS"
+    },
+    {
+      "testId": "A05",
+      "name": "Exact workflow allowlist, exact run ID/SHA/repo/branch/event, TTL/replay/conflict negative controls",
+      "category": "EXACT_WORKFLOW_ALLOWLIST",
+      "assertion": "Partial / prefix workflow names rejected with WORKFLOW_NOT_ALLOWED; exact allowed name succeeds",
+      "verdict": "PASS"
+    },
+    {
+      "testId": "A06",
+      "name": "Authentic-verified run registration failure cannot return signed CI_PASS",
+      "category": "FAIL_CLOSED_REGISTRATION",
+      "assertion": "Registration conflict or failure triggers fail-closed CI_FAIL status with no token issued",
+      "verdict": "PASS"
+    },
+    {
+      "testId": "A07",
+      "name": "Vitest exit=0 but missing/empty/fake/mismatched summary => ENGINEERING_FAIL",
+      "category": "TYPED_GATE_VALIDATOR",
+      "assertion": "Missing summary, zero test count, or arithmetic count mismatch returns ENGINEERING_FAIL even if exit code is 0",
+      "verdict": "PASS"
+    },
+    {
+      "testId": "A08",
+      "name": "E8 JSON malformed/stale/empty; policy PASS with insufficient history is not business PASS",
+      "category": "BACKTEST_OUTPUT_VALIDATOR",
+      "assertion": "Malformed output rejected; backtest with 0 covered days correctly recognized as business insufficient evidence",
+      "verdict": "PASS"
+    },
+    {
+      "testId": "A09",
+      "name": "E9 malformed/incorrect schema, no DB readback, 6 raw rows but zero eligible => G15/G16 insufficient",
+      "category": "DB_READBACK_VALIDATOR",
+      "assertion": "Readback script parses candidate DB record, validates 6 raw rows with 0 eligible, upholding G15/G16 fail-closed",
+      "verdict": "PASS"
+    },
+    {
+      "testId": "A10",
+      "name": "E10 CI_NOT_CONFIGURED/NOT_RUN and fake providerVerified true => CI PASS rejected",
+      "category": "CI_DIAGNOSTIC_VALIDATOR",
+      "assertion": "Gate validator rejects diagnostic claiming providerVerified=true with CI_NOT_CONFIGURED as ENGINEERING_FAIL",
+      "verdict": "PASS"
+    },
+    {
+      "testId": "A11",
+      "name": "statfs failure, ENOSPC, low RAM, disk pressure while running => fail closed",
+      "category": "RESOURCE_SAFETY",
+      "assertion": "Simulated low disk (<1GB), low RAM (<150MB), or statfs failure throws SAFE_CHECK_FAILED",
+      "verdict": "PASS"
+    },
+    {
+      "testId": "A12",
+      "name": "logs > cap flags TRUNCATED_FAIL",
+      "category": "LOG_CAP_ENFORCEMENT",
+      "assertion": "Logs exceeding 50 MB threshold return status TRUNCATED_FAIL",
+      "verdict": "PASS"
+    },
+    {
+      "testId": "A13",
+      "name": "Tracked/untracked source mutation during run, HEAD/tree mismatch => detected",
+      "category": "WORKTREE_IMMUTABILITY",
+      "assertion": "HEAD or tree drift triggers HEAD_MUTATED or TREE_MUTATED fail-closed error",
+      "verdict": "PASS"
+    },
+    {
+      "testId": "A14",
+      "name": "TailRingBuffer retains recent log tail lines deterministically",
+      "category": "LOG_BUFFERING",
+      "assertion": "Ring buffer accurately maintains FIFO tail lines across stdout/stderr stream chunks",
+      "verdict": "PASS"
+    },
+    {
+      "testId": "A15",
+      "name": "MCP import-only => providerVerified=false; handshake/tools/list => protocol status only",
+      "category": "MCP_PROTOCOL_TRUTH",
+      "assertion": "FastMCP stdio handshake discovers tools search_advertiser, get_advertiser_ads at $0.00 with providerVerified=false",
+      "verdict": "PASS"
+    },
+    {
+      "testId": "A16",
+      "name": "Missing Meta/HasData keys, TikTok Ads US deferred, BigQuery no billing => no spend",
+      "category": "PROVIDER_SPEND_GUARDS",
+      "assertion": "All non-configured sources report zero cost ($0.00); TikTok Ads US remains DEFERRED_DO_NOT_TEST",
+      "verdict": "PASS"
+    },
+    {
+      "testId": "A17",
+      "name": "DEV/HOLDOUT chronological cutoff no-lookahead",
+      "category": "TEMPORAL_PARTITION_INTEGRITY",
+      "assertion": "Backtest replay provenance confirms pointInTimeCutoff strictly enforced with zero future leakage",
+      "verdict": "PASS"
+    },
+    {
+      "testId": "A18",
+      "name": "Stale/fake/renamed/nonofficial Google Trends CSV with checksum only never grants authenticated origin",
+      "category": "CSV_PROVENANCE_AUTHORITY",
+      "assertion": "Checksum integrity alone without verified external Google issuance demotes observation to CACHED_UNVERIFIED",
+      "verdict": "PASS"
+    }
+  ]
+}

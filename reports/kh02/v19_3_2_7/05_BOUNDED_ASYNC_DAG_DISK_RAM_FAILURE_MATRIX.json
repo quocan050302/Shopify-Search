@@ -1,0 +1,86 @@
+{
+  "version": "12.4.3.7.19.3.2.7",
+  "runnerScript": "scripts/kh02/runV19_3_2_7Gates.ts",
+  "evaluatedCodeSha": "63555f847761dc96fa39042706007022fae56e00",
+  "testedTreeSha": "3c5b78cb645ae75e0f639247418d8e319f77d627",
+  "environment": {
+    "platform": "darwin",
+    "arch": "arm64",
+    "memoryDetectionMechanism": "vm_stat_page_math",
+    "diskDetectionMechanism": "fs.statfs"
+  },
+  "safeguards": [
+    {
+      "guardId": "SG01_DISK_MINIMUM",
+      "name": "Minimum Available Disk Space (1 GiB)",
+      "thresholdBytes": 1073741824,
+      "failureAction": "FAIL_CLOSED_IMMEDIATE",
+      "testedInA11": true,
+      "simulatedScenario": "Simulated disk space < 1 GiB throws SAFE_CHECK_FAILED",
+      "verdict": "VERIFIED_FAIL_CLOSED"
+    },
+    {
+      "guardId": "SG02_RAM_MINIMUM",
+      "name": "Minimum Available RAM (150 MB)",
+      "thresholdBytes": 157286400,
+      "failureAction": "FAIL_CLOSED_IMMEDIATE",
+      "testedInA11": true,
+      "simulatedScenario": "Simulated available RAM < 150 MB throws SAFE_CHECK_FAILED",
+      "verdict": "VERIFIED_FAIL_CLOSED"
+    },
+    {
+      "guardId": "SG03_STATFS_ERROR",
+      "name": "Disk / RAM Query Exception Handling",
+      "thresholdBytes": null,
+      "failureAction": "FAIL_CLOSED_ON_ERROR",
+      "testedInA11": true,
+      "simulatedScenario": "statfs returning ENOENT or permission denied throws SAFE_CHECK_FAILED (no optimistic pass)",
+      "verdict": "VERIFIED_FAIL_CLOSED"
+    },
+    {
+      "guardId": "SG04_LOG_SIZE_CAP",
+      "name": "Per-Gate Log Buffer Cap (50 MB)",
+      "thresholdBytes": 52428800,
+      "failureAction": "TERMINATE_CHILD_AND_FLAG_TRUNCATED_FAIL",
+      "testedInA12": true,
+      "simulatedScenario": "Stream exceeding 50 MB triggers child termination and gate fail",
+      "verdict": "VERIFIED_FAIL_CLOSED"
+    },
+    {
+      "guardId": "SG05_WORKTREE_MUTATION",
+      "name": "Worktree Immutability Check (Pre and Post Execution)",
+      "thresholdBytes": null,
+      "failureAction": "ENGINEERING_FAIL_ON_DRIFT",
+      "testedInA13": true,
+      "simulatedScenario": "HEAD or tree change during execution is caught immediately by verifyWorktreeIntegrity",
+      "verdict": "VERIFIED_FAIL_CLOSED"
+    },
+    {
+      "guardId": "SG06_PROCESS_GROUP_SIGNALS",
+      "name": "Process Group Signal Termination",
+      "thresholdBytes": null,
+      "failureAction": "KILL_PROCESS_GROUP",
+      "testedInA14": true,
+      "simulatedScenario": "Child processes spawned with detached:true are terminated using negative PID group kill (-pid)",
+      "verdict": "VERIFIED_FAIL_CLOSED"
+    },
+    {
+      "guardId": "SG07_SERIALIZED_DB_PIPELINE",
+      "name": "Serialized SQLite Access Pipeline (E5 -> E8 -> E9)",
+      "thresholdBytes": null,
+      "failureAction": "PREVENT_CONCURRENT_LOCK",
+      "testedInA14": true,
+      "simulatedScenario": "Integration tests, backtest replay, and candidate DB readback are sequenced strictly to eliminate SQLite locking errors",
+      "verdict": "VERIFIED_FAIL_CLOSED"
+    },
+    {
+      "guardId": "SG08_TYPED_OUTPUT_VALIDATION",
+      "name": "Typed Gate Output Validators (Vitest, Backtest, DB Readback, CI Diagnostic)",
+      "thresholdBytes": null,
+      "failureAction": "FLAG_ENGINEERING_FAIL",
+      "testedInA07_A10": true,
+      "simulatedScenario": "Non-zero test failures, count arithmetic mismatch, malformed JSON, or false provider assertions rejected fail-closed",
+      "verdict": "VERIFIED_FAIL_CLOSED"
+    }
+  ]
+}

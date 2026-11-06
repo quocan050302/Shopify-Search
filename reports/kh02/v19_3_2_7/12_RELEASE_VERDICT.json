@@ -1,0 +1,34 @@
+{
+  "version": "12.4.3.7.19.3.2.7",
+  "evaluatedAt": "2026-11-06T16:25:00.000Z",
+  "repository": "quocan050302/Shopify-Search",
+  "branch": "feature/kh02-walmart-us-jina-reader-v12.4.3.5.1",
+  "testedCodeSha": "63555f847761dc96fa39042706007022fae56e00",
+  "testedTreeSha": "3c5b78cb645ae75e0f639247418d8e319f77d627",
+  "baselineCommitSha": "1152810c5b0632ff0f73c55b4327cf216bc69312",
+  "baselineTreeSha": "c0184fddfd59a4580fdd119900706e91418b4052",
+  "engineeringStatus": "ENGINEERING_PASS",
+  "stagingStatus": "STAGING_SHADOW_CONTRACT_READY",
+  "businessStatus": "INSUFFICIENT_EVIDENCE",
+  "ciStatus": "CI_NOT_CONFIGURED",
+  "overallReleaseAllowed": false,
+  "verdictSummary": "RELEASE_NO_GO",
+  "reasons": [
+    "Engineering gates E1 through E10 all passed synchronously/bounded-async against exact code SHA 63555f847761dc96fa39042706007022fae56e00.",
+    "Mutable CI registry reference vulnerability closed: deepCloneAndFreeze applied to registry inputs and outputs, returning immutable snapshots with opaque proof handles.",
+    "Token signer encapsulation completed: _privateMintCiAttestationToken made private/unexported, testKey parameter removed from mintCiAttestationToken, and testMintCiAttestationToken isolated exclusively in test environment.",
+    "Exact workflow allowlisting enforced across verifyAuthenticCiProof and evaluateReleaseEvidence using strict equality (===) with CANONICAL_RELEASE_WORKFLOWS.",
+    "Typed gate output validators operational: arithmetic consistency verified across 2,872 tests (0 failures, 0 skips), Gate E8 backtest JSON validated, Gate E9 DB readback verified, and Gate E10 remote CI diagnostic fail-closed.",
+    "Full unit test suite (E4) passed with 2,400/2,400 tests across 102 files.",
+    "Full integration test suite (E5) passed with 77/77 tests across 16 files.",
+    "Targeted three-source free MCP smoke completed at $0.00 spend: Google Ads Transparency FastMCP operational via stdio JSON-RPC handshake discovering search_advertiser and get_advertiser_ads; unconfigured external sources truthfully marked NOT_RUN; TikTok Ads US DEFERRED.",
+    "Candidate database readback diagnostic (E9) confirms 6 raw rows exist but 0 are official verified Google Trends Explore CSV records; G15 and G16 remain INSUFFICIENT_EVIDENCE.",
+    "Remote CI proof diagnostic (E10) truthfully reports CI_NOT_CONFIGURED due to absence of configured remote workflow runId."
+  ],
+  "blockerList": [
+    "G15_INSUFFICIENT_DEMAND_EVIDENCE",
+    "G16_TOP3_UNVERIFIED",
+    "CI_NOT_RUN"
+  ],
+  "evaluatorVersion": "SWAI_RELEASE_EVALUATOR_V19_3_2_7"
+}

@@ -1,0 +1,116 @@
+{
+  "version": "12.4.3.7.19.3.2.7",
+  "executedAt": "2026-11-06T16:21:34.537Z",
+  "commitSha": "63555f847761dc96fa39042706007022fae56e00",
+  "totalCostUsd": 0,
+  "sources": {
+    "S1": {
+      "sourceId": "S1",
+      "name": "Meta Ads (Ad Library / Collector)",
+      "status": "NOT_RUN_EXTERNAL_DEPENDENCY",
+      "costUsd": 0,
+      "transport": "HTTP_REST_OR_MCP",
+      "sourceIdentity": "META_ADS_API",
+      "providerVerified": false,
+      "details": {
+        "hasAccessToken": false,
+        "tokenMasked": null,
+        "collectorEnabled": false,
+        "providerContentObserved": false
+      },
+      "reason": "META_AD_LIBRARY_ACCESS_TOKEN is not configured. Zero spend incurred; truthfully marked NOT_RUN_EXTERNAL_DEPENDENCY."
+    },
+    "S2": {
+      "sourceId": "S2",
+      "name": "Google Ads Transparency (Free FastMCP stdio)",
+      "status": "PROTOCOL_HANDSHAKE_VERIFIED",
+      "costUsd": 0,
+      "transport": "STDIO_FASTMCP",
+      "sourceIdentity": "GOOGLE_ADS_TRANSPARENCY_MCP",
+      "providerVerified": false,
+      "details": {
+        "commandConfigured": true,
+        "commandPath": "services/google-transparency/.venv/bin/python",
+        "args": [
+          "scripts/googleTransparencyServer.py"
+        ],
+        "pythonExists": true,
+        "serverScriptExists": true,
+        "moduleImported": true,
+        "processStarted": true,
+        "handshakeOk": true,
+        "toolsListed": true,
+        "toolsFound": [
+          "search_advertiser",
+          "get_advertiser_ads"
+        ],
+        "toolCallAttempted": false,
+        "providerContentObserved": false,
+        "providerVerified": false,
+        "importCheck": "MCP_IMPORT_OK"
+      },
+      "reason": "Local stdio FastMCP handshake succeeded and declared tools discovered; upstream live provider query not performed to adhere to zero-spend/read-only test bounds (providerContentObserved=false, providerVerified=false)."
+    },
+    "S3": {
+      "sourceId": "S3",
+      "name": "TikTok Organic Video Intelligence",
+      "status": "NOT_RUN_EXTERNAL_DEPENDENCY",
+      "costUsd": 0,
+      "transport": "HTTP_REST_HASDATA",
+      "sourceIdentity": "HASDATA_TIKTOK_ORGANIC",
+      "providerVerified": false,
+      "details": {
+        "hasApiKey": false,
+        "keyMasked": null,
+        "providerContentObserved": false
+      },
+      "reason": "HASDATA_API_KEY is not configured in environment. Truthfully marked NOT_RUN_EXTERNAL_DEPENDENCY."
+    },
+    "S4": {
+      "sourceId": "S4",
+      "name": "TikTok Commercial Ads US",
+      "status": "DEFERRED_DO_NOT_TEST",
+      "costUsd": 0,
+      "transport": "NONE",
+      "sourceIdentity": "TIKTOK_ADS_US",
+      "providerVerified": false,
+      "details": {
+        "policyDirective": "KH-02 mandate explicitly defers TikTok Ads US to eliminate unauthorized spend.",
+        "providerContentObserved": false
+      },
+      "reason": "TikTok Ads US is explicitly DEFERRED by engineering directive. Zero calls made."
+    },
+    "S5": {
+      "sourceId": "S5",
+      "name": "Google Cloud BigQuery",
+      "status": "NOT_CONFIGURED_NO_BILLING",
+      "costUsd": 0,
+      "transport": "GRPC_GCP",
+      "sourceIdentity": "BIGQUERY_DEMAND_WAREHOUSE",
+      "providerVerified": false,
+      "details": {
+        "configured": false,
+        "billingEnabled": false,
+        "providerContentObserved": false
+      },
+      "reason": "BigQuery is not configured for production demand warehouse; billing disabled. Zero cost."
+    },
+    "S6": {
+      "sourceId": "S6",
+      "name": "Google Trends Explore Official Export Ingestion",
+      "status": "NOT_AVAILABLE_NO_OFFICIAL_EXPORT",
+      "costUsd": 0,
+      "transport": "LOCAL_FS_OFFICIAL_EXPORT",
+      "sourceIdentity": "GOOGLE_TRENDS_EXPLORE_CSV",
+      "providerVerified": false,
+      "details": {
+        "importsDirExists": true,
+        "rawFilesFound": 17,
+        "officialLongitudinalExportsFound": 0,
+        "providerContentObserved": false
+      },
+      "reason": "No official Google-issued >=60-day longitudinal CSV export found in ingestion store. Scraping is prohibited."
+    }
+  },
+  "summaryVerdict": "All 6 source checks evaluated strictly within zero-cost bounds. S2 FastMCP protocol handshake and tool discovery verified operational ($0.00); unconfigured external sources truthfully marked NOT_RUN; TikTok Ads US DEFERRED."
+}

@@ -1,0 +1,98 @@
+{
+  "version": "12.4.3.7.19.3.2.7",
+  "evaluatedCodeSha": "63555f847761dc96fa39042706007022fae56e00",
+  "evaluatedTreeSha": "3c5b78cb645ae75e0f639247418d8e319f77d627",
+  "manifestGeneratedAt": "2026-11-06T16:27:04.154Z",
+  "deliverables": {
+    "01_BASELINE_C0_BRANCH_SHA_CALLGRAPH.md": {
+      "sha256": "8da32af8ce2091deb9d13cc1f97859fb91c1f47ea2d9d4d20516a8196053a7cf",
+      "sizeBytes": 4947
+    },
+    "02_RED_GREEN_MUTABLE_REGISTRY_FORGERY_PROOF.md": {
+      "sha256": "3a120988630ab76e6529756422a97f10124cc4063ce835513b6883ccc4d661e8",
+      "sizeBytes": 4935
+    },
+    "03_FUNCTION_BY_FUNCTION_FIX_AUDIT.md": {
+      "sha256": "b7897571445fb8f40f7bb5063646bca39fb2d372b9baf5fd5a63760fccf8d828",
+      "sizeBytes": 4225
+    },
+    "04_ADVERSARIAL_SECURITY_MATRIX.json": {
+      "sha256": "e310b5790f76274cc3283f3ede5c3b208e2826687d766f3f1bd3ccd7dca9bf86",
+      "sizeBytes": 6204
+    },
+    "05_BOUNDED_ASYNC_DAG_DISK_RAM_FAILURE_MATRIX.json": {
+      "sha256": "29464f99ec13b89fe88a960f05e3bed73a12bd1c2f355a2fcd0da7b19bc652c5",
+      "sizeBytes": 3460
+    },
+    "06_REGRESSION_RAW_COUNTS_COMMANDS_SHA.json": {
+      "sha256": "5ca57799e5ccc6a44422d928c0be8f07a4a6b2510e613232c40c6c353a7cbe3d",
+      "sizeBytes": 6584
+    },
+    "07_BACKTEST_DEV_HOLDOUT_G15_G16_TRUTH.json": {
+      "sha256": "34aa3bbebfac699c220d8b3ba60bdd5cb522118afaa5a672b686fc5ced6d2f99",
+      "sizeBytes": 2287
+    },
+    "08_E9_REAL_DB_CANDIDATE_READBACK.json": {
+      "sha256": "d87f5ecfc7fadf054454b572e6044916574717d1c700dbf8c1fb9b5e2cd287e5",
+      "sizeBytes": 1160
+    },
+    "09_E10_REMOTE_GITHUB_CI_TRUTH.json": {
+      "sha256": "6511bf0682d6a74cd1e011fc97aee045ccbd865589a6b78f359236ce5adc95e3",
+      "sizeBytes": 874
+    },
+    "10_THREE_SOURCE_MCP_PROTOCOL_AND_PROVIDER_SMOKE.json": {
+      "sha256": "10db5b2a214b784a53fb67e7db10c358555a7f329f0ac4815947765394460639",
+      "sizeBytes": 4346
+    },
+    "12_RELEASE_VERDICT.json": {
+      "sha256": "d1f4503e3e2e0570c0ba5d57b6b394f87a6c28ca59d2192f229696fc40c5fed5",
+      "sizeBytes": 2577
+    }
+  },
+  "logs": {
+    "e10_remote_ci.log": {
+      "sha256": "3e48acad529614f32083bbe476ecf2ae177e1071a5ec576a4c434dedcda4874e",
+      "sizeBytes": 899
+    },
+    "e1_typecheck.log": {
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "sizeBytes": 0
+    },
+    "e2_diff_check.log": {
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "sizeBytes": 0
+    },
+    "e3_targeted_suites.log": {
+      "sha256": "bd19b545c653db0fe438e15937d4a6ec6a1297fe39594b8967f2eb9f9327c967",
+      "sizeBytes": 3649
+    },
+    "e4_unit_tests.log": {
+      "sha256": "2ccb40c6a4fb1b15897c96a9214568455bd672fc51e9991f890af7766652802b",
+      "sizeBytes": 30994
+    },
+    "e5_integration_tests.log": {
+      "sha256": "3644eecec9b1ca8f219a7db7af634a923354eabf411b933d969daa94b1e2a4b7",
+      "sizeBytes": 6179
+    },
+    "e6_kh01_verify.log": {
+      "sha256": "dce268c0b5753e78ad98a6f04517c680f601705235187b4bc25e999554a6ba10",
+      "sizeBytes": 3981
+    },
+    "e7_security_negative.log": {
+      "sha256": "b27703182100c646786b2d110d6c46e256f03d403a7a89d7c0eeb700a6fc6459",
+      "sizeBytes": 918
+    },
+    "e8_backtest.log": {
+      "sha256": "13cbcb4b210acfc20de05ebd358e661394d4e775fe83f48dc3302c7428aae898",
+      "sizeBytes": 192
+    },
+    "e9_db_readback.log": {
+      "sha256": "4f4267efe86e007e4284d41bd4607df86cd01f9ef6a19a55d87d0121cc76bcee",
+      "sizeBytes": 1172
+    },
+    "gates_summary.json": {
+      "sha256": "e9cc59514a05405f0f6bd9ea7e9eb06efb770a951f399949e041ef7cfb362801",
+      "sizeBytes": 7080
+    }
+  }
+}
