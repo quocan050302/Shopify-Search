@@ -1,0 +1,93 @@
+{
+  "version": "12.4.3.7.19.3.2.5",
+  "testedCodeSha": "8db28deb38fc06fa4d50881d1436596fd8b223eb",
+  "testedTreeSha": "da79e95864faab01f44d5d629059136e178ba5a5",
+  "testSuite": "tests/unit/kh02/v12_4_3_7_19_3_2_5_CiTrustBoundaryClosure.test.ts",
+  "totalTests": 10,
+  "passed": 10,
+  "failed": 0,
+  "skipped": 0,
+  "allPassed": true,
+  "tests": [
+    {
+      "testId": "T01",
+      "name": "Exploit Reproducer — Well-formed payload without server capability",
+      "attackVector": "Caller crafts syntactically valid GitHubWorkflowRunEvidence with valid 64-hex responseDigest and calls mintCiAttestationToken without internal capability.",
+      "mitigationMechanism": "mintCiAttestationToken checks for TRUSTED_ORCHESTRATOR_CAPABILITY; returns swai_ci_untrusted_* prefix. verifyAuthenticCiProof fails closed with CI_CLAIM_UNVERIFIED.",
+      "durationMs": 2,
+      "pass": true
+    },
+    {
+      "testId": "T02",
+      "name": "Direct HMAC Stolen Key Attack — Valid HMAC signature on unauthenticated run",
+      "attackVector": "Attacker steals or knows KH02_CI_VERIFIER_SECRET and computes valid HMAC signature directly on fabricated run payload.",
+      "mitigationMechanism": "verifyAuthenticCiProof enforces lookupVerifiedRemoteCiRun. Without authentic registration in VERIFIED_PROVIDER_RUNS via verifyRemoteGitHubActionsRun, run is rejected.",
+      "durationMs": 1,
+      "pass": true
+    },
+    {
+      "testId": "T03",
+      "name": "Bypass Removal — verifyGitHubActionsRunProof with requireTrustedVerifier=false",
+      "attackVector": "Caller sets requireTrustedVerifier: false in options to bypass provider verification.",
+      "mitigationMechanism": "Removed requireTrustedVerifier bypass flag from validator logic; providerVerified strictly requires lookupVerifiedRemoteCiRun.",
+      "durationMs": 0,
+      "pass": true
+    },
+    {
+      "testId": "T04",
+      "name": "Exact Numeric RunId Binding — runId mismatch in GitHub API response",
+      "attackVector": "Attacker injects or proxies API response where requested runId differs from data.id.",
+      "mitigationMechanism": "verifyRemoteGitHubActionsRun asserts String(data.id) === runIdStr before registering.",
+      "durationMs": 0,
+      "pass": true
+    },
+    {
+      "testId": "T05",
+      "name": "Exact Workflow Matching — Substring workflow name matching eliminated",
+      "attackVector": "Attacker runs malicious workflow named 'Evil KH-02 Continuous Integration Trigger' relying on substring containment.",
+      "mitigationMechanism": "assertAllowedWorkflow enforces exact match against CANONICAL_RELEASE_WORKFLOWS list.",
+      "durationMs": 0,
+      "pass": true
+    },
+    {
+      "testId": "T06",
+      "name": "Authentic Provider Run Lifecycle — Genuine run registration and lookup",
+      "attackVector": "Verifies that legitimate GitHub API verification lifecycle properly registers run record and allows valid attestation lookup.",
+      "mitigationMechanism": "verifyRemoteGitHubActionsRun registers record in VERIFIED_PROVIDER_RUNS and mints token with TRUSTED_ORCHESTRATOR_CAPABILITY.",
+      "durationMs": 0,
+      "pass": true
+    },
+    {
+      "testId": "T07",
+      "name": "Mock Quarantine — UNIT_TEST_MOCK quarantined from commercial CI_PASS",
+      "attackVector": "Test runner attempts to promote mock test run to commercial CI_PASS.",
+      "mitigationMechanism": "verifyRemoteGitHubActionsRun stamps status: 'CI_NOT_RUN' and level: 'PARSED_CLAIM' for mock runs.",
+      "durationMs": 0,
+      "pass": true
+    },
+    {
+      "testId": "T08",
+      "name": "Field Tampering Detection — Altered headSha or responseDigest",
+      "attackVector": "Attacker registers valid run then tampers with headSha or responseDigest in downstream evidence object.",
+      "mitigationMechanism": "lookupVerifiedRemoteCiRun verifies expectedSha matches registered record; HMAC token verification fails if responseDigest is modified.",
+      "durationMs": 0,
+      "pass": true
+    },
+    {
+      "testId": "T09",
+      "name": "Server Registry Isolation — Cross-test state leakage prevention",
+      "attackVector": "Test run records bleeding across vitest worker executions or test boundaries.",
+      "mitigationMechanism": "clearVerifiedRemoteCiRunsForTesting empties registry between test runs and setup/teardown hooks.",
+      "durationMs": 0,
+      "pass": true
+    },
+    {
+      "testId": "T10",
+      "name": "Full Gate Safety — Unverified CI strictly prevents overallReleaseAllowed",
+      "attackVector": "Caller presents ReleaseEvidenceInput with passing unit, integration, and backtest evidence, attempting release with unverified CI claim.",
+      "mitigationMechanism": "evaluateReleaseEvidence queries lookupVerifiedRemoteCiRun; demotes ciStatus to CI_NOT_RUN, adds CI_CLAIM_UNVERIFIED to blockerList, and enforces overallReleaseAllowed = false.",
+      "durationMs": 0,
+      "pass": true
+    }
+  ]
+}

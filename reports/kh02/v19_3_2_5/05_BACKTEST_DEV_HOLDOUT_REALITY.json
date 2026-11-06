@@ -1,0 +1,59 @@
+{
+  "version": "12.4.3.7.19.3.2.5",
+  "evaluatedAt": "2026-11-06T13:40:05.375Z",
+  "evaluatedCodeSha": "8db28deb38fc06fa4d50881d1436596fd8b223eb",
+  "evaluatedTreeSha": "da79e95864faab01f44d5d629059136e178ba5a5",
+  "niche": "Pet Gadgets",
+  "pointInTimeCutoff": "2026-10-30T12:00:00.000Z",
+  "policyScenarioReplay": {
+    "totalScenarios": 21,
+    "passedScenarios": 21,
+    "failedScenarios": 0,
+    "verdict": "PASS"
+  },
+  "devSplit": {
+    "recordsEvaluated": 60,
+    "shortlistCount": 0,
+    "nicheMatchedCount": 0,
+    "nicheCoverageStatus": "INSUFFICIENT_NICHE_COVERAGE",
+    "demandCoverageStatus": "INSUFFICIENT_HISTORICAL_EVIDENCE",
+    "verdict": "INSUFFICIENT_HISTORICAL_EVIDENCE"
+  },
+  "holdoutSplit": {
+    "recordsEvaluated": 377,
+    "nonSyntheticRecords": 376,
+    "shortlistCount": 3,
+    "shortlistItems": [
+      {
+        "title": "Automatic Dog Feeder for Easy Daily Meals",
+        "observationCount": 0,
+        "coveredDays": 0,
+        "status": "INSUFFICIENT_HISTORY",
+        "eligibleForEvergreen": false
+      },
+      {
+        "title": "The #1 Vet-Recommended Cat Fountain",
+        "observationCount": 0,
+        "coveredDays": 0,
+        "status": "INSUFFICIENT_HISTORY",
+        "eligibleForEvergreen": false
+      },
+      {
+        "title": "The #1 Pet Hair/Lint/Dust Cleaner",
+        "observationCount": 0,
+        "coveredDays": 0,
+        "status": "INSUFFICIENT_HISTORY",
+        "eligibleForEvergreen": false
+      }
+    ],
+    "demandCoverageStatus": "INSUFFICIENT_HISTORICAL_EVIDENCE",
+    "verdict": "INSUFFICIENT_HISTORICAL_EVIDENCE"
+  },
+  "overallVerdict": "INSUFFICIENT_HISTORICAL_EVIDENCE",
+  "businessGroundTruth": {
+    "g15DemandPassed": false,
+    "g15Reason": "Historical records in dev.db have unverified pseudo-references ('verified-merchant-demand'); zero official Google Trends Explore CSV records with verified SHA-256 integrity exist covering >=60 calendar days.",
+    "g16Top3CandidatesPassed": false,
+    "g16Reason": "Top 3 candidates lack authenticated external provider demand evidence covering the required window."
+  }
+}

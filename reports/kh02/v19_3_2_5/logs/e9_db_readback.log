@@ -1,0 +1,29 @@
+=== CANDIDATE DATABASE READBACK DIAGNOSTIC (GATE E9) ===
+{
+  "dbConnected": true,
+  "dbReadbackExecuted": true,
+  "dbPathOrMaskedDsn": "file:/Users/macbook/Documents/Project_Github/Meta-Ads/Shopify-Search/dev.db",
+  "candidateId": "cand_uahpet_feeder",
+  "canonicalProductId": "cmvsy7zqh000jp0orhypwohho",
+  "canonicalTitleFromDB": "Automatic Wet Food Cat Feeder with Cooling & Warming",
+  "rawRecordCount": 6,
+  "distinctKeywords": [
+    "Automatic Wet Food Cat Feeder with Cooling & Warming"
+  ],
+  "sourceClassifications": [
+    "GOOGLE_TRENDS_CSV"
+  ],
+  "distinctEvidenceRefs": [
+    "verified-merchant-demand"
+  ],
+  "candidateAttributableCount": 0,
+  "businessAttributableCount": 0,
+  "verifiedOfficialCsvRows": 0,
+  "coveredCalendarDays": 0,
+  "g15Verdict": "INSUFFICIENT_EVIDENCE",
+  "g16Verdict": "INSUFFICIENT_EVIDENCE",
+  "identityAmbiguity": null,
+  "discrepancyNote": "Database contains 6 raw observation rows with 'verified-merchant-demand' pseudo-reference, but 0 are official verified Google Trends Explore CSV records with valid SHA-256 integrity checksums.",
+  "executedAt": "2026-11-06T13:38:51.291Z"
+}
+STATUS: SUCCESS (dbConnected=true, rawRecords=6)

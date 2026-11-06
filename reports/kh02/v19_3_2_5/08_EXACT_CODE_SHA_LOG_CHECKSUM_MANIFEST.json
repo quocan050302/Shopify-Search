@@ -1,0 +1,112 @@
+{
+  "version": "12.4.3.7.19.3.2.5",
+  "generatedAt": "2026-11-06T13:43:00.000Z",
+  "provenance": {
+    "repository": "quocan050302/Shopify-Search",
+    "lockedBranch": "feature/kh02-walmart-us-jina-reader-v12.4.3.5.1",
+    "baselineCommitSha": "4a1d54a4af34c5814c62c5f488e25fb97b28ffa5",
+    "testedCodeCommitSha": "8db28deb38fc06fa4d50881d1436596fd8b223eb",
+    "testedCodeTreeSha": "da79e95864faab01f44d5d629059136e178ba5a5"
+  },
+  "logManifest": [
+    {
+      "gateId": "E1",
+      "name": "TypeScript Compilation & Typecheck",
+      "logFile": "reports/kh02/v19_3_2_5/logs/e1_typecheck.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "sizeBytes": 0,
+      "exitCode": 0,
+      "verdict": "PASS"
+    },
+    {
+      "gateId": "E2",
+      "name": "Git Diff Whitespace & Conflict Check",
+      "logFile": "reports/kh02/v19_3_2_5/logs/e2_diff_check.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "sizeBytes": 0,
+      "exitCode": 0,
+      "verdict": "PASS"
+    },
+    {
+      "gateId": "E3",
+      "name": "Targeted V19.3.2.x CI Proof & Attestation Suites (T01-T10 + R01-R15 + Regressions)",
+      "logFile": "reports/kh02/v19_3_2_5/logs/e3_targeted_suites.log",
+      "sha256": "581d2c0789fbe5fd8f1249f8a494a8d98ec71c5487a1955484dde9f796955184",
+      "sizeBytes": 2469,
+      "exitCode": 0,
+      "verdict": "PASS"
+    },
+    {
+      "gateId": "E4",
+      "name": "KH-02 Full Unit Test Suite",
+      "logFile": "reports/kh02/v19_3_2_5/logs/e4_unit_tests.log",
+      "sha256": "63ed62c66cb55365538e6ea96f41eeaab50dd5b3a8f81a31c0a73e8fcf245d6f",
+      "sizeBytes": 29640,
+      "exitCode": 0,
+      "verdict": "PASS"
+    },
+    {
+      "gateId": "E5",
+      "name": "KH-02 Full Integration Test Suite",
+      "logFile": "reports/kh02/v19_3_2_5/logs/e5_integration_tests.log",
+      "sha256": "c59d149358f9c129004cbc5e71c709c618c49962d8a4f56b57860cef2dd7270d",
+      "sizeBytes": 6413,
+      "exitCode": 0,
+      "verdict": "PASS"
+    },
+    {
+      "gateId": "E6",
+      "name": "KH-01 Baseline Verification Suite",
+      "logFile": "reports/kh02/v19_3_2_5/logs/e6_kh01_verify.log",
+      "sha256": "79cbc5c1da3979308f5f6a52bbb57082bb50f63e6d0bf4c5bb9727bd59b593f1",
+      "sizeBytes": 4253,
+      "exitCode": 0,
+      "verdict": "PASS"
+    },
+    {
+      "gateId": "E7",
+      "name": "Security Negative Suites",
+      "logFile": "reports/kh02/v19_3_2_5/logs/e7_security_negative.log",
+      "sha256": "f736948c3d4bd43f893f3d6cc549ef75bf779cbe4d92a818e31209c5cc84acc8",
+      "sizeBytes": 918,
+      "exitCode": 0,
+      "verdict": "PASS"
+    },
+    {
+      "gateId": "E8",
+      "name": "Historical Demand Backtest (Dev & Holdout)",
+      "logFile": "reports/kh02/v19_3_2_5/logs/e8_backtest.log",
+      "sha256": "13cbcb4b210acfc20de05ebd358e661394d4e775fe83f48dc3302c7428aae898",
+      "sizeBytes": 192,
+      "exitCode": 0,
+      "verdict": "PASS"
+    },
+    {
+      "gateId": "E9",
+      "name": "Candidate Database Readback (Gate E9)",
+      "logFile": "reports/kh02/v19_3_2_5/logs/e9_db_readback.log",
+      "sha256": "3edce88f576a09c3881e98ff1df03a9a71f6fd29756e61f9f4cf0dd20f47deb1",
+      "sizeBytes": 1172,
+      "exitCode": 0,
+      "verdict": "PASS"
+    },
+    {
+      "gateId": "E10",
+      "name": "Remote CI Proof Diagnostic (Gate E10)",
+      "logFile": "reports/kh02/v19_3_2_5/logs/e10_remote_ci.log",
+      "sha256": "4d56ced4758c88559250e9091afd45d1ffc9dc7d5b3c7fa0ec6ef8d751c45d37",
+      "sizeBytes": 899,
+      "exitCode": 0,
+      "verdict": "PASS"
+    },
+    {
+      "gateId": "SUMMARY",
+      "name": "Atomic Gates Summary Record",
+      "logFile": "reports/kh02/v19_3_2_5/logs/gates_summary.json",
+      "sha256": "16531641b6c2a131cb04489bbec41aabd2b701cc535fef46ab1707453b615abc",
+      "sizeBytes": 5845,
+      "exitCode": 0,
+      "verdict": "ALL_GATES_PASSED"
+    }
+  ]
+}

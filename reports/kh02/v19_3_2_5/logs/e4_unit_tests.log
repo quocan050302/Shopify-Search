@@ -1,0 +1,226 @@
+
+> shopify-winning-ads-intelligence@0.1.0 kh02:test:unit
+> vitest run tests/unit/kh02 --maxWorkers=4
+
+
+[1m[30m[46m RUN [49m[39m[22m [36mv5.0.5 [39m[90m/Users/macbook/Documents/Project_Github/Meta-Ads/Shopify-Search[39m
+
+ [32m✓[39m tests/unit/kh02/v12_4_3_7_13_UnforgeableCollectorUnifiedEligibility.test.ts [2m([22m[2m56 tests[22m[2m)[22m[33m 36558[2mms[22m[39m
+   [32m✓[39m KH-02 V12.4.3.7.13 — Unforgeable Collector Provenance & Unified Eligibility Verification [2m(56)[22m
+     [32m✓[39m Part 1: Adversarial Test Matrix (A01 - A48) [2m(48)[22m
+       [33m[2m✓[22m[39m A31: DB lock held by a second worker causes persistCollectorReceiptAtomically to return DB_LOCK_TIMEOUT and perform 0 Prisma writes[33m 10040[2mms[22m[39m
+       [33m[2m✓[22m[39m A32: DB lock timeout leaves ledger staged as LEDGER_PENDING_DB, eligible=false[33m 10051[2mms[22m[39m
+     [32m✓[39m Part 2: Real OS Multi-Process Concurrency Proof (C01 - C08) [2m(8)[22m
+       [33m[2m✓[22m[39m C01: 2 real OS child processes calling REAL persistCollectorReceiptAtomically on disjoint receipt IDs behind barrier complete with zero lost updates in ledger and SQLite DB[33m 908[2mms[22m[39m
+       [33m[2m✓[22m[39m C02: 4 real OS child processes concurrently calling REAL persistCollectorReceiptAtomically across 20 total iterations persist all 20 receipts with zero lost updates[33m 1259[2mms[22m[39m
+       [33m[2m✓[22m[39m C03: 2 real OS child processes calling REAL persistCollectorReceiptAtomically with the SAME receiptId and IDENTICAL payload succeed idempotently[33m 743[2mms[22m[39m
+       [33m[2m✓[22m[39m C04: 2 real OS child processes calling REAL persistCollectorReceiptAtomically with the SAME receiptId but DIFFERENT SHA result in 1 EVIDENCE_ELIGIBLE and 1 CONFLICT[33m 936[2mms[22m[39m
+       [33m[2m✓[22m[39m C05: Child process holding DB lock causes second child process to return DB_LOCK_TIMEOUT, eligible=false, dbCommitted=false[33m 10195[2mms[22m[39m
+       [33m[2m✓[22m[39m C07: Simulated mid-flight crash: Worker 1 writes LEDGER_PENDING_DB and exits; Reader sees verified=false; Worker 2 runs persistCollectorReceiptAtomically and Reader then sees verified=true[33m 381[2mms[22m[39m
+       [33m[2m✓[22m[39m C08: Concurrent reader + writer: while child writer commits receipts, concurrent reader calls never crash with JSON parse errors and never observe eligible=true before DB commit[33m 655[2mms[22m[39m
+ [32m✓[39m tests/unit/kh02/v12_4_3_7_16_MandatoryDurableAttestation.test.ts [2m([22m[2m26 tests[22m[2m)[22m[33m 17355[2mms[22m[39m
+   [32m✓[39m KH-02 V12.4.3.7.16 — Mandatory Durable Attestation (A01 - A24, D01 - D02) [2m(26)[22m
+     [33m[2m✓[22m[39m A02: Attestation lock timeout -> fail closed, 0 live DB classifications and cleanup[33m 8011[2mms[22m[39m
+     [33m[2m✓[22m[39m A18: Failed persistence consumes active proof; cannot retry by passing old proof alone[33m 8014[2mms[22m[39m
+     [33m[2m✓[22m[39m D01: Multi-process: Two real OS worker processes behind a barrier write disjoint attestation files with zero lost updates[33m 492[2mms[22m[39m
+ [32m✓[39m tests/unit/kh02/v12_4_3_7_19_3_2_1_FinalAliasTrustAndCiProof.test.ts [2m([22m[2m75 tests[22m[2m)[22m[33m 10088[2mms[22m[39m
+   [32m✓[39m KH-02 V12.4.3.7.19.3.2.1: Final Alias Trust & CI Proof Closure Matrix (75 Tests) [2m(75)[22m
+     [33m[2m✓[22m[39m B14: live lock owner on host is not reclaimed prematurely[33m 5012[2mms[22m[39m
+     [33m[2m✓[22m[39m B16: foreign-host lock is never reclaimed based on PID namespace alone[33m 5010[2mms[22m[39m
+ [32m✓[39m tests/unit/kh02/v12_4_3_7_18_1_RetryExhaustion.test.ts [2m([22m[2m8 tests[22m[2m)[22m[33m 8214[2mms[22m[39m
+   [32m✓[39m KH-02 V12.4.3.7.18.1: Workstream B — Retry Exhaustion & Durable Commit (B01 - B08) [2m(8)[22m
+     [33m[2m✓[22m[39m B01: force SQLITE_BUSY on every allowed attempt -> exact MAX_DB_ATTEMPTS attempts, 503, 0 fake success[33m 1661[2mms[22m[39m
+     [33m[2m✓[22m[39m B02: force P1008 on every allowed attempt -> exact MAX_DB_ATTEMPTS, 503[33m 1668[2mms[22m[39m
+     [33m[2m✓[22m[39m B03: final permitted retry succeeds -> correct once-only inserted/skipped counts[33m 1604[2mms[22m[39m
+     [33m[2m✓[22m[39m B07: API maps exhaustion to 503 JSON response, not success: true[33m 1595[2mms[22m[39m
+     [33m[2m✓[22m[39m B08: timeout and resource-bound retry completes within bounded time[33m 1573[2mms[22m[39m
+ [32m✓[39m tests/unit/kh02/v12_4_3_7_12_EvidenceEligibilityFencing.test.ts [2m([22m[2m40 tests[22m[2m)[22m[33m 6293[2mms[22m[39m
+   [32m✓[39m KH-02 V12.4.3.7.12 — Evidence Eligibility Fencing & Production Concurrency Proof [2m(40)[22m
+     [32m✓[39m Part 2: Multi-Process Production Concurrency Proof (C01 - C08) [2m(8)[22m
+       [33m[2m✓[22m[39m C01: 2 real OS child processes calling REAL persistCollectorReceiptAtomically on disjoint receipt IDs behind barrier complete with zero lost updates in ledger and SQLite DB[33m 864[2mms[22m[39m
+       [33m[2m✓[22m[39m C02: 4 real OS child processes concurrently calling REAL persistCollectorReceiptAtomically across 20 total iterations persist all 20 receipts with zero lost updates[33m 1637[2mms[22m[39m
+       [33m[2m✓[22m[39m C03: 2 real OS child processes calling REAL persistCollectorReceiptAtomically with the SAME receiptId and IDENTICAL payload succeed idempotently[33m 748[2mms[22m[39m
+       [33m[2m✓[22m[39m C04: 2 real OS child processes calling REAL persistCollectorReceiptAtomically with the SAME receiptId but DIFFERENT SHA result in 1 EVIDENCE_ELIGIBLE and 1 CONFLICT[33m 643[2mms[22m[39m
+       [33m[2m✓[22m[39m C05: Child process holding production lock while alive causes second child process to return LOCK_TIMEOUT, eligible=false, dbCommitted=false[33m 464[2mms[22m[39m
+       [33m[2m✓[22m[39m C07: Simulated mid-flight crash: Worker 1 writes LEDGER_PENDING_DB and exits; Reader sees verified=false; Worker 2 runs persistCollectorReceiptAtomically and Reader then sees verified=true[33m 339[2mms[22m[39m
+       [33m[2m✓[22m[39m C08: Concurrent reader + writer: while child writer commits receipts, concurrent reader calls never crash with JSON parse errors and never observe eligible=true before DB commit[33m 653[2mms[22m[39m
+ [32m✓[39m tests/unit/kh02/v12_4_3_7_14_TrustedProofIsolationDurableRecovery.test.ts [2m([22m[2m60 tests[22m[2m)[22m[33m 5089[2mms[22m[39m
+   [32m✓[39m KH-02 V12.4.3.7.14 — Trusted Proof Isolation & Durable Provenance Recovery [2m(60)[22m
+     [32m✓[39m Part 2: Durable Provenance Recovery & Restart Survival (R01 - R14) [2m(14)[22m
+       [33m[2m✓[22m[39m R06: Cold OS process spawn: child Node process successfully reads and verifies authentic attestation created by parent[33m 548[2mms[22m[39m
+       [33m[2m✓[22m[39m R07: Child process cannot escalate TEST_SIMULATION receipt to live origin even across process restart[33m 538[2mms[22m[39m
+     [32m✓[39m Part 4: Dynamic Discovery, Concurrency & Sentinel Hygiene (H01 - H10) [2m(10)[22m
+       [33m[2m✓[22m[39m H05: Two concurrent worker processes writing attestations under barrier complete without file corruption or race conditions[33m 690[2mms[22m[39m
+       [33m[2m✓[22m[39m H06: Two concurrent worker processes verifying attestations achieve identical cryptographic verification results[33m 581[2mms[22m[39m
+       [33m[2m✓[22m[39m H10: Memory footprint remains bounded under 100 sequential attestation signing and verification operations[33m 1112[2mms[22m[39m
+ [32m✓[39m tests/unit/kh02V12_2_2_TruthfulDiagnostics.test.ts [2m([22m[2m16 tests[22m[2m)[22m[33m 3782[2mms[22m[39m
+   [32m✓[39m SWAI KH-02 V12.2.2 — Truthful Diagnostics & Real Provider Acceptance [2m(16)[22m
+     [32m✓[39m 1. Missing Key vs Invalid Key (Section C.1, C.2, L) [2m(2)[22m
+       [33m[2m✓[22m[39m verifies HasData credit status fails gracefully with error message on dummy key[33m 2356[2mms[22m[39m
+     [32m✓[39m 7. Demand History Truthfulness (Section B.11, H, L) [2m(2)[22m
+       [33m[2m✓[22m[39m reports Google Free Demand pipeline in default mode and blocks fetchSeries in SERPAPI_LEGACY mode when upstream API keys are absent[33m 306[2mms[22m[39m
+     [32m✓[39m 9. Non-Interfering Provider Connection Testing (Section C.10, L) [2m(1)[22m
+       [33m[2m✓[22m[39m tests each connection independently with timeout without throwing if one fails[33m 795[2mms[22m[39m
+ [32m✓[39m tests/unit/kh02/v12_4_3_4_9_CliExitAndDiskAuditClosure.test.ts [2m([22m[2m14 tests[22m[2m)[22m[33m 4239[2mms[22m[39m
+   [32m✓[39m KH-02 V12.4.3.4.9 — No-False-Pass CLI, Truthful Disk Audit & 46 Negative Controls [2m(14)[22m
+     [32m✓[39m P0: computeKh02AcceptanceExitDecision & Real Child Subprocess Exit Proof [2m(7)[22m
+       [33m[2m✓[22m[39m spawns real child CLI subprocesses via executeCliSubprocessExitProofSuite and verifies exit code 0 for valid baseline and nonzero exit codes (2, 3, 4, 1) for forced failures[33m 3731[2mms[22m[39m
+     [32m✓[39m Validator CHK_17, CHK_18 & 46 Physical-File Negative Control Mutations (MUT_01..MUT_46) [2m(1)[22m
+       [33m[2m✓[22m[39m passes all 20 validator checks on canonical baseline and catches all 46 physical-file mutations (MUT_01..MUT_46)[33m 486[2mms[22m[39m
+ [32m✓[39m tests/unit/kh02/v12_4_3_7_11_AtomicReceiptCommitReadback.test.ts [2m([22m[2m36 tests[22m[2m)[22m[33m 3552[2mms[22m[39m
+   [32m✓[39m KH-02 V12.4.3.7.11 — Atomic Receipt Commit & Verified Demand Readback [2m(36)[22m
+     [32m✓[39m Group 8: Multi-Process OS Concurrency Proof [2m(3)[22m
+       [33m[2m✓[22m[39m A34: Two real child Node processes writing disjoint receipt IDs under barrier complete with zero lost updates[33m 695[2mms[22m[39m
+       [33m[2m✓[22m[39m A36: Child worker holding lock causes competing attempt to return LOCK_TIMEOUT cleanly[33m 2005[2mms[22m[39m
+ [32m✓[39m tests/unit/kh02/ai/geminiModelRouter.test.ts [2m([22m[2m14 tests[22m[2m)[22m[33m 3195[2mms[22m[39m
+   [32m✓[39m SWAI KH-02 V12.4 — Gemini Model Router & Error Classification [2m(14)[22m
+     [33m[2m✓[22m[39m retries up to 3 times on 503 before succeeding on same model[33m 632[2mms[22m[39m
+     [33m[2m✓[22m[39m exhausts 1 initial + 3 retries (4 total) on primary model, then downgrades to fallback model and succeeds[33m 409[2mms[22m[39m
+     [33m[2m✓[22m[39m opens shared circuit breaker for primary model after 4x 503 and skips it on subsequent candidate[33m 1235[2mms[22m[39m
+     [33m[2m✓[22m[39m enforces perAttemptTimeoutMs when provider call hangs and falls back cleanly[33m 381[2mms[22m[39m
+     [33m[2m✓[22m[39m enforces global call budget across candidates via GeminiRunBudgetTracker[33m 511[2mms[22m[39m
+ [32m✓[39m tests/unit/kh02/v12_4_3_7_19_3_2_3_TrustedCiProofAndObservableExecution.test.ts [2m([22m[2m28 tests[22m[2m)[22m[33m 1479[2mms[22m[39m
+   [32m✓[39m KH-02 V12.4.3.7.19.3.2.3: Trusted CI Proof Boundary & Observable Execution [2m(28)[22m
+     [32m✓[39m Group C: Gate E9 Candidate Database Readback Script [2m(4)[22m
+       [33m[2m✓[22m[39m C04: CLI runCandidateDbReadback process returns exitCode 0 and valid JSON with rawRecordCount=6[33m 1023[2mms[22m[39m
+     [32m✓[39m Group D: Gate E10 Remote CI Proof Diagnostic Script [2m(3)[22m
+       [33m[2m✓[22m[39m D03: CLI runRemoteCiProofDiagnostic process returns exitCode 0 and valid JSON with CI_NOT_CONFIGURED[33m 359[2mms[22m[39m
+ [32m✓[39m tests/unit/kh02/v12_4_3_5_1_OriginalAmazonWalmartPilotMatrix.test.ts [2m([22m[2m40 tests[22m[2m)[22m[33m 1337[2mms[22m[39m
+   [32m✓[39m KH-02 V12.4.3.5.1 — Original Amazon US (Playwright MCP) + Walmart US (Jina Reader REST) Matrix (A01..A22, W01..W22, S01..S20) [2m(40)[22m
+     [33m[2m✓[22m[39m A22: Real @playwright/mcp@0.0.83 stdio handshake spawns an owned child PID, lists browser_navigate/browser_snapshot/browser_close tools, and closes cleanly with 0 orphans[33m 1172[2mms[22m[39m
+ [32m✓[39m tests/unit/kh02/v12_4_3_7_15_HmacTrustPathHardening.test.ts [2m([22m[2m35 tests[22m[2m)[22m[33m 2096[2mms[22m[39m
+   [32m✓[39m ANTI KH-02 V12.4.3.7.15 — HMAC Trust Boundary & Attestation Path Hardening [2m(35)[22m
+     [32m✓[39m Part 1: Negative Security & Boundary Hardening (T01 - T30) [2m(30)[22m
+       [33m[2m✓[22m[39m T26: Live-owner lock cannot be stolen; expired crash lock is safely reclaimed[33m 326[2mms[22m[39m
+       [33m[2m✓[22m[39m T27: Two distinct OS processes call real production persistence on same receipt ID with identical payload succeed idempotently[33m 699[2mms[22m[39m
+     [32m✓[39m Part 2: Positive & Compatibility Verification (P01 - P05) [2m(5)[22m
+       [33m[2m✓[22m[39m P05: Real concurrent ledger and DB child processes complete without data loss or race conditions[33m 663[2mms[22m[39m
+ [32m✓[39m tests/unit/kh02/v12_4_3_7_16_RealPdpVerification.test.ts [2m([22m[2m27 tests[22m[2m)[22m[33m 772[2mms[22m[39m
+   [32m✓[39m KH-02 V12.4.3.7.16 — Real Merchant PDP Verification (C01 - C20, D04 - D10) [2m(27)[22m
+     [33m[2m✓[22m[39m C02: 404 HTTP status on final URL -> no exact match, isVerifiedPdp=false[33m 689[2mms[22m[39m
+ [32m✓[39m tests/unit/kh02V12_1_4_2_Reliability.test.ts [2m([22m[2m13 tests[22m[2m)[22m[33m 1530[2mms[22m[39m
+   [32m✓[39m SWAI KH-02 V12.1.4.2 — Research Reliability, Worker Health & Source Auto-Setup [2m(13)[22m
+     [33m[2m✓[22m[39m executes safe connection test for allowed sources without charging credits[33m 748[2mms[22m[39m
+ [32m✓[39m tests/unit/kh02/v12_4_3_7_19_3_2_2_MandatoryBusinessScopeAndCiProof.test.ts [2m([22m[2m52 tests[22m[2m)[22m[33m 888[2mms[22m[39m
+   [32m✓[39m KH-02 V12.4.3.7.19.3.2.2: Mandatory Business Scope & Authentic CI Proof Matrix (52 Tests) [2m(52)[22m
+     [33m[2m✓[22m[39m A04: real history resolver with cached test-alias row excludes observation before G15 assessment[33m 532[2mms[22m[39m
+ [32m✓[39m tests/unit/kh02/v12_4_3_4_6_StrictLineageParityAndAcceptanceTruth.test.ts [2m([22m[2m13 tests[22m[2m)[22m[33m 923[2mms[22m[39m
+   [32m✓[39m V12.4.3.4.6 — Strict Lineage, Real Parity & Acceptance Truth [2m(13)[22m
+     [32m✓[39m Phase 4 & 5: Point-in-Time Joined Metadata Leakage Guard & 26 Physical-File Mutations [2m(3)[22m
+       [33m[2m✓[22m[39m passes all policy & leakage scenario tests in runBacktestV12_4_3_4_2[33m 367[2mms[22m[39m
+       [33m[2m✓[22m[39m validates canonical 32-artifact fixture and catches all 26 physical-file mutations (MUT_01..MUT_26)[33m 535[2mms[22m[39m
+ [32m✓[39m tests/unit/kh02/v12_4_3_7_19_3_1_UnifiedCandidateAttribution.test.ts [2m([22m[2m30 tests[22m[2m)[22m[33m 924[2mms[22m[39m
+   [32m✓[39m KH-02 V12.4.3.7.19.3.1: Unified Candidate Attribution Across Cache & Fresh Provider (A01 - A30) [2m(30)[22m
+     [33m[2m✓[22m[39m A29: resolveProductDemandHistory returns complete candidate attribution diagnostics[33m 514[2mms[22m[39m
+     [33m[2m✓[22m[39m A30: Regression for real research run IDs using read-only snapshot: target G15/G16 remain INSUFFICIENT[33m 311[2mms[22m[39m
+ [32m✓[39m tests/unit/kh02/v12_4_3_5_3_Flow02CsvProvenanceAndGoogleExactPdp.test.ts [2m([22m[2m33 tests[22m[2m)[22m[33m 371[2mms[22m[39m
+Processing request of type ListToolsRequest
+Processing request of type ListToolsRequest
+ [32m✓[39m tests/unit/kh02TestConnectionsFlow.test.ts [2m([22m[2m8 tests[22m[2m)[22m[33m 724[2mms[22m[39m
+   [32m✓[39m SWAI KH-02 — Test Connections Flow & Truthful Diagnostics [2m(8)[22m
+     [32m✓[39m 4. Probe Results Caching & Timeout Handling [2m(3)[22m
+       [33m[2m✓[22m[39m live probes Google Ads via local python FastMCP server and connects successfully[33m 714[2mms[22m[39m
+ [32m✓[39m tests/unit/kh02/v12_4_3_5_2_UahpetDemandAndGoogleAdsPdpEvidence.test.ts [2m([22m[2m24 tests[22m[2m)[22m[33m 669[2mms[22m[39m
+   [32m✓[39m KH-02 Final Source-To-Product Evidence Closure (T01 - T30, P01 - P04) [2m(24)[22m
+     [32m✓[39m P01 - P04: Concrete Adapter & Evidence Flow Assertions [2m(3)[22m
+       [33m[2m✓[22m[39m P01: Simulated provider adapter verifies endpoint status and error handling without fake live promotion[33m 546[2mms[22m[39m
+ [32m✓[39m tests/unit/kh02/v12_4_3_5_0_3_AmazonCreatorsRuntimeClosure.test.ts [2m([22m[2m52 tests[22m[2m)[22m[33m 549[2mms[22m[39m
+   [32m✓[39m KH-02 V12.4.3.5.0.3 — Amazon US Creators API Real Runtime Wiring & Official Contract Parity (R01–R52) [2m(52)[22m
+     [33m[2m✓[22m[39m R52: runAmazonCreatorsRuntimeNegativeMutationSuite executes all 48 physical-file negative control mutations (M01..M48) with 48/48 caught and 0 escapes[32m 300[2mms[22m[39m
+ [32m✓[39m tests/unit/kh02/v12_4_3_5_0_1_AmazonTrueE2EClosure.test.ts [2m([22m[2m40 tests[22m[2m)[22m[33m 583[2mms[22m[39m
+ [32m✓[39m tests/unit/kh02/v12_4_3_7_19_1_StagingRuntimeIsolation.test.ts [2m([22m[2m20 tests[22m[2m)[22m[33m 554[2mms[22m[39m
+   [32m✓[39m KH-02 V12.4.3.7.19.1: Genuine Staging Runtime & DB Isolation (S01 - S20) [2m(20)[22m
+     [33m[2m✓[22m[39m S10: timeout => EXECUTED_FAIL bounded[33m 504[2mms[22m[39m
+ [32m✓[39m tests/unit/kh02/v12_4_3_4_7_RealExecutionProofAndAcceptanceTruth.test.ts [2m([22m[2m12 tests[22m[2m)[22m[33m 500[2mms[22m[39m
+   [32m✓[39m KH-02 V12.4.3.4.7 — Real Execution Proof, Disk-Safe Closure & Acceptance Truth [2m(12)[22m
+     [32m✓[39m Phase 5: G15 Exact Identity Query & 33 Physical-File Negative Control Mutations [2m(2)[22m
+       [33m[2m✓[22m[39m catches all 33 physical-file negative control mutations (MUT_01 through MUT_33)[33m 446[2mms[22m[39m
+ [32m✓[39m tests/unit/kh02V12_1_4_1_HeartbeatRetry.test.ts [2m([22m[2m7 tests[22m[2m)[22m[33m 491[2mms[22m[39m
+ [32m✓[39m tests/unit/kh02/v12_4_3_7_17_CsvRowBindingAndLineage.test.ts [2m([22m[2m24 tests[22m[2m)[22m[33m 421[2mms[22m[39m
+ [32m✓[39m tests/unit/kh02V12_1_4_AtomicCas.test.ts [2m([22m[2m7 tests[22m[2m)[22m[33m 478[2mms[22m[39m
+ [32m✓[39m tests/unit/kh02/v12_4_3_4_8_GoogleProvenanceAndRuntimeClosure.test.ts [2m([22m[2m22 tests[22m[2m)[22m[33m 462[2mms[22m[39m
+   [32m✓[39m KH-02 V12.4.3.4.8 — Google MCP Provenance Truth & Runtime Acceptance Closure [2m(22)[22m
+     [32m✓[39m Google MCP Negative Suite (G06-NEG-01..20) & 40 Physical-File Negative Control Mutations (MUT_01..40) [2m(2)[22m
+       [33m[2m✓[22m[39m catches and rejects all 40 physical-file negative control mutations (MUT_01..MUT_40 covering N01..N15)[33m 449[2mms[22m[39m
+ [32m✓[39m tests/unit/kh02/v12_4_3_7_19_1_UnifiedWriteBoundary.test.ts [2m([22m[2m24 tests[22m[2m)[22m[33m 810[2mms[22m[39m
+   [32m✓[39m KH-02 V12.4.3.7.19.1: Unified Verified Write Boundary (W01 - W24) [2m(24)[22m
+     [33m[2m✓[22m[39m W23: provider call returns 200 but proof fails => provider status and caches honest[33m 554[2mms[22m[39m
+ [32m✓[39m tests/unit/kh02/v12_4_3_4_GoogleFreeDemandAndTikTokDisabled.test.ts [2m([22m[2m18 tests[22m[2m)[22m[33m 665[2mms[22m[39m
+   [32m✓[39m KH-02 V12.4.3.4 — Google Free Demand Only & TikTok Organic Disabled [2m(18)[22m
+     [32m✓[39m Section A: Remove compulsory SerpApi & GOOGLE_FREE_ONLY Mode [2m(4)[22m
+       [33m[2m✓[22m[39m A03: Zero SerpApi network requests are made in GOOGLE_FREE_ONLY mode[33m 634[2mms[22m[39m
+ [32m✓[39m tests/unit/kh02/v12_4_3_7_16_TransactionalDemandImport.test.ts [2m([22m[2m21 tests[22m[2m)[22m[33m 365[2mms[22m[39m
+ [32m✓[39m tests/unit/kh02/v12_4_3_7_4_ZeroTransientPassCommitAttestation.test.ts [2m([22m[2m15 tests[22m[2m)[22m[33m 359[2mms[22m[39m
+ [32m✓[39m tests/unit/kh02V12_2_1_ProviderActivation.test.ts [2m([22m[2m13 tests[22m[2m)[22m[32m 130[2mms[22m[39m
+ [32m✓[39m tests/unit/kh02/v12_4_3_5_0_AmazonUsPilotAcceptance.test.ts [2m([22m[2m30 tests[22m[2m)[22m[33m 344[2mms[22m[39m
+ [32m✓[39m tests/unit/kh02/v12_4_3_3_MetaGoogleRelevanceProvenance.test.ts [2m([22m[2m89 tests[22m[2m)[22m[32m 219[2mms[22m[39m
+ [32m✓[39m tests/unit/kh02V12_1_3_Ownership.test.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 284[2mms[22m[39m
+ [32m✓[39m tests/unit/kh02/v12_4_3_7_18_StrictCsvRowAuthority.test.ts [2m([22m[2m28 tests[22m[2m)[22m[32m 295[2mms[22m[39m
+ [32m✓[39m tests/unit/kh02/v12_4_3_7_17_DbUniquenessMultiProcess.test.ts [2m([22m[2m18 tests[22m[2m)[22m[32m 284[2mms[22m[39m
+ [32m✓[39m tests/unit/kh02RuntimeTelemetryAndRelevance.test.ts [2m([22m[2m32 tests[22m[2m)[22m[32m 261[2mms[22m[39m
+ [32m✓[39m tests/unit/kh02/v12_4_3_PostReviewHardening_2026_11_03.test.ts [2m([22m[2m82 tests[22m[2m)[22m[32m 232[2mms[22m[39m
+ [32m✓[39m tests/unit/kh02/v12_4_3_7_1_CommercialReferenceNetworkWorkerClosure.test.ts [2m([22m[2m50 tests[22m[2m)[22m[32m 230[2mms[22m[39m
+ [32m✓[39m tests/unit/kh02/v12_4_3_7_10_RealCollectorAtomicLedger.test.ts [2m([22m[2m28 tests[22m[2m)[22m[32m 228[2mms[22m[39m
+ [32m✓[39m tests/unit/kh02/v12_4_3_5_0_2_AmazonAuthorizedDiscoveryClosure.test.ts [2m([22m[2m25 tests[22m[2m)[22m[32m 256[2mms[22m[39m
+ [32m✓[39m tests/unit/kh02/v12_4_3_1_EvidenceProvenanceAndAsyncTruth.test.ts [2m([22m[2m25 tests[22m[2m)[22m[32m 221[2mms[22m[39m
+ [32m✓[39m tests/unit/kh02/v12_4_3_7_RealSourceToTop3LiveClosure.test.ts [2m([22m[2m58 tests[22m[2m)[22m[32m 206[2mms[22m[39m
+ [32m✓[39m tests/unit/kh02FreeProviderContracts.test.ts [2m([22m[2m13 tests[22m[2m)[22m[32m 164[2mms[22m[39m
+ [32m✓[39m tests/unit/kh02/v12_4_3_7_18_1_MandatoryProvenance.test.ts [2m([22m[2m14 tests[22m[2m)[22m[32m 210[2mms[22m[39m
+ [32m✓[39m tests/unit/kh02/v12_4_3_7_19_BatchWriteAndReadAuthority.test.ts [2m([22m[2m12 tests[22m[2m)[22m[32m 165[2mms[22m[39m
+ [32m✓[39m tests/unit/kh02V12_1_1_Runtime.test.ts [2m([22m[2m20 tests[22m[2m)[22m[32m 148[2mms[22m[39m
+ [32m✓[39m tests/unit/kh02/v12_4_3_7_18_2_StrictProviderOriginAdmission.test.ts [2m([22m[2m24 tests[22m[2m)[22m[32m 148[2mms[22m[39m
+ [32m✓[39m tests/unit/kh02/v12_4_3_3_2_DemandAndIdentityIntegrity.test.ts [2m([22m[2m10 tests[22m[2m)[22m[32m 127[2mms[22m[39m
+ [32m✓[39m tests/unit/kh02/v12_4_3_6_RealNicheToTop3Discovery.test.ts [2m([22m[2m51 tests[22m[2m)[22m[32m 121[2mms[22m[39m
+ [32m✓[39m tests/unit/kh02V12_1_2_RuntimeOwnership.test.ts [2m([22m[2m9 tests[22m[2m)[22m[32m 104[2mms[22m[39m
+ [32m✓[39m tests/unit/kh02/v12_4_3_7_17_RegressionBusinessResourceGuards.test.ts [2m([22m[2m18 tests[22m[2m)[22m[32m 114[2mms[22m[39m
+ [32m✓[39m tests/unit/kh02/v12_4_3_7_9_TrustedCollectorSafeTest.test.ts [2m([22m[2m35 tests[22m[2m)[22m[32m 105[2mms[22m[39m
+ [32m✓[39m tests/unit/kh02/v12_4_3_3_1_MetaGoogleLiveIntegrity.test.ts [2m([22m[2m19 tests[22m[2m)[22m[32m 104[2mms[22m[39m
+ [32m✓[39m tests/unit/kh02WorkspaceAuthorization.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 102[2mms[22m[39m
+ [32m✓[39m tests/unit/kh02/v12_4_3_IdentityDistinctnessRecovery.test.ts [2m([22m[2m50 tests[22m[2m)[22m[32m 89[2mms[22m[39m
+ [32m✓[39m tests/unit/kh02/v12_4_3_4_2_ClosureAdversarialAndTruth.test.ts [2m([22m[2m34 tests[22m[2m)[22m[32m 104[2mms[22m[39m
+ [32m✓[39m tests/unit/kh02V12_2_3_ProviderDiscovery.test.ts [2m([22m[2m7 tests[22m[2m)[22m[32m 97[2mms[22m[39m
+ [32m✓[39m tests/unit/kh02/v12_4_3_7_17_NetworkSsrfRedirect.test.ts [2m([22m[2m24 tests[22m[2m)[22m[32m 81[2mms[22m[39m
+ [32m✓[39m tests/unit/kh02/v12_4_3_7_18_SocketPeerTlsTrust.test.ts [2m([22m[2m18 tests[22m[2m)[22m[32m 75[2mms[22m[39m
+ [32m✓[39m tests/unit/kh02/v12_4_2_DiscoveryRecall.test.ts [2m([22m[2m15 tests[22m[2m)[22m[32m 65[2mms[22m[39m
+ [32m✓[39m tests/unit/kh02/v12_4_3_2_LiveDiscoveryAuditAudienceUx.test.ts [2m([22m[2m16 tests[22m[2m)[22m[32m 54[2mms[22m[39m
+ [32m✓[39m tests/unit/kh02V12_3_ProductIntelligence.test.ts [2m([22m[2m25 tests[22m[2m)[22m[32m 40[2mms[22m[39m
+ [32m✓[39m tests/unit/kh02CandidateDiscovery.test.ts [2m([22m[2m9 tests[22m[2m)[22m[32m 39[2mms[22m[39m
+ [32m✓[39m tests/unit/kh02/v12_4_3_7_19_3_2_DurableAliasAuthorization.test.ts [2m([22m[2m43 tests[22m[2m)[22m[32m 33[2mms[22m[39m
+ [32m✓[39m tests/unit/kh02/v12_4_3_NextExecutionAudit_2026_11_03.test.ts [2m([22m[2m7 tests[22m[2m)[22m[32m 38[2mms[22m[39m
+ [32m✓[39m tests/unit/kh02/v12_4_3_4_1_ZeroSpendGoogleFreeAutomation.test.ts [2m([22m[2m8 tests[22m[2m)[22m[32m 38[2mms[22m[39m
+ [32m✓[39m tests/unit/kh02/ai/geminiProductClassification.test.ts [2m([22m[2m6 tests[22m[2m)[22m[32m 35[2mms[22m[39m
+ [32m✓[39m tests/unit/kh02V12_1_P0.test.ts [2m([22m[2m8 tests[22m[2m)[22m[32m 30[2mms[22m[39m
+ [32m✓[39m tests/unit/kh02V12_3_1_ProductShortlistClosure.test.ts [2m([22m[2m16 tests[22m[2m)[22m[32m 29[2mms[22m[39m
+ [32m✓[39m tests/unit/kh02ProductIdentity.test.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 28[2mms[22m[39m
+ [32m✓[39m tests/unit/kh02/v12_4_3_3_1_FamilyClassification.test.ts [2m([22m[2m19 tests[22m[2m)[22m[32m 28[2mms[22m[39m
+ [32m✓[39m tests/unit/kh02/v12_4_3_2_1_ProductMediaAndFlowIntegrity.test.ts [2m([22m[2m19 tests[22m[2m)[22m[32m 24[2mms[22m[39m
+ [32m✓[39m tests/unit/kh02/v12_4_3_7_19_2_SourceTruthAndDiagnosticHonesty.test.ts [2m([22m[2m20 tests[22m[2m)[22m[32m 19[2mms[22m[39m
+ [32m✓[39m tests/unit/kh02/v12_4_3_7_18_1_SocketTrustNoTestBypass.test.ts [2m([22m[2m16 tests[22m[2m)[22m[32m 20[2mms[22m[39m
+ [32m✓[39m tests/unit/kh02/v12_4_3_7_17_PdpContentCreativeProvenance.test.ts [2m([22m[2m18 tests[22m[2m)[22m[32m 19[2mms[22m[39m
+ [32m✓[39m tests/unit/kh02/v12_4_3_7_3_AmazonMcpSmokeChronologyFailClosed.test.ts [2m([22m[2m42 tests[22m[2m)[22m[32m 18[2mms[22m[39m
+ [32m✓[39m tests/unit/kh02V12_2_ProductIdentity.test.ts [2m([22m[2m15 tests[22m[2m)[22m[32m 17[2mms[22m[39m
+ [32m✓[39m tests/unit/kh02ProductMetadataSecurity.test.ts [2m([22m[2m7 tests[22m[2m)[22m[32m 17[2mms[22m[39m
+ [32m✓[39m tests/unit/kh02/v12_4_3_7_2_FinalAcceptanceTruthHardening.test.ts [2m([22m[2m38 tests[22m[2m)[22m[32m 17[2mms[22m[39m
+ [32m✓[39m tests/unit/kh02/v12_4_3_7_19_ReleaseGateFromRealResults.test.ts [2m([22m[2m16 tests[22m[2m)[22m[32m 14[2mms[22m[39m
+ [32m✓[39m tests/unit/kh02/ai/geminiEvidenceValidation.test.ts [2m([22m[2m7 tests[22m[2m)[22m[32m 14[2mms[22m[39m
+ [32m✓[39m tests/unit/kh02/v12_4_3_7_19_3_CandidateScopeAttribution.test.ts [2m([22m[2m20 tests[22m[2m)[22m[32m 11[2mms[22m[39m
+ [32m✓[39m tests/unit/kh02/v12_4_3_7_19_3_2_4_CiHmacTrustBoundary.test.ts [2m([22m[2m15 tests[22m[2m)[22m[32m 9[2mms[22m[39m
+ [32m✓[39m tests/unit/kh02/v12_4_3_7_19_ExactProviderRawRowBinding.test.ts [2m([22m[2m38 tests[22m[2m)[22m[32m 8[2mms[22m[39m
+ [32m✓[39m tests/unit/kh02ReleaseGatesAndReconciliation.test.ts [2m([22m[2m37 tests[22m[2m)[22m[32m 8[2mms[22m[39m
+ [32m✓[39m tests/unit/kh02/v12_4_3_7_19_1_RawSeriesPointIdentity.test.ts [2m([22m[2m24 tests[22m[2m)[22m[32m 7[2mms[22m[39m
+ [32m✓[39m tests/unit/kh02EvergreenScoring.test.ts [2m([22m[2m6 tests[22m[2m)[22m[32m 7[2mms[22m[39m
+ [32m✓[39m tests/unit/kh02/v12_4_3_7_18_BusinessGateEvidenceParity.test.ts [2m([22m[2m8 tests[22m[2m)[22m[32m 6[2mms[22m[39m
+ [32m✓[39m tests/unit/kh02/v12_4_3_7_19_3_2_5_CiTrustBoundaryClosure.test.ts [2m([22m[2m10 tests[22m[2m)[22m[32m 6[2mms[22m[39m
+ [32m✓[39m tests/unit/kh02V12_1_4_1_Reconciliation.test.ts [2m([22m[2m16 tests[22m[2m)[22m[32m 6[2mms[22m[39m
+ [32m✓[39m tests/unit/kh02/v12_4_3_7_19_1_ReleaseEvaluatorDurableEvidence.test.ts [2m([22m[2m22 tests[22m[2m)[22m[32m 6[2mms[22m[39m
+ [32m✓[39m tests/unit/kh02GoogleProvenance.test.ts [2m([22m[2m11 tests[22m[2m)[22m[32m 5[2mms[22m[39m
+ [32m✓[39m tests/unit/kh02SourceAdapters.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 6[2mms[22m[39m
+ [32m✓[39m tests/unit/kh02TemporalDemand.test.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 4[2mms[22m[39m
+ [32m✓[39m tests/unit/kh02MetaGlobalBudget.test.ts [2m([22m[2m12 tests[22m[2m)[22m[32m 4[2mms[22m[39m
+ [32m✓[39m tests/unit/kh02/ai/geminiModelDiscovery.test.ts [2m([22m[2m7 tests[22m[2m)[22m[32m 4[2mms[22m[39m
+
+[2m Test Files [22m [1m[32m100 passed[39m[22m[90m (100)[39m
+[2m      Tests [22m [1m[32m2362 passed[39m[22m[90m (2362)[39m
+[2m   Start at [22m 20:37:32
+[2m   Duration [22m 150.89s[2m (tests 85%, import 11%, setup 3%, transform 1%)[22m
+

@@ -1,0 +1,29 @@
+{
+  "version": "12.4.3.7.19.3.2.5",
+  "evaluatedAt": "2026-11-06T13:43:00.000Z",
+  "repository": "quocan050302/Shopify-Search",
+  "branch": "feature/kh02-walmart-us-jina-reader-v12.4.3.5.1",
+  "testedCodeSha": "8db28deb38fc06fa4d50881d1436596fd8b223eb",
+  "testedTreeSha": "da79e95864faab01f44d5d629059136e178ba5a5",
+  "baselineCommitSha": "4a1d54a4af34c5814c62c5f488e25fb97b28ffa5",
+  "engineeringStatus": "ENGINEERING_PASS",
+  "stagingStatus": "STAGING_SHADOW_CONTRACT_READY",
+  "businessStatus": "INSUFFICIENT_EVIDENCE",
+  "ciStatus": "CI_NOT_CONFIGURED",
+  "overallReleaseAllowed": false,
+  "verdictSummary": "RELEASE_NO_GO",
+  "reasons": [
+    "Engineering gates E1 through E10 all passed synchronously/bounded-async against exact code SHA 8db28deb38fc06fa4d50881d1436596fd8b223eb.",
+    "CI origin forgery vulnerability successfully closed: direct caller-minting without capability receives untrusted tokens, and unregistered runs fail closed with CI_CLAIM_UNVERIFIED.",
+    "Targeted adversarial suite (T01-T10, R01-R15, regressions) passed with 223/223 tests green.",
+    "Full unit test suite (E4) passed with 2,362/2,362 tests across 100 files.",
+    "Database readback diagnostic (E9) confirms 6 raw rows exist but 0 are official verified Google Trends Explore CSV records; G15 and G16 remain INSUFFICIENT_EVIDENCE.",
+    "Remote CI proof diagnostic (E10) truthfully reports CI_NOT_CONFIGURED due to absence of configured remote workflow runId."
+  ],
+  "blockerList": [
+    "G15_INSUFFICIENT_DEMAND_EVIDENCE",
+    "G16_TOP3_UNVERIFIED",
+    "CI_NOT_RUN"
+  ],
+  "evaluatorVersion": "SWAI_RELEASE_EVALUATOR_V19_3_2_5"
+}
