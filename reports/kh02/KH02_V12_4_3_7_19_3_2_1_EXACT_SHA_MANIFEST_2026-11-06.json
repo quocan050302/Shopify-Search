@@ -1,0 +1,58 @@
+{
+  "version": "12.4.3.7.19.3.2.1",
+  "generatedAt": "2026-11-06T07:55:00.000Z",
+  "branch": "feature/kh02-walmart-us-jina-reader-v12.4.3.5.1",
+  "baselineRemoteHead": "06d70c4fe87d67b9a0e2e05067b2172f2ac0467e",
+  "codeSha": "10384d3799084e648b37721a794cdb8b149acda3",
+  "treeSha": "9c94346fbf0d01b22f37f7f1284d225703f2e052",
+  "codeChangesSummary": {
+    "filesChanged": [
+      "src/services/kh02/demand/candidateDemandAttribution.ts",
+      "src/services/kh02/demand/durableCandidateAliasAuthority.ts",
+      "src/services/kh02/demand/testSuiteEvidenceValidator.ts",
+      "src/services/kh02/release/releaseGateEvaluatorV19.ts",
+      "tests/unit/kh02/v12_4_3_7_19_3_2_DurableAliasAuthorization.test.ts",
+      "tests/unit/kh02/v12_4_3_7_19_3_2_1_FinalAliasTrustAndCiProof.test.ts"
+    ],
+    "insertions": 2121,
+    "deletions": 73
+  },
+  "logFiles": [
+    {
+      "path": "reports/kh02/logs/v19_3_2_1/e1_tsc_check.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "reports/kh02/logs/v19_3_2_1/e2_whitespace_check.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "reports/kh02/logs/v19_3_2_1/e3_targeted_suites.log",
+      "bytes": 3394,
+      "sha256": "216cfe1b56c93e3ebac3e006797e59a7ddbb39295512f1b9839c0316e1534550"
+    },
+    {
+      "path": "reports/kh02/logs/v19_3_2_1/e4_unit_test.log",
+      "bytes": 59840,
+      "sha256": "dbed40382492b93ae9063133263853b25933929b677ddb18117254a231fad442"
+    },
+    {
+      "path": "reports/kh02/logs/v19_3_2_1/e5_integration_test.log",
+      "bytes": 14270,
+      "sha256": "f3268e281542e510f07f5c60a80b9a85f550f75b8216c72a5cdcfcb209eee194"
+    },
+    {
+      "path": "reports/kh02/logs/v19_3_2_1/e6_kh01_verify.log",
+      "bytes": 8480,
+      "sha256": "033c02966737ae86824234072de1c2931cb9fda0d3364429d1b7823630770957"
+    },
+    {
+      "path": "reports/kh02/logs/v19_3_2_1/e8_backtest.log",
+      "bytes": 388,
+      "sha256": "17157c5ad0363e0e4d4465fea41a4eca3b2c3207f4e890b26718dfb8faffa7a2"
+    }
+  ],
+  "verificationStatus": "ALL_GATES_PASSED_VERIFIED"
+}

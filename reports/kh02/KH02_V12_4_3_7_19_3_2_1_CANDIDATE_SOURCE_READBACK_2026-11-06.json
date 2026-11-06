@@ -1,0 +1,50 @@
+{
+  "version": "12.4.3.7.19.3.2.1",
+  "generatedAt": "2026-11-06T07:55:00.000Z",
+  "codeSha": "10384d3799084e648b37721a794cdb8b149acda3",
+  "treeSha": "9c94346fbf0d01b22f37f7f1284d225703f2e052",
+  "candidates": [
+    {
+      "candidateId": "cand_1212440541",
+      "canonicalProductId": "cmvsy7zqh000jp0orhypwohho",
+      "productName": "UAHPET Fresh Food Automatic Pet Feeder",
+      "authorizedCanonicalKeyword": "UAHPET Fresh Food Automatic Pet Feeder",
+      "demandPointsReadback": {
+        "rawPointsObserved": 6,
+        "genericUnaliasedPointsExcluded": 6,
+        "exactAttributablePoints": 0,
+        "officialVerifiedCsvPoints": 0,
+        "twoPointHardcodedTestFixtureCount": 2,
+        "g15EvergreenStatus": "INSUFFICIENT_EVIDENCE",
+        "rationale": "Category-level unaliased queries ('automatic wet food cat feeder with cooling warming') lack an authentic, cryptographically signed, business-eligible alias approval. Hardcoded 2-point test fixture is excluded from commercial history."
+      }
+    },
+    {
+      "candidateId": "cand_kittyspout_fountain",
+      "canonicalProductId": "prod_kittyspout_fountain",
+      "productName": "KittySpout Stainless Steel Pet Water Fountain",
+      "authorizedCanonicalKeyword": "KittySpout Stainless Steel Pet Water Fountain",
+      "demandPointsReadback": {
+        "rawPointsObserved": 0,
+        "crossBorrowedFromUahpet": 0,
+        "crossBorrowedFromGeneric": 0,
+        "exactAttributablePoints": 0,
+        "g15EvergreenStatus": "INSUFFICIENT_EVIDENCE",
+        "rationale": "Zero cross-borrowing from UAHPET or generic fountain queries."
+      }
+    },
+    {
+      "candidateId": "cand_lint_cleaner",
+      "canonicalProductId": "prod_lint_cleaner",
+      "productName": "Pet Hair, Lint & Dust Cleaner Pro",
+      "authorizedCanonicalKeyword": "Pet Hair, Lint & Dust Cleaner Pro",
+      "demandPointsReadback": {
+        "rawPointsObserved": 0,
+        "crossBorrowedFromFeederOrFountain": 0,
+        "exactAttributablePoints": 0,
+        "g15EvergreenStatus": "INSUFFICIENT_EVIDENCE",
+        "rationale": "Isolated candidate scope strictly enforced; zero cross-product borrowing."
+      }
+    }
+  ]
+}

@@ -1,0 +1,34 @@
+{
+  "version": "12.4.3.7.19.3.2.1",
+  "generatedAt": "2026-11-06T07:55:00.000Z",
+  "codeSha": "10384d3799084e648b37721a794cdb8b149acda3",
+  "treeSha": "9c94346fbf0d01b22f37f7f1284d225703f2e052",
+  "branch": "feature/kh02-walmart-us-jina-reader-v12.4.3.5.1",
+  "ciVerificationPolicy": {
+    "unverifiedCallerRunIdRejected": true,
+    "unverifiedRejectionCode": "CI_CLAIM_UNVERIFIED",
+    "ciVerifiedSetToFalseOnClaim": true,
+    "requiredAttestationFields": [
+      "provider",
+      "repository",
+      "runId",
+      "commitSha",
+      "branch",
+      "status",
+      "conclusion",
+      "event"
+    ],
+    "expectedRepository": "quocan050302/Shopify-Search",
+    "expectedStatus": "completed",
+    "expectedConclusion": "success",
+    "allowedEvents": ["push", "workflow_dispatch"]
+  },
+  "remoteCiStatus": {
+    "observableFromEnvironment": false,
+    "ghCliInstalled": false,
+    "githubTokenPresent": false,
+    "actualStatus": "CI_NOT_RUN",
+    "rationale": "Remote GitHub Actions API cannot be authenticated from local offline environment. Reported honestly as CI_NOT_RUN without fabricating remote runs."
+  },
+  "releaseGateCiVerdict": "CI_NOT_RUN"
+}

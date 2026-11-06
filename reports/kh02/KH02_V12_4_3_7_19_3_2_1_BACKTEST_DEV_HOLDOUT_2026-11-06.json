@@ -1,0 +1,21 @@
+{
+  "version": "12.4.3.7.19.3.2.1",
+  "generatedAt": "2026-11-06T07:55:00.000Z",
+  "codeSha": "10384d3799084e648b37721a794cdb8b149acda3",
+  "treeSha": "9c94346fbf0d01b22f37f7f1284d225703f2e052",
+  "policyReplay": {
+    "verdict": "PASS",
+    "rationale": "Point-in-time chronological simulation verified; zero leakage across evaluation cutoffs."
+  },
+  "devHoldback": {
+    "verdict": "INSUFFICIENT_HISTORICAL_EVIDENCE",
+    "shortlist": "0/0 candidates verified",
+    "rationale": "Historical candidate demand points remain unverified due to absence of official candidate-specific longitudinal Google Trends CSV series."
+  },
+  "holdoutHoldback": {
+    "verdict": "INSUFFICIENT_HISTORICAL_EVIDENCE",
+    "shortlist": "3/3 candidates lack required verified longitudinal series",
+    "rationale": "No synthetic data or fabricated provider proof was introduced to bypass holdback rules."
+  },
+  "overallVerdict": "INSUFFICIENT_HISTORICAL_EVIDENCE"
+}

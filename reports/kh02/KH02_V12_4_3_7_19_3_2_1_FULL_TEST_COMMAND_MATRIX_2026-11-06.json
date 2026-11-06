@@ -1,0 +1,98 @@
+{
+  "version": "12.4.3.7.19.3.2.1",
+  "generatedAt": "2026-11-06T07:55:00.000Z",
+  "codeSha": "10384d3799084e648b37721a794cdb8b149acda3",
+  "treeSha": "9c94346fbf0d01b22f37f7f1284d225703f2e052",
+  "branch": "feature/kh02-walmart-us-jina-reader-v12.4.3.5.1",
+  "executionOrigin": "AUTHENTIC_LOCAL_EXECUTION",
+  "gates": [
+    {
+      "gateId": "E1",
+      "command": "npx tsc --noEmit",
+      "scope": "Full repository TypeScript compilation",
+      "status": "PASS",
+      "exitCode": 0,
+      "errorsCount": 0,
+      "logFile": "reports/kh02/logs/v19_3_2_1/e1_tsc_check.log",
+      "logSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "logBytes": 0
+    },
+    {
+      "gateId": "E2",
+      "command": "git diff --check",
+      "scope": "Git diff whitespace and conflict marker check",
+      "status": "PASS",
+      "exitCode": 0,
+      "whitespaceErrors": 0,
+      "logFile": "reports/kh02/logs/v19_3_2_1/e2_whitespace_check.log",
+      "logSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "logBytes": 0
+    },
+    {
+      "gateId": "E3",
+      "command": "npx vitest run tests/unit/kh02/v12_4_3_7_19_3_2_1_FinalAliasTrustAndCiProof.test.ts tests/unit/kh02/v12_4_3_7_19_3_2_DurableAliasAuthorization.test.ts tests/unit/kh02/v12_4_3_7_19_3_1_UnifiedCandidateAttribution.test.ts tests/unit/kh02/v12_4_3_7_19_3_CandidateScopeAttribution.test.ts",
+      "scope": "Targeted V19.3.2.1 Alias Trust, CI Proof & Attribution suites",
+      "status": "PASS",
+      "exitCode": 0,
+      "testFilesCount": 4,
+      "testsPassed": 168,
+      "testsFailed": 0,
+      "logFile": "reports/kh02/logs/v19_3_2_1/e3_targeted_suites.log",
+      "logSha256": "216cfe1b56c93e3ebac3e006797e59a7ddbb39295512f1b9839c0316e1534550",
+      "logBytes": 3394
+    },
+    {
+      "gateId": "E4",
+      "command": "npx vitest run tests/unit/kh02 --maxWorkers=4",
+      "scope": "Full KH-02 unit test suite (tests/unit/kh02)",
+      "status": "PASS",
+      "exitCode": 0,
+      "testFilesCount": 96,
+      "testsPassed": 2257,
+      "testsFailed": 0,
+      "logFile": "reports/kh02/logs/v19_3_2_1/e4_unit_test.log",
+      "logSha256": "dbed40382492b93ae9063133263853b25933929b677ddb18117254a231fad442",
+      "logBytes": 59840
+    },
+    {
+      "gateId": "E5",
+      "command": "npm run kh02:test:integration",
+      "scope": "Full KH-02 integration test suite (tests/integration/kh02)",
+      "status": "PASS",
+      "exitCode": 0,
+      "testFilesCount": 16,
+      "testsPassed": 77,
+      "testsFailed": 0,
+      "logFile": "reports/kh02/logs/v19_3_2_1/e5_integration_test.log",
+      "logSha256": "f3268e281542e510f07f5c60a80b9a85f550f75b8216c72a5cdcfcb209eee194",
+      "logBytes": 14270
+    },
+    {
+      "gateId": "E6",
+      "command": "npm run kh01:verify",
+      "scope": "KH-01 smoke verification and regression guard",
+      "status": "PASS",
+      "exitCode": 0,
+      "testFilesCount": 5,
+      "testsPassed": 69,
+      "testsFailed": 0,
+      "logFile": "reports/kh02/logs/v19_3_2_1/e6_kh01_verify.log",
+      "logSha256": "033c02966737ae86824234072de1c2931cb9fda0d3364429d1b7823630770957",
+      "logBytes": 8480
+    },
+    {
+      "gateId": "E8",
+      "command": "npx tsx scripts/kh02/runBacktestV12_4_3_4_2.ts",
+      "scope": "Point-in-time historical backtest and DEV/HOLDOUT holdback",
+      "status": "PASS",
+      "exitCode": 0,
+      "policyVerdict": "PASS",
+      "devHoldbackVerdict": "INSUFFICIENT_HISTORICAL_EVIDENCE",
+      "holdoutHoldbackVerdict": "INSUFFICIENT_HISTORICAL_EVIDENCE",
+      "logFile": "reports/kh02/logs/v19_3_2_1/e8_backtest.log",
+      "logSha256": "17157c5ad0363e0e4d4465fea41a4eca3b2c3207f4e890b26718dfb8faffa7a2",
+      "logBytes": 388
+    }
+  ],
+  "overallEngineeringStatus": "PASS"
+}

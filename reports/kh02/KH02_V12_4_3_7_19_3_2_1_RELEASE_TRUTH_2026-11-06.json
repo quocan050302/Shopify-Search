@@ -1,0 +1,24 @@
+{
+  "version": "12.4.3.7.19.3.2.1",
+  "generatedAt": "2026-11-06T07:55:00.000Z",
+  "codeSha": "10384d3799084e648b37721a794cdb8b149acda3",
+  "treeSha": "9c94346fbf0d01b22f37f7f1284d225703f2e052",
+  "engineeringGatesStatus": "PASS",
+  "commercialGates": {
+    "g15DemandHistoryStatus": "INSUFFICIENT_EVIDENCE",
+    "g16ProofVerificationStatus": "INSUFFICIENT_EVIDENCE",
+    "rationale": "Official candidate-specific Google Trends series for UAHPET feeder currently lacks authenticated >=60-day longitudinal data. Category queries without cryptographically signed durable business alias approvals are strictly rejected."
+  },
+  "remoteCiStatus": {
+    "status": "CI_NOT_RUN",
+    "rationale": "GitHub Actions workflow not observable or unauthenticated in local engineering execution. Honestly reported as CI_NOT_RUN without fake passes."
+  },
+  "releaseDecision": "NO-GO",
+  "spendAudit": {
+    "totalUnapprovedSpend": 0.0,
+    "serpApiPaidSpend": 0.0,
+    "bigQueryPaidSpend": 0.0,
+    "tikTokAdsUsStatus": "DEFERRED"
+  },
+  "integrityAttestation": "Software engineering gates pass with 100% compliance. Commercial gates honestly fail-closed without data fabrication."
+}

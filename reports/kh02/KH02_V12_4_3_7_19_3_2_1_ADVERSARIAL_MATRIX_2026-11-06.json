@@ -1,0 +1,37 @@
+{
+  "version": "12.4.3.7.19.3.2.1",
+  "generatedAt": "2026-11-06T07:55:00.000Z",
+  "codeSha": "10384d3799084e648b37721a794cdb8b149acda3",
+  "treeSha": "9c94346fbf0d01b22f37f7f1284d225703f2e052",
+  "testSuite": "tests/unit/kh02/v12_4_3_7_19_3_2_1_FinalAliasTrustAndCiProof.test.ts",
+  "groups": {
+    "groupA_aliasTrustAndBusinessFencing": {
+      "count": 25,
+      "passed": 25,
+      "failed": 0,
+      "coverage": "A01 - A25"
+    },
+    "groupB_durableLedgerAndMultiProcess": {
+      "count": 20,
+      "passed": 20,
+      "failed": 0,
+      "coverage": "B01 - B20"
+    },
+    "groupC_ciProviderProofTruth": {
+      "count": 20,
+      "passed": 20,
+      "failed": 0,
+      "coverage": "C01 - C20"
+    },
+    "groupD_businessAndE2EReleaseTruth": {
+      "count": 10,
+      "passed": 10,
+      "failed": 0,
+      "coverage": "D01 - D10"
+    }
+  },
+  "totalTests": 75,
+  "totalPassed": 75,
+  "totalFailed": 0,
+  "verdict": "PASS"
+}

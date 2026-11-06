@@ -1,0 +1,38 @@
+{
+  "version": "12.4.3.7.19.3.2.1",
+  "generatedAt": "2026-11-06T07:55:00.000Z",
+  "codeSha": "10384d3799084e648b37721a794cdb8b149acda3",
+  "treeSha": "9c94346fbf0d01b22f37f7f1284d225703f2e052",
+  "branch": "feature/kh02-walmart-us-jina-reader-v12.4.3.5.1",
+  "aliasSecurityPolicy": {
+    "keyRegistration": {
+      "purposeSeparationEnforced": true,
+      "requiredOperationScope": "KH02_DEMAND_ALIAS",
+      "minSecretLength": 32,
+      "productionTestOnlyForbidden": true,
+      "productionActiveRequiresAdminToken": true,
+      "adminTokenEnvVar": "KH02_ALIAS_ADMIN_TOKEN",
+      "terminalKeyStatusesImmutable": ["REVOKED", "COMPROMISED"]
+    },
+    "commercialIssuance": {
+      "approverAuthorityConfigRequired": true,
+      "approverPrincipalsEnvVar": "KH02_AUTHORIZED_APPROVER_PRINCIPALS",
+      "unauthorizedApproverRejected": true,
+      "missingConfigurationFailsClosed": "APPROVER_AUTHORITY_NOT_CONFIGURED"
+    },
+    "scopeFencing": {
+      "engineeringScope": {
+        "testOnlyValid": true,
+        "businessEligible": false,
+        "purpose": "Unit testing and cryptographic verification"
+      },
+      "businessScope": {
+        "testOnlyValid": false,
+        "businessEligible": false,
+        "decisionCode": "TEST_ONLY_ALIAS",
+        "purpose": "Commercial G15/G16 demand history attribution"
+      }
+    }
+  },
+  "auditVerdict": "SECURE_FAIL_CLOSED"
+}

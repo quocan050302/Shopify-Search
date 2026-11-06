@@ -1,0 +1,35 @@
+{
+  "version": "12.4.3.7.19.3.2.1",
+  "generatedAt": "2026-11-06T07:55:00.000Z",
+  "codeSha": "10384d3799084e648b37721a794cdb8b149acda3",
+  "treeSha": "9c94346fbf0d01b22f37f7f1284d225703f2e052",
+  "ledgerIntegrityPolicy": {
+    "storageStatuses": [
+      "LEDGER_HEALTHY",
+      "LEDGER_NOT_INITIALIZED",
+      "LEDGER_CORRUPT",
+      "LEDGER_UNREADABLE"
+    ],
+    "corruptionHandling": {
+      "failClosedOnCorruption": true,
+      "overwriteCorruptFilePermitted": false,
+      "corruptStatePreservedOnDisk": true,
+      "lookupOnCorruptReturnsNull": true,
+      "persistenceOnCorruptFailsWithConflict": true
+    },
+    "revocationMonotonicity": {
+      "monotonicRevocationEnforced": true,
+      "rePersistRevokedRecordRejected": true,
+      "rePersistDecisionCode": "CONFLICT_ERROR",
+      "rePersistReason": "REVOCATION_IMMUTABLE"
+    },
+    "lockManagement": {
+      "hostnameIsolation": true,
+      "foreignHostReclaimBlocked": true,
+      "pidLivenessVerification": true,
+      "liveProcessLockProtected": true,
+      "deadProcessLockReclaimedSafely": true
+    }
+  },
+  "auditVerdict": "RESILIENT_FAIL_CLOSED"
+}
