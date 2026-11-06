@@ -39,6 +39,13 @@ describe("KH-02 V12.4.3.7.18.1: Real TLS Peer & Certificate Isolation", () => {
   </head><body><h1>Smart Feeder</h1></body></html>`;
 
   beforeAll(async () => {
+    if (process.platform === "win32" && !process.env.PATH?.includes("Git\\usr\\bin")) {
+      const gitUsrBin = "C:\\Program Files\\Git\\usr\\bin";
+      if (fs.existsSync(gitUsrBin)) {
+        process.env.PATH = `${gitUsrBin};${process.env.PATH}`;
+      }
+    }
+
     const tmpDir = os.tmpdir();
     keyPath = path.join(tmpDir, `swai_v18_1_key_${Date.now()}.pem`);
     certPath = path.join(tmpDir, `swai_v18_1_cert_${Date.now()}.pem`);

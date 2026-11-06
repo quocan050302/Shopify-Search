@@ -35,6 +35,9 @@ import {
   type ProviderRawRowErrorCode,
   type ProviderObservationVerificationResult,
 } from "./providerObservationRawBinding";
+import {
+  classifyCandidateObservationAttribution,
+} from "./candidateDemandAttribution";
 export const PROVIDER_RECEIPT_STORAGE_DIR = path.resolve(
   process.cwd(),
   process.env.PROVIDER_RECEIPT_STORAGE_DIR || "data/provider_receipts"
@@ -149,6 +152,15 @@ export interface DemandHistoryPolicy {
   strictLiveOrigin?: boolean;
   allowUnitFixtures?: boolean;
   providerReceiptDescriptor?: VerifiedDemandEvidenceDescriptor | null;
+  verifiedAliases?: Array<{
+    aliasKeyword: string;
+    targetProductId?: string | null;
+    candidateId?: string | null;
+    approvedBy: string;
+    provenanceReference: string;
+    workspaceId?: string | null;
+    approvedAt?: string | Date;
+  }>;
 }
 
 export interface DemandHistoryAssessment {
@@ -4296,18 +4308,36 @@ export function evaluateDemandSourceAuthority(
     return { authority: "CACHED_UNVERIFIED", reasons, productAttributionValid: false };
   }
 
-  // 4. Check for cross-product family attribution mismatch
-  if (policy.candidateCanonicalName) {
-    const candidateFamily = detectSpecificProductFamily(policy.candidateCanonicalName);
-    if (candidateFamily) {
-      for (const kw of keywords) {
-        const kwFamily = detectSpecificProductFamily(kw);
-        if (kwFamily && kwFamily !== candidateFamily) {
-          reasons.push(
-            `Cross-product demand mismatch: candidate family '${candidateFamily}' cannot be verified by demand keyword '${kw}' (family '${kwFamily}').`
-          );
-          return { authority: "CACHED_UNVERIFIED", reasons, productAttributionValid: false };
+  // 4. Check for candidate-scoped keyword attribution & cross-product family mismatch
+  if (policy.candidateCanonicalName || policy.searchTermUsed) {
+    const candidateQuery = policy.candidateCanonicalName || policy.searchTermUsed || "";
+    const candidateFamily = detectSpecificProductFamily(candidateQuery);
+    for (const kw of keywords) {
+      const kwFamily = detectSpecificProductFamily(kw);
+      if (candidateFamily && kwFamily && kwFamily !== candidateFamily) {
+        reasons.push(
+          `Cross-product demand mismatch: candidate family '${candidateFamily}' cannot be verified by demand keyword '${kw}' (family '${kwFamily}').`
+        );
+        return { authority: "CACHED_UNVERIFIED", reasons, productAttributionValid: false };
+      }
+
+      // Check candidate attribution via classifyCandidateObservationAttribution
+      const attr = classifyCandidateObservationAttribution(
+        { keyword: kw, productId: policy.targetProductId || policy.candidateProductId },
+        {
+          candidateCanonicalName: policy.candidateCanonicalName,
+          searchTermUsed: policy.searchTermUsed,
+          authorizedKeywords: [policy.candidateCanonicalName, policy.searchTermUsed].filter((k): k is string => Boolean(k)),
+          canonicalProductId: policy.targetProductId || policy.candidateProductId,
+          verifiedAliases: policy.verifiedAliases,
         }
+      );
+
+      if (!attr.isAttributable) {
+        reasons.push(
+          `Candidate demand attribution failure (${attr.classification}): ${attr.reason}`
+        );
+        return { authority: "CACHED_UNVERIFIED", reasons, productAttributionValid: false };
       }
     }
   }
@@ -5775,3 +5805,6 @@ export {
   type ProviderRawRowErrorCode,
   type ProviderObservationVerificationResult,
 } from "./providerObservationRawBinding";
+
+export * from "./candidateDemandAttribution";
+export * from "./testSuiteEvidenceValidator";

@@ -335,7 +335,7 @@ export class GoogleTrendsCsvImportProvider implements HistoricalDemandProvider {
       provenanceVerified: false,
       lastCheckedAt: new Date().toISOString(),
       status: "CONFIGURED",
-      reason: "Local Google Trends CSV import repository ready (import capability ready; no relevant validated artifact supplied for target candidate).",
+      reason: "Local Google Trends CSV import repository ready (no external transport connection; import capability ready; no relevant validated artifact supplied for target candidate).",
       missingRequirements: [],
       importCapabilityReady: true,
       sourceArtifactPresent: false,

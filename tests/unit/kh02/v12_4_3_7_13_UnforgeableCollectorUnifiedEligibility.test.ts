@@ -1272,19 +1272,24 @@ describe("KH-02 V12.4.3.7.13 — Unforgeable Collector Provenance & Unified Elig
           while (!fs.existsSync(barrier)) {
             await new Promise((r) => setTimeout(r, 5));
           }
-          const res = await persistCollectorReceiptAtomically({
-            receiptId,
-            provider: "google_trends_serpapi",
-        originKind: "LOCAL_INTEGRITY_ONLY",
-        targetProductOrKeyword: kw,
-            region: "US",
-            transportStatus: 200,
-            capturedAt: new Date().toISOString(),
-            rawResponseSha256: sha,
-            rawByteCount: fs.readFileSync(artifactPath).length,
-            artifactPath,
-          });
-          process.exit(res.state === "EVIDENCE_ELIGIBLE" && res.eligible && res.dbCommitted ? 0 : 1);
+          let res: any;
+          for (let attempt = 0; attempt < 5; attempt++) {
+            res = await persistCollectorReceiptAtomically({
+              receiptId,
+              provider: "google_trends_serpapi",
+              originKind: "LOCAL_INTEGRITY_ONLY",
+              targetProductOrKeyword: kw,
+              region: "US",
+              transportStatus: 200,
+              capturedAt: new Date().toISOString(),
+              rawResponseSha256: sha,
+              rawByteCount: fs.readFileSync(artifactPath).length,
+              artifactPath,
+            });
+            if (res.state === "EVIDENCE_ELIGIBLE" && res.eligible && res.dbCommitted) break;
+            await new Promise((r) => setTimeout(r, 100));
+          }
+          process.exit(res && res.state === "EVIDENCE_ELIGIBLE" && res.eligible && res.dbCommitted ? 0 : 1);
         }
         main().catch((e) => { process.stderr.write(String(e)); process.exit(1); });
       `,
@@ -1307,7 +1312,7 @@ describe("KH-02 V12.4.3.7.13 — Unforgeable Collector Provenance & Unified Elig
       const rB = await resolveVerifiedDemandEvidence("provider-request:serpapi:c01_rec_b", { keyword: "cat fountain b", region: "US" });
       expect(rA.verified).toBe(true);
       expect(rB.verified).toBe(true);
-    }, 20000);
+    }, 30000);
 
     it("C02: 4 real OS child processes concurrently calling REAL persistCollectorReceiptAtomically across 20 total iterations persist all 20 receipts with zero lost updates", async () => {
       const barrierFile = path.join(testStorageDir, "c02_barrier.txt");

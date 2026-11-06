@@ -32,6 +32,10 @@ import {
   type DemandDataPoint,
 } from "@/services/kh02/demand/temporalDemandEngine";
 import {
+  validateTestSuiteExecutionEvidence,
+  parseVitestOutputMetrics,
+} from "@/services/kh02/demand/testSuiteEvidenceValidator";
+import {
   evaluateG16Candidate,
   evaluateG16Top3,
 } from "../../../scripts/kh02/g16CandidateEvaluator";
@@ -304,13 +308,84 @@ Week,cat water fountain: (United States)
     expect(sanitized).toContain("SERPAPI_API_KEY=[REDACTED]");
   });
 
-  it("T19: Baseline targeted 14 files / 272 tests is reproducible and verified", () => {
-    // Verified via Vitest runner invocation in gate E1
-    expect(true).toBe(true);
+  it("T19: Baseline targeted test evidence validator rejects untrusted, missing, or zero-test claims", () => {
+    // 1. Untrusted caller claiming full coverage without evidence is rejected
+    const unbackedReport = validateTestSuiteExecutionEvidence({
+      command: "npm run kh02:test:unit",
+      exitCode: 0,
+      stdout: "",
+      checkoutSha: "ade9f2f1dbb3dffdc8bf02f300b6e5d74eb7b0d9",
+      callerClaimsFullCoverage: true,
+    });
+    expect(unbackedReport.valid).toBe(false);
+    expect(unbackedReport.status).toBe("INCOMPLETE");
+    expect(unbackedReport.rejectionReasons.some((r) => r.includes("Neither durable log file nor stdout"))).toBe(true);
+
+    // 2. Output with zero tests is rejected as INCOMPLETE
+    const zeroTestReport = validateTestSuiteExecutionEvidence({
+      command: "vitest run dummy",
+      exitCode: 0,
+      stdout: "Test Files 0 passed (0)\nTests 0 passed (0)",
+      checkoutSha: "ade9f2f1dbb3dffdc8bf02f300b6e5d74eb7b0d9",
+    });
+    expect(zeroTestReport.valid).toBe(false);
+    expect(zeroTestReport.status).toBe("INCOMPLETE");
+
+    // 3. Genuine execution log parsed and verified with non-empty metrics
+    const sampleOutput = `
+ ✓ tests/unit/kh02/test1.test.ts (10 tests)
+ ✓ tests/unit/kh02/test2.test.ts (15 tests)
+ Test Files  2 passed (2)
+ Tests  25 passed (25)
+`;
+    const validReport = validateTestSuiteExecutionEvidence({
+      command: "vitest run tests/unit/kh02",
+      exitCode: 0,
+      stdout: sampleOutput,
+      checkoutSha: "ade9f2f1dbb3dffdc8bf02f300b6e5d74eb7b0d9",
+      expectedCheckoutSha: "ade9f2f1dbb3dffdc8bf02f300b6e5d74eb7b0d9",
+    });
+    expect(validReport.valid).toBe(true);
+    expect(validReport.status).toBe("PASS");
+    expect(validReport.metrics.testsPassed).toBe(25);
+    expect(validReport.metrics.testFilesPassed).toBe(2);
+    expect(validReport.logFileSha256).toMatch(/^[a-f0-9]{64}$/);
   });
 
-  it("T20: Full KH-02 unit/integration suite impact assessed", () => {
-    // Verified via bounded suite execution
-    expect(true).toBe(true);
+  it("T20: Full suite gate validator requires real command logs, matching SHA, and non-zero exit validation", () => {
+    // 1. Non-zero exit code is rejected as FAIL
+    const failReport = validateTestSuiteExecutionEvidence({
+      command: "npm run kh02:test:integration",
+      exitCode: 1,
+      stdout: "Test Files 1 failed (1)\nTests 1 failed (1)",
+      checkoutSha: "ade9f2f1dbb3dffdc8bf02f300b6e5d74eb7b0d9",
+    });
+    expect(failReport.valid).toBe(false);
+    expect(failReport.status).toBe("FAIL");
+    expect(failReport.rejectionReasons.some((r) => r.includes("exited with non-zero exit code: 1"))).toBe(true);
+
+    // 2. Stale checkout SHA is rejected as STALE
+    const staleReport = validateTestSuiteExecutionEvidence({
+      command: "npm run kh02:test:unit",
+      exitCode: 0,
+      stdout: "Test Files 1 passed (1)\nTests 5 passed (5)",
+      checkoutSha: "old_sha_12345",
+      expectedCheckoutSha: "ade9f2f1dbb3dffdc8bf02f300b6e5d74eb7b0d9",
+    });
+    expect(staleReport.valid).toBe(false);
+    expect(staleReport.status).toBe("STALE");
+    expect(staleReport.rejectionReasons.some((r) => r.includes("STALE_LOG"))).toBe(true);
+
+    // 3. Missing mandatory test suite files rejected
+    const missingSuiteReport = validateTestSuiteExecutionEvidence({
+      command: "vitest run tests/unit/kh02",
+      exitCode: 0,
+      stdout: " ✓ tests/unit/kh02/sample.test.ts\n Test Files 1 passed (1)\n Tests 5 passed (5)",
+      checkoutSha: "ade9f2f1dbb3dffdc8bf02f300b6e5d74eb7b0d9",
+      mandatoryTestFiles: ["mandatorySuiteA.test.ts"],
+    });
+    expect(missingSuiteReport.valid).toBe(false);
+    expect(missingSuiteReport.status).toBe("INCOMPLETE");
+    expect(missingSuiteReport.missingMandatoryFiles).toContain("mandatorySuiteA.test.ts");
   });
 });

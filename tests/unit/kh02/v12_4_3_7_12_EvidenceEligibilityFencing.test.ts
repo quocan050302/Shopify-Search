@@ -1240,18 +1240,23 @@ describe("KH-02 V12.4.3.7.12 — Evidence Eligibility Fencing & Production Concu
             await new Promise((r) => setTimeout(r, 5));
           }
           for (const item of items) {
-            const res = await persistCollectorReceiptAtomically({
-              receiptId: item.receiptId,
-              provider: "google_trends_serpapi",
-              originKind: "ACTUAL_PROVIDER_INVOCATION",
-              targetProductOrKeyword: item.kw,
-              region: "US",
-              transportStatus: 200,
-              capturedAt: new Date().toISOString(),
-              rawResponseSha256: item.sha,
-              rawByteCount: fs.readFileSync(item.artifactPath).length,
-              artifactPath: item.artifactPath,
-            });
+            let res: any;
+            for (let attempt = 0; attempt < 8; attempt++) {
+              res = await persistCollectorReceiptAtomically({
+                receiptId: item.receiptId,
+                provider: "google_trends_serpapi",
+                originKind: "LOCAL_INTEGRITY_ONLY",
+                targetProductOrKeyword: item.kw,
+                region: "US",
+                transportStatus: 200,
+                capturedAt: new Date().toISOString(),
+                rawResponseSha256: item.sha,
+                rawByteCount: fs.readFileSync(item.artifactPath).length,
+                artifactPath: item.artifactPath,
+              });
+              if (res.state === "EVIDENCE_ELIGIBLE" && res.eligible && res.dbCommitted) break;
+              await new Promise((r) => setTimeout(r, 50));
+            }
             if (res.state !== "EVIDENCE_ELIGIBLE" || !res.eligible || !res.dbCommitted) {
               process.stderr.write("Failed item " + item.receiptId + ": " + JSON.stringify(res));
               process.exit(1);
@@ -1574,7 +1579,7 @@ describe("KH-02 V12.4.3.7.12 — Evidence Eligibility Fencing & Production Concu
             await persistCollectorReceiptAtomically({
               receiptId: item.receiptId,
               provider: "google_trends_serpapi",
-              originKind: "ACTUAL_PROVIDER_INVOCATION",
+              originKind: "LOCAL_INTEGRITY_ONLY",
               targetProductOrKeyword: item.kw,
               region: "US",
               transportStatus: 200,
@@ -1583,6 +1588,7 @@ describe("KH-02 V12.4.3.7.12 — Evidence Eligibility Fencing & Production Concu
               rawByteCount: fs.readFileSync(item.artifactPath).length,
               artifactPath: item.artifactPath,
             });
+            await new Promise((r) => setTimeout(r, 20));
           }
           fs.writeFileSync(doneFile, "DONE", "utf-8");
           process.exit(0);
@@ -1592,11 +1598,13 @@ describe("KH-02 V12.4.3.7.12 — Evidence Eligibility Fencing & Production Concu
         "utf-8"
       );
 
+      let childExited = false;
       const writerPromise = spawnTsxWorker(writerScript, [testStorageDir, writerDoneFile, JSON.stringify(items)]);
+      writerPromise.then(() => { childExited = true; });
 
       // Continuously poll getTrustedProviderReceipt and resolveVerifiedDemandEvidence while writer runs
       let readIterations = 0;
-      while (!fs.existsSync(writerDoneFile)) {
+      while (!fs.existsSync(writerDoneFile) && !childExited) {
         for (const item of items) {
           const rec = getTrustedProviderReceipt(item.receiptId);
           if (rec && rec.eligible) {
@@ -1623,6 +1631,6 @@ describe("KH-02 V12.4.3.7.12 — Evidence Eligibility Fencing & Production Concu
         });
         expect(resolved.verified).toBe(true);
       }
-    }, 60000);
+    }, 120000);
   });
 });

@@ -23,6 +23,12 @@ import {
   DemandQuery,
 } from "./demandProviderRegistry";
 import { buildAuthorizedProductWhere } from "@/services/research/authorizedScopeHelpers";
+import {
+  classifyCandidateObservationAttribution,
+  filterAttributableObservations,
+  type CandidateAttributionContext,
+} from "./candidateDemandAttribution";
+import { areExactOrCanonicalEquivalentQueries } from "./providerObservationRawBinding";
 
 export type DemandCacheAuthorityClassification =
   | "CACHE_AUTHORITATIVE_FRESH"
@@ -55,6 +61,10 @@ export interface ProductDemandResolution {
     demandValue?: number | null;
     [key: string]: any;
   }>;
+  rawDbRecordsCount?: number;
+  candidateAttributableRecordsCount?: number;
+  excludedRecordsCount?: number;
+  attributionBreakdown?: Record<string, number>;
   sourceStatus: "PRODUCT_HISTORY_VERIFIED" | "INSUFFICIENT_HISTORY" | "ENGINE_READY";
   cacheClassification?: DemandCacheAuthorityClassification;
   providerAttempted?: boolean;
@@ -198,11 +208,12 @@ export async function resolveProductDemandHistory(
       take: 5,
     });
 
-    const candFamily = detectSpecificProductFamily(candidateObj.canonicalName || "");
     const matchingProduct = candidateProducts.find((mp) => {
-      const mpFamily = detectSpecificProductFamily(mp.title);
-      if (candFamily && mpFamily && candFamily !== mpFamily) return false;
-      return true;
+      // Must be canonically equivalent to the candidate name or search term to prevent broad substring attribution
+      return (
+        areExactOrCanonicalEquivalentQueries(mp.title, candidateObj.canonicalName) ||
+        areExactOrCanonicalEquivalentQueries(mp.title, searchTerm)
+      );
     });
 
     if (matchingProduct) {
@@ -276,6 +287,12 @@ export async function resolveProductDemandHistory(
       );
     }
 
+    if (partitionSummary.excludedCount > 0) {
+      coverageGaps.push(
+        `Excluded ${partitionSummary.excludedCount} stored observation(s) not attributable to candidate '${candidateObj.canonicalName || searchTerm}' (raw productId rows: ${rawRecords.length}, candidate-attributable: ${partitionSummary.attributableCount}).`
+      );
+    }
+
     return {
       productId: targetProductId,
       canonicalName: candidateObj.canonicalName || "",
@@ -289,6 +306,10 @@ export async function resolveProductDemandHistory(
       coverageGaps,
       assessment,
       dataPoints,
+      rawDbRecordsCount: rawRecords.length,
+      candidateAttributableRecordsCount: partitionSummary.attributableCount,
+      excludedRecordsCount: partitionSummary.excludedCount,
+      attributionBreakdown: partitionSummary.classifications,
       observations: rawRecords.map((r) => ({
         ...r,
         productId: r.productId || targetProductId,
@@ -301,9 +322,29 @@ export async function resolveProductDemandHistory(
     };
   };
 
-  // 3. Convert stored raw records to demand data points and evaluate authority/coverage
+  // 3. Candidate-scoped attribution partition: separate raw DB product observations from candidate-attributable records
+  const candidateAttributionContext: CandidateAttributionContext = {
+    candidateId: (candidateObj as any).candidateId || (candidateObj as any).id || null,
+    researchRunId: (options as any).researchRunId || null,
+    canonicalProductId: targetProductId,
+    candidateCanonicalName: candidateObj.canonicalName || "",
+    authorizedKeywords: [
+      candidateObj.canonicalName || "",
+      searchTerm,
+    ].filter(Boolean),
+    workspaceId: options.workspaceId || null,
+    region,
+    asOfTimestamp: (options as any).asOfTimestamp || (options as any).asOf || null,
+    strictChronological: (options as any).strictChronological || false,
+    verifiedAliases: (options as any).verifiedAliases || [],
+    strictProvenance: (options as any).strictProvenance || false,
+  };
+
+  const partitionSummary = filterAttributableObservations(rawRecords, candidateAttributionContext);
+
+  // Convert candidate-attributable records to demand data points and evaluate authority/coverage
   let currentPoints: DemandDataPoint[] = [];
-  for (const r of rawRecords) {
+  for (const r of partitionSummary.attributableObservations) {
     let verifiedDescriptor: any;
     if (r.evidenceReference) {
       const resolved = await resolveVerifiedDemandEvidence(r.evidenceReference, {
@@ -327,15 +368,15 @@ export async function resolveProductDemandHistory(
       evidenceReference: r.evidenceReference,
       methodologyVersion: r.methodologyVersion,
       isFixture: String(r.productId || "").startsWith("prod_fixture_"),
-      periodStart: r.periodStart.toISOString ? r.periodStart.toISOString() : String(r.periodStart),
-      periodEnd: r.periodEnd.toISOString ? r.periodEnd.toISOString() : String(r.periodEnd),
+      periodStart: (r.periodStart && typeof (r.periodStart as any).toISOString === "function") ? (r.periodStart as any).toISOString() : String(r.periodStart || ""),
+      periodEnd: (r.periodEnd && typeof (r.periodEnd as any).toISOString === "function") ? (r.periodEnd as any).toISOString() : String(r.periodEnd || ""),
       demandValue: r.demandValue,
       region: r.region,
       source: r.source,
-      date: r.periodStart.toISOString ? r.periodStart.toISOString() : String(r.periodStart),
+      date: (r.periodStart && typeof (r.periodStart as any).toISOString === "function") ? (r.periodStart as any).toISOString() : String(r.periodStart || ""),
       value: r.demandValue,
       verifiedDescriptor,
-      observedAt: r.observedAt ? (r.observedAt.toISOString ? r.observedAt.toISOString() : String(r.observedAt)) : undefined,
+      observedAt: r.observedAt ? ((typeof (r.observedAt as any).toISOString === "function") ? (r.observedAt as any).toISOString() : String(r.observedAt)) : undefined,
       capturedAt: verifiedDescriptor?.capturedAt,
     } as any);
   }
@@ -346,16 +387,18 @@ export async function resolveProductDemandHistory(
     requiredRegion: region,
     candidateCanonicalName: candidateObj.canonicalName || "",
     searchTermUsed: searchTerm,
+    verifiedAliases: (options as any).verifiedAliases || [],
   });
 
   const initialAuth = evaluateDemandSourceAuthority(currentPoints, {
     candidateCanonicalName: candidateObj.canonicalName || "",
     searchTermUsed: searchTerm,
+    verifiedAliases: (options as any).verifiedAliases || [],
   });
 
   let cacheClassification: DemandCacheAuthorityClassification;
-  if (rawRecords.length === 0) {
-    cacheClassification = "NO_VALID_DEMAND_EVIDENCE";
+  if (rawRecords.length === 0 || currentPoints.length === 0) {
+    cacheClassification = currentPoints.length === 0 && rawRecords.length > 0 ? "CACHE_UNVERIFIED" : "NO_VALID_DEMAND_EVIDENCE";
   } else if (
     initialAuth.authority === "AUTHORITATIVE_VERIFIED" ||
     initialAuth.authority === "HISTORICAL_SOURCE_VERIFIED"
@@ -558,6 +601,7 @@ export async function resolveProductDemandHistory(
     requiredRegion: region,
     candidateCanonicalName: candidateObj.canonicalName || "",
     searchTermUsed: searchTerm,
+    verifiedAliases: (options as any).verifiedAliases || [],
   });
 
   const isSourceVerified =
