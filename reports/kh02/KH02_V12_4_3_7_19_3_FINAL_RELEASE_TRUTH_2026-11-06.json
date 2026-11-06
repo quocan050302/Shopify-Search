@@ -1,0 +1,52 @@
+{
+  "releaseVersion": "12.4.3.7.19.3",
+  "releaseTitle": "Candidate-Scoped Demand Attribution, Zero-False-PASS Test Repair, and Complete KH-02 Verification",
+  "evaluatedAt": "2026-11-06T11:37:00+07:00",
+  "repository": "quocan050302/Shopify-Search",
+  "lockedBranch": "feature/kh02-walmart-us-jina-reader-v12.4.3.5.1",
+  "testedBaselineSha": "ade9f2f1dbb3dffdc8bf02f300b6e5d74eb7b0d9",
+  "scope": {
+    "objectiveA": "Candidate-scoped demand attribution in candidateDemandAttribution.ts & historicalDemandIngestion.ts",
+    "objectiveB": "Zero-false-pass test repair eliminating no-op assertions (expect(true).toBe(true)) in v12_4_3_7_19_2 test suite",
+    "objectiveC": "Full execution of KH-02 unit suite, KH-02 integration suite, KH-01 regression suite, tsc, and backtest replay with real logs",
+    "objectiveD": "Audit readback separating raw productId rows (6) from candidate-attributable rows (0) for UAHPET"
+  },
+  "candidateReadbackSummary": {
+    "cand_1212440541_UAHPET": {
+      "canonicalProductId": "cmvsy7zqh000jp0orhypwohho",
+      "rawProductIdRows": 6,
+      "candidateAttributableRows": 0,
+      "reason": "6 raw observations bear generic keyword 'Automatic Wet Food Cat Feeder with Cooling & Warming', which is classified as EXCLUDED_UNVERIFIED_ALIAS for UAHPET without explicit verified receipt binding."
+    },
+    "cand_1587534715_TheKittySpout": {
+      "canonicalProductId": null,
+      "rawProductIdRows": 0,
+      "candidateAttributableRows": 0,
+      "reason": "Zero US observations found in SQLite or local CSV storage."
+    },
+    "cand_1613504636_PetHairCleaner": {
+      "canonicalProductId": null,
+      "rawProductIdRows": 0,
+      "candidateAttributableRows": 0,
+      "reason": "Zero US observations found; candidate is CheckoutChamp funnel unverified."
+    }
+  },
+  "gatesTruth": {
+    "g15DemandStatus": "INSUFFICIENT_EVIDENCE",
+    "g16Top3Status": "INSUFFICIENT_EVIDENCE",
+    "g16DistinctEvergreenWinnersCount": 0,
+    "spendingProof": {
+      "googleTrendsCsvImport": "LOCAL_FS_IMPORT_ONLY_ZERO_COST",
+      "googleTrendsBigQuery": "NOT_CONFIGURED_NO_PROJECT_ID_ZERO_COST",
+      "serpApiGoogleTrends": "INERT_UNCONFIGURED_ZERO_COST",
+      "totalSpendUsd": 0.00
+    }
+  },
+  "noOpElimination": {
+    "fileTested": "tests/unit/kh02/v12_4_3_7_19_2_SourceTruthAndDiagnosticHonesty.test.ts",
+    "previousNoOpCount": 2,
+    "currentNoOpCount": 0,
+    "validatorEngine": "src/services/kh02/demand/testSuiteEvidenceValidator.ts"
+  }
+}
+

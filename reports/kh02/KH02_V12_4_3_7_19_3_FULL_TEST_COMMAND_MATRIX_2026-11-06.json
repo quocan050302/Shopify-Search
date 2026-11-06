@@ -1,0 +1,83 @@
+{
+  "version": "12.4.3.7.19.3",
+  "generatedAt": "2026-11-06T11:54:40+07:00",
+  "branch": "feature/kh02-walmart-us-jina-reader-v12.4.3.5.1",
+  "baselineSha": "ade9f2f1dbb3dffdc8bf02f300b6e5d74eb7b0d9",
+  "testExecutionMatrix": [
+    {
+      "gate": "Gate E3: KH-02 Unit Test Suite",
+      "command": "npm run kh02:test:unit",
+      "targetSuite": "tests/unit/kh02",
+      "exitCode": 0,
+      "testFilesPassed": 93,
+      "testFilesFailed": 0,
+      "testsPassed": 2109,
+      "testsFailed": 0,
+      "duration": "221.10s",
+      "logFile": "reports/kh02/logs/kh02_unit_test.log",
+      "status": "PASS"
+    },
+    {
+      "gate": "Gate E4: KH-02 Integration Suite",
+      "command": "npm run kh02:test:integration",
+      "targetSuite": "tests/integration/kh02",
+      "exitCode": 0,
+      "testFilesPassed": 16,
+      "testFilesFailed": 0,
+      "testsPassed": 77,
+      "testsFailed": 0,
+      "duration": "76.93s",
+      "logFile": "reports/kh02/logs/kh02_integration_test.log",
+      "status": "PASS"
+    },
+    {
+      "gate": "Gate E5: KH-01 Regression Suite",
+      "command": "npm run kh01:verify",
+      "targetSuite": "tests/unit/kh01* and tests/integration/kh01*",
+      "exitCode": 0,
+      "testFilesPassed": 5,
+      "testFilesFailed": 0,
+      "testsPassed": 69,
+      "testsFailed": 0,
+      "duration": "3.77s",
+      "logFile": "reports/kh02/logs/kh01_verify.log",
+      "status": "PASS"
+    },
+    {
+      "gate": "Gate E7: Key Target Test Files Suite",
+      "command": "npx vitest run tests/unit/kh02/v12_4_3_1_EvidenceProvenanceAndAsyncTruth.test.ts tests/unit/kh02/v12_4_3_2_LiveDiscoveryAuditAudienceUx.test.ts tests/unit/kh02/v12_4_3_5_2_UahpetDemandAndGoogleAdsPdpEvidence.test.ts tests/unit/kh02/v12_4_3_5_3_Flow02CsvProvenanceAndGoogleExactPdp.test.ts tests/unit/kh02/v12_4_3_7_19_2_SourceTruthAndDiagnosticHonesty.test.ts tests/unit/kh02/v12_4_3_7_19_3_CandidateScopeAttribution.test.ts",
+      "exitCode": 0,
+      "testFilesPassed": 6,
+      "testFilesFailed": 0,
+      "testsPassed": 138,
+      "testsFailed": 0,
+      "duration": "6.52s",
+      "status": "PASS"
+    },
+    {
+      "gate": "Gate E1: TypeScript Compilation",
+      "command": "npx tsc --noEmit",
+      "exitCode": 0,
+      "errors": 0,
+      "status": "PASS"
+    },
+    {
+      "gate": "Gate E6: Point-in-Time Backtest Replay",
+      "command": "npx tsx scripts/kh02/runBacktestV12_4_3_4_2.ts",
+      "exitCode": 0,
+      "policyScenario": "PASS",
+      "historicalDev": "INSUFFICIENT_HISTORICAL_EVIDENCE",
+      "historicalHoldout": "INSUFFICIENT_HISTORICAL_EVIDENCE",
+      "logFile": "reports/kh02/KH02_V12_4_3_7_19_3_BACKTEST_PROVENANCE_2026-11-06.json",
+      "status": "PASS"
+    },
+    {
+      "gate": "Gate E2: Git Diff & Whitespace Cleanliness",
+      "command": "git diff --check",
+      "exitCode": 0,
+      "outputLines": 0,
+      "status": "PASS"
+    }
+  ],
+  "verificationVerdict": "ALL_GATES_PASS"
+}

@@ -1,0 +1,71 @@
+{
+  "version": "12.4.3.7.19.3",
+  "generatedAt": "2026-11-06T04:55:12.012Z",
+  "files": [
+    {
+      "file": "reports/kh02/KH02_V12_4_3_7_19_3_CANDIDATE_ATTRIBUTION_AUDIT_2026-11-06.md",
+      "sha256": "57dbd8d1a80e3c68d35a721d4f1f7bf6ad09baea6f8474eeedf5123eb207a528",
+      "sizeBytes": 4661
+    },
+    {
+      "file": "reports/kh02/KH02_V12_4_3_7_19_3_CANDIDATE_SOURCE_READBACK_2026-11-06.json",
+      "sha256": "c6e23e8702a10a9e821b79121be1186e1943698592d2cf2abca03d3010c8c504",
+      "sizeBytes": 5687
+    },
+    {
+      "file": "reports/kh02/KH02_V12_4_3_7_19_3_KEYWORD_ALIAS_NEGATIVE_MATRIX_2026-11-06.json",
+      "sha256": "77786136494201dad7fd410963aed0650d8baf6fdcb31aa4802140aa76c65e9f",
+      "sizeBytes": 8893
+    },
+    {
+      "file": "reports/kh02/KH02_V12_4_3_7_19_3_BACKTEST_PROVENANCE_2026-11-06.json",
+      "sha256": "537d75730f0e177747c5d28d129d540b86acea26bc9ba8b3f19fc748d1df9894",
+      "sizeBytes": 1005
+    },
+    {
+      "file": "reports/kh02/KH02_V12_4_3_7_19_3_FULL_TEST_COMMAND_MATRIX_2026-11-06.json",
+      "sha256": "5ef07a971508a1b6920a01baf83ece57bc0849d800be797a5b4187e99041da97",
+      "sizeBytes": 2914
+    },
+    {
+      "file": "reports/kh02/KH02_V12_4_3_7_19_3_FINAL_RELEASE_TRUTH_2026-11-06.json",
+      "sha256": "b91b20ff4aab246ee962effcac6a51a5e25a2701c32143be5bb61f8805a41f8a",
+      "sizeBytes": 2474
+    },
+    {
+      "file": "src/services/kh02/demand/candidateDemandAttribution.ts",
+      "sha256": "4c478fa5b17b9bdcc461f09d914f1190c24bfcfa7b7c8f7b9cc46ebecd50a083",
+      "sizeBytes": 18860
+    },
+    {
+      "file": "src/services/kh02/demand/testSuiteEvidenceValidator.ts",
+      "sha256": "1e38c36b4fb0569c3185c3dc4aa40fb6d6644e0a1f604eb629a7a46e91252613",
+      "sizeBytes": 7840
+    },
+    {
+      "file": "tests/unit/kh02/v12_4_3_7_19_3_CandidateScopeAttribution.test.ts",
+      "sha256": "6075a3abe5fc8ef61ba426c7d1fdddf14b906d505e6e8988b53c53e400a6cc01",
+      "sizeBytes": 17827
+    },
+    {
+      "file": "tests/unit/kh02/v12_4_3_7_19_2_SourceTruthAndDiagnosticHonesty.test.ts",
+      "sha256": "147e3c66230f9c8aa5de3474f456a156ba9fc70e75a3d5d19749043be086e26d",
+      "sizeBytes": 15690
+    },
+    {
+      "file": "src/services/kh02/demand/historicalDemandIngestion.ts",
+      "sha256": "3f03f2b17e7b84e9b65eb1af1865d9ab46a052256e4591c695b86a1d00b0d5c8",
+      "sizeBytes": 25617
+    },
+    {
+      "file": "src/services/kh02/demand/temporalDemandEngine.ts",
+      "sha256": "9623ec4dec2fd5934308e6f94a7ede40edc2dade2837b1fbdf571eaac6eb677a",
+      "sizeBytes": 224327
+    },
+    {
+      "file": "src/services/kh02/demand/demandProviderRegistry.ts",
+      "sha256": "4d33488ff7fb773a67e44bea1a74899de6d88122ab66291c5527c2b7826bf9ae",
+      "sizeBytes": 32330
+    }
+  ]
+}

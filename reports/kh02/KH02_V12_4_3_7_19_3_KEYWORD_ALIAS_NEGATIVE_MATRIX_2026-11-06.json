@@ -1,0 +1,212 @@
+{
+  "version": "12.4.3.7.19.3",
+  "evaluatedAt": "2026-11-06T11:20:10+07:00",
+  "testedCodeCommitSha": "ade9f2f1dbb3dffdc8bf02f300b6e5d74eb7b0d9",
+  "targetCandidate": {
+    "candidateId": "cand_1212440541",
+    "canonicalProductId": "cmvsy7zqh000jp0orhypwohho",
+    "canonicalName": "UAHPET Fresh Food Automatic Pet Feeder",
+    "authorizedSearchKeywords": [
+      "UAHPET Fresh Food Automatic Pet Feeder"
+    ]
+  },
+  "testSuite": "tests/unit/kh02/v12_4_3_7_19_3_CandidateScopeAttribution.test.ts",
+  "totalAdversarialCases": 20,
+  "cases": [
+    {
+      "caseId": "C01",
+      "description": "ProductId matches but observation keyword is unrelated -> not counted for UAHPET G15",
+      "inputKeyword": "Stainless Steel Cat Water Fountain",
+      "canonicalProductId": "cmvsy7zqh000jp0orhypwohho",
+      "expectedClassification": "EXCLUDED_KEYWORD_MISMATCH",
+      "observedClassification": "EXCLUDED_KEYWORD_MISMATCH",
+      "isAttributable": false,
+      "verdict": "PASS"
+    },
+    {
+      "caseId": "C02",
+      "description": "UAHPET name vs Automatic Wet Food Cat Feeder without verified alias -> UNVERIFIED_ALIAS, not automatic PASS",
+      "inputKeyword": "Automatic Wet Food Cat Feeder with Cooling & Warming",
+      "canonicalProductId": "cmvsy7zqh000jp0orhypwohho",
+      "expectedClassification": "EXCLUDED_UNVERIFIED_ALIAS",
+      "observedClassification": "EXCLUDED_UNVERIFIED_ALIAS",
+      "isAttributable": false,
+      "verdict": "PASS"
+    },
+    {
+      "caseId": "C03",
+      "description": "An independently evidenced explicit alias -> accepted ONLY with same candidate, product, US geo, tenant/run, point-in-time and row provenance",
+      "inputKeyword": "Automatic Wet Food Cat Feeder with Cooling & Warming",
+      "aliasMetadata": {
+        "approvedBy": "qa_principal_lead",
+        "provenanceReference": "gov_decision_ref_20261106_alias_uahpet",
+        "workspaceId": "ws_acceptance_us"
+      },
+      "expectedClassification": "VERIFIED_EXPLICIT_ALIAS_MATCH",
+      "observedClassification": "VERIFIED_EXPLICIT_ALIAS_MATCH",
+      "isAttributable": true,
+      "verdict": "PASS"
+    },
+    {
+      "caseId": "C04",
+      "description": "Same canonical productId with two disjoint SKU keywords -> each candidate sees only authorized series",
+      "inputKeyword": "UAHPET Automatic Feeder Black Edition",
+      "candidate1": "UAHPET Automatic Feeder Black Edition (AUTHORIZED)",
+      "candidate2": "UAHPET Automatic Feeder White Edition (DISJOINT)",
+      "expectedClassification": "Candidate 1: EXACT_CANDIDATE_KEYWORD_MATCH; Candidate 2: EXCLUDED_UNVERIFIED_ALIAS",
+      "observedClassification": "EXACT_CANDIDATE_KEYWORD_MATCH / EXCLUDED_UNVERIFIED_ALIAS",
+      "isAttributable": "Cand1: true, Cand2: false",
+      "verdict": "PASS"
+    },
+    {
+      "caseId": "C05",
+      "description": "Cross-workspace observation with same productId+keyword -> excluded",
+      "inputWorkspace": "ws_other_tenant",
+      "candidateWorkspace": "ws_acceptance_us",
+      "expectedClassification": "EXCLUDED_WORKSPACE_OR_RUN",
+      "observedClassification": "EXCLUDED_WORKSPACE_OR_RUN",
+      "isAttributable": false,
+      "verdict": "PASS"
+    },
+    {
+      "caseId": "C06",
+      "description": "Cross-research-run observation with same productId+keyword -> excluded or explicitly demoted",
+      "inputRun": "run_other_session_999",
+      "candidateRun": "kh02_run_1793424091548_669k8",
+      "expectedClassification": "EXCLUDED_WORKSPACE_OR_RUN",
+      "observedClassification": "EXCLUDED_WORKSPACE_OR_RUN",
+      "isAttributable": false,
+      "verdict": "PASS"
+    },
+    {
+      "caseId": "C07",
+      "description": "Unknown/null candidate productId and empty query -> no proven G15 history",
+      "candidateId": null,
+      "canonicalProductId": null,
+      "expectedClassification": "INSUFFICIENT_CANDIDATE_IDENTITY",
+      "observedClassification": "INSUFFICIENT_CANDIDATE_IDENTITY",
+      "isAttributable": false,
+      "verdict": "PASS"
+    },
+    {
+      "caseId": "C08",
+      "description": "Substring product title / similar merchant URL -> cannot assert identity",
+      "inputKeyword": "Cat Feeder",
+      "expectedClassification": "EXCLUDED_UNVERIFIED_ALIAS",
+      "observedClassification": "EXCLUDED_UNVERIFIED_ALIAS",
+      "isAttributable": false,
+      "verdict": "PASS"
+    },
+    {
+      "caseId": "C09",
+      "description": "Different true product IDs in one cache series -> never merged",
+      "observationProductId": "prod_completely_different_id_456",
+      "candidateProductId": "cmvsy7zqh000jp0orhypwohho",
+      "expectedClassification": "EXCLUDED_CROSS_PRODUCT",
+      "observedClassification": "EXCLUDED_CROSS_PRODUCT",
+      "isAttributable": false,
+      "verdict": "PASS"
+    },
+    {
+      "caseId": "C10",
+      "description": "Cached historical row has valid SHA but wrong keyword for candidate -> excluded",
+      "inputKeyword": "Barking Dog Whistle Ultrasonic",
+      "evidenceReference": "trends-csv:official:sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "expectedClassification": "EXCLUDED_KEYWORD_MISMATCH",
+      "observedClassification": "EXCLUDED_KEYWORD_MISMATCH",
+      "isAttributable": false,
+      "verdict": "PASS"
+    },
+    {
+      "caseId": "C11",
+      "description": "CSV with valid header/row but different US keyword -> excluded",
+      "inputKeyword": "Self Cleaning Cat Litter Box",
+      "expectedClassification": "EXCLUDED_KEYWORD_MISMATCH",
+      "observedClassification": "EXCLUDED_KEYWORD_MISMATCH",
+      "isAttributable": false,
+      "verdict": "PASS"
+    },
+    {
+      "caseId": "C12",
+      "description": "CSV with correct keyword but UK region -> excluded for US G15",
+      "inputRegion": "GB",
+      "requiredRegion": "US",
+      "expectedClassification": "EXCLUDED_REGION",
+      "observedClassification": "EXCLUDED_REGION",
+      "isAttributable": false,
+      "verdict": "PASS"
+    },
+    {
+      "caseId": "C13",
+      "description": "Fixture/manual/demo observations -> not official VERIFIED business evidence",
+      "isFixture": true,
+      "expectedClassification": "EXCLUDED_FIXTURE_OR_PROXY",
+      "observedClassification": "EXCLUDED_FIXTURE_OR_PROXY",
+      "isAttributable": false,
+      "verdict": "PASS"
+    },
+    {
+      "caseId": "C14",
+      "description": "Stale receipt, future capturedAt or row after asOf -> rejected",
+      "futurePeriodStart": "2026-11-16T00:00:00.000Z",
+      "expectedClassification": "EXCLUDED_FUTURE_OR_POST_CUTOFF",
+      "observedClassification": "EXCLUDED_FUTURE_OR_POST_CUTOFF",
+      "isAttributable": false,
+      "verdict": "PASS"
+    },
+    {
+      "caseId": "C15",
+      "description": "Unverified provider-request: string -> never grants AUTHORIZED_PROOF under strict provenance",
+      "evidenceReference": "verified-merchant-demand:uahpet.com",
+      "strictProvenance": true,
+      "expectedClassification": "EXCLUDED_MISSING_PROVENANCE",
+      "observedClassification": "EXCLUDED_MISSING_PROVENANCE",
+      "isAttributable": false,
+      "verdict": "PASS"
+    },
+    {
+      "caseId": "C16",
+      "description": "Empty target series but 96 unrelated workspace rows -> eligible count 0, G15 insufficient (exact code INSUFFICIENT_HISTORY)",
+      "totalUnrelatedRows": 96,
+      "attributableRows": 0,
+      "g15Status": "INSUFFICIENT_HISTORY",
+      "coveredDays": 0,
+      "verdict": "PASS"
+    },
+    {
+      "caseId": "C17",
+      "description": "6 same-product-ID observations but 0 candidate-attributable rows -> report BOTH separately and do not grant history",
+      "rawProductIdRows": 6,
+      "candidateAttributableRows": 0,
+      "classificationCount": {
+        "EXCLUDED_UNVERIFIED_ALIAS": 6
+      },
+      "verdict": "PASS"
+    },
+    {
+      "caseId": "C18",
+      "description": "Source recovers new verified candidate point where cache has different keyword same date -> verified point retained",
+      "liveCandidatePoint": "UAHPET Fresh Food Automatic Pet Feeder (88)",
+      "cachePoint": "Automatic Wet Food Cat Feeder with Cooling & Warming (77)",
+      "deduplicationWinner": "UAHPET Fresh Food Automatic Pet Feeder",
+      "verdict": "PASS"
+    },
+    {
+      "caseId": "C19",
+      "description": "Same canonical query differing only whitespace/case/punctuation -> preserved per supported canonical comparison",
+      "rawInput": "  \"UAHPET fresh food automatic pet feeder\"  ",
+      "expectedClassification": "EXACT_CANDIDATE_KEYWORD_MATCH",
+      "observedClassification": "EXACT_CANDIDATE_KEYWORD_MATCH",
+      "isAttributable": true,
+      "verdict": "PASS"
+    },
+    {
+      "caseId": "C20",
+      "description": "Genuine ≥60d official CSV test fixture validates math/format in TEST_ONLY without affecting commercial G15, G16 or DEV/HOLDOUT",
+      "authority": "FIXTURE_ONLY",
+      "eligibleForEvergreen": false,
+      "verdict": "PASS"
+    }
+  ]
+}
+

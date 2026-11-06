@@ -1,0 +1,20 @@
+{
+  "version": "12.4.3.7.19.3",
+  "evaluatedAt": "2026-11-06T11:33:00+07:00",
+  "testedCodeSha": "ade9f2f1dbb3dffdc8bf02f300b6e5d74eb7b0d9",
+  "niche": "Pet Gadgets",
+  "backtestScript": "scripts/kh02/runBacktestV12_4_3_4_2.ts",
+  "policyScenarioVerdict": "PASS",
+  "policyScenarioCount": 21,
+  "pointInTimeIntegrityVerdict": "PASS",
+  "devHistoricalVerdict": "INSUFFICIENT_HISTORICAL_EVIDENCE",
+  "devCandidatesShortlisted": "0/0",
+  "holdoutHistoricalVerdict": "INSUFFICIENT_HISTORICAL_EVIDENCE",
+  "holdoutCandidatesShortlisted": "3/3 (INSUFFICIENT_HISTORICAL_EVIDENCE)",
+  "overallVerdict": "INSUFFICIENT_HISTORICAL_EVIDENCE",
+  "failClosedCompliance": true,
+  "externalDataBlocker": "Zero official Google Trends CSV exports exist in repository for the three target candidates (UAHPET, KittySpout, Cleaner). System truthfully maintains G15 INSUFFICIENT_HISTORY and G16 INSUFFICIENT_EVIDENCE without fabricating data.",
+  "g15Status": "INSUFFICIENT_EVIDENCE",
+  "g16Status": "INSUFFICIENT_EVIDENCE"
+}
+

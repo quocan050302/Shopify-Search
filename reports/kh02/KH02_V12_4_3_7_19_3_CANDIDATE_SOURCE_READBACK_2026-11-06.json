@@ -1,0 +1,148 @@
+{
+  "version": "12.4.3.7.19.3",
+  "evaluatedAt": "2026-11-06T11:20:00+07:00",
+  "testedCodeCommitSha": "ade9f2f1dbb3dffdc8bf02f300b6e5d74eb7b0d9",
+  "researchRunId": "kh02_run_1793424091548_669k8",
+  "database": "dev.db (read-only SQLite query snapshot)",
+  "workspaceId": "acceptance_v12_2_3_ws",
+  "candidates": [
+    {
+      "candidateId": "cand_1212440541",
+      "canonicalProductId": "cmvsy7zqh000jp0orhypwohho",
+      "title": "UAHPET Fresh Food Automatic Pet Feeder",
+      "authorizedSearchKeywords": [
+        "UAHPET Fresh Food Automatic Pet Feeder"
+      ],
+      "rawProductIdRows": 6,
+      "candidateAttributableRowsUs": 0,
+      "candidateAttributableRowsGlobal": 0,
+      "matchingArtifactFiles": 0,
+      "attributionBreakdown": {
+        "EXACT_CANDIDATE_KEYWORD_MATCH": 0,
+        "VERIFIED_EXPLICIT_ALIAS_MATCH": 0,
+        "EXCLUDED_UNVERIFIED_ALIAS": 6,
+        "EXCLUDED_KEYWORD_MISMATCH": 0,
+        "EXCLUDED_CROSS_PRODUCT": 0,
+        "EXCLUDED_WORKSPACE_OR_RUN": 0,
+        "EXCLUDED_REGION": 0,
+        "EXCLUDED_MISSING_PROVENANCE": 0,
+        "EXCLUDED_FUTURE_OR_POST_CUTOFF": 0,
+        "EXCLUDED_FIXTURE_OR_PROXY": 0,
+        "INSUFFICIENT_CANDIDATE_IDENTITY": 0
+      },
+      "g15DemandStatus": "INSUFFICIENT_HISTORY",
+      "coveredDays": 0,
+      "dataPointsCount": 0,
+      "eligibleForEvergreen": false,
+      "g16VerificationStatus": "MERCHANT_VERIFIED_NO_G15_DEMAND",
+      "rejectionReason": "ResearchProduct cmvsy7zqh000jp0orhypwohho possesses 6 raw DB observations with keyword 'Automatic Wet Food Cat Feeder with Cooling & Warming', but 0 are candidate-attributable to UAHPET without an explicit verified alias."
+    },
+    {
+      "candidateId": "cand_1587534715",
+      "canonicalProductId": null,
+      "title": "The KittySpout™ - Wireless Fountain",
+      "authorizedSearchKeywords": [
+        "The KittySpout™ - Wireless Fountain"
+      ],
+      "rawProductIdRows": 0,
+      "candidateAttributableRowsUs": 0,
+      "candidateAttributableRowsGlobal": 0,
+      "matchingArtifactFiles": 0,
+      "attributionBreakdown": {
+        "EXACT_CANDIDATE_KEYWORD_MATCH": 0,
+        "VERIFIED_EXPLICIT_ALIAS_MATCH": 0,
+        "EXCLUDED_UNVERIFIED_ALIAS": 0,
+        "EXCLUDED_KEYWORD_MISMATCH": 0,
+        "EXCLUDED_CROSS_PRODUCT": 0,
+        "EXCLUDED_WORKSPACE_OR_RUN": 0,
+        "EXCLUDED_REGION": 0,
+        "EXCLUDED_MISSING_PROVENANCE": 0,
+        "EXCLUDED_FUTURE_OR_POST_CUTOFF": 0,
+        "EXCLUDED_FIXTURE_OR_PROXY": 0,
+        "INSUFFICIENT_CANDIDATE_IDENTITY": 0
+      },
+      "g15DemandStatus": "INSUFFICIENT_HISTORY",
+      "coveredDays": 0,
+      "dataPointsCount": 0,
+      "eligibleForEvergreen": false,
+      "g16VerificationStatus": "MERCHANT_VERIFIED_NO_G15_DEMAND",
+      "rejectionReason": "Zero US historical demand observations exist in DB or local CSV storage for KittySpout."
+    },
+    {
+      "candidateId": "cand_1613504636",
+      "canonicalProductId": null,
+      "title": "Pet Hair/Lint/Dust Cleaner",
+      "authorizedSearchKeywords": [
+        "Pet Hair/Lint/Dust Cleaner"
+      ],
+      "rawProductIdRows": 0,
+      "candidateAttributableRowsUs": 0,
+      "candidateAttributableRowsGlobal": 0,
+      "matchingArtifactFiles": 0,
+      "attributionBreakdown": {
+        "EXACT_CANDIDATE_KEYWORD_MATCH": 0,
+        "VERIFIED_EXPLICIT_ALIAS_MATCH": 0,
+        "EXCLUDED_UNVERIFIED_ALIAS": 0,
+        "EXCLUDED_KEYWORD_MISMATCH": 0,
+        "EXCLUDED_CROSS_PRODUCT": 0,
+        "EXCLUDED_WORKSPACE_OR_RUN": 0,
+        "EXCLUDED_REGION": 0,
+        "EXCLUDED_MISSING_PROVENANCE": 0,
+        "EXCLUDED_FUTURE_OR_POST_CUTOFF": 0,
+        "EXCLUDED_FIXTURE_OR_PROXY": 0,
+        "INSUFFICIENT_CANDIDATE_IDENTITY": 0
+      },
+      "g15DemandStatus": "INSUFFICIENT_HISTORY",
+      "coveredDays": 0,
+      "dataPointsCount": 0,
+      "eligibleForEvergreen": false,
+      "g16VerificationStatus": "CHECKOUTCHAMP_FUNNEL_UNVERIFIED",
+      "rejectionReason": "Zero US historical demand observations exist; candidate is classified as CheckoutChamp funnel unverified."
+    }
+  ],
+  "dbWideDemographic": {
+    "totalDemandObservations": 96,
+    "totalUsDemandObservations": 96,
+    "totalUahpetRawProductIdObservations": 6,
+    "totalUahpetCandidateAttributableObservations": 0,
+    "unrelatedProductBreakdown": [
+      {
+        "productId": "cmvsy7zeg0001p0orsexc5psw",
+        "title": "Reusable Pet Hair Remover Roller",
+        "keyword": "Reusable Pet Hair Remover Roller",
+        "count": 6
+      },
+      {
+        "productId": "cmvsy7zoq000ap0or4ly9ciih",
+        "title": "Pawira Stainless Steel Water Fountain",
+        "keyword": "Pawira Stainless Steel Water Fountain",
+        "count": 6
+      },
+      {
+        "productId": "cmvsy7zqh000jp0orhypwohho",
+        "title": "Automatic Wet Food Cat Feeder with Cooling & Warming",
+        "keyword": "Automatic Wet Food Cat Feeder with Cooling & Warming",
+        "count": 6,
+        "note": "Associated with ResearchProduct cmvsy7zqh000jp0orhypwohho; unverified alias for UAHPET candidate cand_1212440541."
+      },
+      {
+        "productId": "cmvsy85zn000yp0ore89xpw92",
+        "title": "Rechargeable Hot Melt Glue Gun",
+        "keyword": "Rechargeable Hot Melt Glue Gun with Stand and 10 Glue Sticks",
+        "count": 6
+      }
+    ]
+  },
+  "sourceCapabilityStatus": {
+    "googleTrendsCsvImport": "IMPORT_CAPABLE_NO_TARGET_FILE",
+    "googleTrendsBigQuery": "NOT_CONFIGURED_NO_PROJECT_ID",
+    "serpApiGoogleTrends": "INERT_UNCONFIGURED_ZERO_SPEND"
+  },
+  "businessGatesStatus": {
+    "g15DemandStatus": "INSUFFICIENT_EVIDENCE",
+    "g16Top3Status": "INSUFFICIENT_EVIDENCE",
+    "g16DistinctEvergreenWinnersCount": 0,
+    "g16RankedWinners": []
+  }
+}
+
