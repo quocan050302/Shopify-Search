@@ -9,6 +9,10 @@
 
 import { areExactOrCanonicalEquivalentQueries, normalizeCanonicalQuery } from "./providerObservationRawBinding";
 import { detectSpecificProductFamily } from "./temporalDemandEngine";
+import {
+  verifyDurableCandidateAliasApproval,
+  type CandidateAliasApprovalRecord,
+} from "./durableCandidateAliasAuthority";
 
 const NON_BRAND_PREFIXES = new Set([
   "the", "a", "an", "automatic", "reusable", "rechargeable", "electric", "portable", "smart", "wireless", "stainless", "self", "pet", "dog", "cat", "multi", "dual"
@@ -34,6 +38,7 @@ export function extractCandidateBrandToken(title: string | null | undefined): st
 export type CandidateAttributionClassification =
   | "EXACT_CANDIDATE_KEYWORD_MATCH"
   | "VERIFIED_EXPLICIT_ALIAS_MATCH"
+  | "KEYWORD_ONLY_UNBOUND"
   | "EXCLUDED_KEYWORD_MISMATCH"
   | "EXCLUDED_UNVERIFIED_ALIAS"
   | "EXCLUDED_CROSS_PRODUCT"
@@ -62,12 +67,13 @@ const ACCESSORY_TOKENS = new Set([
 ]);
 
 /**
- * Validates whether a candidate alias descriptor possesses authentic, immutable, and scoped approval.
+ * Validates whether a candidate alias descriptor possesses authentic, immutable, and scoped approval
+ * backed by an independent durable signed approval record.
  */
 export function isAuthenticVerifiedCandidateAlias(
   alias: VerifiedCandidateAlias,
   context: CandidateAttributionContext
-): { valid: boolean; reason?: string } {
+): { valid: boolean; reason?: string; approvalRecord?: CandidateAliasApprovalRecord; isTestOnly?: boolean } {
   if (!alias || typeof alias !== "object") {
     return { valid: false, reason: "Alias descriptor is missing or not an object." };
   }
@@ -88,26 +94,34 @@ export function isAuthenticVerifiedCandidateAlias(
     return { valid: false, reason: "Alias lacks immutable provenanceReference." };
   }
   const ref = String(alias.provenanceReference).trim();
-  if (!/^(gov_decision_ref_|urn:|sha256:|receipt:|trends-csv:|gov:)/i.test(ref)) {
+  if (!/^(gov_decision_ref_|urn:|sha256:|receipt:|trends-csv:|gov:|alias_appr_)/i.test(ref)) {
     return { valid: false, reason: `Alias provenanceReference '${ref}' lacks verifiable immutable reference prefix.` };
   }
-  if (alias.workspaceId && context.workspaceId && alias.workspaceId !== context.workspaceId) {
-    return { valid: false, reason: `Alias workspaceId '${alias.workspaceId}' does not match context workspaceId '${context.workspaceId}'.` };
+
+  // Independent verification against durable signed alias authority
+  const verification = verifyDurableCandidateAliasApproval(ref, {
+    workspaceId: context.workspaceId,
+    candidateId: context.candidateId,
+    canonicalProductId: context.canonicalProductId,
+    candidateCanonicalName: context.candidateCanonicalName,
+    researchRunId: context.researchRunId,
+    region: context.region,
+    asOfTimestamp: context.asOfTimestamp,
+    observationKeyword: alias.aliasKeyword,
+  });
+
+  if (!verification.valid) {
+    return {
+      valid: false,
+      reason: `Independent durable alias authority check failed (${verification.code}): ${verification.reason}`,
+    };
   }
-  if (alias.candidateId && context.candidateId && alias.candidateId !== context.candidateId) {
-    return { valid: false, reason: `Alias candidateId '${alias.candidateId}' does not match context candidateId '${context.candidateId}'.` };
-  }
-  if (alias.targetProductId && context.canonicalProductId && alias.targetProductId !== context.canonicalProductId) {
-    return { valid: false, reason: `Alias targetProductId '${alias.targetProductId}' does not match context canonicalProductId '${context.canonicalProductId}'.` };
-  }
-  if (context.asOfTimestamp && alias.approvedAt) {
-    const appTime = new Date(alias.approvedAt).getTime();
-    const asOfTime = new Date(context.asOfTimestamp).getTime();
-    if (!isNaN(appTime) && !isNaN(asOfTime) && appTime > asOfTime) {
-      return { valid: false, reason: `Alias approvedAt '${alias.approvedAt}' exceeds asOfTimestamp cutoff '${context.asOfTimestamp}'.` };
-    }
-  }
-  return { valid: true };
+
+  return {
+    valid: true,
+    approvalRecord: verification.record,
+    isTestOnly: verification.isTestOnly,
+  };
 }
 
 export interface CandidateAttributionContext {
@@ -153,6 +167,8 @@ export interface CandidateAttributionResult {
   observationProductId: string | null;
   observationKeyword: string | null;
   matchedAlias?: VerifiedCandidateAlias | null;
+  approvalRecord?: CandidateAliasApprovalRecord | null;
+  isTestOnly?: boolean;
 }
 
 /**
@@ -212,6 +228,32 @@ export function classifyCandidateObservationAttribution(
       classification: "EXCLUDED_CROSS_PRODUCT",
       isAttributable: false,
       reason: `Observation productId '${observationProductId}' does not match candidate canonical productId '${canonicalProductId}'.`,
+      candidateId,
+      canonicalProductId,
+      observationProductId,
+      observationKeyword,
+    };
+  }
+
+  // 3b. Unbound observation productId: Candidate has no canonical productId, but observation specifies a foreign productId
+  if (!canonicalProductId && observationProductId) {
+    return {
+      classification: "KEYWORD_ONLY_UNBOUND",
+      isAttributable: false,
+      reason: `Observation specifies productId '${observationProductId}' but candidate has no canonical product ID linking them.`,
+      candidateId,
+      canonicalProductId,
+      observationProductId,
+      observationKeyword,
+    };
+  }
+
+  // 3c. Observation lacks productId while candidate requires canonical productId and lacks verified raw binding
+  if (canonicalProductId && !observationProductId && !observation.evidenceReference) {
+    return {
+      classification: "INSUFFICIENT_CANDIDATE_IDENTITY",
+      isAttributable: false,
+      reason: `Observation lacks productId while candidate requires canonical productId '${canonicalProductId}'.`,
       candidateId,
       canonicalProductId,
       observationProductId,
@@ -465,6 +507,8 @@ export function classifyCandidateObservationAttribution(
             observationProductId,
             observationKeyword,
             matchedAlias: alias,
+            approvalRecord: aliasAuth.approvalRecord || null,
+            isTestOnly: aliasAuth.isTestOnly || false,
           };
         } else {
           return {
@@ -590,6 +634,7 @@ export function filterAttributableObservations(
     EXCLUDED_FUTURE_OR_POST_CUTOFF: 0,
     EXCLUDED_FIXTURE_OR_PROXY: 0,
     INSUFFICIENT_CANDIDATE_IDENTITY: 0,
+    KEYWORD_ONLY_UNBOUND: 0,
   };
 
   for (const obs of observations) {

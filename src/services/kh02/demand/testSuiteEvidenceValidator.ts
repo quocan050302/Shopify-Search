@@ -13,6 +13,15 @@ import crypto from "crypto";
 
 export type TestSuiteExecutionStatus = "PASS" | "FAIL" | "INCOMPLETE" | "STALE" | "NOT_RUN";
 
+export type VerificationLevel =
+  | "PARSED_CLAIM"
+  | "LOCAL_PROCESS_CAPTURED"
+  | "EXACT_CODE_TREE_VERIFIED"
+  | "CI_PROVIDER_VERIFIED"
+  | "INCOMPLETE"
+  | "STALE"
+  | "FAIL";
+
 export interface TestSuiteExecutionEvidenceInput {
   command: string;
   exitCode: number;
@@ -21,6 +30,15 @@ export interface TestSuiteExecutionEvidenceInput {
   logFilePath?: string | null;
   checkoutSha: string;
   expectedCheckoutSha?: string | null;
+  codeTreeSha?: string | null;
+  expectedCodeTreeSha?: string | null;
+  expectedLogSha256?: string | null;
+  ciProviderProof?: {
+    provider: "github-actions";
+    runId: string;
+    checkSuiteId?: string;
+    commitSha: string;
+  } | null;
   mandatoryTestFiles?: string[];
   callerClaimsFullCoverage?: boolean;
 }
@@ -39,9 +57,13 @@ export interface ParsedRunnerMetrics {
 export interface TestSuiteValidationReport {
   status: TestSuiteExecutionStatus;
   valid: boolean;
+  verificationLevel: VerificationLevel;
   command: string;
   exitCode: number;
   checkoutSha: string;
+  codeTreeSha: string | null;
+  codeTreeVerified: boolean;
+  ciVerified: boolean;
   logFileSha256: string | null;
   logFileBytes: number;
   metrics: ParsedRunnerMetrics;
@@ -132,6 +154,20 @@ export function validateTestSuiteExecutionEvidence(
     );
   }
 
+  // 1b. Validate code tree SHA parity
+  let codeTreeVerified = false;
+  if (input.expectedCodeTreeSha && input.codeTreeSha) {
+    if (input.codeTreeSha !== input.expectedCodeTreeSha) {
+      rejectionReasons.push(
+        `Code tree SHA mismatch: execution ran on tree '${input.codeTreeSha}', but expected tree is '${input.expectedCodeTreeSha}' (CODE_TREE_MUTATION).`
+      );
+    } else {
+      codeTreeVerified = true;
+    }
+  } else if (input.expectedCodeTreeSha && !input.codeTreeSha) {
+    rejectionReasons.push("Expected code tree SHA was required but no codeTreeSha was provided (CODE_TREE_UNVERIFIED).");
+  }
+
   // 2. Validate exit code
   if (input.exitCode !== 0) {
     rejectionReasons.push(`Command '${input.command}' exited with non-zero exit code: ${input.exitCode}.`);
@@ -161,6 +197,31 @@ export function validateTestSuiteExecutionEvidence(
   } else {
     logFileBytes = Buffer.byteLength(rawContent, "utf-8");
     logFileSha256 = crypto.createHash("sha256").update(rawContent).digest("hex");
+  }
+
+  // 3b. Validate log hash integrity against expected log hash
+  if (input.expectedLogSha256 && logFileSha256) {
+    if (logFileSha256.toLowerCase() !== input.expectedLogSha256.toLowerCase()) {
+      rejectionReasons.push(
+        `Corrupted log bytes: computed SHA-256 '${logFileSha256}' does not match expected SHA-256 '${input.expectedLogSha256}' (CORRUPTED_LOG).`
+      );
+    }
+  }
+
+  // 3c. Validate CI provider proof if claimed
+  let ciVerified = false;
+  if (input.ciProviderProof) {
+    if (
+      input.ciProviderProof.provider === "github-actions" &&
+      input.ciProviderProof.runId &&
+      input.ciProviderProof.commitSha === input.checkoutSha
+    ) {
+      ciVerified = true;
+    } else {
+      rejectionReasons.push(
+        `CI provider proof verification failed: commitSha '${input.ciProviderProof.commitSha}' does not match execution checkout '${input.checkoutSha}'.`
+      );
+    }
   }
 
   // 4. Parse runner metrics
@@ -205,18 +266,33 @@ export function validateTestSuiteExecutionEvidence(
   let status: TestSuiteExecutionStatus = "PASS";
   if (rejectionReasons.some((r) => r.includes("STALE_LOG"))) {
     status = "STALE";
-  } else if (rejectionReasons.some((r) => r.includes("ZERO_TESTS") || r.includes("missing from execution"))) {
+  } else if (rejectionReasons.some((r) => r.includes("ZERO_TESTS") || r.includes("missing from execution") || r.includes("CODE_TREE_UNVERIFIED"))) {
     status = "INCOMPLETE";
   } else if (rejectionReasons.length > 0) {
     status = "FAIL";
   }
 
+  let verificationLevel: VerificationLevel = "PARSED_CLAIM";
+  if (status !== "PASS") {
+    verificationLevel = status as VerificationLevel;
+  } else if (ciVerified) {
+    verificationLevel = "CI_PROVIDER_VERIFIED";
+  } else if (codeTreeVerified) {
+    verificationLevel = "EXACT_CODE_TREE_VERIFIED";
+  } else if (input.logFilePath || (input.stdout && input.stdout.length > 50)) {
+    verificationLevel = "LOCAL_PROCESS_CAPTURED";
+  }
+
   return {
     status,
     valid: status === "PASS",
+    verificationLevel,
     command: input.command,
     exitCode: input.exitCode,
     checkoutSha: input.checkoutSha,
+    codeTreeSha: input.codeTreeSha || null,
+    codeTreeVerified,
+    ciVerified,
     logFileSha256,
     logFileBytes,
     metrics,

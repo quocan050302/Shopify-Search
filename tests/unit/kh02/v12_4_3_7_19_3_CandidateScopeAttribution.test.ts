@@ -16,6 +16,11 @@ import {
   type VerifiedCandidateAlias,
 } from "@/services/kh02/demand/candidateDemandAttribution";
 import {
+  registerAliasSigningKey,
+  createSignedCandidateAliasApproval,
+  persistCandidateAliasApprovalAtomically,
+} from "@/services/kh02/demand/durableCandidateAliasAuthority";
+import {
   evaluateDemandHistoryEvidence,
   evaluateDemandSourceAuthority,
   areExactOrCanonicalEquivalentQueries,
@@ -76,12 +81,36 @@ describe("KH-02 V12.4.3.7.19.3: Candidate-Scoped Demand Attribution Matrix (C01 
   });
 
   it("C03: An independently evidenced explicit alias -> accepted ONLY with same candidate, product, US geo, tenant/run, point-in-time and row provenance", () => {
+    const testKeyId = "test_alias_key_c03";
+    registerAliasSigningKey({
+      keyId: testKeyId,
+      secret: "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+      status: "TEST_ONLY",
+      purpose: "KH02_DEMAND_ALIAS",
+      description: "Test signing key for C03",
+    });
+
+    const approvalRecord = createSignedCandidateAliasApproval({
+      approvalId: "gov_decision_ref_20261106_alias_uahpet",
+      candidateId: "cand_1212440541",
+      targetProductId: uahpetCanonicalId,
+      aliasKeyword: catFeederKeyword,
+      authorizedCanonicalKeyword: uahpetCandidateTitle,
+      workspaceId: "ws_acceptance_us",
+      region: "US",
+      approverPrincipalId: "qa_principal_lead",
+      issuerKeyId: testKeyId,
+      evidenceChainReference: "urn:swai:evidence:merchant_pdp_identity:uahpet_cat_feeder_official",
+      isTestOnly: true,
+    });
+    persistCandidateAliasApprovalAtomically(approvalRecord);
+
     const verifiedAlias: VerifiedCandidateAlias = {
       aliasKeyword: catFeederKeyword,
       targetProductId: uahpetCanonicalId,
       candidateId: "cand_1212440541",
       approvedBy: "qa_principal_lead",
-      provenanceReference: "gov_decision_ref_20261106_alias_uahpet",
+      provenanceReference: approvalRecord.approvalId,
       workspaceId: "ws_acceptance_us",
     };
 

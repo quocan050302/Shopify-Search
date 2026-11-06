@@ -18,6 +18,13 @@ import {
   type VerifiedCandidateAlias,
 } from "@/services/kh02/demand/candidateDemandAttribution";
 import {
+  registerAliasSigningKey,
+  createSignedCandidateAliasApproval,
+  persistCandidateAliasApprovalAtomically,
+  revokeCandidateAliasAtomically,
+  clearTestAliasSigningKeys,
+} from "@/services/kh02/demand/durableCandidateAliasAuthority";
+import {
   resolveProductDemandHistory,
   type ProductDemandResolution,
 } from "@/services/kh02/demand/historicalDemandIngestion";
@@ -252,11 +259,20 @@ describe("KH-02 V12.4.3.7.19.3.1: Unified Candidate Attribution Across Cache & F
       demandValue: 70,
     };
 
-    // Since candidate has null canonicalProductId, obsWithDifferentProd has a productId that cannot be verified
+    // Since candidate has null canonicalProductId, obsWithDifferentProd has a productId that belongs to foreign identity
     const res = classifyCandidateObservationAttribution(obsWithDifferentProd, noProductContext);
-    // When canonicalProductId is null, observation with non-null productId lacks binding
-    expect(res.isAttributable).toBe(true); // matches keyword
-    // But resolution engine will not commit it without canonical product ID
+    expect(res.isAttributable).toBe(false);
+    expect(res.classification).toBe("KEYWORD_ONLY_UNBOUND");
+
+    // Sub-case: observation productId is ALSO null/undefined -> matches candidate keyword
+    const obsWithNullProd: CandidateObservationRecord = {
+      productId: null,
+      keyword: "New Trending Dog Harness",
+      demandValue: 70,
+    };
+    const resNull = classifyCandidateObservationAttribution(obsWithNullProd, noProductContext);
+    expect(resNull.isAttributable).toBe(true);
+    expect(resNull.classification).toBe("EXACT_CANDIDATE_KEYWORD_MATCH");
   });
 
   it("A11: Cross-workspace and cross-research-run reuse => excluded", () => {
@@ -358,29 +374,57 @@ describe("KH-02 V12.4.3.7.19.3.1: Unified Candidate Attribution Across Cache & F
   });
 
   it("A15: Authenticated, durable, correctly scoped alias with immutable proof => only exact approved alias passes; revoked fails", () => {
+    const testKeyId = "test_alias_key_a15";
+    registerAliasSigningKey({
+      keyId: testKeyId,
+      secret: "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+      status: "TEST_ONLY",
+      purpose: "KH02_DEMAND_ALIAS",
+      description: "Test signing key for A15",
+    });
+
+    const approvalId = `alias_appr_a15_${Date.now()}_${Math.random().toString(36).substring(2, 8)}`;
+    const approvalRecord = createSignedCandidateAliasApproval({
+      approvalId,
+      candidateId: "cand_1212440541",
+      targetProductId: uahpetCanonicalId,
+      aliasKeyword: catFeederKeyword,
+      authorizedCanonicalKeyword: uahpetCandidateTitle,
+      workspaceId: "ws_acceptance_us",
+      region: "US",
+      approverPrincipalId: "qa_principal_lead",
+      issuerKeyId: testKeyId,
+      evidenceChainReference: "urn:swai:evidence:merchant_pdp_identity:uahpet_cat_feeder_official",
+      isTestOnly: true,
+    });
+    persistCandidateAliasApprovalAtomically(approvalRecord);
+
     const authenticAlias: VerifiedCandidateAlias = {
       aliasKeyword: catFeederKeyword,
       targetProductId: uahpetCanonicalId,
       candidateId: "cand_1212440541",
       approvedBy: "qa_principal_lead",
-      provenanceReference: "gov_decision_ref_20261106_alias_uahpet",
+      provenanceReference: approvalRecord.approvalId,
       workspaceId: "ws_acceptance_us",
     };
 
     const validCheck = isAuthenticVerifiedCandidateAlias(authenticAlias, uahpetContext);
     expect(validCheck.valid).toBe(true);
 
-    const revokedAlias: VerifiedCandidateAlias = {
-      ...authenticAlias,
-      revoked: true,
-    };
-    const revokedCheck = isAuthenticVerifiedCandidateAlias(revokedAlias, uahpetContext);
+    // Atomically revoke the approval in durable ledger
+    revokeCandidateAliasAtomically(
+      approvalRecord.approvalId,
+      "Test revocation for A15",
+      "qa_principal_lead"
+    );
+
+    const revokedCheck = isAuthenticVerifiedCandidateAlias(authenticAlias, uahpetContext);
     expect(revokedCheck.valid).toBe(false);
     expect(revokedCheck.reason).toContain("revoked");
 
     const resRevoked = classifyCandidateObservationAttribution(
       { productId: uahpetCanonicalId, keyword: catFeederKeyword, demandValue: 80 },
-      { ...uahpetContext, verifiedAliases: [revokedAlias] }
+      { ...uahpetContext, verifiedAliases: [authenticAlias] }
     );
     expect(resRevoked.isAttributable).toBe(false);
     expect(resRevoked.classification).toBe("EXCLUDED_UNVERIFIED_ALIAS");
