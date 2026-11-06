@@ -88,6 +88,7 @@ export function normalizeCanonicalQuery(query: string | null | undefined): strin
     .replace(/["'“”‘’]/g, "")
     .replace(/[^\p{L}\p{N}\s\-]/gu, " ")
     .replace(/\s+/g, " ")
+    .replace(/^[\s\-–—]+|[\s\-–—]+$/g, "")
     .trim();
 }
 

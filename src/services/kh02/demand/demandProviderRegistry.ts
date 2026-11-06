@@ -20,6 +20,10 @@ import {
 } from "./temporalDemandEngine";
 import { verifyStoredCsvFile } from "./googleTrendsCsvValidator";
 import {
+  classifyCandidateObservationAttribution,
+  type CandidateAttributionContext,
+} from "./candidateDemandAttribution";
+import {
   executeBigQueryTrendsSearch,
   verifyGoogleCloudProjectBilling,
   PUBLIC_GOOGLE_TRENDS_TOP_TERMS_TABLE,
@@ -380,6 +384,13 @@ export class GoogleTrendsCsvImportProvider implements HistoricalDemandProvider {
         orderBy: { periodStart: "asc" },
       });
 
+      const attrContext: CandidateAttributionContext = {
+        canonicalProductId: query.productId || null,
+        candidateCanonicalName: query.canonicalProductName || query.term || null,
+        authorizedKeywords: [query.canonicalProductName, query.term].filter((k): k is string => Boolean(k && k.trim())),
+        region: query.region || "US",
+      };
+
       const verifiedPoints: DemandDataPointResult[] = [];
       for (const r of records) {
         if (query.productId && r.productId !== query.productId) continue;
@@ -398,13 +409,9 @@ export class GoogleTrendsCsvImportProvider implements HistoricalDemandProvider {
           if (candFam && kwFam && candFam !== kwFam) continue;
         }
 
-        // Validate keyword relevance to candidate product
-        const checkTarget = (query.canonicalProductName || query.term).toLowerCase();
-        const kwLower = (r.keyword || "").toLowerCase();
-        const isSubstringMatch = checkTarget.includes(kwLower) || kwLower.includes(checkTarget);
-        const kwWords = kwLower.split(/\s+/).filter((w: string) => w.length > 2);
-        const hasWordOverlap = kwWords.some((w: string) => checkTarget.includes(w));
-        if (!isSubstringMatch && !hasWordOverlap) {
+        // Shared Candidate-Scoped Attribution Evaluation
+        const attrRes = classifyCandidateObservationAttribution(r, attrContext);
+        if (!attrRes.isAttributable) {
           continue; // Keyword cannot be attributed to candidate product
         }
 

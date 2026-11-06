@@ -1801,6 +1801,7 @@ export async function runEvergreenProductResearch(
       if (isSelected("DEMAND_HISTORY")) {
         demandRes = await resolveProductDemandHistory(
           {
+            candidateId: candidate.candidateId,
             productId: candidate.researchProductId,
             canonicalName: candidate.title,
             category: candidate.category,

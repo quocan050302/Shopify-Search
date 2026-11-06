@@ -27,8 +27,9 @@ import {
   classifyCandidateObservationAttribution,
   filterAttributableObservations,
   type CandidateAttributionContext,
+  type VerifiedCandidateAlias,
 } from "./candidateDemandAttribution";
-import { areExactOrCanonicalEquivalentQueries } from "./providerObservationRawBinding";
+import { areExactOrCanonicalEquivalentQueries, normalizeCanonicalQuery } from "./providerObservationRawBinding";
 
 export type DemandCacheAuthorityClassification =
   | "CACHE_AUTHORITATIVE_FRESH"
@@ -40,7 +41,29 @@ export type DemandCacheAuthorityClassification =
   | "LIVE_PROVIDER_FAILED"
   | "NO_VALID_DEMAND_EVIDENCE";
 
+export interface CandidateDemandTarget {
+  candidateId?: string | null;
+  productId?: string | null;
+  canonicalName?: string;
+  category?: string | null;
+  authorizedKeywords?: string[];
+}
+
+export interface ProductDemandResolutionOptions {
+  lookbackDays?: number;
+  region?: string;
+  workspaceId?: string | null;
+  researchRunId?: string | null;
+  queryId?: string | null;
+  asOfTimestamp?: string | Date | null;
+  asOf?: string | Date | null;
+  strictChronological?: boolean;
+  strictProvenance?: boolean;
+  verifiedAliases?: VerifiedCandidateAlias[];
+}
+
 export interface ProductDemandResolution {
+  candidateId?: string | null;
   productId: string | null;
   canonicalName: string;
   rawTerm: string;
@@ -144,22 +167,10 @@ export function normalizeDemandQueryTerm(rawTerm: string): {
  * Strictly respects workspace authorization and never merges unrelated product series.
  */
 export async function resolveProductDemandHistory(
-  candidate:
-    | string
-    | {
-        productId?: string | null;
-        canonicalName?: string;
-        category?: string | null;
-      },
-  options: {
-    lookbackDays?: number;
-    region?: string;
-    workspaceId?: string;
-    researchRunId?: string;
-    queryId?: string;
-  } = {}
+  candidate: string | CandidateDemandTarget,
+  options: ProductDemandResolutionOptions = {}
 ): Promise<ProductDemandResolution> {
-  const candidateObj =
+  const candidateObj: CandidateDemandTarget =
     typeof candidate === "string"
       ? { productId: candidate, canonicalName: "", category: null }
       : candidate;
@@ -294,6 +305,7 @@ export async function resolveProductDemandHistory(
     }
 
     return {
+      candidateId: candidateObj.candidateId || null,
       productId: targetProductId,
       canonicalName: candidateObj.canonicalName || "",
       rawTerm,
@@ -324,20 +336,26 @@ export async function resolveProductDemandHistory(
 
   // 3. Candidate-scoped attribution partition: separate raw DB product observations from candidate-attributable records
   const candidateAttributionContext: CandidateAttributionContext = {
-    candidateId: (candidateObj as any).candidateId || (candidateObj as any).id || null,
-    researchRunId: (options as any).researchRunId || null,
+    candidateId: candidateObj.candidateId || null,
+    researchRunId: options.researchRunId || null,
     canonicalProductId: targetProductId,
     candidateCanonicalName: candidateObj.canonicalName || "",
-    authorizedKeywords: [
-      candidateObj.canonicalName || "",
-      searchTerm,
-    ].filter(Boolean),
+    searchTermUsed: searchTerm,
+    authorizedKeywords: Array.from(
+      new Set(
+        [
+          candidateObj.canonicalName || "",
+          searchTerm,
+          ...(candidateObj.authorizedKeywords || []),
+        ].filter(Boolean)
+      )
+    ),
     workspaceId: options.workspaceId || null,
     region,
-    asOfTimestamp: (options as any).asOfTimestamp || (options as any).asOf || null,
-    strictChronological: (options as any).strictChronological || false,
-    verifiedAliases: (options as any).verifiedAliases || [],
-    strictProvenance: (options as any).strictProvenance || false,
+    asOfTimestamp: options.asOfTimestamp || options.asOf || null,
+    strictChronological: options.strictChronological || false,
+    verifiedAliases: options.verifiedAliases || [],
+    strictProvenance: options.strictProvenance || false,
   };
 
   const partitionSummary = filterAttributableObservations(rawRecords, candidateAttributionContext);
@@ -458,11 +476,22 @@ export async function resolveProductDemandHistory(
         providerError = seriesResult.error || null;
 
         if (seriesResult.status === "SUCCESS" && seriesResult.points.length > 0) {
+          // V19.3.1 HARDENING: Apply unified candidate attribution to fresh provider points BEFORE DB admission
+          const freshPartition = filterAttributableObservations(seriesResult.points, candidateAttributionContext);
+
           let batchImportSucceeded = false;
           let batchImportError: string | null = null;
 
-          if (targetProductId) {
-            const pointsToImport = seriesResult.points.map((pt) => {
+          if (freshPartition.attributableCount === 0) {
+            batchImportSucceeded = false;
+            providerStatus = "INSUFFICIENT_DATA";
+            providerError = `Provider returned ${seriesResult.points.length} points, but 0 were attributable to candidate '${candidateObj.canonicalName || searchTerm}' (${freshPartition.excludedCount} excluded).`;
+          } else if (!targetProductId) {
+            batchImportSucceeded = false;
+            providerStatus = "INSUFFICIENT_DATA";
+            providerError = "Candidate lacks canonical targetProductId; fresh observations cannot be committed to durable verified history.";
+          } else {
+            const pointsToImport = freshPartition.attributableObservations.map((pt) => {
               const evidenceRef =
                 (pt as any).evidenceReference ||
                 ((seriesResult as any).receiptId
@@ -470,7 +499,7 @@ export async function resolveProductDemandHistory(
                   : null);
               const pointSource =
                 pt.source || (isGoogleFreeMode ? "Google Trends (Free Demand)" : "Google Trends (SerpApi)");
-              const pointKeyword = pt.keyword || searchTerm;
+              const pointKeyword = pt.keyword ? String(pt.keyword).trim() : (searchTerm || "");
               const pointMethodology =
                 pt.methodologyVersion ||
                 (pointSource === "GOOGLE_TRENDS_CSV"
@@ -482,9 +511,9 @@ export async function resolveProductDemandHistory(
               return {
                 keyword: pointKeyword,
                 region: pt.region || region,
-                periodStart: pt.periodStart,
-                periodEnd: pt.periodEnd,
-                demandValue: pt.demandValue,
+                periodStart: (pt.periodStart || new Date().toISOString()) as string | Date,
+                periodEnd: pt.periodEnd || undefined,
+                demandValue: pt.demandValue ?? (pt as any).value,
                 source: pointSource,
                 evidenceReference: evidenceRef,
                 methodologyVersion: pointMethodology,
@@ -495,10 +524,10 @@ export async function resolveProductDemandHistory(
               await executeDemandObservationBatchImport({
                 productId: targetProductId,
                 workspaceId: options.workspaceId || null,
-                researchRunId: (options as any).researchRunId || null,
+                researchRunId: options.researchRunId || null,
                 source: pointsToImport[0]?.source || "PROVIDER_API",
                 strictProvenance: true,
-                asOfTimestamp: (options as any).asOfTimestamp || (options as any).asOf || null,
+                asOfTimestamp: options.asOfTimestamp || options.asOf || null,
                 points: pointsToImport,
               });
               batchImportSucceeded = true;
@@ -508,13 +537,11 @@ export async function resolveProductDemandHistory(
               providerStatus = "FAILED";
               providerError = `Provider proof verification failed before write: ${batchImportError}`;
             }
-          } else {
-            batchImportSucceeded = true;
           }
 
           const livePoints: DemandDataPoint[] = [];
           if (batchImportSucceeded) {
-            for (const p of seriesResult.points) {
+            for (const p of freshPartition.attributableObservations) {
               const evidenceRef =
                 (p as any).evidenceReference ||
                 ((seriesResult as any).receiptId
@@ -522,7 +549,7 @@ export async function resolveProductDemandHistory(
                   : null);
               const pointSource =
                 p.source || (isGoogleFreeMode ? "Google Trends (Free Demand)" : "Google Trends (SerpApi)");
-              const pointKeyword = p.keyword || searchTerm;
+              const pointKeyword = p.keyword ? String(p.keyword).trim() : (searchTerm || "");
               const pointMethodology =
                 p.methodologyVersion ||
                 (pointSource === "GOOGLE_TRENDS_CSV"
@@ -538,9 +565,9 @@ export async function resolveProductDemandHistory(
                   keyword: pointKeyword,
                   region,
                   workspaceId: options.workspaceId || null,
-                  researchRunId: (options as any).researchRunId || null,
+                  researchRunId: options.researchRunId || null,
                   observationDate: p.periodStart,
-                  observationValue: p.demandValue,
+                  observationValue: p.demandValue ?? (p as any).value,
                   strictLiveOrigin: true,
                   ...({ periodEnd: p.periodEnd } as any),
                 });
@@ -548,15 +575,16 @@ export async function resolveProductDemandHistory(
                   verifiedDescriptor = resolved;
                 }
               }
+
               const capturedTs = verifiedDescriptor?.capturedAt || (p as any).capturedAt || (seriesResult as any).acquiredAt || null;
               livePoints.push({
                 periodStart: p.periodStart,
                 periodEnd: p.periodEnd,
-                demandValue: p.demandValue,
-                region: p.region,
+                demandValue: p.demandValue ?? (p as any).value,
+                region: p.region || region,
                 source: pointSource,
                 date: p.periodStart,
-                value: p.demandValue,
+                value: p.demandValue ?? (p as any).value,
                 methodologyVersion: pointMethodology,
                 evidenceReference: evidenceRef,
                 verifiedDescriptor,
@@ -575,12 +603,13 @@ export async function resolveProductDemandHistory(
                 (p) => !p.isFixture && p.source !== "CACHED_UNVERIFIED" && Boolean((p as any).verifiedDescriptor?.verified)
               )
             : [];
-          const seenDates = new Set(livePoints.map((p) => String(p.periodStart).slice(0, 10)));
+          const seenKey = (pt: DemandDataPoint) => `${pt.region || region}_${normalizeCanonicalQuery(pt.keyword || searchTerm)}_${String(pt.periodStart).slice(0, 10)}`;
+          const seenKeys = new Set(livePoints.map(seenKey));
           const combined = [...livePoints];
           for (const ep of existingValid) {
-            const d = String(ep.periodStart).slice(0, 10);
-            if (!seenDates.has(d)) {
-              seenDates.add(d);
+            const k = seenKey(ep);
+            if (!seenKeys.has(k)) {
+              seenKeys.add(k);
               combined.push(ep);
             }
           }

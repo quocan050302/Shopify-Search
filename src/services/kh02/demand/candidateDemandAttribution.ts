@@ -52,6 +52,62 @@ export interface VerifiedCandidateAlias {
   provenanceReference: string;
   workspaceId?: string | null;
   approvedAt?: string | Date;
+  revoked?: boolean;
+  approvalSignature?: string | null;
+}
+
+const ACCESSORY_TOKENS = new Set([
+  "filter", "filters", "replacement", "replacements", "cartridge", "cartridges",
+  "cord", "adapter", "battery", "mat", "bowl", "bowls", "tray", "stand", "sponge", "sponges", "foam"
+]);
+
+/**
+ * Validates whether a candidate alias descriptor possesses authentic, immutable, and scoped approval.
+ */
+export function isAuthenticVerifiedCandidateAlias(
+  alias: VerifiedCandidateAlias,
+  context: CandidateAttributionContext
+): { valid: boolean; reason?: string } {
+  if (!alias || typeof alias !== "object") {
+    return { valid: false, reason: "Alias descriptor is missing or not an object." };
+  }
+  if (!alias.aliasKeyword || !String(alias.aliasKeyword).trim()) {
+    return { valid: false, reason: "Alias descriptor lacks non-empty aliasKeyword." };
+  }
+  if (alias.revoked === true) {
+    return { valid: false, reason: "Alias authorization is explicitly revoked." };
+  }
+  if (!alias.approvedBy || !String(alias.approvedBy).trim()) {
+    return { valid: false, reason: "Alias lacks authenticated approvedBy authority." };
+  }
+  const approver = String(alias.approvedBy).trim().toLowerCase();
+  if (/(untrusted|anonymous|unknown|mock_bypass|caller_override)/i.test(approver)) {
+    return { valid: false, reason: `Alias approvedBy '${alias.approvedBy}' is unauthenticated.` };
+  }
+  if (!alias.provenanceReference || !String(alias.provenanceReference).trim()) {
+    return { valid: false, reason: "Alias lacks immutable provenanceReference." };
+  }
+  const ref = String(alias.provenanceReference).trim();
+  if (!/^(gov_decision_ref_|urn:|sha256:|receipt:|trends-csv:|gov:)/i.test(ref)) {
+    return { valid: false, reason: `Alias provenanceReference '${ref}' lacks verifiable immutable reference prefix.` };
+  }
+  if (alias.workspaceId && context.workspaceId && alias.workspaceId !== context.workspaceId) {
+    return { valid: false, reason: `Alias workspaceId '${alias.workspaceId}' does not match context workspaceId '${context.workspaceId}'.` };
+  }
+  if (alias.candidateId && context.candidateId && alias.candidateId !== context.candidateId) {
+    return { valid: false, reason: `Alias candidateId '${alias.candidateId}' does not match context candidateId '${context.candidateId}'.` };
+  }
+  if (alias.targetProductId && context.canonicalProductId && alias.targetProductId !== context.canonicalProductId) {
+    return { valid: false, reason: `Alias targetProductId '${alias.targetProductId}' does not match context canonicalProductId '${context.canonicalProductId}'.` };
+  }
+  if (context.asOfTimestamp && alias.approvedAt) {
+    const appTime = new Date(alias.approvedAt).getTime();
+    const asOfTime = new Date(context.asOfTimestamp).getTime();
+    if (!isNaN(appTime) && !isNaN(asOfTime) && appTime > asOfTime) {
+      return { valid: false, reason: `Alias approvedAt '${alias.approvedAt}' exceeds asOfTimestamp cutoff '${context.asOfTimestamp}'.` };
+    }
+  }
+  return { valid: true };
 }
 
 export interface CandidateAttributionContext {
@@ -334,42 +390,112 @@ export function classifyCandidateObservationAttribution(
     };
   }
 
-  // 9b. Check legitimate normalized prefix or brand-core query equivalence
+  // 9b. Keyword does not exactly match authorized queries; check discriminating attributes
   const candNameNorm = normalizeCanonicalQuery(context.candidateCanonicalName || "");
   const obsKwNorm = normalizeCanonicalQuery(observationKeyword);
   const candFamily = context.candidateCanonicalName ? detectSpecificProductFamily(context.candidateCanonicalName) : null;
   const obsFamily = detectSpecificProductFamily(observationKeyword);
   const brandToken = extractCandidateBrandToken(context.candidateCanonicalName);
 
-  if (brandToken) {
-    // Candidate has explicit brand prefix (e.g. UAHPET)
-    const candTokens = new Set(candNameNorm.split(/\s+/));
-    const obsTokens = new Set(obsKwNorm.split(/\s+/));
+  const candTokens = new Set(candNameNorm.split(/\s+/).filter(Boolean));
+  const obsTokens = new Set(obsKwNorm.split(/\s+/).filter(Boolean));
 
-    // Check for conflicting SKU variant tokens
-    const candVariantTokens = Array.from(candTokens).filter((t) => SKU_VARIANT_TOKENS.has(t));
-    const obsVariantTokens = Array.from(obsTokens).filter((t) => SKU_VARIANT_TOKENS.has(t));
-    const hasConflictingVariant =
-      (candVariantTokens.length > 0 && obsVariantTokens.length > 0 && candVariantTokens.some((t) => !obsTokens.has(t))) ||
-      (obsVariantTokens.some((t) => !candTokens.has(t)));
+  // Check for conflicting SKU variant tokens (e.g. Black Edition vs White Edition)
+  const candVariantTokens = Array.from(candTokens).filter((t) => SKU_VARIANT_TOKENS.has(t));
+  const obsVariantTokens = Array.from(obsTokens).filter((t) => SKU_VARIANT_TOKENS.has(t));
+  const hasConflictingVariant =
+    (candVariantTokens.length > 0 && obsVariantTokens.length > 0 && candVariantTokens.some((t) => !obsTokens.has(t))) ||
+    (obsVariantTokens.some((t) => !candTokens.has(t)));
 
-    if (hasConflictingVariant) {
-      return {
-        classification: "EXCLUDED_UNVERIFIED_ALIAS",
-        isAttributable: false,
-        reason: `Observation keyword '${observationKeyword}' contains conflicting SKU variant attribute(s) relative to candidate '${context.candidateCanonicalName}'.`,
-        candidateId,
-        canonicalProductId,
-        observationProductId,
-        observationKeyword,
-      };
+  if (hasConflictingVariant) {
+    return {
+      classification: "EXCLUDED_UNVERIFIED_ALIAS",
+      isAttributable: false,
+      reason: `Observation keyword '${observationKeyword}' contains conflicting SKU variant attribute(s) relative to candidate '${context.candidateCanonicalName}'.`,
+      candidateId,
+      canonicalProductId,
+      observationProductId,
+      observationKeyword,
+    };
+  }
+
+  // Check if observation is an accessory / part (e.g. filter, replacement, cord) for a main product
+  const isAccessory = Array.from(obsTokens).some((t) => ACCESSORY_TOKENS.has(t));
+  const candidateIsAccessory = Array.from(candTokens).some((t) => ACCESSORY_TOKENS.has(t));
+  if (isAccessory && !candidateIsAccessory) {
+    return {
+      classification: "EXCLUDED_KEYWORD_MISMATCH",
+      isAttributable: false,
+      reason: `Observation keyword '${observationKeyword}' is an accessory/replacement part rather than candidate product '${context.candidateCanonicalName}'.`,
+      candidateId,
+      canonicalProductId,
+      observationProductId,
+      observationKeyword,
+    };
+  }
+
+  // Check if observation keyword belongs to a different functional product family
+  if (candFamily && obsFamily && candFamily !== obsFamily) {
+    return {
+      classification: "EXCLUDED_KEYWORD_MISMATCH",
+      isAttributable: false,
+      reason: `Observation keyword family '${obsFamily}' does not match candidate family '${candFamily}' despite shared brand or token overlap.`,
+      candidateId,
+      canonicalProductId,
+      observationProductId,
+      observationKeyword,
+    };
+  }
+
+  // 10. Check explicit verified aliases with authentic independent authorization
+  if (Array.isArray(context.verifiedAliases) && context.verifiedAliases.length > 0) {
+    for (const alias of context.verifiedAliases) {
+      if (!alias || typeof alias !== "object" || !alias.aliasKeyword) {
+        continue;
+      }
+      if (areExactOrCanonicalEquivalentQueries(observationKeyword, alias.aliasKeyword)) {
+        const aliasAuth = isAuthenticVerifiedCandidateAlias(alias, context);
+        if (aliasAuth.valid) {
+          return {
+            classification: "VERIFIED_EXPLICIT_ALIAS_MATCH",
+            isAttributable: true,
+            reason: `Observation keyword '${observationKeyword}' matches verified alias '${alias.aliasKeyword}' (approvedBy: ${alias.approvedBy}, ref: ${alias.provenanceReference}).`,
+            candidateId,
+            canonicalProductId,
+            observationProductId,
+            observationKeyword,
+            matchedAlias: alias,
+          };
+        } else {
+          return {
+            classification: "EXCLUDED_UNVERIFIED_ALIAS",
+            isAttributable: false,
+            reason: `Observation keyword '${observationKeyword}' matched alias descriptor but authorization was rejected: ${aliasAuth.reason}`,
+            candidateId,
+            canonicalProductId,
+            observationProductId,
+            observationKeyword,
+          };
+        }
+      }
     }
+  }
 
-    if (obsTokens.has(brandToken) && (candFamily === null || obsFamily === candFamily || /\b(feeder|fountain|remover|bed|scrubber|gun)\b/i.test(obsKwNorm))) {
+  // 10b. Check legitimate brand-core noun query or unbranded functional prefix match
+  if (brandToken) {
+    // Branded candidate (e.g. "UAHPET Fresh Food Automatic Pet Feeder"):
+    // Observation keyword must contain candidate brand token, have >=2 tokens (brand + product noun),
+    // and ALL observation tokens must be a subset of candidate's tokens.
+    if (
+      obsTokens.size >= 2 &&
+      obsTokens.has(brandToken) &&
+      Array.from(obsTokens).every((t) => candTokens.has(t)) &&
+      (!obsFamily || !candFamily || obsFamily === candFamily)
+    ) {
       return {
         classification: "EXACT_CANDIDATE_KEYWORD_MATCH",
         isAttributable: true,
-        reason: `Observation keyword '${observationKeyword}' contains candidate brand '${brandToken}' and matches candidate product.`,
+        reason: `Observation keyword '${observationKeyword}' is the legitimate brand ('${brandToken}') core product query for candidate '${context.candidateCanonicalName}'.`,
         candidateId,
         canonicalProductId,
         observationProductId,
@@ -377,12 +503,18 @@ export function classifyCandidateObservationAttribution(
       };
     }
   } else {
-    // Candidate does not have brand prefix; check if observation keyword is a core prefix of candidate name
-    if (candNameNorm.startsWith(obsKwNorm) && obsKwNorm.length >= 8) {
+    // Unbranded candidate (e.g. "Dog Water Fountain Stainless Steel", "Automatic Wet Food Cat Feeder with Cooling & Warming"):
+    // Observation keyword must be a valid functional leading prefix of candidate title
+    if (
+      candNameNorm.startsWith(obsKwNorm) &&
+      obsKwNorm.length >= 8 &&
+      Array.from(obsTokens).every((t) => candTokens.has(t)) &&
+      (!obsFamily || !candFamily || obsFamily === candFamily)
+    ) {
       return {
         classification: "EXACT_CANDIDATE_KEYWORD_MATCH",
         isAttributable: true,
-        reason: `Observation keyword '${observationKeyword}' is a valid clean functional prefix of candidate '${context.candidateCanonicalName}'.`,
+        reason: `Observation keyword '${observationKeyword}' is the core functional prefix of unbranded candidate '${context.candidateCanonicalName}'.`,
         candidateId,
         canonicalProductId,
         observationProductId,
@@ -391,47 +523,9 @@ export function classifyCandidateObservationAttribution(
     }
   }
 
-  // 10. Check explicit verified aliases
-  if (Array.isArray(context.verifiedAliases) && context.verifiedAliases.length > 0) {
-    for (const alias of context.verifiedAliases) {
-      if (!alias.aliasKeyword || !alias.approvedBy || !alias.provenanceReference) {
-        continue;
-      }
-      if (alias.workspaceId && context.workspaceId && alias.workspaceId !== context.workspaceId) {
-        continue;
-      }
-      if (alias.candidateId && candidateId && alias.candidateId !== candidateId) {
-        continue;
-      }
-      if (alias.targetProductId && canonicalProductId && alias.targetProductId !== canonicalProductId) {
-        continue;
-      }
-      if (areExactOrCanonicalEquivalentQueries(observationKeyword, alias.aliasKeyword)) {
-        return {
-          classification: "VERIFIED_EXPLICIT_ALIAS_MATCH",
-          isAttributable: true,
-          reason: `Observation keyword '${observationKeyword}' matches verified alias '${alias.aliasKeyword}' (approvedBy: ${alias.approvedBy}, ref: ${alias.provenanceReference}).`,
-          candidateId,
-          canonicalProductId,
-          observationProductId,
-          observationKeyword,
-          matchedAlias: alias,
-        };
-      }
-    }
-  }
-
   // 11. Keyword is NOT an exact match and NOT a verified alias.
   // Distinguish UNVERIFIED_ALIAS (token overlap or family match) from complete KEYWORD_MISMATCH:
-  const candTokens = new Set(
-    normalizeCanonicalQuery(context.candidateCanonicalName || "")
-      .split(/\s+/)
-      .filter((t) => t.length > 2)
-  );
-  const obsTokens = normalizeCanonicalQuery(observationKeyword)
-    .split(/\s+/)
-    .filter((t) => t.length > 2);
-  const tokenOverlap = obsTokens.some((t) => candTokens.has(t));
+  const tokenOverlap = Array.from(obsTokens).some((t) => t.length > 2 && candTokens.has(t));
 
   const isPotentialAlias =
     (candFamily && obsFamily && candFamily === obsFamily) || tokenOverlap;
