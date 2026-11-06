@@ -1,0 +1,130 @@
+{
+  "version": "12.4.3.7.19.2",
+  "evaluatedAt": "2026-11-06T10:50:00+07:00",
+  "testedCodeCommitSha": "a9695a2a79cadcafd495e1c1bab1f1876ef5e510",
+  "researchRunId": "kh02_run_1793424091548_669k8",
+  "database": "dev.db (read-only SQLite query snapshot)",
+  "workspaceId": "acceptance_v12_2_3_ws",
+  "candidates": [
+    {
+      "candidateId": "cand_1212440541",
+      "canonicalProductId": "cmvsy7zqh000jp0orhypwohho",
+      "title": "UAHPET Fresh Food Automatic Pet Feeder",
+      "matchingDbRowsUs": 0,
+      "matchingDbRowsGlobal": 0,
+      "matchingArtifactFiles": 0,
+      "g15DemandStatus": "INSUFFICIENT_HISTORY",
+      "coveredDays": 0,
+      "dataPointsCount": 0,
+      "eligibleForEvergreen": false,
+      "g16VerificationStatus": "MERCHANT_VERIFIED_NO_G15_DEMAND",
+      "rejectionReason": "Zero US historical demand observations exist in DB or local CSV storage for UAHPET."
+    },
+    {
+      "candidateId": "cand_1587534715",
+      "canonicalProductId": null,
+      "title": "The KittySpout™ - Wireless Fountain",
+      "matchingDbRowsUs": 0,
+      "matchingDbRowsGlobal": 0,
+      "matchingArtifactFiles": 0,
+      "g15DemandStatus": "INSUFFICIENT_HISTORY",
+      "coveredDays": 0,
+      "dataPointsCount": 0,
+      "eligibleForEvergreen": false,
+      "g16VerificationStatus": "MERCHANT_VERIFIED_NO_G15_DEMAND",
+      "rejectionReason": "Zero US historical demand observations exist in DB or local CSV storage for KittySpout."
+    },
+    {
+      "candidateId": "cand_1613504636",
+      "canonicalProductId": null,
+      "title": "Pet Hair/Lint/Dust Cleaner",
+      "matchingDbRowsUs": 0,
+      "matchingDbRowsGlobal": 0,
+      "matchingArtifactFiles": 0,
+      "g15DemandStatus": "INSUFFICIENT_HISTORY",
+      "coveredDays": 0,
+      "dataPointsCount": 0,
+      "eligibleForEvergreen": false,
+      "g16VerificationStatus": "CHECKOUTCHAMP_FUNNEL_UNVERIFIED",
+      "rejectionReason": "Zero US historical demand observations exist; classified as CheckoutChamp funnel."
+    }
+  ],
+  "dbWideDemographic": {
+    "totalDemandObservations": 96,
+    "totalUsDemandObservations": 96,
+    "totalUahpetDemandObservations": 0,
+    "unrelatedProductBreakdown": [
+      {
+        "productId": "cmvsy7zeg0001p0orsexc5psw",
+        "title": "Reusable Pet Hair Remover Roller",
+        "keyword": "Reusable Pet Hair Remover Roller",
+        "count": 6
+      },
+      {
+        "productId": "cmvsy7zoq000ap0or4ly9ciih",
+        "title": "Pawira Stainless Steel Water Fountain",
+        "keyword": "Pawira Stainless Steel Water Fountain",
+        "count": 6
+      },
+      {
+        "productId": "cmvsy7zqh000jp0orhypwohho",
+        "title": "Automatic Wet Food Cat Feeder with Cooling & Warming",
+        "keyword": "Automatic Wet Food Cat Feeder",
+        "count": 6
+      },
+      {
+        "productId": "cmvsy85zn000yp0ore89xpw92",
+        "title": "Rechargeable Hot Melt Glue Gun",
+        "keyword": "Rechargeable Hot Melt Glue Gun with Stand and 10 Glue Sticks",
+        "count": 6
+      },
+      {
+        "productId": "cmvsy86180017p0orn9ajx8g7",
+        "title": "Hot Melt Glue Gun",
+        "keyword": "Hot Melt Glue Gun",
+        "count": 6
+      },
+      {
+        "productId": "cmvsy862v001gp0orczh9wm7e",
+        "title": "Two Blue Cats",
+        "keyword": "Two Blue Cats",
+        "count": 6
+      },
+      {
+        "productId": "cmvsy864i001pp0or0a8ff2vx",
+        "title": "Easy-Fill Wall Repair Paste Kit",
+        "keyword": "Easy-Fill Wall Repair Paste Kit",
+        "count": 6
+      },
+      {
+        "productId": "cmvsy8663001yp0orm0u01s7m",
+        "title": "THE ULTIMATE White Drywall Repair Paint Kit",
+        "keyword": "THE ULTIMATE White Drywall Repair Paint Kit",
+        "count": 6
+      },
+      {
+        "productId": "cmvsy867l0027p0ort3vvnxxg",
+        "title": "Burnett Wallpaper",
+        "keyword": "Burnett Wallpaper",
+        "count": 6
+      },
+      {
+        "productId": "cmvsy8699002gp0orwl4eryuh",
+        "title": "Brooke Wallpaper",
+        "keyword": "Brooke Wallpaper",
+        "count": 6
+      },
+      {
+        "productId": "prod_fixture_*",
+        "title": "Smart Posture Corrector (Test Fixtures)",
+        "keyword": "Smart Posture Corrector",
+        "count": 36
+      }
+    ]
+  },
+  "verdicts": {
+    "g15Verdict": "INSUFFICIENT_EVIDENCE",
+    "g16Verdict": "INSUFFICIENT_EVIDENCE",
+    "pureEvaluatorParity": "VERIFIED_IDENTICAL"
+  }
+}

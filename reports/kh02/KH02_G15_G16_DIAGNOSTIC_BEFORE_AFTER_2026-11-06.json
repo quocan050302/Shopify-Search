@@ -1,0 +1,110 @@
+{
+  "version": "12.4.3.7.19.2",
+  "evaluatedAt": "2026-11-06T10:50:00+07:00",
+  "testedCodeCommitSha": "a9695a2a79cadcafd495e1c1bab1f1876ef5e510",
+  "baselineSha": "06e49fa8869f2d754dd289f43ea77f3acb08bfd7",
+  "diagnosticComparison": [
+    {
+      "component": "GoogleTrendsCsvImportProvider.diagnose()",
+      "callsite": "src/services/kh02/demand/demandProviderRegistry.ts:327",
+      "before": {
+        "status": "CONFIGURED",
+        "configured": true,
+        "transportConnected": false,
+        "authenticated": false,
+        "queryExecuted": false,
+        "recordsReturned": null,
+        "provenanceVerified": true,
+        "reason": "Local Google Trends CSV import repository ready (local filesystem/database adapter; no external transport connection)."
+      },
+      "after": {
+        "status": "CONFIGURED",
+        "configured": true,
+        "transportConnected": false,
+        "authenticated": false,
+        "queryExecuted": false,
+        "recordsReturned": null,
+        "provenanceVerified": false,
+        "importCapabilityReady": true,
+        "sourceArtifactPresent": false,
+        "sourceArtifactIntegrityVerified": false,
+        "sourceOriginVerified": false,
+        "relevantRowsVerified": false,
+        "verifiedApplicableRowCount": 0,
+        "provenanceScopeEvaluation": "NOT_EVALUATED",
+        "explanationCode": "IMPORT_READY_NO_RELEVANT_ARTIFACT",
+        "reason": "Local Google Trends CSV import repository ready (import capability ready; no relevant validated artifact supplied for target candidate)."
+      },
+      "resolution": "Fixed false positive. Software capability no longer asserts proven evidence."
+    },
+    {
+      "component": "GoogleTrendsBigQueryProvider.diagnose()",
+      "callsite": "src/services/kh02/demand/demandProviderRegistry.ts:213",
+      "before": {
+        "status": "CONFIGURED (when project set)",
+        "provenanceVerified": true
+      },
+      "after": {
+        "status": "NOT_CONFIGURED (when project unset)",
+        "provenanceVerified": false,
+        "importCapabilityReady": false,
+        "verifiedApplicableRowCount": 0,
+        "explanationCode": "TRANSPORT_CONFIGURED_NO_QUERY"
+      },
+      "resolution": "Configuring project no longer asserts verified data without query execution."
+    },
+    {
+      "component": "GoogleFreeDemandProvider.diagnose()",
+      "callsite": "src/services/kh02/demand/demandProviderRegistry.ts:554",
+      "before": {
+        "status": "CONFIGURED",
+        "configured": true,
+        "provenanceVerified": true,
+        "reason": "Using Google Free Demand pipeline (BigQuery public datasets, official Explore CSV imports, and Trending Now discovery signals). SerpApi is not required."
+      },
+      "after": {
+        "status": "CONFIGURED",
+        "configured": true,
+        "transportConnected": false,
+        "authenticated": false,
+        "queryExecuted": false,
+        "recordsReturned": null,
+        "provenanceVerified": false,
+        "importCapabilityReady": true,
+        "sourceArtifactPresent": false,
+        "sourceArtifactIntegrityVerified": false,
+        "sourceOriginVerified": false,
+        "relevantRowsVerified": false,
+        "verifiedApplicableRowCount": 0,
+        "provenanceScopeEvaluation": "NOT_EVALUATED",
+        "explanationCode": "IMPORT_READY_NO_RELEVANT_ARTIFACT",
+        "reason": "Using Google Free Demand pipeline (CSV import capability ready; BigQuery Sandbox not configured; no relevant candidate data artifact validated)."
+      },
+      "resolution": "Composite preserves CONFIGURED for capability, but strictly emits provenanceVerified=false."
+    },
+    {
+      "component": "diagnoseKH02Source('DEMAND_HISTORY')",
+      "callsite": "src/services/kh02/providers/sourceRegistry.ts:804-858",
+      "before": {
+        "transportConnected": true,
+        "authenticated": true,
+        "transportStatus": "CONNECTED",
+        "authStatus": "AUTH_NOT_REQUIRED",
+        "sourceDataVerified": true,
+        "provenanceVerified": false
+      },
+      "after": {
+        "transportConnected": false,
+        "authenticated": false,
+        "transportStatus": "NOT_CONFIGURED",
+        "authStatus": "AUTH_NOT_REQUIRED",
+        "sourceDataVerified": false,
+        "provenanceVerified": false,
+        "importCapabilityReady": true,
+        "verifiedApplicableRowCount": 0,
+        "explanationCode": "IMPORT_READY_NO_RELEVANT_ARTIFACT"
+      },
+      "resolution": "Accurately reflects BigQuery unconfigured status; 96 unrelated workspace rows do not trigger sourceDataVerified."
+    }
+  ]
+}

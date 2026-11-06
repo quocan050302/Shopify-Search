@@ -1,0 +1,34 @@
+{
+  "version": "12.4.3.7.19.2",
+  "evaluatedAt": "2026-11-06T10:50:00+07:00",
+  "testedCodeCommitSha": "a9695a2a79cadcafd495e1c1bab1f1876ef5e510",
+  "baselineSha": "06e49fa8869f2d754dd289f43ea77f3acb08bfd7",
+  "branch": "feature/kh02-walmart-us-jina-reader-v12.4.3.5.1",
+  "threeWayVerdicts": {
+    "sourceCapabilityAndConnectivity": {
+      "googleTrendsCsv": "CONFIGURED (Local filesystem repository ready)",
+      "bigquery": "NOT_CONFIGURED (Missing BIGQUERY_PROJECT_ID)",
+      "serpapi": "NOT_CONFIGURED (Zero-spend locked, no paid calls)",
+      "composite": "CONFIGURED (CSV import capable, BigQuery not configured)"
+    },
+    "sourceContentVerifiedForTargetCandidates": {
+      "uahpet": "NOT_TESTED_NO_SOURCE_FILE (0 US rows in DB)",
+      "kittySpout": "NOT_TESTED_NO_SOURCE_FILE (0 US rows in DB)",
+      "petHairCleaner": "NOT_TESTED_NO_SOURCE_FILE (0 US rows in DB)",
+      "unrelatedWorkspaceRows": "96 rows exist for other products; strictly isolated"
+    },
+    "commercialGateVerdicts": {
+      "g15_LongitudinalDemand": "INSUFFICIENT_EVIDENCE (0 covered days, 0 data points)",
+      "g16_Top3WinningProducts": "INSUFFICIENT_EVIDENCE (Requires 3 verified distinct winners with >=60d G15 demand)"
+    }
+  },
+  "overallVerdicts": {
+    "diagnosticIntegrity": "DIAGNOSTIC_FIXED",
+    "engineeringReadiness": "ENGINEERING_PASS",
+    "stagingReadiness": "STAGING_SHADOW_CONTRACT_READY",
+    "businessEvidenceReadiness": "INSUFFICIENT_AND_BLOCKED",
+    "ciTruthReadiness": "CI_NOT_CONFIGURED",
+    "overallReleaseAllowed": false
+  },
+  "justification": "Software diagnostic defect successfully resolved: Google Free source diagnostic no longer claims provenanceVerified=true without real validated data. Commercial gates G15 and G16 remain fail-closed as designed until authentic Google Trends Explore CSV files are supplied by the user."
+}

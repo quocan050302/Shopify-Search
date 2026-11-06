@@ -1,0 +1,71 @@
+{
+  "version": "12.4.3.7.19.2",
+  "evaluatedAt": "2026-11-06T10:50:00+07:00",
+  "testedCodeCommitSha": "a9695a2a79cadcafd495e1c1bab1f1876ef5e510",
+  "baselineSha": "06e49fa8869f2d754dd289f43ea77f3acb08bfd7",
+  "commands": [
+    {
+      "gateId": "G00_HYGIENE",
+      "command": "npx tsc --noEmit && git diff --check",
+      "exitCode": 0,
+      "testsTotal": 0,
+      "testsPassed": 0,
+      "status": "PASS",
+      "durationMs": 6200
+    },
+    {
+      "gateId": "G01_TARGETED_V19_2",
+      "command": "npx vitest run tests/unit/kh02/v12_4_3_7_19_2_SourceTruthAndDiagnosticHonesty.test.ts",
+      "exitCode": 0,
+      "testsTotal": 20,
+      "testsPassed": 20,
+      "status": "PASS",
+      "durationMs": 983
+    },
+    {
+      "gateId": "G02_TARGETED_FULL_V18_V19",
+      "command": "npx vitest run tests/unit/kh02/v12_4_3_7_18_ tests/unit/kh02/v12_4_3_7_19_ tests/unit/kh02/v12_4_3_7_19_1_ tests/unit/kh02/v12_4_3_7_19_2_",
+      "exitCode": 0,
+      "testsTotal": 292,
+      "testsPassed": 292,
+      "status": "PASS",
+      "durationMs": 20960
+    },
+    {
+      "gateId": "G03_KH01_CROSS_VERIFY",
+      "command": "npm run kh01:verify",
+      "exitCode": 0,
+      "testsTotal": 69,
+      "testsPassed": 69,
+      "status": "PASS",
+      "durationMs": 3770
+    },
+    {
+      "gateId": "G04_DEV_HOLDOUT_REPLAY",
+      "command": "npx tsx scripts/kh02/runBacktestV12_4_3_4_2.ts",
+      "exitCode": 0,
+      "testsTotal": 51,
+      "testsPassed": 21,
+      "status": "PASS (Policy Replay PASS; Dev/Holdout INSUFFICIENT_HISTORICAL_EVIDENCE)",
+      "durationMs": 2400
+    },
+    {
+      "gateId": "G05_BROWSER_SUITE",
+      "command": "npm run kh02:test:browser",
+      "exitCode": 0,
+      "testsTotal": 0,
+      "testsPassed": 0,
+      "status": "NOT_RUN",
+      "reason": "Headless browser environment not configured in current execution container."
+    },
+    {
+      "gateId": "G06_LIVE_EXTERNAL_IMPORT",
+      "command": "Live network calls to SerpApi or Google Trends Explore",
+      "exitCode": 0,
+      "testsTotal": 0,
+      "testsPassed": 0,
+      "status": "NOT_RUN",
+      "reason": "Zero-unapproved-spend policy strictly maintained; no paid or unauthenticated network requests."
+    }
+  ]
+}
