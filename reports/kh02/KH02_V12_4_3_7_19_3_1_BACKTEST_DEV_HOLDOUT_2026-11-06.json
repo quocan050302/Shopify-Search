@@ -1,0 +1,29 @@
+{
+  "version": "12.4.3.7.19.3.1",
+  "generatedAt": "2026-11-06T05:54:35.483Z",
+  "codeSha": "b32a13247d54fa47e3d0d0c7960873a5270248eb",
+  "backtestEvaluation": {
+    "policyScenarioVerdict": "PASS",
+    "policyTotalScenarios": 21,
+    "devSplit": {
+      "split": "DEV",
+      "niche": "Pet Gadgets",
+      "verdict": "INSUFFICIENT_HISTORICAL_EVIDENCE",
+      "shortlistPassedCount": 0,
+      "shortlistTargetCount": 0,
+      "candidateAttributableObservations": 0,
+      "longitudinalDaysVerified": 0
+    },
+    "holdoutSplit": {
+      "split": "HOLDOUT",
+      "niche": "Pet Gadgets",
+      "verdict": "INSUFFICIENT_HISTORICAL_EVIDENCE",
+      "shortlistPassedCount": 3,
+      "shortlistTargetCount": 3,
+      "candidateAttributableObservations": 0,
+      "longitudinalDaysVerified": 0
+    },
+    "overallEvidenceVerdict": "INSUFFICIENT_HISTORICAL_EVIDENCE",
+    "explanation": "Policy replay confirms all scoring, security, and gating logic execute correctly. Real historical dev/holdout demand data lacks candidate-specific authoritative >=60d series for production Evergreen winners, preserving honest fail-closed status."
+  }
+}

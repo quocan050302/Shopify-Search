@@ -1,0 +1,43 @@
+{
+  "version": "12.4.3.7.19.3.1",
+  "generatedAt": "2026-11-06T05:54:35.483Z",
+  "codeSha": "b32a13247d54fa47e3d0d0c7960873a5270248eb",
+  "inventory": [
+    {
+      "callSite": "src/services/kh02/demand/historicalDemandIngestion.ts:resolveProductDemandHistory (DB cache read)",
+      "evaluator": "filterAttributableObservations(rawRecords, candidateAttributionContext)",
+      "scope": "Database cache readback for target product",
+      "boundaryEnforced": "Excludes observations whose keyword does not match candidate canonical name or verified alias before time-series construction."
+    },
+    {
+      "callSite": "src/services/kh02/demand/historicalDemandIngestion.ts:resolveProductDemandHistory (Fresh provider fetch)",
+      "evaluator": "filterAttributableObservations(seriesResult.points, candidateAttributionContext)",
+      "scope": "Fresh provider fetch before database admission",
+      "boundaryEnforced": "Excludes remote observations with non-matching keywords before executeDemandObservationBatchImport and before admission to in-memory livePoints."
+    },
+    {
+      "callSite": "src/services/kh02/demand/demandProviderRegistry.ts:GoogleTrendsCsvImportProvider.fetchSeries",
+      "evaluator": "classifyCandidateObservationAttribution(r, attrContext)",
+      "scope": "CSV provider observation search and selection",
+      "boundaryEnforced": "Replaces loose substring/word-overlap filter with strict candidate-scoped attribution, preventing cross-candidate row leakage across shared product IDs."
+    },
+    {
+      "callSite": "src/services/kh02/demand/historicalDemandIngestion.ts:resolveProductDemandHistory (Cache-Fresh merge)",
+      "evaluator": "seenKey = `${region}_${normalizeCanonicalQuery(keyword)}_${date}`",
+      "scope": "Deduplication and merge of live and cached observations",
+      "boundaryEnforced": "Ensures deduplication preserves candidate identity and query identity, preventing wrong-keyword cached rows from colliding with valid candidate points."
+    },
+    {
+      "callSite": "src/services/kh02/demand/temporalDemandEngine.ts:evaluateDemandSourceAuthority",
+      "evaluator": "classifyCandidateObservationAttribution({ keyword, productId }, context)",
+      "scope": "Authority evaluation for time-series observations",
+      "boundaryEnforced": "Fails closed with CACHED_UNVERIFIED and productAttributionValid=false if any observation fails candidate attribution."
+    },
+    {
+      "callSite": "src/services/kh02/evergreenResearchOrchestrator.ts:evaluateHistoricalDemand",
+      "evaluator": "resolveProductDemandHistory({ candidateId, productId, canonicalName, category }, options)",
+      "scope": "KH-02 orchestrator pipeline",
+      "boundaryEnforced": "Passes explicit candidateId, canonicalName, and authorized candidate scope into historical demand resolution."
+    }
+  ]
+}

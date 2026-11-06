@@ -1,0 +1,161 @@
+{
+  "version": "12.4.3.7.19.3.1",
+  "generatedAt": "2026-11-06T05:54:35.483Z",
+  "codeSha": "b32a13247d54fa47e3d0d0c7960873a5270248eb",
+  "testSuite": "tests/unit/kh02/v12_4_3_7_19_3_1_UnifiedCandidateAttribution.test.ts",
+  "totalTests": 30,
+  "passedCount": 30,
+  "failedCount": 0,
+  "tests": [
+    {
+      "id": "A01",
+      "description": "Cache 6 same-productId rows for unrelated feeder keyword => 0 UAHPET eligible; rawCount=6 distinct from attributable=0",
+      "verdict": "PASS"
+    },
+    {
+      "id": "A02",
+      "description": "Fresh Google Trends CSV provider with same six wrong-keyword records => 0 UAHPET eligible; no false G15 PASS",
+      "verdict": "PASS"
+    },
+    {
+      "id": "A03",
+      "description": "Fresh response SUCCESS with points for wrong product => candidate attribution rejects them; 0 eligible writes",
+      "verdict": "PASS"
+    },
+    {
+      "id": "A04",
+      "description": "Producer omits pt.keyword => no manufactured authorized keyword; marked as mismatch",
+      "verdict": "PASS"
+    },
+    {
+      "id": "A05",
+      "description": "Brand token + unrelated function (UAHPET fountain, UAHPET filter) => rejected; no loose brand pass",
+      "verdict": "PASS"
+    },
+    {
+      "id": "A06",
+      "description": "Broad unbranded prefix / shared family / substring -> rejected for candidate authority",
+      "verdict": "PASS"
+    },
+    {
+      "id": "A07",
+      "description": "Actual exact candidate keyword with authentic row evidence => accepted as attributable",
+      "verdict": "PASS"
+    },
+    {
+      "id": "A08",
+      "description": "Benign punctuation, case, and whitespace variations retain legitimate canonical equivalence",
+      "verdict": "PASS"
+    },
+    {
+      "id": "A09",
+      "description": "Same productId, two SKU variants with disjoint queries => no cross-variant attribution",
+      "verdict": "PASS"
+    },
+    {
+      "id": "A10",
+      "description": "Candidate ID present but canonical product absent => require independent identity, no auto-pass",
+      "verdict": "PASS"
+    },
+    {
+      "id": "A11",
+      "description": "Cross-workspace and cross-research-run reuse => excluded",
+      "verdict": "PASS"
+    },
+    {
+      "id": "A12",
+      "description": "Invalid or missing region and UK data used for US => excluded",
+      "verdict": "PASS"
+    },
+    {
+      "id": "A13",
+      "description": "Future interval, post-asOf capture/approval/row => excluded",
+      "verdict": "PASS"
+    },
+    {
+      "id": "A14",
+      "description": "Untrusted caller-provided verifiedAliases strings => rejected; cannot grant commercial eligibility",
+      "verdict": "PASS"
+    },
+    {
+      "id": "A15",
+      "description": "Authenticated, durable, correctly scoped alias with immutable proof => only exact approved alias passes; revoked fails",
+      "verdict": "PASS"
+    },
+    {
+      "id": "A16",
+      "description": "Fixture, simulated transport, pseudo-reference, checksum-only CSV => no commercial authority",
+      "verdict": "PASS"
+    },
+    {
+      "id": "A17",
+      "description": "Cache wrong keyword + fresh correct keyword on same date => fresh valid candidate point retained; no incorrect dedup",
+      "verdict": "PASS"
+    },
+    {
+      "id": "A18",
+      "description": "Cache correct keyword + fresh wrong keyword on same date => wrong point dropped, correct retained",
+      "verdict": "PASS"
+    },
+    {
+      "id": "A19",
+      "description": "Two valid same-candidate sources with overlapping dates but different values => deterministic resolution",
+      "verdict": "PASS"
+    },
+    {
+      "id": "A20",
+      "description": "Partially valid provider batch (one wrong keyword) => no in-memory mixed eligible result",
+      "verdict": "PASS"
+    },
+    {
+      "id": "A21",
+      "description": "providerStatus=SUCCESS for remote fetch but provenance invalid => do not return verified G15",
+      "verdict": "PASS"
+    },
+    {
+      "id": "A22",
+      "description": "Zero or unrelated 96 workspace rows => 0 target rows; no cross-candidate borrowing",
+      "verdict": "PASS"
+    },
+    {
+      "id": "A23",
+      "description": "History without asOf metadata under strict chronological replay => rejected",
+      "verdict": "PASS"
+    },
+    {
+      "id": "A24",
+      "description": "BigQuery public Top Terms and Trending Now signals do not masquerade as product-specific 60d evidence",
+      "verdict": "PASS"
+    },
+    {
+      "id": "A25",
+      "description": "Concurrency & idempotency: deduplicating identical candidate receipts returns consistent single state",
+      "verdict": "PASS"
+    },
+    {
+      "id": "A26",
+      "description": "Local-only valid 60-90d fixture tests the math but remains FIXTURE_ONLY for business G15/G16",
+      "verdict": "PASS"
+    },
+    {
+      "id": "A27",
+      "description": "Caller passes fabricated candidateId, run, source 'GOOGLE_TRENDS_CSV' with fake verified=true => admission fails",
+      "verdict": "PASS"
+    },
+    {
+      "id": "A28",
+      "description": "Valid cached exact canonical rows still work; legitimate source is not rejected",
+      "verdict": "PASS"
+    },
+    {
+      "id": "A29",
+      "description": "resolveProductDemandHistory returns complete candidate attribution diagnostics",
+      "verdict": "PASS"
+    },
+    {
+      "id": "A30",
+      "description": "Regression for real research run IDs using read-only snapshot: target G15/G16 remain INSUFFICIENT",
+      "verdict": "PASS"
+    }
+  ]
+}

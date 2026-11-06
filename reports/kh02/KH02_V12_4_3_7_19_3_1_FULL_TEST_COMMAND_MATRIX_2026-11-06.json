@@ -1,0 +1,82 @@
+{
+  "version": "12.4.3.7.19.3.1",
+  "generatedAt": "2026-11-06T05:54:35.483Z",
+  "codeSha": "b32a13247d54fa47e3d0d0c7960873a5270248eb",
+  "branch": "feature/kh02-walmart-us-jina-reader-v12.4.3.5.1",
+  "executionOrigin": "SELF_REPORTED_LOCAL_EXECUTION",
+  "gates": [
+    {
+      "gateId": "E1",
+      "command": "npx tsc --noEmit",
+      "scope": "Full repository TypeScript compilation",
+      "status": "PASS",
+      "exitCode": 0,
+      "errorsCount": 0,
+      "filesChecked": "all"
+    },
+    {
+      "gateId": "E2",
+      "command": "git diff --check",
+      "scope": "Git diff whitespace and conflict marker check",
+      "status": "PASS",
+      "exitCode": 0,
+      "whitespaceErrors": 0
+    },
+    {
+      "gateId": "E3",
+      "command": "npm run kh02:test:unit",
+      "scope": "Full KH-02 unit test suite (tests/unit/kh02)",
+      "status": "PASS",
+      "exitCode": 0,
+      "testFilesCount": 94,
+      "testsPassed": 2139,
+      "testsFailed": 0,
+      "durationMs": 214620
+    },
+    {
+      "gateId": "E4",
+      "command": "npm run kh02:test:integration",
+      "scope": "Full KH-02 integration test suite (tests/integration/kh02)",
+      "status": "PASS",
+      "exitCode": 0,
+      "testFilesCount": 16,
+      "testsPassed": 77,
+      "testsFailed": 0,
+      "durationMs": 71870
+    },
+    {
+      "gateId": "E5",
+      "command": "npm run kh01:verify",
+      "scope": "KH-01 regression verification",
+      "status": "PASS",
+      "exitCode": 0,
+      "testFilesCount": 5,
+      "testsPassed": 69,
+      "testsFailed": 0,
+      "durationMs": 3610
+    },
+    {
+      "gateId": "E6",
+      "command": "npx tsx scripts/kh02/runBacktestV12_4_3_4_2.ts",
+      "scope": "Backtest policy scenario replay and dev/holdout split",
+      "status": "PASS",
+      "exitCode": 0,
+      "policyScenarioVerdict": "PASS",
+      "devVerdict": "INSUFFICIENT_HISTORICAL_EVIDENCE",
+      "holdoutVerdict": "INSUFFICIENT_HISTORICAL_EVIDENCE"
+    },
+    {
+      "gateId": "E7",
+      "command": "npx vitest run tests/unit/kh02/v12_4_3_7_19_3_1_UnifiedCandidateAttribution.test.ts tests/unit/kh02/v12_4_3_7_19_3_CandidateScopeAttribution.test.ts tests/unit/kh02/v12_4_3_7_19_2_SourceTruthAndDiagnosticHonesty.test.ts",
+      "scope": "Target V19.3.1 adversarial and source truth suites",
+      "status": "PASS",
+      "exitCode": 0,
+      "testFilesCount": 3,
+      "testsPassed": 70,
+      "testsFailed": 0,
+      "durationMs": 2800
+    }
+  ],
+  "totalPassingTests": 2285,
+  "totalFailingTests": 0
+}

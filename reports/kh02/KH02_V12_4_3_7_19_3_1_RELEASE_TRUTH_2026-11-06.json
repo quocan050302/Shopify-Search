@@ -1,0 +1,21 @@
+{
+  "version": "12.4.3.7.19.3.1",
+  "generatedAt": "2026-11-06T05:54:35.483Z",
+  "codeSha": "b32a13247d54fa47e3d0d0c7960873a5270248eb",
+  "branch": "feature/kh02-walmart-us-jina-reader-v12.4.3.5.1",
+  "verdicts": {
+    "engineering": "PASS",
+    "cacheAndFreshAttribution": "VERIFIED_CLOSED",
+    "provenance": "VERIFIED_BOUNDARY",
+    "staging": "CONTRACT_READY",
+    "ci": "SELF_REPORTED_LOCAL_EXECUTION",
+    "g15DemandGate": "INSUFFICIENT_EVIDENCE",
+    "g16Top3WinnersGate": "INSUFFICIENT_EVIDENCE",
+    "productionRelease": "NO-GO"
+  },
+  "blockers": {
+    "commercialG15": "External merchant official Google Trends CSV with candidate-specific keyword and byte-level SHA-256 ledger proof is absent.",
+    "commercialG16": "Requires three distinct candidates each satisfying G15 authoritative demand; current candidate pool has 0 qualified.",
+    "productionDeployment": "Zero-spend policy in place; SerpApi inert, BigQuery unconfigured, staging remote unconfigured."
+  }
+}

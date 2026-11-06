@@ -1,0 +1,64 @@
+{
+  "version": "12.4.3.7.19.3.1",
+  "generatedAt": "2026-11-06T05:54:35.483Z",
+  "codeSha": "b32a13247d54fa47e3d0d0c7960873a5270248eb",
+  "researchRunId": "kh02_run_1793424091548_669k8",
+  "workspaceId": "acceptance_v12_2_3_ws",
+  "candidates": [
+    {
+      "candidateId": "cand_1212440541",
+      "canonicalName": "UAHPET Fresh Food Automatic Pet Feeder",
+      "canonicalProductId": "cmvsy7zqh000jp0orhypwohho",
+      "rawDbRecordsCount": 6,
+      "candidateAttributableRecordsCount": 0,
+      "excludedRecordsCount": 6,
+      "sourceVerifiedRows": 0,
+      "historicalEligibleRows": 0,
+      "coveredDays": 0,
+      "attributionBreakdown": {
+        "EXACT_CANDIDATE_KEYWORD_MATCH": 0,
+        "VERIFIED_EXPLICIT_ALIAS_MATCH": 0,
+        "EXCLUDED_UNVERIFIED_ALIAS": 6,
+        "EXCLUDED_KEYWORD_MISMATCH": 0,
+        "EXCLUDED_CROSS_PRODUCT": 0,
+        "EXCLUDED_WORKSPACE_OR_RUN": 0,
+        "EXCLUDED_REGION": 0,
+        "EXCLUDED_MISSING_PROVENANCE": 0,
+        "EXCLUDED_FUTURE_OR_POST_CUTOFF": 0,
+        "EXCLUDED_FIXTURE_OR_PROXY": 0,
+        "INSUFFICIENT_CANDIDATE_IDENTITY": 0
+      },
+      "g15Verdict": "INSUFFICIENT_HISTORY",
+      "g16Verdict": "INSUFFICIENT_EVIDENCE",
+      "eligibleForEvergreen": false
+    },
+    {
+      "candidateId": "cand_1587534715",
+      "canonicalName": "The KittySpout™ - Wireless Fountain",
+      "canonicalProductId": null,
+      "rawDbRecordsCount": 0,
+      "candidateAttributableRecordsCount": 0,
+      "excludedRecordsCount": 0,
+      "sourceVerifiedRows": 0,
+      "historicalEligibleRows": 0,
+      "coveredDays": 0,
+      "g15Verdict": "INSUFFICIENT_HISTORY",
+      "g16Verdict": "INSUFFICIENT_EVIDENCE",
+      "eligibleForEvergreen": false
+    },
+    {
+      "candidateId": "cand_1613504636",
+      "canonicalName": "Pet Hair/Lint/Dust Cleaner",
+      "canonicalProductId": null,
+      "rawDbRecordsCount": 0,
+      "candidateAttributableRecordsCount": 0,
+      "excludedRecordsCount": 0,
+      "sourceVerifiedRows": 0,
+      "historicalEligibleRows": 0,
+      "coveredDays": 0,
+      "g15Verdict": "INSUFFICIENT_HISTORY",
+      "g16Verdict": "INSUFFICIENT_EVIDENCE",
+      "eligibleForEvergreen": false
+    }
+  ]
+}

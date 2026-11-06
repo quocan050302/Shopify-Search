@@ -1,0 +1,75 @@
+{
+  "version": "12.4.3.7.19.3.1",
+  "generatedAt": "2026-11-06T05:54:35.483Z",
+  "codeSha": "b32a13247d54fa47e3d0d0c7960873a5270248eb",
+  "parentSha": "d2e0dcf477fc54bae8a23fef203f763eeff91b78",
+  "treeSha": "4a2e9b87235fc672225d0710d863b8cf0a56b877",
+  "branch": "feature/kh02-walmart-us-jina-reader-v12.4.3.5.1",
+  "files": [
+    {
+      "file": "reports/kh02/KH02_V12_4_3_7_19_3_1_UNIFIED_ATTRIBUTION_AUDIT_2026-11-06.md",
+      "sha256": "947fa2058b291e24bc10ae4e1e59092476f98cce777ce4736472bd456b38533e",
+      "sizeBytes": 5584
+    },
+    {
+      "file": "reports/kh02/KH02_V12_4_3_7_19_3_1_PATH_AND_WRITER_INVENTORY_2026-11-06.json",
+      "sha256": "5dc9271c777b33f4d52e39d5ef6381f6f8705cd709c0ca2fa95069a509090bbb",
+      "sizeBytes": 2836
+    },
+    {
+      "file": "reports/kh02/KH02_V12_4_3_7_19_3_1_ADVERSARIAL_TEST_MATRIX_2026-11-06.json",
+      "sha256": "5577603895464f76ba02efbc3fcf0a22fdaa4ed960ccbe20901747f011ab012d",
+      "sizeBytes": 5490
+    },
+    {
+      "file": "reports/kh02/KH02_V12_4_3_7_19_3_1_CANDIDATE_READBACK_2026-11-06.json",
+      "sha256": "620eab8079d7a81d00e0e186c3a0e419680f77bf563fa313811cd16d2893a35f",
+      "sizeBytes": 2178
+    },
+    {
+      "file": "reports/kh02/KH02_V12_4_3_7_19_3_1_FULL_TEST_COMMAND_MATRIX_2026-11-06.json",
+      "sha256": "bb63d945b82d3aa9cb542b270740c74aa6409712bc8c6216bc23c951c4ae6c6d",
+      "sizeBytes": 2495
+    },
+    {
+      "file": "reports/kh02/KH02_V12_4_3_7_19_3_1_BACKTEST_DEV_HOLDOUT_2026-11-06.json",
+      "sha256": "f65a33fb2fec6391766b558ac1b4ed7811b31aef7587bb4d995fe8efc12d2cce",
+      "sizeBytes": 1134
+    },
+    {
+      "file": "reports/kh02/KH02_V12_4_3_7_19_3_1_RELEASE_TRUTH_2026-11-06.json",
+      "sha256": "74458cc22564a716d97b2fc566081c7a11fe9f95c44ec8d9d2deb2583b6cfe55",
+      "sizeBytes": 979
+    },
+    {
+      "file": "src/services/kh02/demand/candidateDemandAttribution.ts",
+      "sha256": "1075bea2f6bbc6c882d7e62689aa6d6859b2fc299b2e30ea5bfb96c1f8d6a5b6",
+      "sizeBytes": 23672
+    },
+    {
+      "file": "src/services/kh02/demand/demandProviderRegistry.ts",
+      "sha256": "5aa628b6ea7b2536ad31913008c9761d8fac99949d8eb0f762ebfcaee8031218",
+      "sizeBytes": 32478
+    },
+    {
+      "file": "src/services/kh02/demand/historicalDemandIngestion.ts",
+      "sha256": "8f2653b1571c60262d584e20dc3aced48bd9e62d6636705108cbf61b98de8fd1",
+      "sizeBytes": 27322
+    },
+    {
+      "file": "src/services/kh02/demand/providerObservationRawBinding.ts",
+      "sha256": "e4d99d2a599ab37b163ddec0210a3ca6c26614127ee39f036e3f9fa7ce2ab58d",
+      "sizeBytes": 31095
+    },
+    {
+      "file": "src/services/kh02/evergreenResearchOrchestrator.ts",
+      "sha256": "b6c28e3a129352b037b26b444b957b18904e6d4734806adad45ac00ccaf39316",
+      "sizeBytes": 105104
+    },
+    {
+      "file": "tests/unit/kh02/v12_4_3_7_19_3_1_UnifiedCandidateAttribution.test.ts",
+      "sha256": "3d9b9a7c91d8833b44c65e895eabdff96a884ce6ce1a7c52bdeb802336668b3d",
+      "sizeBytes": 30894
+    }
+  ]
+}
