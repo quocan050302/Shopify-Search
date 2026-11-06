@@ -1,0 +1,26 @@
+{
+  "version": "12.4.3.7.19.3.2.4",
+  "commitSha": "1e463304b5552f996d0732b1a21ae6bbf927efb6",
+  "treeSha": "1fdf79e3deba7c608de01c3f9408d869122ba1a6",
+  "branch": "feature/kh02-walmart-us-jina-reader-v12.4.3.5.1",
+  "generatedAt": "2026-11-06T11:54:38.144Z",
+  "runner": "scripts/kh02/runBacktestV12_4_3_4_2.ts",
+  "exitCode": 0,
+  "policyVerdict": "PASS",
+  "devSplit": {
+    "status": "INSUFFICIENT_HISTORICAL_EVIDENCE",
+    "shortlistCount": 0,
+    "requiredCount": 0,
+    "coverageDays": 0,
+    "leakageChecksPassed": true
+  },
+  "holdoutSplit": {
+    "status": "INSUFFICIENT_HISTORICAL_EVIDENCE",
+    "shortlistCount": 3,
+    "requiredCount": 3,
+    "coverageDays": 0,
+    "leakageChecksPassed": true
+  },
+  "overallBacktestStatus": "INSUFFICIENT_HISTORICAL_EVIDENCE",
+  "reason": "Development and holdout historical demand datasets demonstrate strict chronological policy replay without lookahead leakage, but remain INSUFFICIENT_HISTORICAL_EVIDENCE due to absence of verified official longitudinal Google Trends CSV data."
+}

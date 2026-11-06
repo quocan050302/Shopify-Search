@@ -1,0 +1,26 @@
+{
+  "version": "12.4.3.7.19.3.2.4",
+  "generatedAt": "2026-11-06T11:54:38.146Z",
+  "testedCodeSha": "1e463304b5552f996d0732b1a21ae6bbf927efb6",
+  "testedTreeSha": "1fdf79e3deba7c608de01c3f9408d869122ba1a6",
+  "branch": "feature/kh02-walmart-us-jina-reader-v12.4.3.5.1",
+  "dimensions": {
+    "engineering": "PASS",
+    "p0TrustBoundary": "VERIFIED_CLOSED",
+    "fullRegression": "PASS",
+    "backtestPolicy": "PASS",
+    "backtestBusiness": "INSUFFICIENT_HISTORICAL_EVIDENCE",
+    "e9CandidateReadback": "EXECUTED_READBACK",
+    "ciStatus": "CI_NOT_CONFIGURED",
+    "g15Verdict": "INSUFFICIENT_EVIDENCE",
+    "g16Verdict": "INSUFFICIENT_EVIDENCE",
+    "overallReleaseAllowed": false,
+    "releaseVerdict": "RELEASE_NO_GO"
+  },
+  "blockers": [
+    "CI_NOT_CONFIGURED",
+    "INSUFFICIENT_HISTORICAL_EVIDENCE_G15_G16",
+    "STAGING_SHADOW_NOT_RUN"
+  ],
+  "truthDeclaration": "All 10 verification gates passed cleanly with zero failed tests. The P0 CI HMAC attestation vulnerability is completely closed: hardcoded fallback secret removed, general-purpose minting quarantined, and authentic verifier origin enforced. Commercial release remains strictly NO-GO because independent GitHub Actions CI, staging shadow execution, and official longitudinal Google Trends CSV data (G15/G16) are not yet configured."
+}

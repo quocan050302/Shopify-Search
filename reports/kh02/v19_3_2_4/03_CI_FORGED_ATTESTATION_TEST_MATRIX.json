@@ -1,0 +1,118 @@
+{
+  "version": "12.4.3.7.19.3.2.4",
+  "testedCodeSha": "1e463304b5552f996d0732b1a21ae6bbf927efb6",
+  "testedTreeSha": "1fdf79e3deba7c608de01c3f9408d869122ba1a6",
+  "branch": "feature/kh02-walmart-us-jina-reader-v12.4.3.5.1",
+  "suite": "tests/unit/kh02/v12_4_3_7_19_3_2_4_CiHmacTrustBoundary.test.ts",
+  "generatedAt": "2026-11-06T11:54:38.137Z",
+  "totalTests": 15,
+  "passedTests": 15,
+  "failedTests": 0,
+  "tests": [
+    {
+      "id": "R01",
+      "name": "Missing KH02_CI_VERIFIER_SECRET fails closed; attempted default-key minting never yields CI_PASS",
+      "status": "PASS",
+      "denialType": "CI_CLAIM_UNVERIFIED",
+      "blockerRecorded": "CI_CLAIM_UNVERIFIED"
+    },
+    {
+      "id": "R02",
+      "name": "mintCiAttestationToken imported in caller code cannot mint a valid release-grade proof without internal execution capability",
+      "status": "PASS",
+      "denialType": "UNAUTHORIZED_MINT",
+      "blockerRecorded": "MISSING_TRUST_ANCHOR"
+    },
+    {
+      "id": "R03",
+      "name": "User-supplied plain object without authentic cryptographic attestation fails closed across all paths",
+      "status": "PASS",
+      "denialType": "CI_CLAIM_UNVERIFIED",
+      "blockerRecorded": "CI_CLAIM_UNVERIFIED"
+    },
+    {
+      "id": "R04",
+      "name": "Self-created HMAC using historical default key is strictly rejected even if all fields match",
+      "status": "PASS",
+      "denialType": "MISSING_TRUST_ANCHOR_OR_PROHIBITED",
+      "blockerRecorded": "PROHIBITED_KEY"
+    },
+    {
+      "id": "R05",
+      "name": "Arbitrary unsigned, truncated, malformed, or replayed signatures are strictly rejected",
+      "status": "PASS",
+      "denialType": "MALFORMED_OR_TRUNCATED_SIGNATURE",
+      "blockerRecorded": "SIGNATURE_MISMATCH"
+    },
+    {
+      "id": "R06",
+      "name": "Token signed under test key or marked as unit test mock NEVER yields commercial CI_PASS",
+      "status": "PASS",
+      "denialType": "MOCK_QUARANTINE",
+      "blockerRecorded": "CI_NOT_RUN"
+    },
+    {
+      "id": "R07",
+      "name": "Token correctly signed under trusted key with unverified self-provided claims is NOT VALID for release",
+      "status": "PASS",
+      "denialType": "INVALID_RESPONSE_DIGEST",
+      "blockerRecorded": "CI_CLAIM_UNVERIFIED"
+    },
+    {
+      "id": "R08",
+      "name": "Attestation with mismatched SHA, branch, repo, or event is strictly rejected",
+      "status": "PASS",
+      "denialType": "FIELD_MISMATCH",
+      "blockerRecorded": "CI_FAIL"
+    },
+    {
+      "id": "R09",
+      "name": "Unapproved or neighboring workflow name is rejected fail-closed",
+      "status": "PASS",
+      "denialType": "UNAPPROVED_WORKFLOW",
+      "blockerRecorded": "CI_FAIL"
+    },
+    {
+      "id": "R10",
+      "name": "Direct release-gate input with spoofed ciStatus=CI_PASS or overallReleaseAllowed=true cannot promote verdict",
+      "status": "PASS",
+      "denialType": "UNTRUSTED_CALLER_STATUS",
+      "blockerRecorded": "CI_CLAIM_UNVERIFIED"
+    },
+    {
+      "id": "R11",
+      "name": "Mocked customFetch deceptively labeled isUnitTestMock:false is strictly forced to UNIT_TEST_MOCK and PARSED_CLAIM",
+      "status": "PASS",
+      "denialType": "FORCED_MOCK_QUARANTINE",
+      "blockerRecorded": "PARSED_CLAIM"
+    },
+    {
+      "id": "R12",
+      "name": "Structural claim validator distinguishes structurallyValid from providerVerified",
+      "status": "PASS",
+      "denialType": "STRUCTURAL_ONLY_SEPARATION",
+      "blockerRecorded": "PROVIDER_UNVERIFIED"
+    },
+    {
+      "id": "R13",
+      "name": "Missing token, missing secret, HTTP errors (401/403/404/500), timeout, and SSRF fail closed",
+      "status": "PASS",
+      "denialType": "NETWORK_AND_AUTH_FAIL_CLOSED",
+      "blockerRecorded": "CI_NOT_CONFIGURED"
+    },
+    {
+      "id": "R14",
+      "name": "Cross-run substitution of runId, headSha, or responseDigest fails cryptographic verification",
+      "status": "PASS",
+      "denialType": "SIGNATURE_DIGEST_MISMATCH",
+      "blockerRecorded": "SIGNATURE_MISMATCH"
+    },
+    {
+      "id": "R15",
+      "name": "Unconfigured CI with fake success and all passing gates independently keeps ciStatus != CI_PASS and release NO-GO",
+      "status": "PASS",
+      "denialType": "INDEPENDENT_CI_VERDICT",
+      "blockerRecorded": "CI_NOT_CONFIGURED"
+    }
+  ]
+}

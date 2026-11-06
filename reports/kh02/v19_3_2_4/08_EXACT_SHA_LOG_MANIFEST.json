@@ -1,0 +1,117 @@
+{
+  "version": "12.4.3.7.19.3.2.4",
+  "generatedAt": "2026-11-06T11:54:38.146Z",
+  "repository": "quocan050302/Shopify-Search",
+  "branch": "feature/kh02-walmart-us-jina-reader-v12.4.3.5.1",
+  "baselineCommitSha": "76c3de8adefc6995cdf5728753450d186abfc0de",
+  "baselineTreeSha": "32dbfb575b9561d32c172b84d38ab7eab59013c5",
+  "testedCodeCommitSha": "1e463304b5552f996d0732b1a21ae6bbf927efb6",
+  "testedCodeTreeSha": "1fdf79e3deba7c608de01c3f9408d869122ba1a6",
+  "evidenceProvenance": {
+    "codeCommitImmutable": true,
+    "p0Closed": true,
+    "allGatesPassed": true
+  },
+  "logs": [
+    {
+      "gateId": "E1",
+      "name": "TypeScript Compilation & Typecheck",
+      "command": "npx tsc --noEmit",
+      "logFile": "e1_typecheck.log",
+      "logSha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b",
+      "logSizeBytes": 1,
+      "exitCode": 0,
+      "durationMs": 4300
+    },
+    {
+      "gateId": "E2",
+      "name": "Git Diff Whitespace & Conflict Check",
+      "command": "git diff --check HEAD~1 HEAD",
+      "logFile": "e2_diff_check.log",
+      "logSha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b",
+      "logSizeBytes": 1,
+      "exitCode": 0,
+      "durationMs": 41
+    },
+    {
+      "gateId": "E3",
+      "name": "Targeted V19.3.2.x CI Proof & Attestation Suites (R01-R15 + Regressions)",
+      "command": "npx vitest run tests/unit/kh02/v12_4_3_7_19_3_2_4_CiHmacTrustBoundary.test.ts tests/unit/kh02/v12_4_3_7_19_3_2_3_TrustedCiProofAndObservableExecution.test.ts tests/unit/kh02/v12_4_3_7_19_3_2_2_MandatoryBusinessScopeAndCiProof.test.ts tests/unit/kh02/v12_4_3_7_19_3_2_1_FinalAliasTrustAndCiProof.test.ts tests/unit/kh02/v12_4_3_7_19_3_2_DurableAliasAuthorization.test.ts",
+      "logFile": "e3_targeted_suites.log",
+      "logSha256": "c4080f2afd688b6c0ec412d848ca2ab9b68d29f20a9da2adeb1e9b4c1aee189f",
+      "logSizeBytes": 2324,
+      "exitCode": 0,
+      "durationMs": 14782
+    },
+    {
+      "gateId": "E4",
+      "name": "KH-02 Full Unit Test Suite",
+      "command": "npm run kh02:test:unit -- --maxWorkers=4",
+      "logFile": "e4_unit_tests.log",
+      "logSha256": "b1d6c978673a8107662a633c32808c3d509e8ca2f229b315d98f155702269366",
+      "logSizeBytes": 29797,
+      "exitCode": 0,
+      "durationMs": 152223
+    },
+    {
+      "gateId": "E5",
+      "name": "KH-02 Full Integration Test Suite",
+      "command": "npm run kh02:test:integration",
+      "logFile": "e5_integration_tests.log",
+      "logSha256": "a206593fd4557456d9b7e87c642df0165c7b551dd0699ca1673b2c0463193e7a",
+      "logSizeBytes": 6412,
+      "exitCode": 0,
+      "durationMs": 59075
+    },
+    {
+      "gateId": "E6",
+      "name": "KH-01 Baseline Verification Suite",
+      "command": "npm run kh01:verify",
+      "logFile": "e6_kh01_verify.log",
+      "logSha256": "963ac2882e43ffdf0fa3aaa263a8a493f581023ca74710471744b7e7d234cac3",
+      "logSizeBytes": 4003,
+      "exitCode": 0,
+      "durationMs": 1905
+    },
+    {
+      "gateId": "E7",
+      "name": "Security Negative Suites",
+      "command": "npx vitest run tests/unit/kh02ProductMetadataSecurity.test.ts tests/unit/kh02/v12_4_3_7_17_NetworkSsrfRedirect.test.ts tests/unit/kh02/v12_4_3_7_18_SocketPeerTlsTrust.test.ts tests/unit/kh02/v12_4_3_7_18_1_SocketTrustNoTestBypass.test.ts",
+      "logFile": "e7_security_negative.log",
+      "logSha256": "66434df695585b483b462bb284f723e3a4112b97843a4bc63af1aec185c2fdea",
+      "logSizeBytes": 917,
+      "exitCode": 0,
+      "durationMs": 1727
+    },
+    {
+      "gateId": "E8",
+      "name": "Historical Demand Backtest (Dev & Holdout)",
+      "command": "npx tsx scripts/kh02/runBacktestV12_4_3_4_2.ts",
+      "logFile": "e8_backtest.log",
+      "logSha256": "13cbcb4b210acfc20de05ebd358e661394d4e775fe83f48dc3302c7428aae898",
+      "logSizeBytes": 192,
+      "exitCode": 0,
+      "durationMs": 1439
+    },
+    {
+      "gateId": "E9",
+      "name": "Candidate Database Readback (Gate E9)",
+      "command": "npx tsx scripts/kh02/runCandidateDbReadback.ts",
+      "logFile": "e9_db_readback.log",
+      "logSha256": "16715924b37fb141e9e556c55ed9b260dd9f07bb0383bb3ebc0adfe9d2fada1a",
+      "logSizeBytes": 1172,
+      "exitCode": 0,
+      "durationMs": 777
+    },
+    {
+      "gateId": "E10",
+      "name": "Remote CI Proof Diagnostic (Gate E10)",
+      "command": "npx tsx scripts/kh02/runRemoteCiProofDiagnostic.ts",
+      "logFile": "e10_remote_ci.log",
+      "logSha256": "526faec9efee7a1bcecb39e949abf597f23cfee5437e37811bf7b13128fd619c",
+      "logSizeBytes": 899,
+      "exitCode": 0,
+      "durationMs": 379
+    }
+  ]
+}
