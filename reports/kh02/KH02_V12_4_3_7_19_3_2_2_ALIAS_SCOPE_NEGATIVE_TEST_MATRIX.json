@@ -1,0 +1,189 @@
+{
+  "version": "V12.4.3.7.19.3.2.2",
+  "auditDate": "2026-11-06T16:25:00+07:00",
+  "testSuite": "tests/unit/kh02/v12_4_3_7_19_3_2_2_MandatoryBusinessScopeAndCiProof.test.ts",
+  "groupA_ScopeAndAliasNegativeMatrix": [
+    {
+      "testId": "A01",
+      "description": "missing evaluationScope with TEST_ONLY alias yields businessAttributable: false",
+      "scopeInput": "undefined (unspecified)",
+      "aliasType": "TEST_ONLY signed alias",
+      "expectedClassification": "VERIFIED_EXPLICIT_ALIAS_MATCH",
+      "expectedIsAttributable": true,
+      "expectedBusinessAttributable": false,
+      "observedStatus": "PASS"
+    },
+    {
+      "testId": "A02",
+      "description": "explicit BUSINESS scope with TEST_ONLY signed alias strictly fails with TEST_ONLY_ALIAS",
+      "scopeInput": "BUSINESS",
+      "aliasType": "TEST_ONLY signed alias",
+      "expectedClassification": "EXCLUDED_UNVERIFIED_ALIAS",
+      "expectedIsAttributable": false,
+      "expectedBusinessAttributable": false,
+      "observedStatus": "PASS"
+    },
+    {
+      "testId": "A03",
+      "description": "explicit ENGINEERING scope with TEST_ONLY alias allows engineering match but businessEligible is false",
+      "scopeInput": "ENGINEERING",
+      "aliasType": "TEST_ONLY signed alias",
+      "expectedClassification": "VERIFIED_EXPLICIT_ALIAS_MATCH",
+      "expectedIsAttributable": true,
+      "expectedBusinessAttributable": false,
+      "observedStatus": "PASS"
+    },
+    {
+      "testId": "A04",
+      "description": "real history resolver with cached test-alias row excludes observation before G15 assessment",
+      "scopeInput": "BUSINESS (resolver default)",
+      "aliasType": "TEST_ONLY signed alias",
+      "expectedStatus": "INSUFFICIENT_HISTORY",
+      "expectedDataPointsCount": 0,
+      "observedStatus": "PASS"
+    },
+    {
+      "testId": "A05",
+      "description": "real history resolver fresh provider response using TEST_ONLY alias excluded before DB write",
+      "scopeInput": "BUSINESS (resolver default)",
+      "aliasType": "TEST_ONLY signed alias",
+      "expectedStatus": "INSUFFICIENT_HISTORY",
+      "expectedLivePointsImported": 0,
+      "observedStatus": "PASS"
+    },
+    {
+      "testId": "A06",
+      "description": "CSV import provider direct call using test alias yields 0 business historical series",
+      "scopeInput": "BUSINESS",
+      "aliasType": "TEST_ONLY signed alias",
+      "expectedPointsLength": 0,
+      "observedStatus": "PASS"
+    },
+    {
+      "testId": "A07",
+      "description": "evaluateDemandSourceAuthority direct call with test-only alias returns CACHED_UNVERIFIED",
+      "scopeInput": "BUSINESS",
+      "aliasType": "TEST_ONLY signed alias",
+      "expectedAuthority": "CACHED_UNVERIFIED",
+      "expectedProductAttributionValid": false,
+      "observedStatus": "PASS"
+    },
+    {
+      "testId": "A08",
+      "description": "evaluateDemandHistoryEvidence with >=60d well-formed test-only alias fixtures returns INSUFFICIENT",
+      "scopeInput": "BUSINESS",
+      "aliasType": "TEST_ONLY signed alias",
+      "expectedStatus": "INSUFFICIENT_HISTORY",
+      "expectedEligibleForEvergreen": false,
+      "observedStatus": "PASS"
+    },
+    {
+      "testId": "A09",
+      "description": "G16 Top3 candidates with test-only aliases yield no verified commercial winner",
+      "scopeInput": "BUSINESS",
+      "aliasType": "TEST_ONLY signed alias",
+      "expectedWinningTier": "NOT_VERIFIED",
+      "expectedG16Pass": false,
+      "observedStatus": "PASS"
+    },
+    {
+      "testId": "A10",
+      "description": "caller trying evaluationScope: ENGINEERING through production endpoint is ignored/re-fenced",
+      "scopeInput": "Caller supplied ENGINEERING",
+      "aliasType": "TEST_ONLY signed alias",
+      "expectedStatus": "INSUFFICIENT_HISTORY",
+      "observedStatus": "PASS"
+    },
+    {
+      "testId": "A11",
+      "description": "unknown/missing scope with valid business approval still allows legitimate business attribution",
+      "scopeInput": "undefined",
+      "aliasType": "COMMERCIAL_ACTIVE business alias",
+      "expectedClassification": "VERIFIED_EXPLICIT_ALIAS_MATCH",
+      "expectedIsAttributable": true,
+      "expectedBusinessAttributable": true,
+      "observedStatus": "PASS"
+    },
+    {
+      "testId": "A12",
+      "description": "genuine business approval + non-fixture row succeeds when source/time rules pass",
+      "scopeInput": "BUSINESS",
+      "aliasType": "COMMERCIAL_ACTIVE business alias",
+      "expectedClassification": "VERIFIED_EXPLICIT_ALIAS_MATCH",
+      "expectedBusinessAttributable": true,
+      "observedStatus": "PASS"
+    },
+    {
+      "testId": "A13",
+      "description": "forged alias caller object with businessEligible: true but no ledger record is rejected",
+      "scopeInput": "BUSINESS",
+      "aliasType": "Forged object without signature/ledger",
+      "expectedClassification": "EXCLUDED_UNVERIFIED_ALIAS",
+      "observedStatus": "PASS"
+    },
+    {
+      "testId": "A14",
+      "description": "cross-tenant/workspace alias observation is rejected",
+      "scopeInput": "BUSINESS",
+      "aliasType": "Workspace mismatch",
+      "expectedClassification": "EXCLUDED_WORKSPACE_OR_RUN",
+      "observedStatus": "PASS"
+    },
+    {
+      "testId": "A15",
+      "description": "cross-run / asOf later approval is rejected point-in-time",
+      "scopeInput": "BUSINESS",
+      "aliasType": "Approval timestamp > asOf cutoff",
+      "expectedClassification": "EXCLUDED_UNVERIFIED_ALIAS",
+      "observedStatus": "PASS"
+    },
+    {
+      "testId": "A16",
+      "description": "revoked alias is strictly rejected fail-closed",
+      "scopeInput": "BUSINESS",
+      "aliasType": "Revoked in ledger",
+      "expectedClassification": "EXCLUDED_UNVERIFIED_ALIAS",
+      "observedStatus": "PASS"
+    },
+    {
+      "testId": "A17",
+      "description": "same canonical productId with mismatched SKU/variant token prevents cross-borrowing",
+      "scopeInput": "BUSINESS",
+      "aliasType": "Variant token conflict",
+      "expectedClassification": "EXCLUDED_UNVERIFIED_ALIAS",
+      "observedStatus": "PASS"
+    },
+    {
+      "testId": "A18",
+      "description": "valid business alias with missing raw source provenance leaves G15 insufficient",
+      "scopeInput": "BUSINESS",
+      "aliasType": "COMMERCIAL_ACTIVE business alias with no raw CSV",
+      "expectedStatus": "INSUFFICIENT_HISTORY",
+      "observedStatus": "PASS"
+    },
+    {
+      "testId": "A19",
+      "description": "UAHPET six wrong-keyword raw rows yield 0 attributable records and G15 INSUFFICIENT",
+      "scopeInput": "BUSINESS",
+      "aliasType": "Wrong keywords without alias",
+      "expectedAttributableCount": 0,
+      "expectedG15Status": "INSUFFICIENT_HISTORY",
+      "observedStatus": "PASS"
+    },
+    {
+      "testId": "A20",
+      "description": "hardcoded 2-point 14-day fixture is marked fixture only and not counted as official Google source",
+      "scopeInput": "BUSINESS",
+      "aliasType": "Synthetic unit fixture",
+      "expectedAuthority": "FIXTURE_ONLY",
+      "observedStatus": "PASS"
+    }
+  ],
+  "matrixSummary": {
+    "totalNegativeTests": 20,
+    "passed": 20,
+    "failed": 0,
+    "passRate": "100.0%"
+  }
+}
+

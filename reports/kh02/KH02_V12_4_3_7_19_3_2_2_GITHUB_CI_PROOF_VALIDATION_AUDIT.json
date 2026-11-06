@@ -1,0 +1,149 @@
+{
+  "version": "V12.4.3.7.19.3.2.2",
+  "auditDate": "2026-11-06T16:26:00+07:00",
+  "testedCommitSha": "70c1434ccfee3e41787d472f6027f6f57eb49caf",
+  "testedTreeSha": "26d9b0b59f04ea486d19cf4cccab9e5c7a4fa3ce",
+  "remoteCiTruthStatus": "CI_NOT_CONFIGURED",
+  "remoteCiTruthReason": "GitHub Actions remote workflow execution was not run because no external GitHub Actions workflows are configured or active for this private branch.",
+  "groupB_CiProofValidationMatrix": [
+    {
+      "testId": "B01",
+      "description": "bare runId + matching sha without authentic verifier returns CI_CLAIM_UNVERIFIED",
+      "expectedStatus": "CI_CLAIM_UNVERIFIED",
+      "observedStatus": "PASS"
+    },
+    {
+      "testId": "B02",
+      "description": "verified: true + full plausible plain object without verifier provenance returns CI_CLAIM_UNVERIFIED",
+      "expectedStatus": "CI_CLAIM_UNVERIFIED",
+      "observedStatus": "PASS"
+    },
+    {
+      "testId": "B03",
+      "description": "fake attestationSignature without trusted verifier root is rejected as unverified",
+      "expectedStatus": "CI_CLAIM_UNVERIFIED",
+      "observedStatus": "PASS"
+    },
+    {
+      "testId": "B04",
+      "description": "fake runId 1234567890 with completed/success claims returns NOT_VERIFIED",
+      "expectedStatus": "CI_CLAIM_UNVERIFIED",
+      "observedStatus": "PASS"
+    },
+    {
+      "testId": "B05",
+      "description": "mock API adapter payload produces UNIT_TEST_MOCK, not REAL_CI_VERIFIED",
+      "expectedStatus": "UNIT_TEST_MOCK",
+      "observedStatus": "PASS"
+    },
+    {
+      "testId": "B06",
+      "description": "run belonging to wrong repository is rejected with CI_FAIL",
+      "expectedStatus": "CI_FAIL",
+      "observedStatus": "PASS"
+    },
+    {
+      "testId": "B07",
+      "description": "run on wrong branch is rejected with CI_FAIL",
+      "expectedStatus": "CI_FAIL",
+      "observedStatus": "PASS"
+    },
+    {
+      "testId": "B08",
+      "description": "run with stale or mismatched commit SHA is rejected with CI_FAIL",
+      "expectedStatus": "CI_FAIL",
+      "observedStatus": "PASS"
+    },
+    {
+      "testId": "B09",
+      "description": "workflow not on allowed release workflows list is rejected with CI_FAIL",
+      "expectedStatus": "CI_FAIL",
+      "observedStatus": "PASS"
+    },
+    {
+      "testId": "B10",
+      "description": "untrusted trigger event (e.g. pull_request from untrusted fork) is rejected",
+      "expectedStatus": "CI_FAIL",
+      "observedStatus": "PASS"
+    },
+    {
+      "testId": "B11",
+      "description": "workflow with status queued or in_progress returns CI_NOT_RUN, never PASS",
+      "expectedStatus": "CI_NOT_RUN",
+      "observedStatus": "PASS"
+    },
+    {
+      "testId": "B12",
+      "description": "workflow with conclusion failure or cancelled returns CI_FAIL, never PASS",
+      "expectedStatus": "CI_FAIL",
+      "observedStatus": "PASS"
+    },
+    {
+      "testId": "B13",
+      "description": "cancelled or timed_out conclusion returns CI_FAIL",
+      "expectedStatus": "CI_FAIL",
+      "observedStatus": "PASS"
+    },
+    {
+      "testId": "B14",
+      "description": "GitHub API 401, 403 or 404 returns CI_NOT_RUN / UNAVAILABLE, never PASS",
+      "expectedStatus": "CI_NOT_RUN",
+      "observedStatus": "PASS"
+    },
+    {
+      "testId": "B15",
+      "description": "no token and network absent returns CI_NOT_CONFIGURED",
+      "expectedStatus": "CI_NOT_CONFIGURED",
+      "observedStatus": "PASS"
+    },
+    {
+      "testId": "B16",
+      "description": "SSRF URL injection and non-HTTPS endpoints fail before network dispatch",
+      "expectedStatus": "SECURITY_VIOLATION_SSRF",
+      "observedStatus": "PASS"
+    },
+    {
+      "testId": "B17",
+      "description": "HTTP 200 with invalid non-JSON or empty response body is rejected",
+      "expectedStatus": "CI_FAIL",
+      "observedStatus": "PASS"
+    },
+    {
+      "testId": "B18",
+      "description": "authentic verifier output includes 64-char responseDigest and TRUSTED_VERIFIER_ID",
+      "expectedStatus": "CI_PROVIDER_VERIFIED",
+      "observedStatus": "PASS"
+    },
+    {
+      "testId": "B19",
+      "description": "release evaluator caller ciStatus.runStatus=SUCCESS with verifiedProof: {verified: true} but no trusted origin returns CI_NOT_RUN",
+      "expectedStatus": "CI_NOT_RUN",
+      "observedStatus": "PASS"
+    },
+    {
+      "testId": "B20",
+      "description": "replaying a CI run for previous commit or branch is rejected",
+      "expectedStatus": "CI_FAIL",
+      "observedStatus": "PASS"
+    },
+    {
+      "testId": "B21",
+      "description": "modified logs or test counts after purported CI success produces no exact-SHA proof",
+      "expectedStatus": "CI_CLAIM_UNVERIFIED",
+      "observedStatus": "PASS"
+    },
+    {
+      "testId": "B22",
+      "description": "sanitizeCiLog strictly redacts tokens, bearer secrets, and passwords from logs",
+      "expectedStatus": "SANITIZED",
+      "observedStatus": "PASS"
+    }
+  ],
+  "ciProofSummary": {
+    "totalCiProofTests": 22,
+    "passed": 22,
+    "failed": 0,
+    "passRate": "100.0%"
+  }
+}
+

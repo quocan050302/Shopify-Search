@@ -1,0 +1,11 @@
+[GATE_E2]
+command: git diff --check HEAD~1 HEAD
+tested_c1_sha: 70c1434ccfee3e41787d472f6027f6f57eb49caf
+tested_c1_tree: 26d9b0b59f04ea486d19cf4cccab9e5c7a4fa3ce
+started_at: 2026-11-06T09:24:26.870Z
+completed_at: 2026-11-06T09:24:26.930Z
+duration_seconds: 0.06
+exit_code: 0
+--- RAW PROCESS STDOUT/STDERR ---
+
+--- END RAW PROCESS OUTPUT ---

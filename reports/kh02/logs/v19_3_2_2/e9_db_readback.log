@@ -1,0 +1,28 @@
+[GATE_E9]
+command: node -e "
+    const { PrismaClient } = require('@prisma/client');
+    const prisma = new PrismaClient();
+    async function check() {
+      const uahpetId = 'cmvsy7zqh000jp0orhypwohho';
+      const obs = await prisma.productDemandObservation.findMany({
+        where: { productId: uahpetId },
+        orderBy: { periodStart: 'asc' }
+      });
+      console.log('Database readback for UAHPET canonical ID:', uahpetId);
+      console.log('Total demand observations:', obs.length);
+      console.log('Distinct keywords:', Array.from(new Set(obs.map(o => o.keyword))));
+      console.log('Sources:', Array.from(new Set(obs.map(o => o.source))));
+      console.log('Evidence references:', Array.from(new Set(obs.map(o => o.evidenceReference))));
+      await prisma.\$disconnect();
+    }
+    check().catch(e => { console.error(e); process.exit(1); });
+  "
+tested_c1_sha: 70c1434ccfee3e41787d472f6027f6f57eb49caf
+tested_c1_tree: 26d9b0b59f04ea486d19cf4cccab9e5c7a4fa3ce
+started_at: 2026-11-06T09:29:59.623Z
+completed_at: 2026-11-06T09:29:59.690Z
+duration_seconds: 0.07
+exit_code: 0
+--- RAW PROCESS STDOUT/STDERR ---
+
+--- END RAW PROCESS OUTPUT ---

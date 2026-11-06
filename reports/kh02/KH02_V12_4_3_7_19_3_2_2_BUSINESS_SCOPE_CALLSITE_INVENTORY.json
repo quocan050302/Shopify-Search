@@ -1,0 +1,90 @@
+{
+  "version": "V12.4.3.7.19.3.2.2",
+  "auditDate": "2026-11-06T16:25:00+07:00",
+  "testedCommitSha": "70c1434ccfee3e41787d472f6027f6f57eb49caf",
+  "testedTreeSha": "26d9b0b59f04ea486d19cf4cccab9e5c7a4fa3ce",
+  "policyInvariant": "UNSPECIFIED_SCOPE_MUST_NEVER_GRANT_COMMERCIAL_AUTHORITY",
+  "callsiteInventory": [
+    {
+      "callerFile": "src/services/kh02/demand/candidateDemandAttribution.ts",
+      "callerFunction": "classifyCandidateObservationAttribution",
+      "entrypointKind": "CORE_ATTRIBUTION_CLASSIFIER",
+      "evaluationScope": "context.evaluationScope || undefined",
+      "fixtureProtection": "isFixture flag rejects fixture observations upfront; test-only aliases yield businessAttributable: false",
+      "intendedInvariant": "Observations matching test-only aliases receive businessAttributable: false unless explicit isolated ENGINEERING scope is verified; under BUSINESS scope, returns EXCLUDED_UNVERIFIED_ALIAS fail-closed."
+    },
+    {
+      "callerFile": "src/services/kh02/demand/candidateDemandAttribution.ts",
+      "callerFunction": "filterAttributableObservations",
+      "entrypointKind": "BATCH_ATTRIBUTION_PARTITIONER",
+      "evaluationScope": "context.evaluationScope",
+      "fixtureProtection": "Separates observations into attributableObservations and businessAttributableObservations",
+      "intendedInvariant": "Only businessAttributableObservations can be passed to commercial G15/G16 or persisted to production database."
+    },
+    {
+      "callerFile": "src/services/kh02/demand/candidateDemandAttribution.ts",
+      "callerFunction": "isAuthenticVerifiedCandidateAlias",
+      "entrypointKind": "DURABLE_ALIAS_VERIFIER",
+      "evaluationScope": "context.evaluationScope",
+      "fixtureProtection": "Cryptographic HMAC check + ledger check; under BUSINESS scope, isTestOnly === true strictly returns valid: false",
+      "intendedInvariant": "Test-only approval records cannot satisfy commercial business evaluation under any circumstances."
+    },
+    {
+      "callerFile": "src/services/kh02/demand/historicalDemandIngestion.ts",
+      "callerFunction": "resolveProductDemandHistory",
+      "entrypointKind": "HISTORICAL_RESOLVER_ENTRYPOINT",
+      "evaluationScope": "BUSINESS (fixed in CandidateAttributionContext)",
+      "fixtureProtection": "Only businessAttributableObservations are converted to DemandDataPoint and passed to G15 assessment",
+      "intendedInvariant": "Unspecified caller scope cannot downgrade resolution to ENGINEERING; test-only aliases yield zero business data points."
+    },
+    {
+      "callerFile": "src/services/kh02/demand/historicalDemandIngestion.ts",
+      "callerFunction": "resolveProductDemandHistory (fresh provider branch)",
+      "entrypointKind": "LIVE_PROVIDER_INGESTION_BOUNDARY",
+      "evaluationScope": "BUSINESS",
+      "fixtureProtection": "Provider response filtered via filterAttributableObservations before any Prisma DB writes",
+      "intendedInvariant": "Fresh provider observations with test-only aliases are discarded before writing to productDemandObservation."
+    },
+    {
+      "callerFile": "src/services/kh02/demand/demandProviderRegistry.ts",
+      "callerFunction": "GoogleTrendsCsvImportProvider.fetchSeries",
+      "entrypointKind": "CSV_PROVIDER_FETCH_SERIES",
+      "evaluationScope": "BUSINESS (fixed in CandidateAttributionContext)",
+      "fixtureProtection": "strictProvenance: true + businessAttributable check; excludes non-business attributable rows",
+      "intendedInvariant": "Direct caller to CSV provider cannot rescue unverified search terms without durable business alias approval."
+    },
+    {
+      "callerFile": "src/services/kh02/demand/temporalDemandEngine.ts",
+      "callerFunction": "evaluateDemandSourceAuthority",
+      "entrypointKind": "DEMAND_SOURCE_AUTHORITY_EVALUATOR",
+      "evaluationScope": "policy.evaluationScope || 'BUSINESS'",
+      "fixtureProtection": "Rejects synthetic/fixture markers; checks candidate attribution with businessAttributable guard",
+      "intendedInvariant": "Test-only aliases or unverified queries return CACHED_UNVERIFIED and productAttributionValid: false."
+    },
+    {
+      "callerFile": "src/services/kh02/demand/temporalDemandEngine.ts",
+      "callerFunction": "evaluateDemandHistoryEvidence",
+      "entrypointKind": "TEMPORAL_COVERAGE_AND_G15_EVALUATOR",
+      "evaluationScope": "Propagated to evaluateDemandSourceAuthority",
+      "fixtureProtection": "Requires >=3 valid business points and >=60 covered days; future and post-cutoff dates rejected",
+      "intendedInvariant": "Zero business-attributable points yields status INSUFFICIENT_HISTORY and eligibleForEvergreen: false."
+    },
+    {
+      "callerFile": "src/services/kh02/evergreenResearchOrchestrator.ts",
+      "callerFunction": "orchestrateKH02EvergreenResearch",
+      "entrypointKind": "BUSINESS_ORCHESTRATOR_G15_G16",
+      "evaluationScope": "BUSINESS",
+      "fixtureProtection": "Consumes resolved business demand history; enforces G15 and G16 gates",
+      "intendedInvariant": "Without authentic candidate-matched >=60d demand data, G15 and G16 remain INSUFFICIENT_EVIDENCE (NO-GO)."
+    },
+    {
+      "callerFile": "src/services/kh02/release/releaseGateEvaluatorV19.ts",
+      "callerFunction": "evaluateReleaseGatesV19",
+      "entrypointKind": "RELEASE_GOVERNANCE_GATE",
+      "evaluationScope": "BUSINESS",
+      "fixtureProtection": "Requires verifiedProof from SWAI_TRUSTED_GITHUB_VERIFIER_V1; demotes caller claims to CI_NOT_RUN",
+      "intendedInvariant": "Release decision is NO-GO unless all commercial gates (G01-G16) and authentic CI proof pass."
+    }
+  ]
+}
+

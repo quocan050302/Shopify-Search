@@ -1,0 +1,12 @@
+[GATE_E8]
+command: npx tsx scripts/kh02/runBacktestV12_4_3_4_2.ts
+tested_c1_sha: 70c1434ccfee3e41787d472f6027f6f57eb49caf
+tested_c1_tree: 26d9b0b59f04ea486d19cf4cccab9e5c7a4fa3ce
+started_at: 2026-11-06T09:29:57.199Z
+completed_at: 2026-11-06T09:29:59.564Z
+duration_seconds: 2.37
+exit_code: 0
+--- RAW PROCESS STDOUT/STDERR ---
+[Backtest V12.4.3.4.2] Policy=PASS | Dev=INSUFFICIENT_HISTORICAL_EVIDENCE (shortlist=0/0) | Holdout=INSUFFICIENT_HISTORICAL_EVIDENCE (shortlist=3/3) | Overall=INSUFFICIENT_HISTORICAL_EVIDENCE
+
+--- END RAW PROCESS OUTPUT ---

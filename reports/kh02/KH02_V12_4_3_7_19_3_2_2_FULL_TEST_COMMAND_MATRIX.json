@@ -1,0 +1,116 @@
+{
+  "version": "V12.4.3.7.19.3.2.2",
+  "generatedAt": "2026-11-06T16:30:00+07:00",
+  "testedCommitSha": "70c1434ccfee3e41787d472f6027f6f57eb49caf",
+  "testedTreeSha": "26d9b0b59f04ea486d19cf4cccab9e5c7a4fa3ce",
+  "commandMatrix": [
+    {
+      "gate": "E1",
+      "purpose": "Full TypeScript Typecheck",
+      "command": "npx tsc --noEmit",
+      "exitCode": 0,
+      "verdict": "PASS",
+      "durationSeconds": 5.68,
+      "logFile": "reports/kh02/logs/v19_3_2_2/e1_tsc_check.log",
+      "logSha256": "ed1b1cf5d6a227615f563400349ff09cbc967bee721e2a19be537fa41a5238d3"
+    },
+    {
+      "gate": "E2",
+      "purpose": "Git Whitespace and Patch Boundary Check",
+      "command": "git diff --check HEAD~1 HEAD",
+      "exitCode": 0,
+      "verdict": "PASS",
+      "durationSeconds": 0.06,
+      "logFile": "reports/kh02/logs/v19_3_2_2/e2_whitespace_check.log",
+      "logSha256": "1f3515bd98e1d7fb67fdfd2355c283622057242a81776458eed8630026050b45"
+    },
+    {
+      "gate": "E3",
+      "purpose": "Targeted V19.3 Test Suites (220 tests across 5 suites)",
+      "command": "npx vitest run tests/unit/kh02/v12_4_3_7_19_3_CandidateScopeAttribution.test.ts tests/unit/kh02/v12_4_3_7_19_3_1_UnifiedCandidateAttribution.test.ts tests/unit/kh02/v12_4_3_7_19_3_2_DurableAliasAuthorization.test.ts tests/unit/kh02/v12_4_3_7_19_3_2_1_FinalAliasTrustAndCiProof.test.ts tests/unit/kh02/v12_4_3_7_19_3_2_2_MandatoryBusinessScopeAndCiProof.test.ts",
+      "exitCode": 0,
+      "verdict": "PASS",
+      "durationSeconds": 17.27,
+      "testTotals": { "suites": 5, "tests": 220, "passed": 220, "failed": 0 },
+      "logFile": "reports/kh02/logs/v19_3_2_2/e3_targeted_suites.log",
+      "logSha256": "bf611442a5359696c6c92e72fb202b269254b938dfc0c47877adfcc69e45f23c"
+    },
+    {
+      "gate": "E4",
+      "purpose": "Entire KH-02 Unit Test Suite (97 test files, 2309 tests)",
+      "command": "npm run kh02:test:unit -- --maxWorkers=4",
+      "exitCode": 0,
+      "verdict": "PASS",
+      "durationSeconds": 230.20,
+      "testTotals": { "suites": 97, "tests": 2309, "passed": 2309, "failed": 0 },
+      "logFile": "reports/kh02/logs/v19_3_2_2/e4_unit_test.log",
+      "logSha256": "c009f42fb5d4d5a05dc3ce165f5864595167e91270de4c60cf25e37bae5761a4"
+    },
+    {
+      "gate": "E5",
+      "purpose": "Entire KH-02 Integration Test Suite",
+      "command": "npm run kh02:test:integration",
+      "exitCode": 0,
+      "verdict": "PASS",
+      "durationSeconds": 74.62,
+      "logFile": "reports/kh02/logs/v19_3_2_2/e5_integration_test.log",
+      "logSha256": "b577fa59e1328a1e53e756af07ed56c9d205f490bce87ab672c5da8003cfeb3f"
+    },
+    {
+      "gate": "E6",
+      "purpose": "KH-01 Regression Suite Verification",
+      "command": "npm run kh01:verify",
+      "exitCode": 0,
+      "verdict": "PASS",
+      "durationSeconds": 4.53,
+      "logFile": "reports/kh02/logs/v19_3_2_2/e6_kh01_verify.log",
+      "logSha256": "7ae9c8424f42d6c33c2913d0dd65777a0abebb0b0de51cf4e165be0007872693"
+    },
+    {
+      "gate": "E7",
+      "purpose": "Security, SSRF, & Socket Trust Negative Suites",
+      "command": "npx vitest run tests/unit/kh02ProductMetadataSecurity.test.ts tests/unit/kh02/v12_4_3_7_17_NetworkSsrfRedirect.test.ts tests/unit/kh02/v12_4_3_7_18_SocketPeerTlsTrust.test.ts tests/unit/kh02/v12_4_3_7_18_1_SocketTrustNoTestBypass.test.ts",
+      "exitCode": 0,
+      "verdict": "PASS",
+      "durationSeconds": 3.63,
+      "logFile": "reports/kh02/logs/v19_3_2_2/e7_security_negative.log",
+      "logSha256": "4caea9d0c6c2e8de350d35818cb362465f807f3dec0caf240b6070cd9c8a5f85"
+    },
+    {
+      "gate": "E8",
+      "purpose": "Historical Policy Backtest DEV/HOLDOUT Replay",
+      "command": "npx tsx scripts/kh02/runBacktestV12_4_3_4_2.ts",
+      "exitCode": 0,
+      "verdict": "PASS",
+      "durationSeconds": 2.37,
+      "logFile": "reports/kh02/logs/v19_3_2_2/e8_backtest.log",
+      "logSha256": "6868b1b10591e812b7d54a0445f1f71dff323c89a0a6cb4db8065d955a783057"
+    },
+    {
+      "gate": "E9",
+      "purpose": "UAHPET Demand Database Readback and Source Isolation Check",
+      "command": "node e9_db_readback_script",
+      "exitCode": 0,
+      "verdict": "PASS",
+      "durationSeconds": 0.07,
+      "logFile": "reports/kh02/logs/v19_3_2_2/e9_db_readback.log",
+      "logSha256": "606ead4a2941d74537953e2b5c18a474fc16a85cb80b896db5c323edc7c9d3c2"
+    },
+    {
+      "gate": "E10",
+      "purpose": "Authentic Remote GitHub Actions CI Verification",
+      "command": "node e10_remote_ci_script",
+      "exitCode": 0,
+      "verdict": "PASS (CI_NOT_CONFIGURED)",
+      "durationSeconds": 0.07,
+      "logFile": "reports/kh02/logs/v19_3_2_2/e10_remote_ci.log",
+      "logSha256": "1e6511787a65f497eee1a8a55c2b6b9782003482ef48419cee55068c9bbd9b43"
+    }
+  ],
+  "engineeringGateSummary": {
+    "totalGates": 10,
+    "passed": 10,
+    "failed": 0,
+    "overallEngineeringStatus": "PASS"
+  }
+}

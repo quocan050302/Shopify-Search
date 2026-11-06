@@ -1,0 +1,112 @@
+[
+  {
+    "gateId": "E1",
+    "command": "npx tsc --noEmit",
+    "exitCode": 0,
+    "logFileName": "e1_tsc_check.log",
+    "logFilePath": "D:\\Project_github\\Running-Ads\\reports\\kh02\\logs\\v19_3_2_2\\e1_tsc_check.log",
+    "sha256": "ed1b1cf5d6a227615f563400349ff09cbc967bee721e2a19be537fa41a5238d3",
+    "durationMs": 5682,
+    "startedAt": "2026-11-06T09:24:21.186Z",
+    "completedAt": "2026-11-06T09:24:26.868Z"
+  },
+  {
+    "gateId": "E2",
+    "command": "git diff --check HEAD~1 HEAD",
+    "exitCode": 0,
+    "logFileName": "e2_whitespace_check.log",
+    "logFilePath": "D:\\Project_github\\Running-Ads\\reports\\kh02\\logs\\v19_3_2_2\\e2_whitespace_check.log",
+    "sha256": "1f3515bd98e1d7fb67fdfd2355c283622057242a81776458eed8630026050b45",
+    "durationMs": 59,
+    "startedAt": "2026-11-06T09:24:26.870Z",
+    "completedAt": "2026-11-06T09:24:26.930Z"
+  },
+  {
+    "gateId": "E3",
+    "command": "npx vitest run tests/unit/kh02/v12_4_3_7_19_3_CandidateScopeAttribution.test.ts tests/unit/kh02/v12_4_3_7_19_3_1_UnifiedCandidateAttribution.test.ts tests/unit/kh02/v12_4_3_7_19_3_2_DurableAliasAuthorization.test.ts tests/unit/kh02/v12_4_3_7_19_3_2_1_FinalAliasTrustAndCiProof.test.ts tests/unit/kh02/v12_4_3_7_19_3_2_2_MandatoryBusinessScopeAndCiProof.test.ts",
+    "exitCode": 0,
+    "logFileName": "e3_targeted_suites.log",
+    "logFilePath": "D:\\Project_github\\Running-Ads\\reports\\kh02\\logs\\v19_3_2_2\\e3_targeted_suites.log",
+    "sha256": "bf611442a5359696c6c92e72fb202b269254b938dfc0c47877adfcc69e45f23c",
+    "durationMs": 17269,
+    "startedAt": "2026-11-06T09:24:26.931Z",
+    "completedAt": "2026-11-06T09:24:44.200Z"
+  },
+  {
+    "gateId": "E4",
+    "command": "npm run kh02:test:unit -- --maxWorkers=4",
+    "exitCode": 0,
+    "logFileName": "e4_unit_test.log",
+    "logFilePath": "D:\\Project_github\\Running-Ads\\reports\\kh02\\logs\\v19_3_2_2\\e4_unit_test.log",
+    "sha256": "c009f42fb5d4d5a05dc3ce165f5864595167e91270de4c60cf25e37bae5761a4",
+    "durationMs": 230203,
+    "startedAt": "2026-11-06T09:24:44.201Z",
+    "completedAt": "2026-11-06T09:28:34.404Z"
+  },
+  {
+    "gateId": "E5",
+    "command": "npm run kh02:test:integration",
+    "exitCode": 0,
+    "logFileName": "e5_integration_test.log",
+    "logFilePath": "D:\\Project_github\\Running-Ads\\reports\\kh02\\logs\\v19_3_2_2\\e5_integration_test.log",
+    "sha256": "b577fa59e1328a1e53e756af07ed56c9d205f490bce87ab672c5da8003cfeb3f",
+    "durationMs": 74624,
+    "startedAt": "2026-11-06T09:28:34.405Z",
+    "completedAt": "2026-11-06T09:29:49.029Z"
+  },
+  {
+    "gateId": "E6",
+    "command": "npm run kh01:verify",
+    "exitCode": 0,
+    "logFileName": "e6_kh01_verify.log",
+    "logFilePath": "D:\\Project_github\\Running-Ads\\reports\\kh02\\logs\\v19_3_2_2\\e6_kh01_verify.log",
+    "sha256": "7ae9c8424f42d6c33c2913d0dd65777a0abebb0b0de51cf4e165be0007872693",
+    "durationMs": 4533,
+    "startedAt": "2026-11-06T09:29:49.031Z",
+    "completedAt": "2026-11-06T09:29:53.564Z"
+  },
+  {
+    "gateId": "E7",
+    "command": "npx vitest run tests/unit/kh02ProductMetadataSecurity.test.ts tests/unit/kh02/v12_4_3_7_17_NetworkSsrfRedirect.test.ts tests/unit/kh02/v12_4_3_7_18_SocketPeerTlsTrust.test.ts tests/unit/kh02/v12_4_3_7_18_1_SocketTrustNoTestBypass.test.ts",
+    "exitCode": 0,
+    "logFileName": "e7_security_negative.log",
+    "logFilePath": "D:\\Project_github\\Running-Ads\\reports\\kh02\\logs\\v19_3_2_2\\e7_security_negative.log",
+    "sha256": "4caea9d0c6c2e8de350d35818cb362465f807f3dec0caf240b6070cd9c8a5f85",
+    "durationMs": 3633,
+    "startedAt": "2026-11-06T09:29:53.565Z",
+    "completedAt": "2026-11-06T09:29:57.198Z"
+  },
+  {
+    "gateId": "E8",
+    "command": "npx tsx scripts/kh02/runBacktestV12_4_3_4_2.ts",
+    "exitCode": 0,
+    "logFileName": "e8_backtest.log",
+    "logFilePath": "D:\\Project_github\\Running-Ads\\reports\\kh02\\logs\\v19_3_2_2\\e8_backtest.log",
+    "sha256": "6868b1b10591e812b7d54a0445f1f71dff323c89a0a6cb4db8065d955a783057",
+    "durationMs": 2365,
+    "startedAt": "2026-11-06T09:29:57.199Z",
+    "completedAt": "2026-11-06T09:29:59.564Z"
+  },
+  {
+    "gateId": "E9",
+    "command": "node -e \"\n    const { PrismaClient } = require('@prisma/client');\n    const prisma = new PrismaClient();\n    async function check() {\n      const uahpetId = 'cmvsy7zqh000jp0orhypwohho';\n      const obs = await prisma.productDemandObservation.findMany({\n        where: { productId: uahpetId },\n        orderBy: { periodStart: 'asc' }\n      });\n      console.log('Database readback for UAHPET canonical ID:', uahpetId);\n      console.log('Total demand observations:', obs.length);\n      console.log('Distinct keywords:', Array.from(new Set(obs.map(o => o.keyword))));\n      console.log('Sources:', Array.from(new Set(obs.map(o => o.source))));\n      console.log('Evidence references:', Array.from(new Set(obs.map(o => o.evidenceReference))));\n      await prisma.\\$disconnect();\n    }\n    check().catch(e => { console.error(e); process.exit(1); });\n  \"",
+    "exitCode": 0,
+    "logFileName": "e9_db_readback.log",
+    "logFilePath": "D:\\Project_github\\Running-Ads\\reports\\kh02\\logs\\v19_3_2_2\\e9_db_readback.log",
+    "sha256": "606ead4a2941d74537953e2b5c18a474fc16a85cb80b896db5c323edc7c9d3c2",
+    "durationMs": 67,
+    "startedAt": "2026-11-06T09:29:59.623Z",
+    "completedAt": "2026-11-06T09:29:59.690Z"
+  },
+  {
+    "gateId": "E10",
+    "command": "node -e \"\n    const { verifyAuthenticCiProof } = require('./src/services/kh02/release/githubActionsCiEvidence');\n    async function check() {\n      console.log('Evaluating Authentic GitHub Actions Remote CI Proof...');\n      const proof = await verifyAuthenticCiProof({\n        repository: 'quocan050302/Shopify-Search',\n        branch: 'feature/kh02-walmart-us-jina-reader-v12.4.3.5.1',\n        commitSha: '70c1434ccfee3e41787d472f6027f6f57eb49caf',\n        requiredWorkflowName: 'KH-02 Continuous Integration'\n      });\n      console.log('Verification Status:', proof.status);\n      console.log('Reason:', proof.reason);\n      console.log('Run details:', JSON.stringify(proof.runDetails, null, 2));\n      console.log('Response digest:', proof.responseDigest);\n    }\n    check().catch(e => { console.error(e); process.exit(1); });\n  \"",
+    "exitCode": 0,
+    "logFileName": "e10_remote_ci.log",
+    "logFilePath": "D:\\Project_github\\Running-Ads\\reports\\kh02\\logs\\v19_3_2_2\\e10_remote_ci.log",
+    "sha256": "1e6511787a65f497eee1a8a55c2b6b9782003482ef48419cee55068c9bbd9b43",
+    "durationMs": 74,
+    "startedAt": "2026-11-06T09:29:59.691Z",
+    "completedAt": "2026-11-06T09:29:59.765Z"
+  }
+]

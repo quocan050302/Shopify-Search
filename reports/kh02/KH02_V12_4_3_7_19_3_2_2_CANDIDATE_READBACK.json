@@ -1,0 +1,90 @@
+{
+  "version": "V12.4.3.7.19.3.2.2",
+  "auditDate": "2026-11-06T16:26:00+07:00",
+  "testedCommitSha": "70c1434ccfee3e41787d472f6027f6f57eb49caf",
+  "testedTreeSha": "26d9b0b59f04ea486d19cf4cccab9e5c7a4fa3ce",
+  "candidateReadback": {
+    "candidateId": "cand_uahpet_feeder",
+    "canonicalProductId": "cmvsy7zqh000jp0orhypwohho",
+    "canonicalTitle": "Automatic Wet Food Cat Feeder with Cooling & Warming",
+    "storeDomain": "uahpet.com",
+    "databaseReadbackStatus": "VERIFIED_ISOLATED_READBACK",
+    "totalDatabaseObservations": 6,
+    "observations": [
+      {
+        "id": "cmvsy86t4000rp0orcf6y5v2e",
+        "keyword": "Automatic Wet Food Cat Feeder",
+        "source": "GOOGLE_TRENDS_CSV",
+        "region": "US",
+        "periodStart": "2026-06-01T00:00:00.000Z",
+        "demandValue": 68,
+        "evidenceReference": "csv-import:job_uahpet_2026:sha256:107089a9ae947cc6fc5b7c251bc6aab5e692096dc66e8dc47de62a549351d74f",
+        "businessAttributable": true,
+        "classification": "EXACT_CANDIDATE_KEYWORD_MATCH"
+      },
+      {
+        "id": "cmvsy86t4000sp0or85iuhd99",
+        "keyword": "Automatic Wet Food Cat Feeder",
+        "source": "GOOGLE_TRENDS_CSV",
+        "region": "US",
+        "periodStart": "2026-07-01T00:00:00.000Z",
+        "demandValue": 71,
+        "evidenceReference": "csv-import:job_uahpet_2026:sha256:107089a9ae947cc6fc5b7c251bc6aab5e692096dc66e8dc47de62a549351d74f",
+        "businessAttributable": true,
+        "classification": "EXACT_CANDIDATE_KEYWORD_MATCH"
+      },
+      {
+        "id": "cmvsy86t4000tp0orff01vd57",
+        "keyword": "Automatic Wet Food Cat Feeder",
+        "source": "GOOGLE_TRENDS_CSV",
+        "region": "US",
+        "periodStart": "2026-08-01T00:00:00.000Z",
+        "demandValue": 70,
+        "evidenceReference": "csv-import:job_uahpet_2026:sha256:107089a9ae947cc6fc5b7c251bc6aab5e692096dc66e8dc47de62a549351d74f",
+        "businessAttributable": true,
+        "classification": "EXACT_CANDIDATE_KEYWORD_MATCH"
+      },
+      {
+        "id": "cmvsy86t4000up0or95514f7b",
+        "keyword": "Automatic Wet Food Cat Feeder",
+        "source": "GOOGLE_TRENDS_CSV",
+        "region": "US",
+        "periodStart": "2026-09-01T00:00:00.000Z",
+        "demandValue": 72,
+        "evidenceReference": "csv-import:job_uahpet_2026:sha256:107089a9ae947cc6fc5b7c251bc6aab5e692096dc66e8dc47de62a549351d74f",
+        "businessAttributable": true,
+        "classification": "EXACT_CANDIDATE_KEYWORD_MATCH"
+      },
+      {
+        "id": "cmvsy86t4000vp0or3qfe51vd",
+        "keyword": "Automatic Wet Food Cat Feeder",
+        "source": "GOOGLE_TRENDS_CSV",
+        "region": "US",
+        "periodStart": "2026-09-15T00:00:00.000Z",
+        "demandValue": 74,
+        "evidenceReference": "csv-import:job_uahpet_2026:sha256:107089a9ae947cc6fc5b7c251bc6aab5e692096dc66e8dc47de62a549351d74f",
+        "businessAttributable": true,
+        "classification": "EXACT_CANDIDATE_KEYWORD_MATCH"
+      },
+      {
+        "id": "cmvsy86t4000wp0or285kjd12",
+        "keyword": "Automatic Wet Food Cat Feeder",
+        "source": "GOOGLE_TRENDS_CSV",
+        "region": "US",
+        "periodStart": "2026-10-01T00:00:00.000Z",
+        "demandValue": 75,
+        "evidenceReference": "csv-import:job_uahpet_2026:sha256:107089a9ae947cc6fc5b7c251bc6aab5e692096dc66e8dc47de62a549351d74f",
+        "businessAttributable": true,
+        "classification": "EXACT_CANDIDATE_KEYWORD_MATCH"
+      }
+    ],
+    "commercialGateEvaluation": {
+      "g15Status": "INSUFFICIENT_EVIDENCE",
+      "g15Reason": "Database records are engineering/local import fixture representations; official candidate-matched Google Trends Explore CSV bytes have not been ingested into production.",
+      "g16Status": "INSUFFICIENT_EVIDENCE",
+      "g16Reason": "Zero candidates have verified commercial demand in production environment.",
+      "commercialReleaseVerdict": "NO-GO"
+    }
+  }
+}
+

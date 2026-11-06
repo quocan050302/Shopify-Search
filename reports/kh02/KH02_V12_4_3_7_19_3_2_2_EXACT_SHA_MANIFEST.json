@@ -1,0 +1,78 @@
+{
+  "version": "V12.4.3.7.19.3.2.2",
+  "generatedAt": "2026-11-06T16:30:00+07:00",
+  "repository": "quocan050302/Shopify-Search",
+  "lockedBranch": "feature/kh02-walmart-us-jina-reader-v12.4.3.5.1",
+  "baselineRemoteHead": "4d472c277454b0b2230d80a03f843124b44cd49c",
+  "testedCodeCommitSha_C1": "70c1434ccfee3e41787d472f6027f6f57eb49caf",
+  "testedCodeTreeSha_C1": "26d9b0b59f04ea486d19cf4cccab9e5c7a4fa3ce",
+  "modifiedSourceFiles": [
+    "src/services/kh02/demand/candidateDemandAttribution.ts",
+    "src/services/kh02/demand/demandProviderRegistry.ts",
+    "src/services/kh02/demand/historicalDemandIngestion.ts",
+    "src/services/kh02/demand/temporalDemandEngine.ts",
+    "src/services/kh02/demand/testSuiteEvidenceValidator.ts",
+    "src/services/kh02/release/githubActionsCiEvidence.ts",
+    "src/services/kh02/release/releaseGateEvaluatorV19.ts",
+    "tests/unit/kh02/v12_4_3_7_12_EvidenceEligibilityFencing.test.ts",
+    "tests/unit/kh02/v12_4_3_7_13_UnforgeableCollectorUnifiedEligibility.test.ts",
+    "tests/unit/kh02/v12_4_3_7_19_3_2_2_MandatoryBusinessScopeAndCiProof.test.ts"
+  ],
+  "gateLogManifest": {
+    "e1_tsc_check.log": {
+      "path": "reports/kh02/logs/v19_3_2_2/e1_tsc_check.log",
+      "sha256": "ed1b1cf5d6a227615f563400349ff09cbc967bee721e2a19be537fa41a5238d3",
+      "exitCode": 0
+    },
+    "e2_whitespace_check.log": {
+      "path": "reports/kh02/logs/v19_3_2_2/e2_whitespace_check.log",
+      "sha256": "1f3515bd98e1d7fb67fdfd2355c283622057242a81776458eed8630026050b45",
+      "exitCode": 0
+    },
+    "e3_targeted_suites.log": {
+      "path": "reports/kh02/logs/v19_3_2_2/e3_targeted_suites.log",
+      "sha256": "bf611442a5359696c6c92e72fb202b269254b938dfc0c47877adfcc69e45f23c",
+      "exitCode": 0
+    },
+    "e4_unit_test.log": {
+      "path": "reports/kh02/logs/v19_3_2_2/e4_unit_test.log",
+      "sha256": "c009f42fb5d4d5a05dc3ce165f5864595167e91270de4c60cf25e37bae5761a4",
+      "exitCode": 0
+    },
+    "e5_integration_test.log": {
+      "path": "reports/kh02/logs/v19_3_2_2/e5_integration_test.log",
+      "sha256": "b577fa59e1328a1e53e756af07ed56c9d205f490bce87ab672c5da8003cfeb3f",
+      "exitCode": 0
+    },
+    "e6_kh01_verify.log": {
+      "path": "reports/kh02/logs/v19_3_2_2/e6_kh01_verify.log",
+      "sha256": "7ae9c8424f42d6c33c2913d0dd65777a0abebb0b0de51cf4e165be0007872693",
+      "exitCode": 0
+    },
+    "e7_security_negative.log": {
+      "path": "reports/kh02/logs/v19_3_2_2/e7_security_negative.log",
+      "sha256": "4caea9d0c6c2e8de350d35818cb362465f807f3dec0caf240b6070cd9c8a5f85",
+      "exitCode": 0
+    },
+    "e8_backtest.log": {
+      "path": "reports/kh02/logs/v19_3_2_2/e8_backtest.log",
+      "sha256": "6868b1b10591e812b7d54a0445f1f71dff323c89a0a6cb4db8065d955a783057",
+      "exitCode": 0
+    },
+    "e9_db_readback.log": {
+      "path": "reports/kh02/logs/v19_3_2_2/e9_db_readback.log",
+      "sha256": "606ead4a2941d74537953e2b5c18a474fc16a85cb80b896db5c323edc7c9d3c2",
+      "exitCode": 0
+    },
+    "e10_remote_ci.log": {
+      "path": "reports/kh02/logs/v19_3_2_2/e10_remote_ci.log",
+      "sha256": "1e6511787a65f497eee1a8a55c2b6b9782003482ef48419cee55068c9bbd9b43",
+      "exitCode": 0
+    }
+  },
+  "overallVerdict": {
+    "engineeringGates": "PASS",
+    "commercialGates": "NO-GO (G15/G16 INSUFFICIENT_EVIDENCE)",
+    "remoteCi": "CI_NOT_CONFIGURED"
+  }
+}

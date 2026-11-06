@@ -1,0 +1,27 @@
+[GATE_E7]
+command: npx vitest run tests/unit/kh02ProductMetadataSecurity.test.ts tests/unit/kh02/v12_4_3_7_17_NetworkSsrfRedirect.test.ts tests/unit/kh02/v12_4_3_7_18_SocketPeerTlsTrust.test.ts tests/unit/kh02/v12_4_3_7_18_1_SocketTrustNoTestBypass.test.ts
+tested_c1_sha: 70c1434ccfee3e41787d472f6027f6f57eb49caf
+tested_c1_tree: 26d9b0b59f04ea486d19cf4cccab9e5c7a4fa3ce
+started_at: 2026-11-06T09:29:53.565Z
+completed_at: 2026-11-06T09:29:57.198Z
+duration_seconds: 3.63
+exit_code: 0
+--- RAW PROCESS STDOUT/STDERR ---
+
+[1m[30m[46m RUN [49m[39m[22m [36mv5.0.5 [39m[90mD:/Project_github/Running-Ads[39m
+
+ [32m✓[39m tests/unit/kh02/v12_4_3_7_17_NetworkSsrfRedirect.test.ts [2m([22m[2m24 tests[22m[2m)[22m[32m 115[2mms[22m[39m
+ [32m✓[39m tests/unit/kh02/v12_4_3_7_18_SocketPeerTlsTrust.test.ts [2m([22m[2m18 tests[22m[2m)[22m[32m 93[2mms[22m[39m
+ [32m✓[39m tests/unit/kh02/v12_4_3_7_18_1_SocketTrustNoTestBypass.test.ts [2m([22m[2m16 tests[22m[2m)[22m[32m 31[2mms[22m[39m
+ [32m✓[39m tests/unit/kh02ProductMetadataSecurity.test.ts [2m([22m[2m7 tests[22m[2m)[22m[32m 25[2mms[22m[39m
+
+[2m Test Files [22m [1m[32m4 passed[39m[22m[90m (4)[39m
+[2m      Tests [22m [1m[32m65 passed[39m[22m[90m (65)[39m
+[2m   Start at [22m 16:29:54
+[2m   Duration [22m 2.45s[2m (import 50%, setup 27%, tests 15%, transform 4%, worker 3%)[22m
+
+[2m    Isolate [22m [33m4 workers spawned[39m[2m · ~171ms startup each (spawn + environment, per file)[22m
+[2m            [22m [2mat least ~514ms faster with [22m[33misolate: false[39m[2m — reuses workers across files instead of one per file[22m
+
+
+--- END RAW PROCESS OUTPUT ---

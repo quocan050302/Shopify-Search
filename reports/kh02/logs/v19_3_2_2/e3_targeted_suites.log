@@ -1,0 +1,34 @@
+[GATE_E3]
+command: npx vitest run tests/unit/kh02/v12_4_3_7_19_3_CandidateScopeAttribution.test.ts tests/unit/kh02/v12_4_3_7_19_3_1_UnifiedCandidateAttribution.test.ts tests/unit/kh02/v12_4_3_7_19_3_2_DurableAliasAuthorization.test.ts tests/unit/kh02/v12_4_3_7_19_3_2_1_FinalAliasTrustAndCiProof.test.ts tests/unit/kh02/v12_4_3_7_19_3_2_2_MandatoryBusinessScopeAndCiProof.test.ts
+tested_c1_sha: 70c1434ccfee3e41787d472f6027f6f57eb49caf
+tested_c1_tree: 26d9b0b59f04ea486d19cf4cccab9e5c7a4fa3ce
+started_at: 2026-11-06T09:24:26.931Z
+completed_at: 2026-11-06T09:24:44.200Z
+duration_seconds: 17.27
+exit_code: 0
+--- RAW PROCESS STDOUT/STDERR ---
+
+[1m[30m[46m RUN [49m[39m[22m [36mv5.0.5 [39m[90mD:/Project_github/Running-Ads[39m
+
+ [32m✓[39m tests/unit/kh02/v12_4_3_7_19_3_2_1_FinalAliasTrustAndCiProof.test.ts [2m([22m[2m75 tests[22m[2m)[22m[33m 10294[2mms[22m[39m
+   [32m✓[39m KH-02 V12.4.3.7.19.3.2.1: Final Alias Trust & CI Proof Closure Matrix (75 Tests) [2m(75)[22m
+     [33m[2m✓[22m[39m B14: live lock owner on host is not reclaimed prematurely[33m 5022[2mms[22m[39m
+     [33m[2m✓[22m[39m B16: foreign-host lock is never reclaimed based on PID namespace alone[33m 5022[2mms[22m[39m
+ [32m✓[39m tests/unit/kh02/v12_4_3_7_19_3_2_2_MandatoryBusinessScopeAndCiProof.test.ts [2m([22m[2m52 tests[22m[2m)[22m[33m 1474[2mms[22m[39m
+   [32m✓[39m KH-02 V12.4.3.7.19.3.2.2: Mandatory Business Scope & Authentic CI Proof Matrix (52 Tests) [2m(52)[22m
+     [33m[2m✓[22m[39m A04: real history resolver with cached test-alias row excludes observation before G15 assessment[33m 467[2mms[22m[39m
+     [33m[2m✓[22m[39m A05: real history resolver fresh provider response using TEST_ONLY alias excluded before DB write[33m 700[2mms[22m[39m
+ [32m✓[39m tests/unit/kh02/v12_4_3_7_19_3_1_UnifiedCandidateAttribution.test.ts [2m([22m[2m30 tests[22m[2m)[22m[33m 1581[2mms[22m[39m
+   [32m✓[39m KH-02 V12.4.3.7.19.3.1: Unified Candidate Attribution Across Cache & Fresh Provider (A01 - A30) [2m(30)[22m
+     [33m[2m✓[22m[39m A29: resolveProductDemandHistory returns complete candidate attribution diagnostics[33m 713[2mms[22m[39m
+     [33m[2m✓[22m[39m A30: Regression for real research run IDs using read-only snapshot: target G15/G16 remain INSUFFICIENT[33m 708[2mms[22m[39m
+ [32m✓[39m tests/unit/kh02/v12_4_3_7_19_3_2_DurableAliasAuthorization.test.ts [2m([22m[2m43 tests[22m[2m)[22m[32m 148[2mms[22m[39m
+ [32m✓[39m tests/unit/kh02/v12_4_3_7_19_3_CandidateScopeAttribution.test.ts [2m([22m[2m20 tests[22m[2m)[22m[32m 34[2mms[22m[39m
+
+[2m Test Files [22m [1m[32m5 passed[39m[22m[90m (5)[39m
+[2m      Tests [22m [1m[32m220 passed[39m[22m[90m (220)[39m
+[2m   Start at [22m 16:24:28
+[2m   Duration [22m 16.14s[2m (tests 88%, import 6%, setup 4%, transform 1%)[22m
+
+
+--- END RAW PROCESS OUTPUT ---
