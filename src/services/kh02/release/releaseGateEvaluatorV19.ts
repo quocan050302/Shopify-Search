@@ -72,6 +72,8 @@ export interface ReleaseEvidenceInput {
     readinessStatus?: "CONTRACT_READY" | "EXECUTED_PASS" | "EXECUTED_FAIL" | "NOT_RUN";
     notRunReason?: string;
   };
+  businessG06Status?: "TRANSPORT_READY_NOT_VERIFIED" | "BLOCKED" | "VERIFIED" | string;
+  businessG07Status?: "BLOCKED" | "VERIFIED" | string;
   callerSuppliedStaticPass?: boolean;
 }
 
@@ -148,6 +150,12 @@ export function evaluateReleaseEvidence(
   }
 
   // 3. Check test counts integrity
+  if (input.realTotal === 0) {
+    engineeringStatus = "ENGINEERING_INCOMPLETE";
+    reasons.push("Zero tests executed: test suite is empty or unexecuted.");
+    blockerList.push("ZERO_TESTS_EXECUTED");
+  }
+
   if (input.realFailed > 0) {
     engineeringStatus = "ENGINEERING_FAIL";
     reasons.push(`Test execution recorded ${input.realFailed} failing test(s).`);
@@ -162,7 +170,13 @@ export function evaluateReleaseEvidence(
   }
 
   // 4. Check suite coverage
-  if (input.fullSuiteCoverage) {
+  if (!input.fullSuiteCoverage) {
+    if (engineeringStatus !== "ENGINEERING_FAIL") {
+      engineeringStatus = "ENGINEERING_INCOMPLETE";
+    }
+    reasons.push("Mandatory suite coverage missing: fullSuiteCoverage input is strictly required for ENGINEERING_PASS.");
+    blockerList.push("MISSING_SUITE_COVERAGE");
+  } else {
     const { unitPassed, integrationPassed, backtestPassed, kh01VerifyPassed } = input.fullSuiteCoverage;
     if (!unitPassed || !integrationPassed || !backtestPassed || !kh01VerifyPassed) {
       if (engineeringStatus !== "ENGINEERING_FAIL") {
@@ -228,21 +242,27 @@ export function evaluateReleaseEvidence(
   const fixtureCount = input.evidenceProofCounters?.fixtureOnlyCount ?? 0;
   const minRequired = options.minLiveOriginProofsForBusiness ?? 3;
 
-  if (liveProofs === 0) {
+  if (input.businessG06Status === "BLOCKED" || input.businessG07Status === "BLOCKED") {
+    businessStatus = "BLOCKED";
+    reasons.push("Business evidence blocked by upstream gate G06 or G07.");
+    blockerList.push("UPSTREAM_BUSINESS_GATE_BLOCKED");
+  } else if (liveProofs === 0) {
     businessStatus = "INSUFFICIENT_EVIDENCE";
     reasons.push("Business evidence G06/G07/G15/G16 is INSUFFICIENT_EVIDENCE: zero live external provider proofs recorded (all data is fixture, CSV, or unverified).");
   } else if (liveProofs < minRequired) {
     businessStatus = "INSUFFICIENT_EVIDENCE";
     reasons.push(`Business evidence has ${liveProofs} live proof(s), but minimum ${minRequired} required for Evergreen verification.`);
+  } else if (
+    !input.backtestResults ||
+    !input.backtestResults.policyReplayPassed ||
+    !input.backtestResults.devHistoricalPassed ||
+    !input.backtestResults.holdoutHistoricalPassed
+  ) {
+    businessStatus = "INSUFFICIENT_EVIDENCE";
+    reasons.push("Historical backtest results missing or DEV/HOLDOUT checks failed to confirm longitudinal demand.");
   } else {
-    // Check if backtest holdout passed
-    if (input.backtestResults && (!input.backtestResults.devHistoricalPassed || !input.backtestResults.holdoutHistoricalPassed)) {
-      businessStatus = "INSUFFICIENT_EVIDENCE";
-      reasons.push("Historical backtest DEV or HOLDOUT checks failed to confirm longitudinal demand.");
-    } else {
-      businessStatus = "BUSINESS_EVIDENCE_SUFFICIENT";
-      reasons.push("Business evidence confirmed with genuine live provider proofs across longitudinal history.");
-    }
+    businessStatus = "BUSINESS_EVIDENCE_SUFFICIENT";
+    reasons.push("Business evidence confirmed with genuine live provider proofs across longitudinal history.");
   }
 
   // 8. CI Evaluation
@@ -263,13 +283,12 @@ export function evaluateReleaseEvidence(
     ciStatus = "CI_NOT_RUN";
   }
 
-  // Overall release is allowed only if Engineering passed AND Staging is ready/passed AND Business is sufficient
-  // (In our current pre-production environment, Business is truthfully INSUFFICIENT_EVIDENCE, so overallReleaseAllowed is false)
+  // Overall release is allowed strictly when ALL independent gates pass (Workstream D & Defect P0-D fix)
   const overallReleaseAllowed =
     engineeringStatus === "ENGINEERING_PASS" &&
-    (stagingStatus === "STAGING_SHADOW_CONTRACT_READY" || stagingStatus === "STAGING_SHADOW_EXECUTED_PASS") &&
+    stagingStatus === "STAGING_SHADOW_EXECUTED_PASS" &&
     businessStatus === "BUSINESS_EVIDENCE_SUFFICIENT" &&
-    (ciStatus === "CI_PASS" || ciStatus === "CI_NOT_CONFIGURED");
+    ciStatus === "CI_PASS";
 
   return {
     engineeringStatus,
@@ -280,6 +299,6 @@ export function evaluateReleaseEvidence(
     reasons,
     blockerList,
     evaluatedAt,
-    evaluatorVersion: "12.4.3.7.19",
+    evaluatorVersion: "12.4.3.7.19.1",
   };
 }

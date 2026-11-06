@@ -269,22 +269,38 @@ export function parseProviderTimeseriesPayload(
     };
   }
 
-  const rawQ = String(rawObj.search_parameters?.q || options.expectedQuery || "").trim();
-  const rawGeo = String(rawObj.search_parameters?.geo || options.expectedRegion || "US").trim().toUpperCase();
+  const rawQ = rawObj.search_parameters?.q ? String(rawObj.search_parameters.q).trim() : "";
+  const rawGeo = rawObj.search_parameters?.geo ? String(rawObj.search_parameters.geo).trim().toUpperCase() : "";
 
   // Detect cadence
   let cadence: ProviderTimeseriesCadence = "DAILY";
   if (timelineData.length >= 2) {
-    const d0 = parseUtcIsoDateOnly(timelineData[0].date || timelineData[0].timestamp);
-    const d1 = parseUtcIsoDateOnly(timelineData[1].date || timelineData[1].timestamp);
-    if (d0 && d1) {
-      const diffDays = Math.abs((new Date(d1).getTime() - new Date(d0).getTime()) / (1000 * 60 * 60 * 24));
-      if (diffDays >= 6 && diffDays <= 8) {
-        cadence = "WEEKLY";
-      } else if (diffDays >= 27 && diffDays <= 32) {
-        cadence = "MONTHLY";
-      } else if (diffDays < 1) {
+    const t0 = Date.parse(timelineData[0].date || timelineData[0].timestamp);
+    const t1 = Date.parse(timelineData[1].date || timelineData[1].timestamp);
+    if (!isNaN(t0) && !isNaN(t1) && String(timelineData[0].date || "").includes("T")) {
+      const diffHours = Math.abs(t1 - t0) / (1000 * 60 * 60);
+      if (diffHours > 0 && diffHours <= 4) {
         cadence = "HOURLY";
+      } else {
+        const diffDays = diffHours / 24;
+        if (diffDays >= 6 && diffDays <= 8) {
+          cadence = "WEEKLY";
+        } else if (diffDays >= 27 && diffDays <= 32) {
+          cadence = "MONTHLY";
+        }
+      }
+    } else {
+      const d0 = parseUtcIsoDateOnly(timelineData[0].date || timelineData[0].timestamp);
+      const d1 = parseUtcIsoDateOnly(timelineData[1].date || timelineData[1].timestamp);
+      if (d0 && d1) {
+        const diffDays = Math.abs((new Date(d1).getTime() - new Date(d0).getTime()) / (1000 * 60 * 60 * 24));
+        if (diffDays >= 6 && diffDays <= 8) {
+          cadence = "WEEKLY";
+        } else if (diffDays >= 27 && diffDays <= 32) {
+          cadence = "MONTHLY";
+        } else if (diffDays < 1) {
+          cadence = "HOURLY";
+        }
       }
     }
   }
@@ -330,9 +346,14 @@ export function parseProviderTimeseriesPayload(
 
       if (typeof valItem === "number") {
         numericVal = Number.isFinite(valItem) ? valItem : null;
+        if (pt.values.length > 1) {
+          queryKey = ""; // Unlabeled multi-series cannot be assumed
+        }
       } else if (valItem && typeof valItem === "object") {
         if (valItem.query) {
           queryKey = String(valItem.query).trim();
+        } else if (pt.values.length > 1) {
+          queryKey = ""; // Unlabeled multi-series cannot be assumed
         }
         if (typeof valItem.extracted_value === "number") {
           numericVal = Number.isFinite(valItem.extracted_value) ? valItem.extracted_value : null;
@@ -388,6 +409,8 @@ export interface VerifyProviderObservationParams {
     eligible?: boolean;
     commitState?: string;
     transportStatus?: number;
+    signature?: string;
+    attestation?: any;
   } | null;
   observation: {
     keyword?: string | null;
@@ -528,23 +551,32 @@ export function verifyProviderObservationAgainstRawArtifact(
   }
 
   // 3. Query identity check (Defect P1-B fix: strict canonical equality, no loose family overlap)
-  const rawQuery = String(rawJson.search_parameters?.q || receipt?.targetProductOrKeyword || "").trim();
-  const obsKeyword = String(observation.keyword || "").trim();
+  // R05: receipt only q when raw q missing is rejected unless supported signed schema proves identity
+  const hasAttestedIdentity = Boolean(
+    receipt?.signature ||
+    receipt?.attestation ||
+    (receipt?.originKind === "ACTUAL_PROVIDER_INVOCATION" && receipt?.targetProductOrKeyword)
+  );
 
-  if (!rawQuery && !obsKeyword) {
-    return {
-      verified: false,
-      errorCode: "RAW_SERIES_IDENTITY_MISMATCH",
-      rejectionReason: "Neither raw payload nor observation contains a query keyword.",
-      rawPayloadHash: computedSha,
-    };
-  }
+  const rawQuery =
+    (rawJson.search_parameters?.q ? String(rawJson.search_parameters.q).trim() : "") ||
+    (hasAttestedIdentity && receipt?.targetProductOrKeyword ? String(receipt.targetProductOrKeyword).trim() : "");
+  const obsKeyword = String(observation.keyword || "").trim();
 
   // Check if payload has nested multi-series points with explicit query attribution matching obsKeyword
   const hasMatchingNestedSeries = rawTimeline.some((pt: any) =>
     Array.isArray(pt?.values) &&
     pt.values.some((v: any) => v && typeof v === "object" && v.query && areExactOrCanonicalEquivalentQueries(v.query, obsKeyword))
   );
+
+  if (!rawQuery && !hasMatchingNestedSeries) {
+    return {
+      verified: false,
+      errorCode: "RAW_SERIES_IDENTITY_MISMATCH",
+      rejectionReason: "Raw provider artifact lacks authoritative query specification ('search_parameters.q' or point 'query' attribute).",
+      rawPayloadHash: computedSha,
+    };
+  }
 
   if (obsKeyword && rawQuery && !areExactOrCanonicalEquivalentQueries(obsKeyword, rawQuery) && !hasMatchingNestedSeries) {
     return {
@@ -664,7 +696,12 @@ export function verifyProviderObservationAgainstRawArtifact(
   } else {
     if (observation.demandValue !== undefined && observation.demandValue !== null) {
       const expectedVal = Number(observation.demandValue);
-      const matched = parsedSeries.observations.find((obs) => obs.value === expectedVal);
+      const matched = parsedSeries.observations.find(
+        (obs) =>
+          obs.value === expectedVal &&
+          obs.queryKey &&
+          areExactOrCanonicalEquivalentQueries(obs.queryKey, obsKeyword || rawQuery)
+      );
       if (matched) {
         return {
           verified: true,
@@ -677,7 +714,7 @@ export function verifyProviderObservationAgainstRawArtifact(
       return {
         verified: false,
         errorCode: "RAW_VALUE_MISMATCH",
-        rejectionReason: `Observation demandValue (${expectedVal}) does not match any point in raw provider timeline_data.`,
+        rejectionReason: `Observation demandValue (${expectedVal}) for query '${obsKeyword || rawQuery}' does not match any point in raw provider timeline_data.`,
         rawPayloadHash: computedSha,
       };
     }
@@ -717,22 +754,40 @@ export function verifyProviderObservationAgainstRawArtifact(
   // Check for ambiguous multi-series on the same date without query distinction
   let matchedPoint: ParsedProviderObservation | null = null;
 
+  const matchingQueryPoints = pointsOnDate.filter((p) =>
+    p.queryKey && areExactOrCanonicalEquivalentQueries(p.queryKey, obsKeyword || rawQuery)
+  );
+
   if (pointsOnDate.length === 1) {
-    matchedPoint = pointsOnDate[0];
+    const singlePt = pointsOnDate[0];
+    if (!singlePt.queryKey || !areExactOrCanonicalEquivalentQueries(singlePt.queryKey, obsKeyword || rawQuery)) {
+      return {
+        verified: false,
+        errorCode: "RAW_SERIES_IDENTITY_MISMATCH",
+        rejectionReason: `Selected raw point query '${singlePt.queryKey || "unlabeled"}' does not match expected query '${obsKeyword || rawQuery}'.`,
+        rawPayloadHash: computedSha,
+      };
+    }
+    matchedPoint = singlePt;
   } else {
     // Multiple points on same date: could be multi-keyword series or duplicate timestamps
-    const matchingQueryPoints = pointsOnDate.filter((p) =>
-      areExactOrCanonicalEquivalentQueries(p.queryKey, obsKeyword || rawQuery)
-    );
-
     if (matchingQueryPoints.length === 1) {
       matchedPoint = matchingQueryPoints[0];
     } else if (matchingQueryPoints.length === 0) {
+      const hasUnlabeled = pointsOnDate.some((p) => !p.queryKey);
+      if (hasUnlabeled) {
+        return {
+          verified: false,
+          errorCode: "RAW_ROW_AMBIGUOUS",
+          rejectionReason: `Observation date '${targetDateStr}' has multiple ambiguous unlabeled points in raw payload.`,
+          rawPayloadHash: computedSha,
+        };
+      }
       // Date exists in raw payload, but ONLY for a DIFFERENT keyword series
       return {
         verified: false,
         errorCode: "RAW_SERIES_IDENTITY_MISMATCH",
-        rejectionReason: `Observation date '${targetDateStr}' exists only for other series queries (${pointsOnDate.map(p => p.queryKey).join(", ")}), not '${obsKeyword}'.`,
+        rejectionReason: `Observation date '${targetDateStr}' exists only for other series queries (${pointsOnDate.map((p) => p.queryKey || "unlabeled").join(", ")}), not '${obsKeyword}'.`,
         rawPayloadHash: computedSha,
       };
     } else {
@@ -754,6 +809,14 @@ export function verifyProviderObservationAgainstRawArtifact(
   if (observation.periodEnd) {
     const endIso = parseUtcIsoDateOnly(observation.periodEnd);
     if (endIso) {
+      if (matchedPoint.end && endIso !== matchedPoint.end) {
+        return {
+          verified: false,
+          errorCode: "INTERVAL_MISMATCH",
+          rejectionReason: `Observation periodEnd '${endIso}' does not match raw point interval end '${matchedPoint.end}'.`,
+          rawPayloadHash: computedSha,
+        };
+      }
       const pStartMs = new Date(targetDateStr).getTime();
       const pEndMs = new Date(endIso).getTime();
       const diffDays = Math.round((pEndMs - pStartMs) / (1000 * 60 * 60 * 24));

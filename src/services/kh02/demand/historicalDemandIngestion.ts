@@ -8,6 +8,7 @@
  */
 
 import { prisma } from "@/lib/db";
+import { executeDemandObservationBatchImport, BatchImportError } from "./demandObservationBatchImport";
 import {
   DemandDataPoint,
   DemandHistoryAssessment,
@@ -414,8 +415,11 @@ export async function resolveProductDemandHistory(
         providerError = seriesResult.error || null;
 
         if (seriesResult.status === "SUCCESS" && seriesResult.points.length > 0) {
+          let batchImportSucceeded = false;
+          let batchImportError: string | null = null;
+
           if (targetProductId) {
-            for (const pt of seriesResult.points) {
+            const pointsToImport = seriesResult.points.map((pt) => {
               const evidenceRef =
                 (pt as any).evidenceReference ||
                 ((seriesResult as any).receiptId
@@ -432,97 +436,91 @@ export async function resolveProductDemandHistory(
                   ? "google_free_demand_live"
                   : "serpapi_google_trends_live");
 
-              try {
-                await prisma.productDemandObservation.create({
-                  data: {
-                    productId: targetProductId,
-                    source: pointSource,
-                    region: pt.region || region,
-                    keyword: pointKeyword,
-                    periodStart: new Date(pt.periodStart),
-                    periodEnd: new Date(pt.periodEnd),
-                    demandValue: pt.demandValue,
-                    valueType: "RELATIVE_INTEREST",
-                    evidenceReference: evidenceRef,
-                    methodologyVersion: pointMethodology,
-                  },
-                });
-              } catch (err: any) {
-                if (err?.code === "P2002") {
-                  // Verify existing duplicate observation matches value and reference
-                  const existingObs = await prisma.productDemandObservation.findFirst({
-                    where: {
-                      productId: targetProductId,
-                      keyword: pointKeyword,
-                      region: pt.region || region,
-                      periodStart: new Date(pt.periodStart),
-                    },
-                  });
-                  if (
-                    existingObs &&
-                    existingObs.demandValue !== null &&
-                    Math.abs(existingObs.demandValue - pt.demandValue) > 0.001
-                  ) {
-                    throw new Error(
-                      `Conflicting duplicate demand observation for product '${targetProductId}' at '${pt.periodStart}': existing=${existingObs.demandValue}, incoming=${pt.demandValue}`
-                    );
-                  }
-                } else {
-                  throw err;
-                }
-              }
+              return {
+                keyword: pointKeyword,
+                region: pt.region || region,
+                periodStart: pt.periodStart,
+                periodEnd: pt.periodEnd,
+                demandValue: pt.demandValue,
+                source: pointSource,
+                evidenceReference: evidenceRef,
+                methodologyVersion: pointMethodology,
+              };
+            });
+
+            try {
+              await executeDemandObservationBatchImport({
+                productId: targetProductId,
+                workspaceId: options.workspaceId || null,
+                researchRunId: (options as any).researchRunId || null,
+                source: pointsToImport[0]?.source || "PROVIDER_API",
+                strictProvenance: true,
+                asOfTimestamp: (options as any).asOfTimestamp || (options as any).asOf || null,
+                points: pointsToImport,
+              });
+              batchImportSucceeded = true;
+            } catch (importErr: any) {
+              batchImportSucceeded = false;
+              batchImportError = importErr?.message || String(importErr);
+              providerStatus = "FAILED";
+              providerError = `Provider proof verification failed before write: ${batchImportError}`;
             }
+          } else {
+            batchImportSucceeded = true;
           }
 
           const livePoints: DemandDataPoint[] = [];
-          for (const p of seriesResult.points) {
-            const evidenceRef =
-              (p as any).evidenceReference ||
-              ((seriesResult as any).receiptId
-                ? `provider-request:serpapi:${(seriesResult as any).receiptId}`
-                : null);
-            const pointSource =
-              p.source || (isGoogleFreeMode ? "Google Trends (Free Demand)" : "Google Trends (SerpApi)");
-            const pointKeyword = p.keyword || searchTerm;
-            const pointMethodology =
-              p.methodologyVersion ||
-              (pointSource === "GOOGLE_TRENDS_CSV"
-                ? "google_trends_explore_csv_v1"
-                : isGoogleFreeMode
-                ? "google_free_demand_live"
-                : "serpapi_google_trends_live");
+          if (batchImportSucceeded) {
+            for (const p of seriesResult.points) {
+              const evidenceRef =
+                (p as any).evidenceReference ||
+                ((seriesResult as any).receiptId
+                  ? `provider-request:serpapi:${(seriesResult as any).receiptId}`
+                  : null);
+              const pointSource =
+                p.source || (isGoogleFreeMode ? "Google Trends (Free Demand)" : "Google Trends (SerpApi)");
+              const pointKeyword = p.keyword || searchTerm;
+              const pointMethodology =
+                p.methodologyVersion ||
+                (pointSource === "GOOGLE_TRENDS_CSV"
+                  ? "google_trends_explore_csv_v1"
+                  : isGoogleFreeMode
+                  ? "google_free_demand_live"
+                  : "serpapi_google_trends_live");
 
-            let verifiedDescriptor: any;
-            if (evidenceRef) {
-              const resolved = await resolveVerifiedDemandEvidence(evidenceRef, {
-                productId: targetProductId,
-                keyword: pointKeyword,
-                region,
-                workspaceId: options.workspaceId || null,
-                researchRunId: (options as any).researchRunId || null,
-                observationDate: p.periodStart,
-                observationValue: p.demandValue,
-                ...({ periodEnd: p.periodEnd } as any),
-              });
-              if (resolved.verified) {
-                verifiedDescriptor = resolved;
+              let verifiedDescriptor: any;
+              if (evidenceRef) {
+                const resolved = await resolveVerifiedDemandEvidence(evidenceRef, {
+                  productId: targetProductId,
+                  keyword: pointKeyword,
+                  region,
+                  workspaceId: options.workspaceId || null,
+                  researchRunId: (options as any).researchRunId || null,
+                  observationDate: p.periodStart,
+                  observationValue: p.demandValue,
+                  strictLiveOrigin: true,
+                  ...({ periodEnd: p.periodEnd } as any),
+                });
+                if (resolved.verified && (resolved as any).exactObservationVerified) {
+                  verifiedDescriptor = resolved;
+                }
               }
+              const capturedTs = verifiedDescriptor?.capturedAt || (p as any).capturedAt || (seriesResult as any).acquiredAt || null;
+              livePoints.push({
+                periodStart: p.periodStart,
+                periodEnd: p.periodEnd,
+                demandValue: p.demandValue,
+                region: p.region,
+                source: pointSource,
+                date: p.periodStart,
+                value: p.demandValue,
+                methodologyVersion: pointMethodology,
+                evidenceReference: evidenceRef,
+                verifiedDescriptor,
+                observedAt: capturedTs || undefined,
+                capturedAt: capturedTs,
+              } as any);
             }
-            const capturedTs = verifiedDescriptor?.capturedAt || (p as any).capturedAt || (seriesResult as any).acquiredAt || null;
-            livePoints.push({
-              periodStart: p.periodStart,
-              periodEnd: p.periodEnd,
-              demandValue: p.demandValue,
-              region: p.region,
-              source: pointSource,
-              date: p.periodStart,
-              value: p.demandValue,
-              methodologyVersion: pointMethodology,
-              evidenceReference: evidenceRef,
-              verifiedDescriptor,
-              observedAt: capturedTs || undefined,
-              capturedAt: capturedTs,
-            } as any);
           }
 
           // Only merge with existing cache points when existing cache is authoritative and same source type

@@ -95,6 +95,12 @@ describe("KH-02 V12.4.3.7.18.2: Final Release Gate (RG01 - RG06)", () => {
       realFailed: 0,
       realSkipped: 0,
       runMode: "OFFLINE_CONTRACT_CHECK",
+      fullSuiteCoverage: {
+        unitPassed: true,
+        integrationPassed: true,
+        backtestPassed: true,
+        kh01VerifyPassed: true,
+      },
       evidenceProofCounters: {
         rawRowsVerified: 38,
         liveOriginProofs: 0, // 0 live external proofs
