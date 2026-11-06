@@ -35,6 +35,11 @@ describe("KH-02 V12.4.3.7.18: MultiProcessAtomicImport Integration", () => {
   const evidenceRef = `csv-import:google-trends-explore:sha256:${csvSha256}:q=automatic_cat_feeder`;
 
   beforeEach(async () => {
+    try {
+      await prisma.$executeRawUnsafe("PRAGMA journal_mode = WAL;");
+      await prisma.$executeRawUnsafe("PRAGMA busy_timeout = 15000;");
+    } catch {}
+
     fs.mkdirSync(GOOGLE_TRENDS_CSV_STORAGE_DIR, { recursive: true });
     fs.writeFileSync(csvFilePath, sampleCsvContent, "utf8");
 

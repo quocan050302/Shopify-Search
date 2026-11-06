@@ -105,6 +105,11 @@ describe("KH-02 V12.4.3.7.18.1: Workstream C — OS Process Conflict & Concurren
   });
 
   beforeEach(async () => {
+    try {
+      await prisma.$executeRawUnsafe("PRAGMA journal_mode = WAL;");
+      await prisma.$executeRawUnsafe("PRAGMA busy_timeout = 15000;");
+    } catch {}
+
     for (const pid of [productA, productB, productC, productD]) {
       await prisma.productDemandObservation.deleteMany({
         where: { productId: pid },

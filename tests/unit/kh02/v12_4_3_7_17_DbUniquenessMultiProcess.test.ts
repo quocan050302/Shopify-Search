@@ -3,7 +3,7 @@
  * Scenarios D01 - D18
  */
 
-import { describe, it, expect, beforeEach, afterEach } from "vitest";
+import { describe, it, expect, beforeAll, beforeEach, afterEach } from "vitest";
 import { execFile } from "node:child_process";
 import { promisify } from "node:util";
 import path from "node:path";
@@ -18,6 +18,15 @@ const execFileAsync = promisify(execFile);
 describe("KH-02 V12.4.3.7.17 Group D: Database Uniqueness & Concurrency", () => {
   const testProductId = "prod_d_test_" + Date.now();
   const testWorkspaceId = "ws_d_test";
+
+  beforeAll(async () => {
+    try {
+      await prisma.$executeRawUnsafe(`
+        CREATE UNIQUE INDEX IF NOT EXISTS product_demand_observations_productId_source_keyword_region_periodStart_key
+        ON product_demand_observations(productId, source, keyword, region, periodStart);
+      `);
+    } catch {}
+  });
 
   beforeEach(async () => {
     await prisma.workspace.upsert({

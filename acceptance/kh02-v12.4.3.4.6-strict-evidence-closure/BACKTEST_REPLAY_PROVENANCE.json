@@ -1,10 +1,10 @@
 {
   "version": "12.4.3.5.1",
-  "sourceSha": "dc68cc51c8db95e0090754d6e106e13470649a6b",
-  "evaluatedCodeSha": "dc68cc51c8db95e0090754d6e106e13470649a6b",
-  "evaluatedTreeSha": "a7046b25b2c58ca28ebf912383b7a10228cc90a3",
-  "inputBaselineCommitSha": "dc68cc51c8db95e0090754d6e106e13470649a6b",
-  "evaluatedAt": "2026-11-05T16:38:35.586Z",
+  "sourceSha": "812018d4eaf3d51bcaa35b9ccb16f3f7ca92a916",
+  "evaluatedCodeSha": "812018d4eaf3d51bcaa35b9ccb16f3f7ca92a916",
+  "evaluatedTreeSha": "69474e8899784dd3ad50dafe5e6d147a9ccb24b8",
+  "inputBaselineCommitSha": "812018d4eaf3d51bcaa35b9ccb16f3f7ca92a916",
+  "evaluatedAt": "2026-11-06T02:11:08.093Z",
   "niche": "Pet Gadgets",
   "policyScenarioVerdict": "PASS",
   "pointInTimeIntegrityVerdict": "PASS",
@@ -21,17 +21,17 @@
       "end": "2026-10-30T12:00:00.000Z"
     },
     "zeroOverlapVerified": true,
-    "devRecordsEvaluated": 60,
-    "holdoutRecordsEvaluated": 377,
-    "devDatasetFingerprintSha256": "f9e80915cea9901a325fec6da7c8654cf37ffcec1a0aea29be60b120f067a72c",
-    "holdoutDatasetFingerprintSha256": "3e677412e40dc8850911b597712c12c8209f58cec1f212bb8ea57a3f33be26b5",
+    "devRecordsEvaluated": 19,
+    "holdoutRecordsEvaluated": 380,
+    "devDatasetFingerprintSha256": "9855ac11a972adc0a558c23b7608309f158301c12ad8dcb0de3e3a5fd65af6a4",
+    "holdoutDatasetFingerprintSha256": "26bcffb0d900f14f43614918e4f1102015fbb2b9308292c6461acf6e582650b3",
     "devShortlistCount": 0,
     "devShortlistNicheMatchedCount": 0,
     "devNicheCoverageStatus": "INSUFFICIENT_NICHE_COVERAGE",
     "holdoutShortlistCount": 3,
     "holdoutShortlistNicheMatchedCount": 3,
     "holdoutNicheCoverageStatus": "SUFFICIENT_NICHE_COVERAGE",
-    "walmartPointInTimeVacuousAsHistoricalParityProof": true,
+    "walmartPointInTimeVacuousAsHistoricalParityProof": false,
     "zeroFutureLeakageVerified": true
   }
 }

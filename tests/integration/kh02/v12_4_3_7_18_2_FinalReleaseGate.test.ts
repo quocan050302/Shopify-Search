@@ -16,6 +16,7 @@ import {
   evaluateDemandHistoryEvidence,
   evaluateDemandSourceAuthority,
 } from "@/services/kh02/demand/temporalDemandEngine";
+import { evaluateReleaseEvidence } from "@/services/kh02/release/releaseGateEvaluatorV19";
 
 describe("KH-02 V12.4.3.7.18.2: Final Release Gate (RG01 - RG06)", () => {
   it("RG01: Environment hygiene — ENABLE_LIVE_NETWORK_FETCHER is not true in test environment", () => {
@@ -76,15 +77,34 @@ describe("KH-02 V12.4.3.7.18.2: Final Release Gate (RG01 - RG06)", () => {
     }
   });
 
-  it("RG06: Release decision table invariant: Engineering PASS != Business GO", () => {
-    // Assert separation of concerns:
-    // Engineering verdict: PASS (code, tests, types, security invariants all verified)
-    // Staging verdict: STAGING_SHADOW_ONLY_GO (safe for isolated shadow run)
-    // Business evidence verdict: INSUFFICIENT_EVIDENCE / BLOCKED (no live external data)
-    const engineeringPass = true;
-    const businessEvidenceReady = false; // G06, G07, G15, G16 not yet connected to live external APIs
+  it("RG06: Release decision table invariant: Engineering PASS != Business GO (Defect P1-C fixed)", () => {
+    // Assert separation of concerns via pure deterministic evaluator:
+    // Engineering verdict: ENGINEERING_PASS
+    // Staging verdict: STAGING_SHADOW_CONTRACT_READY
+    // Business evidence verdict: INSUFFICIENT_EVIDENCE
+    const verdict = evaluateReleaseEvidence({
+      version: "12.4.3.7.19",
+      branch: "feature/kh02-walmart-us-jina-reader-v12.4.3.5.1",
+      baselineSha: "812018d4eaf3d51bcaa35b9ccb16f3f7ca92a916",
+      testedCodeSha: "36d559465ece26ac872144d61c58117130ac00c9",
+      reportGeneratedAt: new Date().toISOString(),
+      testCommand: "vitest run tests/unit/kh02",
+      exitCode: 0,
+      realTotal: 38,
+      realPassed: 38,
+      realFailed: 0,
+      realSkipped: 0,
+      runMode: "OFFLINE_CONTRACT_CHECK",
+      evidenceProofCounters: {
+        rawRowsVerified: 38,
+        liveOriginProofs: 0, // 0 live external proofs
+        fixtureOnlyCount: 38,
+      },
+    });
 
-    expect(engineeringPass).toBe(true);
-    expect(businessEvidenceReady).toBe(false);
+    expect(verdict.engineeringStatus).toBe("ENGINEERING_PASS");
+    expect(verdict.stagingStatus).toBe("STAGING_SHADOW_CONTRACT_READY");
+    expect(verdict.businessStatus).toBe("INSUFFICIENT_EVIDENCE");
+    expect(verdict.overallReleaseAllowed).toBe(false);
   });
 });

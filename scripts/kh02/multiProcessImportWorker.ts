@@ -43,6 +43,7 @@ async function main() {
 
   try {
     try {
+      await (prisma as any).$executeRawUnsafe("PRAGMA journal_mode = WAL;");
       await (prisma as any).$executeRawUnsafe("PRAGMA busy_timeout = 15000;");
     } catch {
       // ignore

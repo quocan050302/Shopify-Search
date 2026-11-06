@@ -25,7 +25,16 @@ import {
   verifyStoredCsvFile,
   verifyDemandObservationAgainstRawCsv,
 } from "./googleTrendsCsvValidator";
-
+import {
+  verifyProviderObservationAgainstRawArtifact,
+  parseProviderTimeseriesPayload,
+  areExactOrCanonicalEquivalentQueries,
+  normalizeCanonicalQuery,
+  type ParsedProviderSeries,
+  type ParsedProviderObservation,
+  type ProviderRawRowErrorCode,
+  type ProviderObservationVerificationResult,
+} from "./providerObservationRawBinding";
 export const PROVIDER_RECEIPT_STORAGE_DIR = path.resolve(
   process.cwd(),
   process.env.PROVIDER_RECEIPT_STORAGE_DIR || "data/provider_receipts"
@@ -70,7 +79,16 @@ export type DemandEvidenceRejectionCode =
   | "RESPONSE_STATUS_INVALID"
   | "TIME_INVALID"
   | "DATE_MISMATCH"
-  | "POINT_IN_TIME_VIOLATION";
+  | "POINT_IN_TIME_VIOLATION"
+  | "RAW_SERIES_MISSING"
+  | "UNSUPPORTED_RAW_SCHEMA"
+  | "RAW_ROW_NOT_FOUND"
+  | "RAW_VALUE_MISMATCH"
+  | "RAW_SERIES_IDENTITY_MISMATCH"
+  | "RAW_ROW_AMBIGUOUS"
+  | "INVALID_NUMERIC_VALUE"
+  | "INTERVAL_MISMATCH"
+  | "NO_TIMESERIES_SUPPORT";
 
 export type KH02DemandClass =
   | "EVERGREEN_STABLE"
@@ -3519,6 +3537,9 @@ export interface VerifiedDemandEvidenceDescriptor {
   evidenceVersion?: string;
   decisionAt?: string;
   asOf?: string | Date | null;
+  exactObservationVerified?: boolean;
+  rawRowPointer?: string;
+  cadence?: string;
   reasonCodes?: string[];
   decisionProofToken?: string;
   rejectionReason?: string | null;
@@ -3826,12 +3847,12 @@ export function isAuthenticProviderReceiptDescriptor(
       }
       const checkKeyword = context.targetKeyword || descriptor.targetProductOrKeyword || ledger?.targetProductOrKeyword;
       if (rawJson.search_parameters?.q && checkKeyword) {
-        if (!areCompatibleProductKeywords(String(rawJson.search_parameters.q), String(checkKeyword))) {
+        if (!areExactOrCanonicalEquivalentQueries(String(rawJson.search_parameters.q), String(checkKeyword))) {
           return {
             authentic: false,
             contentIntegrityVerified: true,
             providerOriginVerified: false,
-            reason: `Raw payload query '${rawJson.search_parameters.q}' contradicts keyword '${checkKeyword}'.`,
+            reason: `Raw payload query '${rawJson.search_parameters.q}' contradicts keyword '${checkKeyword}' (strict canonical equality required).`,
             errorCode: "PRODUCT_MISMATCH",
           };
         }
@@ -4722,6 +4743,20 @@ export async function resolveVerifiedDemandEvidence(
     };
   }
 
+  // Strict live origin requirement at ingress
+  if (context.strictLiveOrigin && (isUnitFixture || trustedReceipt.originKind !== "ACTUAL_PROVIDER_INVOCATION")) {
+    return {
+      verified: false,
+      eligible: false,
+      verifiedOrigin: false,
+      originKind: isUnitFixture ? "UNIT_FIXTURE" : (trustedReceipt.originKind || "LOCAL_INTEGRITY_ONLY"),
+      providerOriginVerified: false,
+      contentIntegrityVerified: true,
+      rejectionReason: `Receipt origin '${trustedReceipt.originKind}' cannot verify production live provider origin under strictLiveOrigin=true.`,
+      errorCode: "ORIGIN_UNVERIFIED",
+    };
+  }
+
   // F05/F21/F29: Non-fixture ledger receipt MUST have a matching committed ResearchEvidence DB record
   if (!isUnitFixture && !dbMatch) {
     if (dbQuerySucceeded) {
@@ -4822,6 +4857,7 @@ export async function resolveVerifiedDemandEvidence(
   }
 
   // Deep raw artifact parity check if JSON
+  let rawVerificationResult: ProviderObservationVerificationResult | null = null;
   if (artifactPath.endsWith(".json")) {
     let rawPayloadObj: any = null;
     try {
@@ -4881,69 +4917,53 @@ export async function resolveVerifiedDemandEvidence(
         };
       }
       const rawQ = rawPayloadObj.search_parameters?.q;
-      if (rawQ && trustedReceipt.targetProductOrKeyword && !areCompatibleProductKeywords(String(rawQ), trustedReceipt.targetProductOrKeyword)) {
+      if (rawQ && trustedReceipt.targetProductOrKeyword && !areExactOrCanonicalEquivalentQueries(String(rawQ), trustedReceipt.targetProductOrKeyword)) {
         return {
           verified: false,
           eligible: false,
-          rejectionReason: `Raw payload search_parameters.q '${rawQ}' contradicts recorded targetProductOrKeyword '${trustedReceipt.targetProductOrKeyword}'.`,
+          rejectionReason: `Raw payload search_parameters.q '${rawQ}' contradicts recorded targetProductOrKeyword '${trustedReceipt.targetProductOrKeyword}' (strict canonical equality required).`,
           errorCode: "PRODUCT_MISMATCH",
         };
       }
-      if (
-        (context.observationValue !== undefined || context.observationDate !== undefined) &&
-        Array.isArray(rawPayloadObj.interest_over_time?.timeline_data) &&
-        rawPayloadObj.interest_over_time.timeline_data.length > 0
-      ) {
-        if (context.observationDate) {
-          const targetDateStr = new Date(context.observationDate).toISOString().slice(0, 10);
-          const matchingDatePoint = rawPayloadObj.interest_over_time.timeline_data.find((pt: any) => {
-            const ptDateStr = pt.date || (pt.timestamp ? new Date(Number(pt.timestamp) * 1000).toISOString().slice(0, 10) : "");
-            return ptDateStr.startsWith(targetDateStr) || targetDateStr.startsWith(ptDateStr);
-          });
-          if (matchingDatePoint) {
-            if (context.observationValue !== undefined && context.observationValue !== null) {
-              const expectedVal = Number(context.observationValue);
-              const hasVal = Array.isArray(matchingDatePoint.values) && matchingDatePoint.values.some((v: any) => {
-                const num = typeof v === "number" ? v : Number(v?.extracted_value ?? v?.value);
-                return Number.isFinite(num) && num === expectedVal;
-              });
-              if (!hasVal) {
-                return {
-                  verified: false,
-                  eligible: false,
-                  verifiedOrigin: false,
-                  rejectionReason: `Observation date '${context.observationDate}' has value not matching expected demandValue (${expectedVal}) in raw timeline_data.`,
-                  errorCode: "HASH_MISMATCH",
-                };
-              }
-            }
-          } else {
-            return {
-              verified: false,
-              eligible: false,
-              verifiedOrigin: false,
-              rejectionReason: `Observation date '${context.observationDate}' not found in raw timeline_data.`,
-              errorCode: "DATE_MISMATCH",
-            };
+
+      // Exact raw observation verification (Workstream A & Defect P1-A fix)
+      if (context.observationValue !== undefined || context.observationDate !== undefined) {
+        rawVerificationResult = verifyProviderObservationAgainstRawArtifact({
+          rawBytes,
+          receipt: trustedReceipt,
+          observation: {
+            keyword: context.keyword,
+            region: context.region,
+            periodStart: (context.observationDate || (context as any).periodStart)!,
+            periodEnd: (context as any).periodEnd,
+            demandValue: context.observationValue,
+            productId: context.productId,
+            workspaceId: context.workspaceId,
+            researchRunId: context.researchRunId,
+            asOfTimestamp: context.asOfTimestamp,
+          },
+          options: {
+            strictLiveOrigin: context.strictLiveOrigin,
+            asOfTimestamp: context.asOfTimestamp,
+          },
+        });
+
+        if (!rawVerificationResult.verified) {
+          let reportedErrorCode: DemandEvidenceRejectionCode | undefined = rawVerificationResult.errorCode;
+          if (rawVerificationResult.errorCode === "RAW_ROW_NOT_FOUND" && context.observationDate) {
+            reportedErrorCode = "DATE_MISMATCH";
+          } else if (rawVerificationResult.errorCode === "RAW_VALUE_MISMATCH" && !context.observationDate) {
+            reportedErrorCode = "HASH_MISMATCH";
           }
-        } else if (context.observationValue !== undefined && context.observationValue !== null) {
-          const expectedVal = Number(context.observationValue);
-          const matchesTimelinePoint = rawPayloadObj.interest_over_time.timeline_data.some((pt: any) => {
-            if (!Array.isArray(pt?.values)) return false;
-            return pt.values.some((v: any) => {
-              const num = typeof v === "number" ? v : Number(v?.extracted_value ?? v?.value);
-              return Number.isFinite(num) && num === expectedVal;
-            });
-          });
-          if (!matchesTimelinePoint) {
-            return {
-              verified: false,
-              eligible: false,
-              verifiedOrigin: false,
-              rejectionReason: `Observation demandValue (${expectedVal}) does not match any point in raw provider timeline_data.`,
-              errorCode: "HASH_MISMATCH",
-            };
-          }
+          return {
+            verified: false,
+            eligible: false,
+            verifiedOrigin: false,
+            exactObservationVerified: false,
+            originKind: trustedReceipt.originKind,
+            rejectionReason: rawVerificationResult.rejectionReason,
+            errorCode: reportedErrorCode,
+          };
         }
       }
     }
@@ -5017,12 +5037,12 @@ export async function resolveVerifiedDemandEvidence(
 
   const effectiveTarget = trustedReceipt.targetProductOrKeyword || parsedObs?.targetProductOrKeyword || parsedObs?.targetKeyword;
   if (context.keyword) {
-    if (!effectiveTarget || !areCompatibleProductKeywords(context.keyword, String(effectiveTarget))) {
+    if (!effectiveTarget || !areExactOrCanonicalEquivalentQueries(context.keyword, String(effectiveTarget))) {
       return {
         verified: false,
         eligible: false,
         verifiedOrigin: false,
-        rejectionReason: `Evidence targetKeyword '${effectiveTarget || "MISSING"}' does not match context keyword '${context.keyword}'.`,
+        rejectionReason: `Evidence targetKeyword '${effectiveTarget || "MISSING"}' does not match context keyword '${context.keyword}' (strict canonical equality required).`,
         errorCode: "PRODUCT_MISMATCH",
       };
     }
@@ -5122,6 +5142,9 @@ export async function resolveVerifiedDemandEvidence(
     sourceAuthority: isLiveOrigin ? "AUTHORITATIVE_VERIFIED" : (isUnitFixture ? "FIXTURE_ONLY" : "LOCAL_INTEGRITY_ONLY"),
     originKind: isLiveOrigin ? "ACTUAL_PROVIDER_INVOCATION" : effectiveOrigin,
     providerOriginVerified: isLiveOrigin,
+    exactObservationVerified: Boolean(rawVerificationResult?.verified),
+    rawRowPointer: rawVerificationResult?.rawRowPointer,
+    cadence: rawVerificationResult?.cadence,
     decisionAt: new Date().toISOString(),
     evidenceVersion: "12.4.3.7.14",
     asOf: context.asOfTimestamp || null,
@@ -5741,3 +5764,14 @@ export function evaluateTemporalDemandStability(
     confidencePenaltyReason: null,
   };
 }
+
+export {
+  verifyProviderObservationAgainstRawArtifact,
+  parseProviderTimeseriesPayload,
+  areExactOrCanonicalEquivalentQueries,
+  normalizeCanonicalQuery,
+  type ParsedProviderSeries,
+  type ParsedProviderObservation,
+  type ProviderRawRowErrorCode,
+  type ProviderObservationVerificationResult,
+} from "./providerObservationRawBinding";

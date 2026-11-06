@@ -311,6 +311,9 @@ export async function resolveProductDemandHistory(
         region: r.region,
         workspaceId: options.workspaceId || null,
         researchRunId: (options as any).researchRunId || null,
+        observationDate: r.periodStart,
+        observationValue: r.demandValue,
+        ...({ periodEnd: r.periodEnd } as any),
       });
       if (resolved.verified) {
         verifiedDescriptor = resolved;
@@ -497,6 +500,9 @@ export async function resolveProductDemandHistory(
                 region,
                 workspaceId: options.workspaceId || null,
                 researchRunId: (options as any).researchRunId || null,
+                observationDate: p.periodStart,
+                observationValue: p.demandValue,
+                ...({ periodEnd: p.periodEnd } as any),
               });
               if (resolved.verified) {
                 verifiedDescriptor = resolved;

@@ -159,6 +159,7 @@ export interface AssertProviderOriginParams {
   keyword: string;
   region: string;
   periodStart: Date;
+  periodEnd?: Date | string | null;
   demandValue: number | null;
   asOfTimestamp?: string | Date | null;
   asOf?: string | Date | null;
@@ -195,6 +196,7 @@ export async function assertVerifiedProviderOriginForImport(
     keyword,
     region,
     periodStart,
+    periodEnd,
     demandValue,
     asOfTimestamp,
     asOf,
@@ -220,6 +222,7 @@ export async function assertVerifiedProviderOriginForImport(
     observationValue: demandValue,
     strictLiveOrigin: true,
     asOfTimestamp: effectiveAsOf || undefined,
+    ...({ periodEnd } as any),
   });
 
   // Strict Conjunctive Predicate (all must be true):
@@ -232,7 +235,8 @@ export async function assertVerifiedProviderOriginForImport(
     desc.eligibleForBusiness === true &&
     desc.durablePersistenceVerified === true &&
     desc.commitState === "EVIDENCE_ELIGIBLE" &&
-    desc.responseStatus === 200;
+    desc.responseStatus === 200 &&
+    desc.exactObservationVerified === true;
 
   if (!isConjunctiveSuccess) {
     const reason = desc.rejectionReason || "Receipt failed strict provider origin verification.";
@@ -243,7 +247,19 @@ export async function assertVerifiedProviderOriginForImport(
       code = "PRODUCT_MISMATCH";
     } else if (desc.errorCode === "REGION_MISMATCH") {
       code = "REGION_MISMATCH";
-    } else if (desc.errorCode === "DATE_MISMATCH") {
+    } else if (desc.errorCode === "DATE_MISMATCH" || desc.errorCode === "RAW_ROW_NOT_FOUND") {
+      code = "DATE_MISMATCH";
+    } else if (desc.errorCode === "RAW_VALUE_MISMATCH") {
+      code = "RAW_VALUE_MISMATCH";
+    } else if (desc.errorCode === "RAW_SERIES_MISSING") {
+      code = "RAW_SERIES_MISSING";
+    } else if (desc.errorCode === "RAW_SERIES_IDENTITY_MISMATCH") {
+      code = "RAW_SERIES_IDENTITY_MISMATCH";
+    } else if (desc.errorCode === "RAW_ROW_AMBIGUOUS") {
+      code = "RAW_ROW_AMBIGUOUS";
+    } else if (desc.errorCode === "UNSUPPORTED_RAW_SCHEMA" || desc.errorCode === "NO_TIMESERIES_SUPPORT") {
+      code = "UNSUPPORTED_RAW_SCHEMA";
+    } else if (desc.errorCode === "INTERVAL_MISMATCH") {
       code = "DATE_MISMATCH";
     } else if (desc.errorCode === "HASH_MISMATCH") {
       code = "HASH_MISMATCH";
@@ -453,6 +469,7 @@ export async function executeDemandObservationBatchImport(
         keyword: kw,
         region: reg,
         periodStart: pStart,
+        periodEnd: pEnd,
         demandValue: dVal,
         asOfTimestamp: input.asOfTimestamp || input.asOf,
         rowIndex,
@@ -598,7 +615,7 @@ export async function executeDemandObservationBatchImport(
       if (isMocked && !(prisma.$transaction as any)?.mock) {
         await execTx(prisma);
       } else {
-        await prisma.$transaction(execTx, { timeout: 15000 });
+        await prisma.$transaction(execTx, { timeout: 15000, maxWait: 10000 });
       }
 
       if (!isMocked && insertedCount > 0) {
@@ -678,8 +695,43 @@ export async function executeDemandObservationBatchImport(
 
       if (isBusy) {
         if (attempt < MAX_DB_ATTEMPTS - 1) {
+          // If competing worker committed matching rows while we waited, resolve idempotently
+          try {
+            const committedRows = await prisma.productDemandObservation.findMany({
+              where: { productId: input.productId },
+            });
+            if (committedRows.length >= deduplicatedPoints.length) {
+              const committedMap = new Map<string, any>();
+              for (const row of committedRows) {
+                const rowKey = `${row.source}|${String(row.keyword).toLowerCase().trim()}|${String(row.region || "").trim().toUpperCase()}|${new Date(row.periodStart).toISOString()}`;
+                committedMap.set(rowKey, row);
+              }
+              let allMatch = true;
+              for (const pt of deduplicatedPoints) {
+                const ptKey = `${pt.source}|${pt.keyword.toLowerCase().trim()}|${pt.region.trim().toUpperCase()}|${pt.periodStart.toISOString()}`;
+                const existing = committedMap.get(ptKey);
+                if (existing) {
+                  assertIdenticalOrThrowConflict(existing, pt, input.productId);
+                } else {
+                  allMatch = false;
+                  break;
+                }
+              }
+              if (allMatch) {
+                insertedCount = 0;
+                skippedCount = deduplicatedPoints.length + intraBatchDuplicates;
+                committed = true;
+                break;
+              }
+            }
+          } catch (checkErr: any) {
+            if (checkErr instanceof BatchImportError) {
+              throw checkErr;
+            }
+          }
+
           await new Promise((r) =>
-            setTimeout(r, Math.min(1000, 50 * Math.pow(1.5, attempt)) + Math.floor(Math.random() * 80))
+            setTimeout(r, Math.min(1000, 180 * Math.pow(1.5, attempt)) + Math.floor(Math.random() * 80))
           );
           continue;
         }
