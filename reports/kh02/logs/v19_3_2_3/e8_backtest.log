@@ -1,0 +1,12 @@
+=== GATE E8: Historical Demand Backtest (Dev & Holdout) ===
+Command:    npx tsx scripts/kh02/runBacktestV12_4_3_4_2.ts
+Commit SHA: 27d3a5835dc055990f4b9d2b02b6fe44705f3626
+Tree SHA:   f4ecc2373fdd136176158c7b1812e6cd7f315869
+Branch:     feature/kh02-walmart-us-jina-reader-v12.4.3.5.1
+Start:      2026-11-06T10:21:47.513Z
+Duration:   2411ms
+Exit Code:  0
+SHA-256:    c0f365adab5490ff2e2037bdb775d04b615698563853b79fde4828793e52c385
+================================================================
+
+[Backtest V12.4.3.4.2] Policy=PASS | Dev=INSUFFICIENT_HISTORICAL_EVIDENCE (shortlist=0/0) | Holdout=INSUFFICIENT_HISTORICAL_EVIDENCE (shortlist=3/3) | Overall=INSUFFICIENT_HISTORICAL_EVIDENCE

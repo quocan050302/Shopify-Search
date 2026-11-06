@@ -1,0 +1,34 @@
+=== GATE E10: Remote GitHub Actions CI Proof Diagnostic ===
+Command:    npx tsx scripts/kh02/runRemoteCiProofDiagnostic.ts
+Commit SHA: 27d3a5835dc055990f4b9d2b02b6fe44705f3626
+Tree SHA:   f4ecc2373fdd136176158c7b1812e6cd7f315869
+Branch:     feature/kh02-walmart-us-jina-reader-v12.4.3.5.1
+Start:      2026-11-06T10:21:51.357Z
+Duration:   1084ms
+Exit Code:  0
+SHA-256:    ac66e3b21197d01cf7ac129654fddc12839405f3bf59e0f70cab6872edc42619
+================================================================
+
+=== REMOTE GITHUB ACTIONS CI PROOF DIAGNOSTIC (GATE E10) ===
+{
+  "diagnosticExecuted": true,
+  "networkAttempted": false,
+  "remoteRunObserved": false,
+  "remoteVerificationLevel": "CI_NOT_RUN",
+  "status": "CI_NOT_CONFIGURED",
+  "ciProviderVerified": false,
+  "providerHttpStatus": null,
+  "workflowPath": null,
+  "runId": null,
+  "headSha": null,
+  "testedCodeSha": "27d3a5835dc055990f4b9d2b02b6fe44705f3626",
+  "repository": "quocan050302/Shopify-Search",
+  "branch": "feature/kh02-walmart-us-jina-reader-v12.4.3.5.1",
+  "event": null,
+  "conclusion": null,
+  "source": "NONE",
+  "isUnitTestMock": false,
+  "reason": "No remote GitHub Actions workflow runId specified, and repository has no active public workflow runs for this branch. Truthfully classified as CI_NOT_CONFIGURED.",
+  "executedAt": "2026-11-06T10:21:52.359Z"
+}
+STATUS: SUCCESS (status=CI_NOT_CONFIGURED, ciProviderVerified=false)

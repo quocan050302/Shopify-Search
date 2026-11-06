@@ -1,0 +1,100 @@
+{
+  "version": "V12.4.3.7.19.3.2.3",
+  "generatedAt": "2026-11-06T17:22:55+07:00",
+  "repository": "quocan050302/Shopify-Search",
+  "lockedBranch": "feature/kh02-walmart-us-jina-reader-v12.4.3.5.1",
+  "baselineRemoteHead": "f13cdf07b77c9ca92cae0585b0e33204ff7cad47",
+  "testedCodeCommitSha_C1": "27d3a5835dc055990f4b9d2b02b6fe44705f3626",
+  "testedCodeTreeSha_C1": "f4ecc2373fdd136176158c7b1812e6cd7f315869",
+  "modifiedSourceFiles": [
+    {
+      "file": "scripts/kh02/runCandidateDbReadback.ts",
+      "sha256": "0b571c7f635f5e6cd9a5efffb98d85b3f382ef23da4768293f084649c3aefb06"
+    },
+    {
+      "file": "scripts/kh02/runRemoteCiProofDiagnostic.ts",
+      "sha256": "9cb0008f6a6bde199f14aec31decf152b76635417cfcf26372cfb380397655f2"
+    },
+    {
+      "file": "src/services/kh02/demand/testSuiteEvidenceValidator.ts",
+      "sha256": "f801b69e5912b4e79816a9828d218164c04eadc552a2898016d0ab37f3b625f9"
+    },
+    {
+      "file": "src/services/kh02/release/githubActionsCiEvidence.ts",
+      "sha256": "3a00ff37e3ee5f3a5a60f4e741ac5a807b56faeabd8c75a90f60c816c871a2ae"
+    },
+    {
+      "file": "src/services/kh02/release/releaseGateEvaluatorV19.ts",
+      "sha256": "4eaa0bd29b6f8523f65c82a0e3673ad4a6d501b71cf82f4352242faa4ffbc3ac"
+    },
+    {
+      "file": "tests/unit/kh02/v12_4_3_7_19_3_2_1_FinalAliasTrustAndCiProof.test.ts",
+      "sha256": "31b90b022afb0730f106d005a438d120eaefbb48ff50e1bd2003df584993a313"
+    },
+    {
+      "file": "tests/unit/kh02/v12_4_3_7_19_3_2_3_TrustedCiProofAndObservableExecution.test.ts",
+      "sha256": "8a9ff28970c7533da3f3440936dbbd370a1b1189c099d903f93c73be6ea254a7"
+    },
+    {
+      "file": "tests/unit/kh02/v12_4_3_7_19_3_2_DurableAliasAuthorization.test.ts",
+      "sha256": "e0ea723d6a85a51be4556822dfc18b5102efb75c31d01d17014341317095e646"
+    }
+  ],
+  "gateLogManifest": {
+    "e1_typecheck.log": {
+      "path": "reports/kh02/logs/v19_3_2_3/e1_typecheck.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "exitCode": 0
+    },
+    "e2_diff_check.log": {
+      "path": "reports/kh02/logs/v19_3_2_3/e2_diff_check.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "exitCode": 0
+    },
+    "e3_targeted_suites.log": {
+      "path": "reports/kh02/logs/v19_3_2_3/e3_targeted_suites.log",
+      "sha256": "a7fd6ead9ee95531b510ceb4c94f2498f6c8576ac5376f453b04f11a70f94e30",
+      "exitCode": 0
+    },
+    "e4_unit_tests.log": {
+      "path": "reports/kh02/logs/v19_3_2_3/e4_unit_tests.log",
+      "sha256": "558af16409572e1317d8a970f3dc30434391528b89a755ba3b7e6be74733c105",
+      "exitCode": 0
+    },
+    "e5_integration_tests.log": {
+      "path": "reports/kh02/logs/v19_3_2_3/e5_integration_tests.log",
+      "sha256": "3406721c53ca13860ddd651e5c89c17c1c21e0d2fd9033af4bdcb5d4b72256e8",
+      "exitCode": 0
+    },
+    "e6_kh01_verify.log": {
+      "path": "reports/kh02/logs/v19_3_2_3/e6_kh01_verify.log",
+      "sha256": "6fe27b7e6394081fa581ec444149167eaad5d72ae87a9661b24ce5804d75c5ae",
+      "exitCode": 0
+    },
+    "e7_security_negative.log": {
+      "path": "reports/kh02/logs/v19_3_2_3/e7_security_negative.log",
+      "sha256": "112eeb7069032e3c232835eed9870137763bb9e336328bdeab14c080f7de91f5",
+      "exitCode": 0
+    },
+    "e8_backtest.log": {
+      "path": "reports/kh02/logs/v19_3_2_3/e8_backtest.log",
+      "sha256": "c0f365adab5490ff2e2037bdb775d04b615698563853b79fde4828793e52c385",
+      "exitCode": 0
+    },
+    "e9_db_readback.log": {
+      "path": "reports/kh02/logs/v19_3_2_3/e9_db_readback.log",
+      "sha256": "ce3704cb7c4da35e225fa2b08bc17f4b8626aeb5d51a7635d13801345d3cdaf1",
+      "exitCode": 0
+    },
+    "e10_remote_ci.log": {
+      "path": "reports/kh02/logs/v19_3_2_3/e10_remote_ci.log",
+      "sha256": "ac66e3b21197d01cf7ac129654fddc12839405f3bf59e0f70cab6872edc42619",
+      "exitCode": 0
+    }
+  },
+  "overallVerdict": {
+    "engineeringGates": "PASS",
+    "commercialGates": "NO-GO (G15/G16 INSUFFICIENT_EVIDENCE)",
+    "remoteCi": "CI_NOT_CONFIGURED"
+  }
+}

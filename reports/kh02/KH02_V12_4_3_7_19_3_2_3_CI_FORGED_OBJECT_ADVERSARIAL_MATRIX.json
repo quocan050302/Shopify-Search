@@ -1,0 +1,241 @@
+{
+  "version": "V12.4.3.7.19.3.2.3",
+  "generatedAt": "2026-11-06T17:22:00.000+07:00",
+  "title": "Adversarial CI Forged Object & Observable Execution Test Matrix",
+  "totalAdversarialVectors": 28,
+  "passedVectors": 28,
+  "failedVectors": 0,
+  "groups": [
+    {
+      "groupId": "Group A",
+      "name": "Adversarial Forged Caller Objects & Cryptographic Attestation Boundary",
+      "vectorCount": 7,
+      "vectors": [
+        {
+          "id": "A01",
+          "name": "Handcrafted proof with trusted source/verifier but no attestation token",
+          "attackVector": "Caller supplies object with source='GITHUB_API', verifier='SWAI_TRUSTED_GITHUB_VERIFIER_V1', verified=true, 64-char digest, matching SHA, but attestationToken=undefined",
+          "expectedBehavior": "verifyAuthenticCiProof returns status='CI_CLAIM_UNVERIFIED', ciProviderVerified=false, verified=false",
+          "testResult": "PASS"
+        },
+        {
+          "id": "A02",
+          "name": "Handcrafted proof with forged/invalid HMAC token",
+          "attackVector": "Caller provides random HMAC-like 64-hex string as attestationToken",
+          "expectedBehavior": "verifyAuthenticCiProof detects cryptographic signature mismatch, returns CI_CLAIM_UNVERIFIED",
+          "testResult": "PASS"
+        },
+        {
+          "id": "A03",
+          "name": "Token replay attack with different commit SHA",
+          "attackVector": "Attacker captures valid token for commit SHA_X and attempts to replay it against commit SHA_Y",
+          "expectedBehavior": "verifyAuthenticCiProof detects payload SHA binding mismatch and rejects fail-closed",
+          "testResult": "PASS"
+        },
+        {
+          "id": "A04",
+          "name": "Token parameter tampering with altered runId",
+          "attackVector": "Attacker modifies runId while keeping valid token for original runId",
+          "expectedBehavior": "verifyCiAttestationToken returns false due to signature invalidation; verification rejected",
+          "testResult": "PASS"
+        },
+        {
+          "id": "A05",
+          "name": "Token parameter tampering with altered status/conclusion",
+          "attackVector": "Attacker changes run conclusion from 'failure' to 'success' using token minted for 'failure'",
+          "expectedBehavior": "Cryptographic signature check fails; returns status='CI_CLAIM_UNVERIFIED'",
+          "testResult": "PASS"
+        },
+        {
+          "id": "A06",
+          "name": "Mock/test actor signature rejection",
+          "attackVector": "Caller supplies token minted with actor='UNIT_TEST_MOCK_ACTOR' in production validation mode",
+          "expectedBehavior": "verifyAuthenticCiProof quarantines mock actor and refuses elevation to commercial CI_PASS",
+          "testResult": "PASS"
+        },
+        {
+          "id": "A07",
+          "name": "verifyRemoteGitHubActionsRun dependency-injected mock stamping",
+          "attackVector": "Caller passes customFetch to simulate successful GitHub API response",
+          "expectedBehavior": "Function stamps isUnitTestMock=true, source='UNIT_TEST_MOCK', and marks mint token with isMock=true",
+          "testResult": "PASS"
+        }
+      ]
+    },
+    {
+      "groupId": "Group B",
+      "name": "Unit Test Mock Quarantine in Commercial Release Gates",
+      "vectorCount": 5,
+      "vectors": [
+        {
+          "id": "B01",
+          "name": "evaluateReleaseGatesV19 demotes mock-verified CI run to CI_NOT_RUN",
+          "attackVector": "CI status passed to evaluateReleaseGatesV19 has runStatus='SUCCESS' but isUnitTestMock=true",
+          "expectedBehavior": "Evaluator demotes ciStatus to CI_NOT_RUN, adds CI_CLAIM_UNVERIFIED blocker, overallReleaseAllowed=false",
+          "testResult": "PASS"
+        },
+        {
+          "id": "B02",
+          "name": "validateVerifiedCiAttestation rejects attestation marked isUnitTestMock: true",
+          "attackVector": "Attestation object has isUnitTestMock=true and source='UNIT_TEST_MOCK'",
+          "expectedBehavior": "Validator returns valid=false, reason='MOCK_CI_EVIDENCE_CANNOT_SATISFY_COMMERCIAL_RELEASE'",
+          "testResult": "PASS"
+        },
+        {
+          "id": "B03",
+          "name": "verifyGitHubActionsRunProof rejects mock with requireTrustedVerifier: true",
+          "attackVector": "Proof object marked isUnitTestMock passed to verifyGitHubActionsRunProof",
+          "expectedBehavior": "Returns verified=false, reason='MOCK_CI_EVIDENCE_CANNOT_SATISFY_COMMERCIAL_RELEASE'",
+          "testResult": "PASS"
+        },
+        {
+          "id": "B04",
+          "name": "Handcrafted proof directly submitted to evaluateReleaseGatesV19 fails closed",
+          "attackVector": "Handcrafted proof without signature submitted directly to release gate evaluator",
+          "expectedBehavior": "Evaluator demotes status to CI_NOT_RUN with blocker CI_CLAIM_UNVERIFIED",
+          "testResult": "PASS"
+        },
+        {
+          "id": "B05",
+          "name": "Attestation with altered token payload parameters fails closed",
+          "attackVector": "Attestation object altered post-minting (e.g. branch or event modified)",
+          "expectedBehavior": "verifyCiAttestationToken fails cryptographic digest verification; proof rejected",
+          "testResult": "PASS"
+        }
+      ]
+    },
+    {
+      "groupId": "Group C",
+      "name": "E9 Observable Execution and Candidate Database Readback Proof",
+      "vectorCount": 6,
+      "vectors": [
+        {
+          "id": "C01",
+          "name": "runCandidateDbReadback script exists and is executable",
+          "attackVector": "Verification that checked-in script exists at scripts/kh02/runCandidateDbReadback.ts",
+          "expectedBehavior": "File exists, has non-zero size, and compiles cleanly with TypeScript",
+          "testResult": "PASS"
+        },
+        {
+          "id": "C02",
+          "name": "E9 script emits valid JSON to stdout",
+          "attackVector": "Executing script and parsing stdout as JSON",
+          "expectedBehavior": "stdout contains valid JSON object with status indicator; exit code is 0",
+          "testResult": "PASS"
+        },
+        {
+          "id": "C03",
+          "name": "E9 JSON contains mandatory candidate and database fields",
+          "attackVector": "Checking schema of E9 stdout JSON",
+          "expectedBehavior": "Contains candidateId, canonicalProductId, rawRecordCount, distinctKeywords, sourceClassifications, g15Verdict, g16Verdict",
+          "testResult": "PASS"
+        },
+        {
+          "id": "C04",
+          "name": "E9 reports dbConnected: true and rawRecordCount >= 0",
+          "attackVector": "Querying live SQLite database (dev.db)",
+          "expectedBehavior": "dbConnected=true, rawRecordCount=6",
+          "testResult": "PASS"
+        },
+        {
+          "id": "C05",
+          "name": "E9 honestly reports 0 businessAttributableCount and INSUFFICIENT_EVIDENCE",
+          "attackVector": "Running filterAttributableObservations with evaluationScope='BUSINESS'",
+          "expectedBehavior": "businessAttributableCount=0, verifiedOfficialCsvRows=0, g15Verdict='INSUFFICIENT_EVIDENCE', g16Verdict='INSUFFICIENT_EVIDENCE'",
+          "testResult": "PASS"
+        },
+        {
+          "id": "C06",
+          "name": "E9 masks database credentials in stdout",
+          "attackVector": "Testing DSN masking logic with sensitive credentials (e.g. postgresql://user:pass@host:5432/db)",
+          "expectedBehavior": "Password and user info are masked with '***'; credentials never leaked to stdout or logs",
+          "testResult": "PASS"
+        }
+      ]
+    },
+    {
+      "groupId": "Group D",
+      "name": "E10 Remote CI Proof Diagnostic and Observable Proof",
+      "vectorCount": 5,
+      "vectors": [
+        {
+          "id": "D01",
+          "name": "runRemoteCiProofDiagnostic script exists and is executable",
+          "attackVector": "Verification that checked-in script exists at scripts/kh02/runRemoteCiProofDiagnostic.ts",
+          "expectedBehavior": "File exists, has non-zero size, and compiles cleanly with TypeScript",
+          "testResult": "PASS"
+        },
+        {
+          "id": "D02",
+          "name": "E10 script emits valid JSON to stdout",
+          "attackVector": "Executing script and parsing stdout as JSON",
+          "expectedBehavior": "stdout contains valid JSON object with status indicator; exit code is 0",
+          "testResult": "PASS"
+        },
+        {
+          "id": "D03",
+          "name": "E10 JSON contains mandatory CI diagnostic fields",
+          "attackVector": "Checking schema of E10 stdout JSON",
+          "expectedBehavior": "Contains status, remoteVerificationLevel, ciProviderVerified, repository, branch, testedCodeSha",
+          "testResult": "PASS"
+        },
+        {
+          "id": "D04",
+          "name": "E10 reports status: 'CI_NOT_CONFIGURED' when no workflow/token is active",
+          "attackVector": "Running without external GitHub Actions credentials or runId",
+          "expectedBehavior": "Honestly outputs status='CI_NOT_CONFIGURED', remoteVerificationLevel='CI_NOT_RUN', ciProviderVerified=false",
+          "testResult": "PASS"
+        },
+        {
+          "id": "D05",
+          "name": "E10 with mock credentials stamps isUnitTestMock: true",
+          "attackVector": "Invoking verifyRemoteGitHubActionsRun with mock handler",
+          "expectedBehavior": "Outputs isUnitTestMock=true, preventing mock from satisfying commercial release",
+          "testResult": "PASS"
+        }
+      ]
+    },
+    {
+      "groupId": "Group E",
+      "name": "End-to-End Release Gate Integrity & Defense-in-Depth",
+      "vectorCount": 5,
+      "vectors": [
+        {
+          "id": "E01",
+          "name": "Complete release gate evaluation with honest inputs yields ENGINEERING_PASS and NO-GO",
+          "attackVector": "evaluateReleaseGatesV19 with all 10 gates passed locally but no external CI and insufficient candidate history",
+          "expectedBehavior": "engineeringStatus='PASS', releaseDecision='NO-GO', blockers include commercial and CI reasons",
+          "testResult": "PASS"
+        },
+        {
+          "id": "E02",
+          "name": "Attempted commercial elevation of dev/holdout data fails closed",
+          "attackVector": "Feeding test fixtures or backtest synthetic series into commercial gate evaluator",
+          "expectedBehavior": "Rejected with INSUFFICIENT_EVIDENCE; commercial gating remains fail-closed",
+          "testResult": "PASS"
+        },
+        {
+          "id": "E03",
+          "name": "Point-in-time timestamp tampering fails verification",
+          "attackVector": "Observation records dated after evaluation cutoff date",
+          "expectedBehavior": "Point-in-time filter drops future observations strictly",
+          "testResult": "PASS"
+        },
+        {
+          "id": "E04",
+          "name": "Multi-stage pipeline prevents cross-candidate leakage",
+          "attackVector": "Attempting to attribute Cat Feeder demand to KittySpout or Spin Scrubber candidate",
+          "expectedBehavior": "Candidate boundary filter enforces exact candidate productId match; cross-attribution = 0",
+          "testResult": "PASS"
+        },
+        {
+          "id": "E05",
+          "name": "Full attestation chain enforces unforgeable proof boundary",
+          "attackVector": "Injecting unsigned or corrupted attestation objects at any stage of the pipeline",
+          "expectedBehavior": "Every pipeline stage verifies signature independently and fails closed",
+          "testResult": "PASS"
+        }
+      ]
+    }
+  ]
+}

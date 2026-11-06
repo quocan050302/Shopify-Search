@@ -1,0 +1,133 @@
+{
+  "version": "V12.4.3.7.19.3.2.3",
+  "generatedAt": "2026-11-06T17:21:52.442+07:00",
+  "testedCodeCommitSha_C1": "27d3a5835dc055990f4b9d2b02b6fe44705f3626",
+  "testedCodeTreeSha_C1": "f4ecc2373fdd136176158c7b1812e6cd7f315869",
+  "lockedBranch": "feature/kh02-walmart-us-jina-reader-v12.4.3.5.1",
+  "overallEngineeringStatus": "PASS",
+  "totalGates": 10,
+  "passedGates": 10,
+  "failedGates": 0,
+  "gates": [
+    {
+      "gateId": "E1",
+      "name": "TypeScript Compilation & Typecheck",
+      "command": "npx tsc --noEmit",
+      "exitCode": 0,
+      "pass": true,
+      "durationMs": 4520,
+      "logFile": "reports/kh02/logs/v19_3_2_3/e1_typecheck.log",
+      "logSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "startedAt": "2026-11-06T10:15:17.008Z",
+      "completedAt": "2026-11-06T10:15:21.529Z"
+    },
+    {
+      "gateId": "E2",
+      "name": "Git Diff Whitespace & Conflict Check",
+      "command": "git diff --check HEAD~1 HEAD",
+      "exitCode": 0,
+      "pass": true,
+      "durationMs": 54,
+      "logFile": "reports/kh02/logs/v19_3_2_3/e2_diff_check.log",
+      "logSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "startedAt": "2026-11-06T10:15:21.529Z",
+      "completedAt": "2026-11-06T10:15:21.584Z"
+    },
+    {
+      "gateId": "E3",
+      "name": "Targeted V19.3.2.x CI Proof & Alias Suites",
+      "command": "npx vitest run tests/unit/kh02/v12_4_3_7_19_3_2_3_TrustedCiProofAndObservableExecution.test.ts tests/unit/kh02/v12_4_3_7_19_3_2_2_MandatoryBusinessScopeAndCiProof.test.ts tests/unit/kh02/v12_4_3_7_19_3_2_1_FinalAliasTrustAndCiProof.test.ts",
+      "exitCode": 0,
+      "pass": true,
+      "durationMs": 16393,
+      "logFile": "reports/kh02/logs/v19_3_2_3/e3_targeted_suites.log",
+      "logSha256": "a7fd6ead9ee95531b510ceb4c94f2498f6c8576ac5376f453b04f11a70f94e30",
+      "startedAt": "2026-11-06T10:15:21.584Z",
+      "completedAt": "2026-11-06T10:15:37.977Z"
+    },
+    {
+      "gateId": "E4",
+      "name": "KH-02 Full Unit Test Suite",
+      "command": "npm run kh02:test:unit -- --maxWorkers=4",
+      "exitCode": 0,
+      "pass": true,
+      "durationMs": 226192,
+      "logFile": "reports/kh02/logs/v19_3_2_3/e4_unit_tests.log",
+      "logSha256": "558af16409572e1317d8a970f3dc30434391528b89a755ba3b7e6be74733c105",
+      "startedAt": "2026-11-06T10:15:37.977Z",
+      "completedAt": "2026-11-06T10:19:24.170Z"
+    },
+    {
+      "gateId": "E5",
+      "name": "KH-02 Integration Test Suite",
+      "command": "npm run kh02:test:integration",
+      "exitCode": 0,
+      "pass": true,
+      "durationMs": 71989,
+      "logFile": "reports/kh02/logs/v19_3_2_3/e5_integration_tests.log",
+      "logSha256": "3406721c53ca13860ddd651e5c89c17c1c21e0d2fd9033af4bdcb5d4b72256e8",
+      "startedAt": "2026-11-06T10:19:24.170Z",
+      "completedAt": "2026-11-06T10:20:36.160Z"
+    },
+    {
+      "gateId": "E6",
+      "name": "KH-01 Baseline Verification Suite",
+      "command": "npm run kh01:verify",
+      "exitCode": 0,
+      "pass": true,
+      "durationMs": 4269,
+      "logFile": "reports/kh02/logs/v19_3_2_3/e6_kh01_verify.log",
+      "logSha256": "6fe27b7e6394081fa581ec444149167eaad5d72ae87a9661b24ce5804d75c5ae",
+      "startedAt": "2026-11-06T10:20:36.160Z",
+      "completedAt": "2026-11-06T10:20:40.430Z"
+    },
+    {
+      "gateId": "E7",
+      "name": "Security Negative Suites",
+      "command": "npx vitest run tests/unit/kh02ProductMetadataSecurity.test.ts tests/unit/kh02/v12_4_3_7_17_NetworkSsrfRedirect.test.ts tests/unit/kh02/v12_4_3_7_18_SocketPeerTlsTrust.test.ts tests/unit/kh02/v12_4_3_7_18_1_SocketTrustNoTestBypass.test.ts",
+      "exitCode": 0,
+      "pass": true,
+      "durationMs": 3283,
+      "logFile": "reports/kh02/logs/v19_3_2_3/e7_security_negative.log",
+      "logSha256": "112eeb7069032e3c232835eed9870137763bb9e336328bdeab14c080f7de91f5",
+      "startedAt": "2026-11-06T10:21:44.229Z",
+      "completedAt": "2026-11-06T10:21:47.513Z"
+    },
+    {
+      "gateId": "E8",
+      "name": "Historical Demand Backtest (Dev & Holdout)",
+      "command": "npx tsx scripts/kh02/runBacktestV12_4_3_4_2.ts",
+      "exitCode": 0,
+      "pass": true,
+      "durationMs": 2411,
+      "logFile": "reports/kh02/logs/v19_3_2_3/e8_backtest.log",
+      "logSha256": "c0f365adab5490ff2e2037bdb775d04b615698563853b79fde4828793e52c385",
+      "startedAt": "2026-11-06T10:21:47.513Z",
+      "completedAt": "2026-11-06T10:21:49.925Z"
+    },
+    {
+      "gateId": "E9",
+      "name": "Candidate Database Readback Proof",
+      "command": "npx tsx scripts/kh02/runCandidateDbReadback.ts",
+      "exitCode": 0,
+      "pass": true,
+      "durationMs": 1431,
+      "logFile": "reports/kh02/logs/v19_3_2_3/e9_db_readback.log",
+      "logSha256": "ce3704cb7c4da35e225fa2b08bc17f4b8626aeb5d51a7635d13801345d3cdaf1",
+      "startedAt": "2026-11-06T10:21:49.925Z",
+      "completedAt": "2026-11-06T10:21:51.357Z"
+    },
+    {
+      "gateId": "E10",
+      "name": "Remote GitHub Actions CI Proof Diagnostic",
+      "command": "npx tsx scripts/kh02/runRemoteCiProofDiagnostic.ts",
+      "exitCode": 0,
+      "pass": true,
+      "durationMs": 1084,
+      "logFile": "reports/kh02/logs/v19_3_2_3/e10_remote_ci.log",
+      "logSha256": "ac66e3b21197d01cf7ac129654fddc12839405f3bf59e0f70cab6872edc42619",
+      "startedAt": "2026-11-06T10:21:51.357Z",
+      "completedAt": "2026-11-06T10:21:52.442Z"
+    }
+  ]
+}

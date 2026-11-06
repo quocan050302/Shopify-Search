@@ -1,0 +1,34 @@
+{
+  "version": "V12.4.3.7.19.3.2.3",
+  "generatedAt": "2026-11-06T17:21:52.359+07:00",
+  "gate": "E10",
+  "description": "Remote GitHub Actions CI Proof Diagnostic",
+  "diagnosticResult": {
+    "diagnosticExecuted": true,
+    "networkAttempted": false,
+    "remoteRunObserved": false,
+    "remoteVerificationLevel": "CI_NOT_RUN",
+    "status": "CI_NOT_CONFIGURED",
+    "ciProviderVerified": false,
+    "providerHttpStatus": null,
+    "workflowPath": null,
+    "runId": null,
+    "headSha": null,
+    "testedCodeSha": "27d3a5835dc055990f4b9d2b02b6fe44705f3626",
+    "repository": "quocan050302/Shopify-Search",
+    "branch": "feature/kh02-walmart-us-jina-reader-v12.4.3.5.1",
+    "event": null,
+    "conclusion": null,
+    "source": "NONE",
+    "isUnitTestMock": false,
+    "reason": "No remote GitHub Actions workflow runId specified, and repository has no active public workflow runs for this branch. Truthfully classified as CI_NOT_CONFIGURED.",
+    "executedAt": "2026-11-06T10:21:52.359Z"
+  },
+  "verdict": {
+    "executionStatus": "SUCCESS",
+    "remoteCiConfigured": false,
+    "ciStatus": "CI_NOT_CONFIGURED",
+    "forgedProofAdmitted": false,
+    "commercialReleaseAllowed": false
+  }
+}

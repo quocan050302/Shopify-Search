@@ -1,0 +1,27 @@
+{
+  "version": "V12.4.3.7.19.3.2.3",
+  "generatedAt": "2026-11-06T17:22:00.000+07:00",
+  "codeSha": "27d3a5835dc055990f4b9d2b02b6fe44705f3626",
+  "treeSha": "f4ecc2373fdd136176158c7b1812e6cd7f315869",
+  "branch": "feature/kh02-walmart-us-jina-reader-v12.4.3.5.1",
+  "engineeringGatesStatus": "PASS",
+  "commercialGates": {
+    "g15DemandHistoryStatus": "INSUFFICIENT_EVIDENCE",
+    "g16ProofVerificationStatus": "INSUFFICIENT_EVIDENCE",
+    "rationale": "Official candidate-specific Google Trends series for UAHPET feeder currently lacks authenticated >=60-day longitudinal data. Category queries and test-only aliases without cryptographically signed durable business alias approvals are strictly rejected across all cache, fresh, CSV, and evaluation boundaries."
+  },
+  "remoteCiStatus": {
+    "status": "CI_NOT_CONFIGURED",
+    "ciProviderVerified": false,
+    "rationale": "GitHub Actions remote workflow execution was not run because no external GitHub Actions workflows are configured or active for this private branch. Truthfully reported as CI_NOT_CONFIGURED without fake passes. Handcrafted caller objects are cryptographically rejected."
+  },
+  "releaseDecision": "NO-GO",
+  "spendAudit": {
+    "totalUnapprovedSpend": 0.0,
+    "serpApiPaidSpend": 0.0,
+    "bigQueryPaidSpend": 0.0,
+    "tikTokAdsUsStatus": "DEFERRED",
+    "demandProviderMode": "GOOGLE_FREE_ONLY"
+  },
+  "integrityAttestation": "Software engineering gates pass with 100% compliance across 10 gates. Commercial gates honestly fail-closed without data fabrication. Engineering PASS != Commercial GO."
+}
