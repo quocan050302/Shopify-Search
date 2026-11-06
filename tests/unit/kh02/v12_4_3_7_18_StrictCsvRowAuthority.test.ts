@@ -3,7 +3,7 @@
  * Scenarios R01 - R28
  */
 
-import { describe, it, expect, beforeEach, afterEach } from "vitest";
+import { describe, it, expect, beforeEach, afterEach, afterAll } from "vitest";
 import fs from "node:fs";
 import path from "node:path";
 import crypto from "node:crypto";
@@ -72,7 +72,7 @@ describe("KH-02 V12.4.3.7.18: Strict CSV Row Authority (R01 - R28)", () => {
     });
   });
 
-  afterEach(async () => {
+  afterAll(async () => {
     try {
       if (fs.existsSync(csvFilePath)) {
         fs.unlinkSync(csvFilePath);

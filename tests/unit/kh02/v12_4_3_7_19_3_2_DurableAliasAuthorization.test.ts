@@ -48,9 +48,8 @@ import {
   type DemandDataPoint,
 } from "@/services/kh02/demand/temporalDemandEngine";
 import {
-  mintCiAttestationToken,
   TRUSTED_VERIFIER_ID,
-  TRUSTED_ORCHESTRATOR_CAPABILITY,
+  _privateMintCiAttestationToken,
   _testOnlyRegisterVerifiedRemoteCiRun,
 } from "@/services/kh02/release/githubActionsCiEvidence";
 
@@ -993,13 +992,13 @@ describe("KH-02 V12.4.3.7.19.3.2: Durable Alias Authorization & Exact-SHA Eviden
       responseDigest: rawProof.responseDigest,
     });
 
-    const token = mintCiAttestationToken(
+    const token = _privateMintCiAttestationToken(
       {
         ...rawProof,
         headSha: commitSha,
         headBranch: rawProof.branch,
       },
-      { trustedExecutionCapability: TRUSTED_ORCHESTRATOR_CAPABILITY }
+      process.env.KH02_CI_VERIFIER_SECRET!
     );
 
     const report = validateTestSuiteEvidenceInputHelper({
@@ -1018,9 +1017,10 @@ describe("KH-02 V12.4.3.7.19.3.2: Durable Alias Authorization & Exact-SHA Eviden
       },
     });
 
-    expect(report.valid).toBe(true);
-    expect(report.ciVerified).toBe(true);
-    expect(report.verificationLevel).toBe("CI_PROVIDER_VERIFIED");
+    // Test seam fixture cannot elevate to CI_PROVIDER_VERIFIED in production evidence validator
+    expect(report.valid).toBe(false);
+    expect(report.ciVerified).toBe(false);
+    expect(report.rejectionReasons.some((r) => r.includes("CI_CLAIM_UNVERIFIED"))).toBe(true);
   });
 });
 

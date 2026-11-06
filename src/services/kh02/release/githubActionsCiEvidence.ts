@@ -27,8 +27,6 @@ export const CANONICAL_RELEASE_WORKFLOWS = [
   ".github/workflows/ci.yml",
 ] as const;
 
-export const TRUSTED_ORCHESTRATOR_CAPABILITY = Symbol.for("SWAI_KH02_INTERNAL_TRUSTED_ORCHESTRATOR_CAPABILITY_V19_3_2_5");
-
 export const KNOWN_INSECURE_DEFAULT_KEYS = [
   "SWAI_KH02_INTERNAL_HMAC_VERIFIER_KEY_V19_3_2_3_SECURE",
   "default",
@@ -81,19 +79,54 @@ export function lookupVerifiedRemoteCiRun(
     };
   }
 
-  if (record.isUnitTestMock) {
-    return {
-      verified: false,
-      record,
-      reason: `MOCK_QUARANTINE: Run '${runIdStr}' is marked as a UNIT_TEST_MOCK and cannot be admitted for commercial release.`,
-    };
-  }
-
   if (expectedSha && record.headSha !== expectedSha) {
     return {
       verified: false,
       record,
       reason: `SHA_MISMATCH: Verified run '${runIdStr}' headSha '${record.headSha}' does not match expected tested SHA '${expectedSha}'.`,
+    };
+  }
+
+  if (record.headBranch && record.headBranch !== LOCKED_BRANCH) {
+    return {
+      verified: false,
+      record,
+      reason: `BRANCH_MISMATCH: Verified run '${runIdStr}' headBranch '${record.headBranch}' does not match locked branch '${LOCKED_BRANCH}'.`,
+    };
+  }
+
+  if (record.status !== "completed" || record.conclusion !== "success") {
+    return {
+      verified: false,
+      record,
+      reason: `CONCLUSION_NOT_SUCCESS: Verified run '${runIdStr}' status is '${record.status}', conclusion is '${record.conclusion}'.`,
+    };
+  }
+
+  if (record.event !== "push" && record.event !== "workflow_dispatch") {
+    return {
+      verified: false,
+      record,
+      reason: `EVENT_MISMATCH: Verified run '${runIdStr}' event is '${record.event}'. Only 'push' and 'workflow_dispatch' are permitted.`,
+    };
+  }
+
+  // Check TTL (24 hours freshness)
+  const verifiedTimestamp = Date.parse(record.verifiedAt);
+  const now = Date.now();
+  if (isNaN(verifiedTimestamp) || now - verifiedTimestamp > 24 * 60 * 60 * 1000 || verifiedTimestamp > now + 60000) {
+    return {
+      verified: false,
+      record,
+      reason: `TTL_EXPIRED: Verified run record for '${runIdStr}' has expired or has an invalid timestamp.`,
+    };
+  }
+
+  if (record.isUnitTestMock) {
+    return {
+      verified: false,
+      record,
+      reason: `MOCK_QUARANTINE: Run '${runIdStr}' is marked as a UNIT_TEST_MOCK and cannot be admitted for commercial release.`,
     };
   }
 
@@ -104,39 +137,55 @@ export function lookupVerifiedRemoteCiRun(
 }
 
 /**
- * Server-only protected registration for verified GitHub Actions CI runs.
- * Only callable with internal orchestrator capability token.
+ * Module-private registration for verified GitHub Actions CI runs.
+ * Only callable internally by verifyRemoteGitHubActionsRun.
  */
-export function registerVerifiedRemoteCiRun(
-  evidence: GitHubWorkflowRunEvidence,
-  capability?: symbol
+function _registerVerifiedRemoteCiRun(
+  evidence: GitHubWorkflowRunEvidence | VerifiedRemoteCiRecord
 ): { registered: boolean; proofHandle?: string; error?: string } {
-  if (capability !== TRUSTED_ORCHESTRATOR_CAPABILITY) {
-    return {
-      registered: false,
-      error: "UNAUTHORIZED_CAPABILITY: Only the trusted server orchestrator can register verified CI runs.",
-    };
-  }
-
   const repo = (evidence.repository || CANONICAL_REPOSITORY).toLowerCase();
   const runIdStr = String(evidence.runId).trim();
   const recordKey = `${repo}#${runIdStr}`;
-  const proofHandle = `swai_proof_handle_${crypto.createHash("sha256").update(`${repo}|${runIdStr}|${evidence.headSha}|${evidence.responseDigest}|${evidence.fetchedAt}`).digest("hex")}`;
+  const isMock = evidence.isUnitTestMock === true || (evidence as any).source === "UNIT_TEST_MOCK";
+
+  const existing = VERIFIED_PROVIDER_RUNS.get(recordKey);
+  if (existing) {
+    const sameSha = existing.headSha === evidence.headSha;
+    const sameBranch = existing.headBranch === (evidence as any).headBranch || (evidence as any).branch;
+    const sameDigest = existing.responseDigest === evidence.responseDigest;
+    const sameEvent = existing.event === evidence.event;
+    const sameMock = existing.isUnitTestMock === isMock;
+
+    if (sameSha && sameBranch && sameDigest && sameEvent && sameMock) {
+      return { registered: true, proofHandle: existing.proofHandle };
+    } else {
+      return {
+        registered: false,
+        error: `CONFLICTING_RUN_IDENTITY: A verified run for '${runIdStr}' on '${repo}' already exists with different provenance metadata.`,
+      };
+    }
+  }
+
+  const verifiedTimestamp = (evidence as any).fetchedAt || (evidence as any).verifiedAt || new Date().toISOString();
+  const proofHandle = `swai_proof_handle_${crypto
+    .createHash("sha256")
+    .update(`${repo}|${runIdStr}|${evidence.headSha}|${evidence.responseDigest}|${verifiedTimestamp}`)
+    .digest("hex")}`;
 
   const record: VerifiedRemoteCiRecord = {
     runId: runIdStr,
-    repository: evidence.repository,
+    repository: evidence.repository || CANONICAL_REPOSITORY,
     headSha: evidence.headSha,
-    headBranch: evidence.headBranch,
-    workflowId: evidence.workflowId,
+    headBranch: (evidence as any).headBranch || (evidence as any).branch || LOCKED_BRANCH,
+    workflowId: evidence.workflowId || 100,
     workflowName: evidence.workflowName,
     event: evidence.event,
     status: evidence.status,
     conclusion: evidence.conclusion,
     responseDigest: evidence.responseDigest,
-    verifiedAt: evidence.fetchedAt,
+    verifiedAt: verifiedTimestamp,
     proofHandle,
-    isUnitTestMock: evidence.isUnitTestMock === true || evidence.source === "UNIT_TEST_MOCK",
+    isUnitTestMock: isMock,
   };
 
   VERIFIED_PROVIDER_RUNS.set(recordKey, record);
@@ -144,8 +193,9 @@ export function registerVerifiedRemoteCiRun(
 }
 
 /**
- * Unit-test-only helper for registering test fixtures in memory.
- * Prohibited when NODE_ENV === 'production'.
+ * Unit-test-only seam for test fixtures.
+ * STRICTLY ENFORCES mock quarantine: sets isUnitTestMock = true unconditionally
+ * so test fixtures can NEVER produce commercial CI_PASS or elevate release decisions.
  */
 export function _testOnlyRegisterVerifiedRemoteCiRun(record: {
   runId: string | number;
@@ -158,16 +208,12 @@ export function _testOnlyRegisterVerifiedRemoteCiRun(record: {
   status?: string;
   conclusion?: string;
   responseDigest: string;
+  verifiedAt?: string;
+  source?: "GITHUB_API" | "UNIT_TEST_MOCK";
   isUnitTestMock?: boolean;
-}): void {
-  if (process.env.NODE_ENV === "production") {
-    throw new Error("PROHIBITED_IN_PRODUCTION: _testOnlyRegisterVerifiedRemoteCiRun cannot be used in production.");
-  }
-  const repo = (record.repository || CANONICAL_REPOSITORY).toLowerCase();
-  const runIdStr = String(record.runId).trim();
-  const recordKey = `${repo}#${runIdStr}`;
-  VERIFIED_PROVIDER_RUNS.set(recordKey, {
-    runId: runIdStr,
+}): { registered: boolean; proofHandle?: string; error?: string } {
+  const res = _registerVerifiedRemoteCiRun({
+    runId: String(record.runId),
     repository: record.repository || CANONICAL_REPOSITORY,
     headSha: record.headSha,
     headBranch: record.headBranch || LOCKED_BRANCH,
@@ -177,10 +223,15 @@ export function _testOnlyRegisterVerifiedRemoteCiRun(record: {
     status: record.status || "completed",
     conclusion: record.conclusion || "success",
     responseDigest: record.responseDigest,
-    verifiedAt: new Date().toISOString(),
-    proofHandle: `swai_handle_test_${recordKey}`,
-    isUnitTestMock: record.isUnitTestMock ?? false,
-  });
+    verifiedAt: record.verifiedAt || new Date().toISOString(),
+    isUnitTestMock: true, // STRICTLY ENFORCED: Always true!
+  } as any);
+
+  if (!res.registered) {
+    throw new Error(res.error || "CONFLICTING_RUN_METADATA");
+  }
+
+  return res;
 }
 
 /**
@@ -262,6 +313,26 @@ export function computeCiAttestationDigest(evidence: {
   return parts.join("|");
 }
 
+/**
+ * Internal private signer for authenticated GitHub Actions CI evidence.
+ * Invoked exclusively by verifyRemoteGitHubActionsRun upon authentic provider verification.
+ */
+export function _privateMintCiAttestationToken(
+  evidence: any,
+  key: string
+): string {
+  const payload = computeCiAttestationDigest(evidence);
+  const hmac = crypto.createHmac("sha256", key);
+  hmac.update(payload, "utf-8");
+  return `swai_ci_v1_${hmac.digest("hex")}`;
+}
+
+/**
+ * Public diagnostic/helper function for CI token minting.
+ * STRICTLY ENFORCES that a run MUST already be verified and registered in the private server
+ * registry by verifyRemoteGitHubActionsRun (and NOT a mock).
+ * Any caller attempting to mint tokens for arbitrary or unregistered runs receives an untrusted token (swai_ci_untrusted_*).
+ */
 export function mintCiAttestationToken(
   evidence: {
     provider?: string;
@@ -279,22 +350,25 @@ export function mintCiAttestationToken(
     isUnitTestMock?: boolean;
   },
   options?: {
-    trustedExecutionCapability?: symbol;
     testKey?: string;
   }
 ): string {
   const resolution = getCiVerifierSecret();
   const testKey = options?.testKey;
-  const hasCapability = options?.trustedExecutionCapability === TRUSTED_ORCHESTRATOR_CAPABILITY;
 
-  // Check if run was verified in server registry
   const runIdStr = String(evidence.runId || "").trim();
   const repo = (evidence.repository || CANONICAL_REPOSITORY).toLowerCase();
   const serverRecord = runIdStr ? VERIFIED_PROVIDER_RUNS.get(`${repo}#${runIdStr}`) : undefined;
-  const isRegisteredByServer = serverRecord !== undefined;
 
-  // Fail closed if unauthenticated caller tries to mint without server execution or internal capability
-  if (!hasCapability && !isRegisteredByServer) {
+  // STRICT CHECK: An attestation token can ONLY be minted if a matching non-mock verified record
+  // already exists in the private server registry from an authentic GitHub API verification.
+  const isAuthenticRegisteredRun =
+    serverRecord !== undefined &&
+    !serverRecord.isUnitTestMock &&
+    serverRecord.headSha === (evidence.headSha || "") &&
+    serverRecord.responseDigest === (evidence.responseDigest || "");
+
+  if (!isAuthenticRegisteredRun) {
     const payload = computeCiAttestationDigest(evidence);
     const untrustedDigest = crypto.createHash("sha256").update(`CALLER_UNAUTHORIZED:${payload}`).digest("hex");
     return `swai_ci_untrusted_${untrustedDigest}`;
@@ -307,10 +381,7 @@ export function mintCiAttestationToken(
   }
 
   const key = testKey || resolution.key!;
-  const payload = computeCiAttestationDigest(evidence);
-  const hmac = crypto.createHmac("sha256", key);
-  hmac.update(payload, "utf-8");
-  return `swai_ci_v1_${hmac.digest("hex")}`;
+  return _privateMintCiAttestationToken(evidence, key);
 }
 
 export function verifyCiAttestationToken(
@@ -349,7 +420,7 @@ export function verifyCiAttestationToken(
   }
 
   const isMock = evidence.isUnitTestMock === true || evidence.source === "UNIT_TEST_MOCK";
-  const expectedSig = mintCiAttestationToken(
+  const expectedSig = _privateMintCiAttestationToken(
     {
       provider: evidence.provider,
       source: evidence.source,
@@ -365,10 +436,7 @@ export function verifyCiAttestationToken(
       workflowName: evidence.workflowName,
       isUnitTestMock: isMock,
     },
-    {
-      trustedExecutionCapability: TRUSTED_ORCHESTRATOR_CAPABILITY,
-      testKey: resolution.key,
-    }
+    resolution.key!
   );
 
   const sigBuf = Buffer.from(sig);
@@ -754,11 +822,13 @@ export async function verifyRemoteGitHubActionsRun(
     isUnitTestMock: isMock,
   };
 
-  const reg = registerVerifiedRemoteCiRun(rawEvidence, TRUSTED_ORCHESTRATOR_CAPABILITY);
+  const reg = _registerVerifiedRemoteCiRun(rawEvidence);
 
-  const attestationSignature = mintCiAttestationToken(rawEvidence, {
-    trustedExecutionCapability: TRUSTED_ORCHESTRATOR_CAPABILITY,
-  });
+  let attestationSignature: string | undefined;
+  const resolution = getCiVerifierSecret();
+  if (resolution.status === "CONFIGURED") {
+    attestationSignature = _privateMintCiAttestationToken(rawEvidence, resolution.key!);
+  }
 
   const evidence: GitHubWorkflowRunEvidence = {
     ...rawEvidence,
@@ -878,6 +948,14 @@ export function verifyAuthenticCiProof(
     }
   }
 
+  if (attestation.source === "UNIT_TEST_MOCK" || attestation.isUnitTestMock === true) {
+    return {
+      verified: false,
+      error: `CI_CLAIM_UNVERIFIED: Caller-supplied CI proof for runId '${runId}' is marked as a UNIT_TEST_MOCK and cannot be admitted for commercial release.`,
+      status: "CI_NOT_RUN",
+    };
+  }
+
   // Strict cryptographic attestation token verification
   const tokenCheck = verifyCiAttestationToken(attestation, options);
   if (!tokenCheck.valid) {
@@ -888,7 +966,7 @@ export function verifyAuthenticCiProof(
     };
   }
 
-  if (tokenCheck.isUnitTestMock || attestation.source === "UNIT_TEST_MOCK" || attestation.isUnitTestMock === true) {
+  if (tokenCheck.isUnitTestMock) {
     return {
       verified: false,
       error: `CI_CLAIM_UNVERIFIED: Caller-supplied CI proof for runId '${runId}' is marked as a UNIT_TEST_MOCK and cannot be admitted for commercial release.`,

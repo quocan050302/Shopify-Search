@@ -3,7 +3,7 @@
  * Scenarios C01 - C24
  */
 
-import { describe, it, expect, beforeEach, afterEach } from "vitest";
+import { describe, it, expect, beforeEach, afterEach, afterAll } from "vitest";
 import fs from "node:fs";
 import path from "node:path";
 import crypto from "node:crypto";
@@ -71,9 +71,6 @@ describe("KH-02 V12.4.3.7.17 Group C: CSV Row Binding & Demand Lineage", () => {
 
   afterEach(async () => {
     try {
-      if (fs.existsSync(csvFilePath)) fs.unlinkSync(csvFilePath);
-    } catch {}
-    try {
       await prisma.productDemandObservation.deleteMany({
         where: { productId: { startsWith: "prod_c_test_" } },
       });
@@ -83,6 +80,12 @@ describe("KH-02 V12.4.3.7.17 Group C: CSV Row Binding & Demand Lineage", () => {
       await prisma.researchProduct.deleteMany({
         where: { id: { startsWith: "prod_c_test_" } },
       });
+    } catch {}
+  });
+
+  afterAll(async () => {
+    try {
+      if (fs.existsSync(csvFilePath)) fs.unlinkSync(csvFilePath);
     } catch {}
   });
 
