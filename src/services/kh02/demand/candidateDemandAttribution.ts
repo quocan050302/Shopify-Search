@@ -73,7 +73,7 @@ const ACCESSORY_TOKENS = new Set([
 export function isAuthenticVerifiedCandidateAlias(
   alias: VerifiedCandidateAlias,
   context: CandidateAttributionContext
-): { valid: boolean; reason?: string; approvalRecord?: CandidateAliasApprovalRecord; isTestOnly?: boolean } {
+): { valid: boolean; reason?: string; approvalRecord?: CandidateAliasApprovalRecord; isTestOnly?: boolean; businessEligible?: boolean } {
   if (!alias || typeof alias !== "object") {
     return { valid: false, reason: "Alias descriptor is missing or not an object." };
   }
@@ -108,6 +108,7 @@ export function isAuthenticVerifiedCandidateAlias(
     region: context.region,
     asOfTimestamp: context.asOfTimestamp,
     observationKeyword: alias.aliasKeyword,
+    scope: context.evaluationScope,
   });
 
   if (!verification.valid) {
@@ -117,10 +118,19 @@ export function isAuthenticVerifiedCandidateAlias(
     };
   }
 
+  // In explicit BUSINESS scope, test-only records are strictly ineligible for commercial demand attribution
+  if (context.evaluationScope === "BUSINESS" && (verification.isTestOnly || !verification.businessEligible)) {
+    return {
+      valid: false,
+      reason: `Independent durable alias authority check failed (TEST_ONLY_ALIAS): Record is marked TEST_ONLY and ineligible for commercial business demand attribution.`,
+    };
+  }
+
   return {
     valid: true,
     approvalRecord: verification.record,
     isTestOnly: verification.isTestOnly,
+    businessEligible: verification.businessEligible,
   };
 }
 
@@ -137,6 +147,7 @@ export interface CandidateAttributionContext {
   strictChronological?: boolean;
   verifiedAliases?: VerifiedCandidateAlias[];
   strictProvenance?: boolean;
+  evaluationScope?: "ENGINEERING" | "BUSINESS";
 }
 
 export interface CandidateObservationRecord {
@@ -169,6 +180,7 @@ export interface CandidateAttributionResult {
   matchedAlias?: VerifiedCandidateAlias | null;
   approvalRecord?: CandidateAliasApprovalRecord | null;
   isTestOnly?: boolean;
+  businessEligible?: boolean;
 }
 
 /**
@@ -509,6 +521,7 @@ export function classifyCandidateObservationAttribution(
             matchedAlias: alias,
             approvalRecord: aliasAuth.approvalRecord || null,
             isTestOnly: aliasAuth.isTestOnly || false,
+            businessEligible: aliasAuth.businessEligible,
           };
         } else {
           return {

@@ -939,7 +939,7 @@ describe("KH-02 V12.4.3.7.19.3.2: Durable Alias Authorization & Exact-SHA Eviden
     expect(report.missingMandatoryFiles).toContain("tests/unit/kh02/missing_suite.test.ts");
   });
 
-  it("A42: TestSuiteEvidenceValidator: valid CI provider proof elevates verification level to CI_PROVIDER_VERIFIED", () => {
+  it("A42: TestSuiteEvidenceValidator: unverified caller-supplied runId rejected as CI_CLAIM_UNVERIFIED without genuine attestation", () => {
     const commitSha = "36d559465ece26ac872144d61c58117130ac00c9";
     const fakeLog = "Test Files  1 passed (1)\nTests  10 passed (10)\n ✓ tests/unit/kh02/foo.test.ts";
     const report = validateTestSuiteEvidenceInputHelper({
@@ -951,6 +951,39 @@ describe("KH-02 V12.4.3.7.19.3.2: Durable Alias Authorization & Exact-SHA Eviden
         runId: "1234567890",
         checkSuiteId: "chk_987654",
         commitSha: commitSha,
+      },
+    });
+
+    // Unverified runId assertion must NOT elevate to CI_PROVIDER_VERIFIED
+    expect(report.valid).toBe(false);
+    expect(report.ciVerified).toBe(false);
+    expect(report.rejectionReasons.some((r) => r.includes("CI_CLAIM_UNVERIFIED"))).toBe(true);
+  });
+
+  it("A42b: TestSuiteEvidenceValidator: authentic verified CI attestation elevates verification level to CI_PROVIDER_VERIFIED", () => {
+    const commitSha = "36d559465ece26ac872144d61c58117130ac00c9";
+    const fakeLog = "Test Files  1 passed (1)\nTests  10 passed (10)\n ✓ tests/unit/kh02/foo.test.ts";
+    const report = validateTestSuiteEvidenceInputHelper({
+      stdout: fakeLog,
+      checkoutSha: commitSha,
+      expectedCheckoutSha: commitSha,
+      ciProviderProof: {
+        provider: "github-actions",
+        runId: "1234567890",
+        commitSha: commitSha,
+        verified: true,
+        authenticatedProof: {
+          provider: "github-actions",
+          repository: "quocan050302/Shopify-Search",
+          runId: "1234567890",
+          commitSha: commitSha,
+          branch: "feature/kh02-walmart-us-jina-reader-v12.4.3.5.1",
+          status: "completed",
+          conclusion: "success",
+          event: "push",
+          verifiedAt: new Date().toISOString(),
+          verifierPrincipal: "github-actions-oidc",
+        },
       },
     });
 

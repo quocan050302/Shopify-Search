@@ -57,6 +57,12 @@ export interface ReleaseEvidenceInput {
     configured: boolean;
     runStatus?: "SUCCESS" | "FAILURE" | "PENDING" | "NOT_RUN";
     workflowName?: string;
+    runId?: string;
+    commitSha?: string;
+    verifiedProof?: {
+      verified: boolean;
+      attestation?: any;
+    };
   };
   backtestResults?: {
     devHistoricalPassed: boolean;
@@ -107,7 +113,7 @@ const PRODUCTION_HOST_PATTERNS = [
 export function sanitizeReleaseLog(text: string | null | undefined): string {
   if (!text) return "";
   return text
-    .replace(/(?:(?:api[_-]?key|token|secret|password)[=:]\s*|bearer\s+)([a-zA-Z0-9_\-\.]{8,})/gi, "REDACTED_SECRET")
+    .replace(/(?:(?:api[_-]?key|signing[_-]?key|key|token|secret|password)[=:]\s*|bearer\s+)([a-zA-Z0-9_\-\.]{8,})/gi, "REDACTED_SECRET")
     .replace(/\b[a-f0-9]{32,64}\b/gi, (match) => {
       // Retain 64-hex SHA-256 digests, but redact 32-hex API keys
       if (match.length === 64) return match;
@@ -273,8 +279,14 @@ export function evaluateReleaseEvidence(
     ciStatus = "CI_NOT_RUN";
     reasons.push("Remote CI workflow configured but not run for tested commit.");
   } else if (input.ciStatus.runStatus === "SUCCESS") {
-    ciStatus = "CI_PASS";
-    reasons.push("Remote CI workflow run succeeded.");
+    if (input.ciStatus.verifiedProof?.verified === true) {
+      ciStatus = "CI_PASS";
+      reasons.push("Remote CI workflow run succeeded with verified provider attestation.");
+    } else {
+      ciStatus = "CI_NOT_RUN";
+      reasons.push("Caller-asserted CI SUCCESS rejected: unverified CI claim without authentic provider attestation (CI_CLAIM_UNVERIFIED).");
+      blockerList.push("CI_CLAIM_UNVERIFIED");
+    }
   } else if (input.ciStatus.runStatus === "FAILURE") {
     ciStatus = "CI_FAIL";
     reasons.push("Remote CI workflow run failed.");

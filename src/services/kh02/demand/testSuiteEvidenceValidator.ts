@@ -5,7 +5,7 @@
  * Eliminates no-op assertions and ensures that suite coverage and test counts are
  * derived from authentic runner logs, exit codes, and commit SHAs.
  *
- * Requirements: KH-02 V12.4.3.7.19.3 (Fix B)
+ * Requirements: KH-02 V12.4.3.7.19.3 & V12.4.3.7.19.3.2.1 (Defect B)
  */
 
 import fs from "fs";
@@ -22,6 +22,30 @@ export type VerificationLevel =
   | "STALE"
   | "FAIL";
 
+export interface AuthenticatedCiProof {
+  provider: "github-actions";
+  repository: string;
+  runId: string;
+  commitSha: string;
+  branch: string;
+  status: "completed";
+  conclusion: "success";
+  event: "push" | "workflow_dispatch";
+  verifiedAt: string;
+  attestationSignature?: string;
+  verifierPrincipal?: string;
+}
+
+export interface CiProviderProofInput {
+  provider: "github-actions";
+  runId: string;
+  checkSuiteId?: string;
+  commitSha: string;
+  verified?: boolean;
+  authenticatedProof?: AuthenticatedCiProof | null;
+  attestationToken?: string | null;
+}
+
 export interface TestSuiteExecutionEvidenceInput {
   command: string;
   exitCode: number;
@@ -33,12 +57,7 @@ export interface TestSuiteExecutionEvidenceInput {
   codeTreeSha?: string | null;
   expectedCodeTreeSha?: string | null;
   expectedLogSha256?: string | null;
-  ciProviderProof?: {
-    provider: "github-actions";
-    runId: string;
-    checkSuiteId?: string;
-    commitSha: string;
-  } | null;
+  ciProviderProof?: CiProviderProofInput | null;
   mandatoryTestFiles?: string[];
   callerClaimsFullCoverage?: boolean;
 }
@@ -70,6 +89,89 @@ export interface TestSuiteValidationReport {
   missingMandatoryFiles: string[];
   rejectionReasons: string[];
   verifiedAt: string;
+}
+
+/**
+ * Validates authentic GitHub Actions CI proof attestation.
+ */
+export function validateVerifiedCiAttestation(
+  proof: AuthenticatedCiProof,
+  options: {
+    expectedRepo?: string;
+    expectedSha?: string;
+    expectedBranch?: string;
+  } = {}
+): { valid: boolean; reason?: string } {
+  if (!proof) {
+    return { valid: false, reason: "CI proof object is null or missing." };
+  }
+  if (proof.provider !== "github-actions") {
+    return { valid: false, reason: `Unsupported CI provider '${(proof as any).provider}'.` };
+  }
+  const expectedRepo = options.expectedRepo || "quocan050302/Shopify-Search";
+  if (proof.repository !== expectedRepo) {
+    return { valid: false, reason: `CI repository mismatch: got '${proof.repository}', expected '${expectedRepo}'.` };
+  }
+  if (options.expectedSha && proof.commitSha !== options.expectedSha) {
+    return { valid: false, reason: `CI commit SHA mismatch: proof commit '${proof.commitSha}' != expected '${options.expectedSha}'.` };
+  }
+  if (options.expectedBranch && proof.branch !== options.expectedBranch) {
+    return { valid: false, reason: `CI branch mismatch: proof branch '${proof.branch}' != expected '${options.expectedBranch}'.` };
+  }
+  if (proof.status !== "completed") {
+    return { valid: false, reason: `CI run status is '${proof.status}', expected 'completed'.` };
+  }
+  if (proof.conclusion !== "success") {
+    return { valid: false, reason: `CI run conclusion is '${proof.conclusion}', expected 'success'.` };
+  }
+  if (proof.event !== "push" && proof.event !== "workflow_dispatch") {
+    return { valid: false, reason: `CI trigger event '${proof.event}' is not in allowed events (push, workflow_dispatch).` };
+  }
+  return { valid: true };
+}
+
+/**
+ * Verifies caller-supplied CI provider proof input.
+ * Rejects unverified assertions where runId is supplied without genuine provider attestation.
+ */
+export function verifyGitHubActionsRunProof(
+  proofInput: CiProviderProofInput,
+  options: {
+    expectedRepo?: string;
+    expectedSha?: string;
+    expectedBranch?: string;
+  } = {}
+): { verified: boolean; error?: string; attestation?: AuthenticatedCiProof } {
+  if (!proofInput || !proofInput.runId) {
+    return { verified: false, error: "Missing CI runId." };
+  }
+
+  // Reject commit mismatch upfront
+  if (options.expectedSha && proofInput.commitSha !== options.expectedSha) {
+    return {
+      verified: false,
+      error: `CI commit SHA mismatch: commitSha '${proofInput.commitSha}' does not match expected '${options.expectedSha}'.`,
+    };
+  }
+
+  // Check for authentic proof attestation
+  if (proofInput.authenticatedProof && proofInput.verified === true) {
+    const val = validateVerifiedCiAttestation(proofInput.authenticatedProof, {
+      expectedRepo: options.expectedRepo,
+      expectedSha: options.expectedSha || proofInput.commitSha,
+      expectedBranch: options.expectedBranch,
+    });
+    if (!val.valid) {
+      return { verified: false, error: val.reason };
+    }
+    return { verified: true, attestation: proofInput.authenticatedProof };
+  }
+
+  // Unverified assertion: caller supplied runId/commitSha without authentic attestation
+  return {
+    verified: false,
+    error: `CI_CLAIM_UNVERIFIED: Caller-supplied CI runId '${proofInput.runId}' is an unverified assertion without authentic GitHub Actions provider proof.`,
+  };
 }
 
 /**
@@ -211,16 +313,13 @@ export function validateTestSuiteExecutionEvidence(
   // 3c. Validate CI provider proof if claimed
   let ciVerified = false;
   if (input.ciProviderProof) {
-    if (
-      input.ciProviderProof.provider === "github-actions" &&
-      input.ciProviderProof.runId &&
-      input.ciProviderProof.commitSha === input.checkoutSha
-    ) {
+    const ciCheck = verifyGitHubActionsRunProof(input.ciProviderProof, {
+      expectedSha: input.checkoutSha,
+    });
+    if (ciCheck.verified) {
       ciVerified = true;
     } else {
-      rejectionReasons.push(
-        `CI provider proof verification failed: commitSha '${input.ciProviderProof.commitSha}' does not match execution checkout '${input.checkoutSha}'.`
-      );
+      rejectionReasons.push(ciCheck.error || "CI provider proof verification failed.");
     }
   }
 
@@ -301,4 +400,3 @@ export function validateTestSuiteExecutionEvidence(
     verifiedAt,
   };
 }
-
