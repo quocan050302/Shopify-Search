@@ -1,0 +1,91 @@
+{
+  "version": "12.4.3.7.19.3.2",
+  "generatedAt": "2026-11-06T06:56:00.000Z",
+  "codeSha": "5c331c1dae3ec60cf5b58c67c3623595743488f4",
+  "treeSha": "e0dd11c4c42b254c3487815b13c88f3ee75c29fe",
+  "branch": "feature/kh02-walmart-us-jina-reader-v12.4.3.5.1",
+  "reports": [
+    {
+      "fileName": "KH02_V12_4_3_7_19_3_2_ALIAS_AUTHORITY_INVENTORY_2026-11-06.md",
+      "bytes": 6134,
+      "sha256": "f970be7356f31dc1e963d50e56820bd0d6e15c158a777f34aae78d7a847bafd3"
+    },
+    {
+      "fileName": "KH02_V12_4_3_7_19_3_2_ALIAS_APPROVAL_SECURITY_MATRIX_2026-11-06.json",
+      "bytes": 12317,
+      "sha256": "0db11700a5ec032ab3e4f651a5a2c469ab0c964e357682f353aa5e0441d44816"
+    },
+    {
+      "fileName": "KH02_V12_4_3_7_19_3_2_PRODUCT_IDENTITY_AND_WRITER_AUDIT_2026-11-06.json",
+      "bytes": 3224,
+      "sha256": "7c789be0ef76e1ce724d0fb618713422933b3debaaa1f1c98cf86b33563e8209"
+    },
+    {
+      "fileName": "KH02_V12_4_3_7_19_3_2_FULL_TEST_COMMAND_MATRIX_2026-11-06.json",
+      "bytes": 2894,
+      "sha256": "587c46a683337061575fab30692cf18ed389e816157088edc97b4078baaef3b1"
+    },
+    {
+      "fileName": "KH02_V12_4_3_7_19_3_2_CONCURRENCY_DURABILITY_PROOF_2026-11-06.json",
+      "bytes": 1225,
+      "sha256": "699c5ea5f952c01981306e8f6c21db5d14870ea95c4ba339c4a6ba2a463a59bb"
+    },
+    {
+      "fileName": "KH02_V12_4_3_7_19_3_2_CANDIDATE_READBACK_2026-11-06.json",
+      "bytes": 2755,
+      "sha256": "36308c22ccb57607588d295155290d842446ac0efc4b3d1112ac669551ba9b45"
+    },
+    {
+      "fileName": "KH02_V12_4_3_7_19_3_2_BACKTEST_DEV_HOLDOUT_2026-11-06.json",
+      "bytes": 794,
+      "sha256": "d0ffffb3274bb8e67113adcf3ad0b262690eac113787fdbd388204bbdd9d1400"
+    },
+    {
+      "fileName": "KH02_V12_4_3_7_19_3_2_EXACT_SHA_ATTESTATION_2026-11-06.json",
+      "bytes": 549,
+      "sha256": "7e98a4558248892998a645de735fdc481f70916efa074b086d03a45f0cdc2284"
+    },
+    {
+      "fileName": "KH02_V12_4_3_7_19_3_2_RELEASE_TRUTH_2026-11-06.json",
+      "bytes": 957,
+      "sha256": "68163fc931aafbdf726d9d952df6d756b83b676e0f4c78dffe11e2d22e65e794"
+    }
+  ],
+  "logs": [
+    {
+      "fileName": "reports/kh02/logs/v19_3_2/e1_tsc_check.log",
+      "bytes": 87,
+      "sha256": "3e614c9654adcd51a3eb37bd26ca73307b2e75d76ba22cab6af9fbdedecdaa78"
+    },
+    {
+      "fileName": "reports/kh02/logs/v19_3_2/e2_whitespace_check.log",
+      "bytes": 92,
+      "sha256": "cf4c7b86c2c4092f697a2256df0ab74331ef89ecebb75188ce9b1dfa39899c5b"
+    },
+    {
+      "fileName": "reports/kh02/logs/v19_3_2/e3_targeted_suites.log",
+      "bytes": 2982,
+      "sha256": "89c8e90d7d4d7271b5b2b21575bbe62cbc1d5da1a95413bc05ce695ad40b65db"
+    },
+    {
+      "fileName": "reports/kh02/logs/v19_3_2/e4_unit_test.log",
+      "bytes": 59968,
+      "sha256": "cdf3c2633c81b4f38bd6368c6a3729f68197182ec8d146537af89b6b18d67b2e"
+    },
+    {
+      "fileName": "reports/kh02/logs/v19_3_2/e5_integration_test.log",
+      "bytes": 14320,
+      "sha256": "7290d82e68b75bc7d35b53e4fb64aa57311c095560b4c1f1188e3b2f585884af"
+    },
+    {
+      "fileName": "reports/kh02/logs/v19_3_2/e6_kh01_verify.log",
+      "bytes": 8546,
+      "sha256": "9a9dbcd81a7a8e1b499393250d57cebf4d8a17662f9f86d5a2c385962bee4845"
+    },
+    {
+      "fileName": "reports/kh02/logs/v19_3_2/e8_backtest.log",
+      "bytes": 388,
+      "sha256": "17157c5ad0363e0e4d4465fea41a4eca3b2c3207f4e890b26718dfb8faffa7a2"
+    }
+  ]
+}

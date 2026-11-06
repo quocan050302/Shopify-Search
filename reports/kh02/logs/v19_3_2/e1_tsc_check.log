@@ -1,0 +1,3 @@
+Command: npx tsc --noEmit
+Exit Code: 0
+Output: Clean TypeScript compilation, 0 errors.

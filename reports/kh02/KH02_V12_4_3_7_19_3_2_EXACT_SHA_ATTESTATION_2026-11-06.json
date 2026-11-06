@@ -1,0 +1,15 @@
+{
+  "version": "12.4.3.7.19.3.2",
+  "generatedAt": "2026-11-06T06:55:35.000Z",
+  "branch": "feature/kh02-walmart-us-jina-reader-v12.4.3.5.1",
+  "parentCommitSha": "d2398d27b050e523ad0efcb95619375a40bd8add",
+  "c1CommitSha": "5c331c1dae3ec60cf5b58c67c3623595743488f4",
+  "c1TreeSha": "e0dd11c4c42b254c3487815b13c88f3ee75c29fe",
+  "c1WorkingTreeClean": true,
+  "verificationIntegrity": {
+    "zeroWorkingTreeMutationDuringGates": true,
+    "exactCodeTreeShaVerified": true,
+    "logHashesVerified": true,
+    "noSurpriseContractPreserved": true
+  }
+}

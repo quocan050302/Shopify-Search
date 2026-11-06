@@ -1,0 +1,24 @@
+{
+  "version": "12.4.3.7.19.3.2",
+  "generatedAt": "2026-11-06T06:55:25.000Z",
+  "codeSha": "5c331c1dae3ec60cf5b58c67c3623595743488f4",
+  "treeSha": "e0dd11c4c42b254c3487815b13c88f3ee75c29fe",
+  "script": "scripts/kh02/runBacktestV12_4_3_4_2.ts",
+  "exitCode": 0,
+  "policyScenario": {
+    "verdict": "PASS",
+    "description": "Deterministic backtest policy scenario validates mathematical criteria on valid synthetic fixtures in test scope."
+  },
+  "devSet": {
+    "verdict": "INSUFFICIENT_HISTORICAL_EVIDENCE",
+    "shortlistCount": "0/0",
+    "falsePassCount": 0
+  },
+  "holdoutSet": {
+    "verdict": "INSUFFICIENT_HISTORICAL_EVIDENCE",
+    "shortlistCount": "3/3",
+    "falsePassCount": 0
+  },
+  "overallVerdict": "INSUFFICIENT_HISTORICAL_EVIDENCE",
+  "honestNonInflationVerified": true
+}

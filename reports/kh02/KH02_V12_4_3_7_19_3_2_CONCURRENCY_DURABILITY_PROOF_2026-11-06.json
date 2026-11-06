@@ -1,0 +1,19 @@
+{
+  "version": "12.4.3.7.19.3.2",
+  "generatedAt": "2026-11-06T06:55:00.000Z",
+  "codeSha": "5c331c1dae3ec60cf5b58c67c3623595743488f4",
+  "treeSha": "e0dd11c4c42b254c3487815b13c88f3ee75c29fe",
+  "concurrencyDurabilityAudit": {
+    "atomicLockMechanism": "PID_AWARE_FILE_MUTEX",
+    "lockPath": "data/candidate_aliases/.candidate_alias_ledger.lock",
+    "ledgerPath": "data/candidate_aliases/.candidate_alias_ledger.json",
+    "deadLockRecoveryTested": true,
+    "deadLockRecoveryBehavior": "Expired locks with dead PIDs on host are safely unlinked and reclaimed without manual intervention.",
+    "monotonicRevocationVerified": true,
+    "monotonicRevocationBehavior": "Once an approvalId is revoked, subsequent writes with unrevoked status remain revoked in the durable ledger.",
+    "conflictDetectionVerified": true,
+    "conflictDetectionBehavior": "Attempting to persist an existing approvalId with a different canonical payload digest triggers CONFLICT_ERROR.",
+    "idempotentDuplicateHandling": "Identical payloads on the same approvalId return IDEMPOTENT_SKIP with success true.",
+    "safeFallbackOnCorruptLedger": "Malformed ledger JSON returns null gracefully without uncaught exceptions or process crash."
+  }
+}

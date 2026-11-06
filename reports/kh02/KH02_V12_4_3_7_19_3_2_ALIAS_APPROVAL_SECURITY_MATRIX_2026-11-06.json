@@ -1,0 +1,348 @@
+{
+  "version": "12.4.3.7.19.3.2",
+  "generatedAt": "2026-11-06T06:54:15.000Z",
+  "codeSha": "5c331c1dae3ec60cf5b58c67c3623595743488f4",
+  "treeSha": "e0dd11c4c42b254c3487815b13c88f3ee75c29fe",
+  "adversarialMatrixTotal": 42,
+  "adversarialMatrixPassed": 42,
+  "adversarialMatrixFailed": 0,
+  "testSuite": "tests/unit/kh02/v12_4_3_7_19_3_2_DurableAliasAuthorization.test.ts",
+  "cases": [
+    {
+      "testId": "A01",
+      "name": "Plain string approvedBy without durable signed record fails with ALIAS_NOT_FOUND",
+      "decisionCode": "ALIAS_NOT_FOUND",
+      "expectedStatus": "REJECTED",
+      "actualStatus": "REJECTED",
+      "failClosedVerified": true
+    },
+    {
+      "testId": "A02",
+      "name": "Spoofed approver string on fabricated record without registered issuer fails with APPROVAL_UNTRUSTED",
+      "decisionCode": "APPROVAL_UNTRUSTED",
+      "expectedStatus": "REJECTED",
+      "actualStatus": "REJECTED",
+      "failClosedVerified": true
+    },
+    {
+      "testId": "A03",
+      "name": "Fabricated URN/reference prefix not in ledger fails with ALIAS_NOT_FOUND",
+      "decisionCode": "ALIAS_NOT_FOUND",
+      "expectedStatus": "REJECTED",
+      "actualStatus": "REJECTED",
+      "failClosedVerified": true
+    },
+    {
+      "testId": "A04",
+      "name": "Valid HMAC-SHA256 signature accepted and verifies successfully",
+      "decisionCode": "VERIFIED_ALIAS",
+      "expectedStatus": "ACCEPTED",
+      "actualStatus": "ACCEPTED",
+      "failClosedVerified": true
+    },
+    {
+      "testId": "A05",
+      "name": "Tampered canonical payload byte fails digest verification with TAMPERED_PAYLOAD",
+      "decisionCode": "TAMPERED_PAYLOAD",
+      "expectedStatus": "REJECTED",
+      "actualStatus": "REJECTED",
+      "failClosedVerified": true
+    },
+    {
+      "testId": "A06",
+      "name": "Tenant/workspace mismatch rejected with SCOPE_MISMATCH",
+      "decisionCode": "SCOPE_MISMATCH",
+      "expectedStatus": "REJECTED",
+      "actualStatus": "REJECTED",
+      "failClosedVerified": true
+    },
+    {
+      "testId": "A07",
+      "name": "CandidateId mismatch rejected with SCOPE_MISMATCH",
+      "decisionCode": "SCOPE_MISMATCH",
+      "expectedStatus": "REJECTED",
+      "actualStatus": "REJECTED",
+      "failClosedVerified": true
+    },
+    {
+      "testId": "A08",
+      "name": "Canonical productId mismatch rejected with PRODUCT_IDENTITY_MISMATCH",
+      "decisionCode": "PRODUCT_IDENTITY_MISMATCH",
+      "expectedStatus": "REJECTED",
+      "actualStatus": "REJECTED",
+      "failClosedVerified": true
+    },
+    {
+      "testId": "A09",
+      "name": "ResearchRunId mismatch rejected with RUN_SCOPE_MISMATCH",
+      "decisionCode": "RUN_SCOPE_MISMATCH",
+      "expectedStatus": "REJECTED",
+      "actualStatus": "REJECTED",
+      "failClosedVerified": true
+    },
+    {
+      "testId": "A10",
+      "name": "Region mismatch (e.g. GB vs US) rejected with REGION_MISMATCH",
+      "decisionCode": "REGION_MISMATCH",
+      "expectedStatus": "REJECTED",
+      "actualStatus": "REJECTED",
+      "failClosedVerified": true
+    },
+    {
+      "testId": "A11",
+      "name": "Observation keyword does not match approved aliasKeyword => rejected with KEYWORD_MISMATCH",
+      "decisionCode": "KEYWORD_MISMATCH",
+      "expectedStatus": "REJECTED",
+      "actualStatus": "REJECTED",
+      "failClosedVerified": true
+    },
+    {
+      "testId": "A12",
+      "name": "SKU variant / product accessory demoted; accessory query cannot claim parent demand",
+      "decisionCode": "EXCLUDED_KEYWORD_MISMATCH",
+      "expectedStatus": "REJECTED",
+      "actualStatus": "REJECTED",
+      "failClosedVerified": true
+    },
+    {
+      "testId": "A13",
+      "name": "Future effective date rejected with FUTURE_APPROVAL",
+      "decisionCode": "FUTURE_APPROVAL",
+      "expectedStatus": "REJECTED",
+      "actualStatus": "REJECTED",
+      "failClosedVerified": true
+    },
+    {
+      "testId": "A14",
+      "name": "Expired approval rejected with EXPIRED",
+      "decisionCode": "EXPIRED",
+      "expectedStatus": "REJECTED",
+      "actualStatus": "REJECTED",
+      "failClosedVerified": true
+    },
+    {
+      "testId": "A15",
+      "name": "Revoked approval fails with REVOKED and monotonic revocation cannot be reversed",
+      "decisionCode": "REVOKED",
+      "expectedStatus": "REJECTED",
+      "actualStatus": "REJECTED",
+      "failClosedVerified": true
+    },
+    {
+      "testId": "A16",
+      "name": "Issuer key not registered in Trust Registry fails with APPROVAL_UNTRUSTED",
+      "decisionCode": "APPROVAL_UNTRUSTED",
+      "expectedStatus": "REJECTED",
+      "actualStatus": "REJECTED",
+      "failClosedVerified": true
+    },
+    {
+      "testId": "A17",
+      "name": "Compromised or revoked signing key fails with KEY_REVOKED",
+      "decisionCode": "KEY_REVOKED",
+      "expectedStatus": "REJECTED",
+      "actualStatus": "REJECTED",
+      "failClosedVerified": true
+    },
+    {
+      "testId": "A18",
+      "name": "Same approvalId with different payload returns CONFLICT; identical duplicate returns IDEMPOTENT_SKIP",
+      "decisionCode": "CONFLICT_ERROR",
+      "expectedStatus": "REJECTED_ON_CONFLICT",
+      "actualStatus": "REJECTED_ON_CONFLICT",
+      "failClosedVerified": true
+    },
+    {
+      "testId": "A19",
+      "name": "Candidate null canonicalProductId + observation foreign productId => KEYWORD_ONLY_UNBOUND",
+      "decisionCode": "KEYWORD_ONLY_UNBOUND",
+      "expectedStatus": "REJECTED",
+      "actualStatus": "REJECTED",
+      "failClosedVerified": true
+    },
+    {
+      "testId": "A20",
+      "name": "Candidate null canonicalProductId + observation null productId + matching keyword => EXACT_CANDIDATE_KEYWORD_MATCH",
+      "decisionCode": "EXACT_CANDIDATE_KEYWORD_MATCH",
+      "expectedStatus": "ACCEPTED",
+      "actualStatus": "ACCEPTED",
+      "failClosedVerified": true
+    },
+    {
+      "testId": "A21",
+      "name": "Candidate has canonicalProductId, observation has null productId without evidenceReference => INSUFFICIENT_CANDIDATE_IDENTITY",
+      "decisionCode": "INSUFFICIENT_CANDIDATE_IDENTITY",
+      "expectedStatus": "REJECTED",
+      "actualStatus": "REJECTED",
+      "failClosedVerified": true
+    },
+    {
+      "testId": "A22",
+      "name": "Candidate has canonicalProductId, observation has null productId but authentic evidenceReference => attributable",
+      "decisionCode": "EXACT_CANDIDATE_KEYWORD_MATCH",
+      "expectedStatus": "ACCEPTED",
+      "actualStatus": "ACCEPTED",
+      "failClosedVerified": true
+    },
+    {
+      "testId": "A23",
+      "name": "Conflicting non-null productIds (prod_A vs prod_B) => EXCLUDED_CROSS_PRODUCT",
+      "decisionCode": "EXCLUDED_CROSS_PRODUCT",
+      "expectedStatus": "REJECTED",
+      "actualStatus": "REJECTED",
+      "failClosedVerified": true
+    },
+    {
+      "testId": "A24",
+      "name": "UAHPET demographic readback: unaliased generic queries are rejected as EXCLUDED_UNVERIFIED_ALIAS",
+      "decisionCode": "EXCLUDED_UNVERIFIED_ALIAS",
+      "expectedStatus": "REJECTED",
+      "actualStatus": "REJECTED",
+      "failClosedVerified": true
+    },
+    {
+      "testId": "A25",
+      "name": "UAHPET demographic readback: exact brand+functional title is accepted",
+      "decisionCode": "EXACT_CANDIDATE_KEYWORD_MATCH",
+      "expectedStatus": "ACCEPTED",
+      "actualStatus": "ACCEPTED",
+      "failClosedVerified": true
+    },
+    {
+      "testId": "A26",
+      "name": "KittySpout demographic readback: no cross-borrowing from generic fountain or UAHPET",
+      "decisionCode": "EXCLUDED_CROSS_PRODUCT",
+      "expectedStatus": "REJECTED",
+      "actualStatus": "REJECTED",
+      "failClosedVerified": true
+    },
+    {
+      "testId": "A27",
+      "name": "Cleaner / Hydroponics candidate readback: generic queries rejected with zero cross-borrowing",
+      "decisionCode": "EXCLUDED_UNVERIFIED_ALIAS",
+      "expectedStatus": "REJECTED",
+      "actualStatus": "REJECTED",
+      "failClosedVerified": true
+    },
+    {
+      "testId": "A28",
+      "name": "Commercial G15/G16 honest outcome: with generic queries excluded, UAHPET G15 remains INSUFFICIENT_EVIDENCE",
+      "decisionCode": "INSUFFICIENT_HISTORY",
+      "expectedStatus": "INSUFFICIENT_EVIDENCE",
+      "actualStatus": "INSUFFICIENT_EVIDENCE",
+      "failClosedVerified": true
+    },
+    {
+      "testId": "A29",
+      "name": "Provider fetch does not mutate candidate database directly; returns isolated observation records",
+      "decisionCode": "EXACT_CANDIDATE_KEYWORD_MATCH",
+      "expectedStatus": "MEMORY_ONLY",
+      "actualStatus": "MEMORY_ONLY",
+      "failClosedVerified": true
+    },
+    {
+      "testId": "A30",
+      "name": "Raw observation persistence requires candidate identity binding",
+      "decisionCode": "INSUFFICIENT_CANDIDATE_IDENTITY",
+      "expectedStatus": "REJECTED",
+      "actualStatus": "REJECTED",
+      "failClosedVerified": true
+    },
+    {
+      "testId": "A31",
+      "name": "Synthetic or fixture records in provider output are rejected as EXCLUDED_FIXTURE_OR_PROXY",
+      "decisionCode": "EXCLUDED_FIXTURE_OR_PROXY",
+      "expectedStatus": "REJECTED",
+      "actualStatus": "REJECTED",
+      "failClosedVerified": true
+    },
+    {
+      "testId": "A32",
+      "name": "Unverified provider receipt strings cannot substitute for signed alias approvals",
+      "decisionCode": "ALIAS_NOT_FOUND",
+      "expectedStatus": "REJECTED",
+      "actualStatus": "REJECTED",
+      "failClosedVerified": true
+    },
+    {
+      "testId": "A33",
+      "name": "Filter attributable observations correctly splits valid candidate points from unverified queries",
+      "decisionCode": "ATTRIBUTION_PARTITIONED",
+      "expectedStatus": "SPLIT_CLEANLY",
+      "actualStatus": "SPLIT_CLEANLY",
+      "failClosedVerified": true
+    },
+    {
+      "testId": "A34",
+      "name": "Concurrent atomic writes do not corrupt ledger state",
+      "decisionCode": "PERSISTED",
+      "expectedStatus": "PERSISTED",
+      "actualStatus": "PERSISTED",
+      "failClosedVerified": true
+    },
+    {
+      "testId": "A35",
+      "name": "Stale lock file with dead PID is reclaimed safely after expiry",
+      "decisionCode": "PERSISTED",
+      "expectedStatus": "RECLAIMED_AND_PERSISTED",
+      "actualStatus": "RECLAIMED_AND_PERSISTED",
+      "failClosedVerified": true
+    },
+    {
+      "testId": "A36",
+      "name": "Monotonic revocation: re-persisting unrevoked record fails to undo revocation",
+      "decisionCode": "REVOKED",
+      "expectedStatus": "REMAINS_REVOKED",
+      "actualStatus": "REMAINS_REVOKED",
+      "failClosedVerified": true
+    },
+    {
+      "testId": "A37",
+      "name": "Corrupted ledger file falls back safely without unhandled exception",
+      "decisionCode": "SAFE_FALLBACK",
+      "expectedStatus": "NULL_RETURNED",
+      "actualStatus": "NULL_RETURNED",
+      "failClosedVerified": true
+    },
+    {
+      "testId": "A38",
+      "name": "TestSuiteEvidenceValidator: code tree SHA parity check succeeds on exact match",
+      "decisionCode": "EXACT_CODE_TREE_VERIFIED",
+      "expectedStatus": "ACCEPTED",
+      "actualStatus": "ACCEPTED",
+      "failClosedVerified": true
+    },
+    {
+      "testId": "A39",
+      "name": "TestSuiteEvidenceValidator: code tree SHA mismatch fails with CODE_TREE_MUTATION",
+      "decisionCode": "CODE_TREE_MUTATION",
+      "expectedStatus": "REJECTED",
+      "actualStatus": "REJECTED",
+      "failClosedVerified": true
+    },
+    {
+      "testId": "A40",
+      "name": "TestSuiteEvidenceValidator: corrupted log byte detection rejects when computed SHA does not match expected",
+      "decisionCode": "CORRUPTED_LOG",
+      "expectedStatus": "REJECTED",
+      "actualStatus": "REJECTED",
+      "failClosedVerified": true
+    },
+    {
+      "testId": "A41",
+      "name": "TestSuiteEvidenceValidator: missing mandatory test files rejected as INCOMPLETE",
+      "decisionCode": "INCOMPLETE",
+      "expectedStatus": "REJECTED",
+      "actualStatus": "REJECTED",
+      "failClosedVerified": true
+    },
+    {
+      "testId": "A42",
+      "name": "TestSuiteEvidenceValidator: valid CI provider proof elevates verification level to CI_PROVIDER_VERIFIED",
+      "decisionCode": "CI_PROVIDER_VERIFIED",
+      "expectedStatus": "ACCEPTED",
+      "actualStatus": "ACCEPTED",
+      "failClosedVerified": true
+    }
+  ]
+}

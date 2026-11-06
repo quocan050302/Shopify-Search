@@ -1,0 +1,85 @@
+{
+  "version": "12.4.3.7.19.3.2",
+  "generatedAt": "2026-11-06T06:54:50.000Z",
+  "codeSha": "5c331c1dae3ec60cf5b58c67c3623595743488f4",
+  "treeSha": "e0dd11c4c42b254c3487815b13c88f3ee75c29fe",
+  "branch": "feature/kh02-walmart-us-jina-reader-v12.4.3.5.1",
+  "executionOrigin": "AUTHENTIC_LOCAL_EXECUTION",
+  "gates": [
+    {
+      "gateId": "E1",
+      "command": "npx tsc --noEmit",
+      "scope": "Full repository TypeScript compilation",
+      "status": "PASS",
+      "exitCode": 0,
+      "errorsCount": 0,
+      "logFile": "reports/kh02/logs/v19_3_2/e1_tsc_check.log"
+    },
+    {
+      "gateId": "E2",
+      "command": "git diff --check",
+      "scope": "Git diff whitespace and conflict marker check",
+      "status": "PASS",
+      "exitCode": 0,
+      "whitespaceErrors": 0,
+      "logFile": "reports/kh02/logs/v19_3_2/e2_whitespace_check.log"
+    },
+    {
+      "gateId": "E3",
+      "command": "npx vitest run tests/unit/kh02/v12_4_3_7_19_3_2_DurableAliasAuthorization.test.ts tests/unit/kh02/v12_4_3_7_19_3_1_UnifiedCandidateAttribution.test.ts tests/unit/kh02/v12_4_3_7_19_3_CandidateScopeAttribution.test.ts",
+      "scope": "Target V19.3.2 Durable Alias Authority & Attribution suites",
+      "status": "PASS",
+      "exitCode": 0,
+      "testFilesCount": 3,
+      "testsPassed": 92,
+      "testsFailed": 0,
+      "logFile": "reports/kh02/logs/v19_3_2/e3_targeted_suites.log"
+    },
+    {
+      "gateId": "E4",
+      "command": "npm run kh02:test:unit",
+      "scope": "Full KH-02 unit test suite (tests/unit/kh02)",
+      "status": "PASS",
+      "exitCode": 0,
+      "testFilesCount": 95,
+      "testsPassed": 2181,
+      "testsFailed": 0,
+      "logFile": "reports/kh02/logs/v19_3_2/e4_unit_test.log"
+    },
+    {
+      "gateId": "E5",
+      "command": "npm run kh02:test:integration",
+      "scope": "Full KH-02 integration test suite (tests/integration/kh02)",
+      "status": "PASS",
+      "exitCode": 0,
+      "testFilesCount": 16,
+      "testsPassed": 77,
+      "testsFailed": 0,
+      "logFile": "reports/kh02/logs/v19_3_2/e5_integration_test.log"
+    },
+    {
+      "gateId": "E6",
+      "command": "npm run kh01:verify",
+      "scope": "KH-01 regression verification",
+      "status": "PASS",
+      "exitCode": 0,
+      "testFilesCount": 5,
+      "testsPassed": 69,
+      "testsFailed": 0,
+      "logFile": "reports/kh02/logs/v19_3_2/e6_kh01_verify.log"
+    },
+    {
+      "gateId": "E8",
+      "command": "npx tsx scripts/kh02/runBacktestV12_4_3_4_2.ts",
+      "scope": "Backtest policy scenario replay and dev/holdout split",
+      "status": "PASS",
+      "exitCode": 0,
+      "policyScenarioVerdict": "PASS",
+      "devVerdict": "INSUFFICIENT_HISTORICAL_EVIDENCE",
+      "holdoutVerdict": "INSUFFICIENT_HISTORICAL_EVIDENCE",
+      "logFile": "reports/kh02/logs/v19_3_2/e8_backtest.log"
+    }
+  ],
+  "totalPassingTestsAcrossAllSuites": 2327,
+  "totalFailingTests": 0
+}

@@ -1,0 +1,78 @@
+{
+  "version": "12.4.3.7.19.3.2",
+  "generatedAt": "2026-11-06T06:54:40.000Z",
+  "codeSha": "5c331c1dae3ec60cf5b58c67c3623595743488f4",
+  "treeSha": "e0dd11c4c42b254c3487815b13c88f3ee75c29fe",
+  "classificationsAudit": {
+    "totalClassifications": 12,
+    "classifications": [
+      {
+        "classification": "EXACT_CANDIDATE_KEYWORD_MATCH",
+        "isAttributable": true,
+        "description": "Observation matches authorized canonical title of the candidate with benign punctuation, case, and whitespace tolerance."
+      },
+      {
+        "classification": "VERIFIED_EXPLICIT_ALIAS_MATCH",
+        "isAttributable": true,
+        "description": "Observation matches an authentic, signed, non-revoked CandidateAliasApprovalRecord in the durable ledger."
+      },
+      {
+        "classification": "EXCLUDED_KEYWORD_MISMATCH",
+        "isAttributable": false,
+        "description": "Observation keyword is completely distinct or represents an accessory / variant not mapped to candidate."
+      },
+      {
+        "classification": "EXCLUDED_UNVERIFIED_ALIAS",
+        "isAttributable": false,
+        "description": "Observation keyword represents a broad generic query or category search without an authentic signed alias record."
+      },
+      {
+        "classification": "EXCLUDED_CROSS_PRODUCT",
+        "isAttributable": false,
+        "description": "Observation specifies a canonical productId that conflicts with candidate canonicalProductId."
+      },
+      {
+        "classification": "EXCLUDED_WORKSPACE_OR_RUN",
+        "isAttributable": false,
+        "description": "Observation belongs to a different workspace tenant or researchRunId."
+      },
+      {
+        "classification": "EXCLUDED_REGION",
+        "isAttributable": false,
+        "description": "Observation region differs from candidate target market (e.g. GB vs US)."
+      },
+      {
+        "classification": "EXCLUDED_MISSING_PROVENANCE",
+        "isAttributable": false,
+        "description": "Observation lacks required authentic origin proof under strict provenance."
+      },
+      {
+        "classification": "EXCLUDED_FUTURE_OR_POST_CUTOFF",
+        "isAttributable": false,
+        "description": "Observation date is in the future or occurs after the evaluation asOf cutoff."
+      },
+      {
+        "classification": "EXCLUDED_FIXTURE_OR_PROXY",
+        "isAttributable": false,
+        "description": "Observation is derived from a test mock, synthetic fixture, or demo source."
+      },
+      {
+        "classification": "INSUFFICIENT_CANDIDATE_IDENTITY",
+        "isAttributable": false,
+        "description": "Candidate requires canonicalProductId but observation has null productId without authentic raw evidenceReference."
+      },
+      {
+        "classification": "KEYWORD_ONLY_UNBOUND",
+        "isAttributable": false,
+        "description": "Candidate has null canonicalProductId while observation specifies an explicit foreign productId (A10 fix)."
+      }
+    ]
+  },
+  "writeBoundaryAudit": {
+    "providerDirectDbMutation": false,
+    "providerRawObservationIsolation": true,
+    "unverifiedPrismaWritesBlocked": true,
+    "candidateScopedFilteringEnforced": true,
+    "unauthorizedSpendBlocked": true
+  }
+}

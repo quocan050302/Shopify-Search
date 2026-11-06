@@ -1,0 +1,20 @@
+{
+  "version": "12.4.3.7.19.3.2",
+  "generatedAt": "2026-11-06T06:55:40.000Z",
+  "codeSha": "5c331c1dae3ec60cf5b58c67c3623595743488f4",
+  "treeSha": "e0dd11c4c42b254c3487815b13c88f3ee75c29fe",
+  "engineeringGatesStatus": "PASS",
+  "commercialGates": {
+    "g15DemandHistoryStatus": "INSUFFICIENT_EVIDENCE",
+    "g16ProofVerificationStatus": "INSUFFICIENT_EVIDENCE",
+    "rationale": "Official candidate-specific Google Trends series for UAHPET feeder currently spans only 14 days, below the mandatory 60-day threshold. Category-level queries without cryptographically signed durable alias approvals are strictly rejected."
+  },
+  "releaseDecision": "NO-GO",
+  "spendAudit": {
+    "totalUnapprovedSpend": 0.0,
+    "serpApiPaidSpend": 0.0,
+    "bigQueryPaidSpend": 0.0,
+    "tikTokAdsUsStatus": "DEFERRED"
+  },
+  "integrityAttestation": "Software engineering gates pass with 100% compliance. Commercial gates honestly fail-closed without data fabrication."
+}

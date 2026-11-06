@@ -1,0 +1,61 @@
+{
+  "version": "12.4.3.7.19.3.2",
+  "generatedAt": "2026-11-06T06:55:10.000Z",
+  "codeSha": "5c331c1dae3ec60cf5b58c67c3623595743488f4",
+  "treeSha": "e0dd11c4c42b254c3487815b13c88f3ee75c29fe",
+  "candidates": [
+    {
+      "candidateId": "cand_1212440541",
+      "canonicalProductId": "cmvsy7zqh000jp0orhypwohho",
+      "productTitle": "UAHPET Fresh Food Automatic Pet Feeder",
+      "market": "US",
+      "readbackResults": {
+        "unaliasedCategoryQueries": [
+          { "query": "pet feeder", "classification": "EXCLUDED_UNVERIFIED_ALIAS", "isAttributable": false },
+          { "query": "cat feeder", "classification": "EXCLUDED_UNVERIFIED_ALIAS", "isAttributable": false },
+          { "query": "automatic pet feeder", "classification": "EXCLUDED_UNVERIFIED_ALIAS", "isAttributable": false },
+          { "query": "timed pet feeder", "classification": "EXCLUDED_UNVERIFIED_ALIAS", "isAttributable": false }
+        ],
+        "exactCandidateQueries": [
+          { "query": "UAHPET Fresh Food Automatic Pet Feeder", "classification": "EXACT_CANDIDATE_KEYWORD_MATCH", "isAttributable": true },
+          { "query": "uahpet fresh food automatic pet feeder", "classification": "EXACT_CANDIDATE_KEYWORD_MATCH", "isAttributable": true }
+        ],
+        "historicalEvidenceDays": 14,
+        "requiredHistoricalDays": 60,
+        "g15Status": "INSUFFICIENT_EVIDENCE",
+        "g16Status": "INSUFFICIENT_EVIDENCE",
+        "commercialEligibility": "INELIGIBLE"
+      }
+    },
+    {
+      "candidateId": "cand_kittyspout_fountain",
+      "canonicalProductId": "prod_kittyspout_123",
+      "productTitle": "KittySpout Wireless Stainless Steel Fountain",
+      "market": "US",
+      "readbackResults": {
+        "unaliasedCategoryQueries": [
+          { "query": "cat water fountain", "classification": "EXCLUDED_UNVERIFIED_ALIAS", "isAttributable": false },
+          { "query": "pet fountain", "classification": "EXCLUDED_UNVERIFIED_ALIAS", "isAttributable": false }
+        ],
+        "crossProductAttributionAttempt": [
+          { "query": "UAHPET Fresh Food Automatic Pet Feeder", "classification": "EXCLUDED_CROSS_PRODUCT", "isAttributable": false }
+        ],
+        "crossBorrowingDetected": false,
+        "commercialEligibility": "INELIGIBLE"
+      }
+    },
+    {
+      "candidateId": "cand_cleaner_bot",
+      "canonicalProductId": "prod_cleaner_456",
+      "productTitle": "PureGlow Sonic Ultrasonic Cleaner",
+      "market": "US",
+      "readbackResults": {
+        "unaliasedCategoryQueries": [
+          { "query": "ultrasonic jewelry cleaner", "classification": "EXCLUDED_UNVERIFIED_ALIAS", "isAttributable": false }
+        ],
+        "crossBorrowingDetected": false,
+        "commercialEligibility": "INELIGIBLE"
+      }
+    }
+  ]
+}

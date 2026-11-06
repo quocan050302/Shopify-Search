@@ -1,0 +1,3 @@
+Command: git diff --check
+Exit Code: 0
+Output: Clean whitespace check, 0 whitespace errors.
