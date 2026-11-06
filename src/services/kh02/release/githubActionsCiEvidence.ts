@@ -53,17 +53,27 @@ export interface VerifiedRemoteCiRecord {
   isUnitTestMock: boolean;
 }
 
-const VERIFIED_PROVIDER_RUNS = new Map<string, VerifiedRemoteCiRecord>();
+const VERIFIED_PROVIDER_RUNS = new Map<string, Readonly<VerifiedRemoteCiRecord>>();
+
+/**
+ * Deep-clones an object and recursively freezes it, ensuring references returned
+ * to callers can NEVER mutate internal state held in memory.
+ */
+function deepCloneAndFreeze<T extends object>(obj: T): Readonly<T> {
+  const clone = JSON.parse(JSON.stringify(obj));
+  return Object.freeze(clone);
+}
 
 /**
  * Server-only protected lookup for verified GitHub Actions CI runs.
  * A run is ONLY verified if it was authenticated by verifyRemoteGitHubActionsRun in this runtime session.
+ * Never exposes mutable references to internal registry storage.
  */
 export function lookupVerifiedRemoteCiRun(
   runId: string | number,
   expectedSha?: string,
   expectedRepo?: string
-): { verified: boolean; record?: VerifiedRemoteCiRecord; reason?: string } {
+): { verified: boolean; record?: Readonly<VerifiedRemoteCiRecord>; proofHandle?: string; reason?: string } {
   if (!runId || String(runId).trim() === "") {
     return { verified: false, reason: "MISSING_RUN_ID: No CI runId provided for lookup." };
   }
@@ -79,10 +89,14 @@ export function lookupVerifiedRemoteCiRun(
     };
   }
 
+  // Always return an immutable, isolated deep-clone to protect internal Map integrity
+  const isolatedSnapshot = deepCloneAndFreeze(record);
+
   if (expectedSha && record.headSha !== expectedSha) {
     return {
       verified: false,
-      record,
+      proofHandle: record.proofHandle,
+      record: isolatedSnapshot,
       reason: `SHA_MISMATCH: Verified run '${runIdStr}' headSha '${record.headSha}' does not match expected tested SHA '${expectedSha}'.`,
     };
   }
@@ -90,7 +104,8 @@ export function lookupVerifiedRemoteCiRun(
   if (record.headBranch && record.headBranch !== LOCKED_BRANCH) {
     return {
       verified: false,
-      record,
+      proofHandle: record.proofHandle,
+      record: isolatedSnapshot,
       reason: `BRANCH_MISMATCH: Verified run '${runIdStr}' headBranch '${record.headBranch}' does not match locked branch '${LOCKED_BRANCH}'.`,
     };
   }
@@ -98,7 +113,8 @@ export function lookupVerifiedRemoteCiRun(
   if (record.status !== "completed" || record.conclusion !== "success") {
     return {
       verified: false,
-      record,
+      proofHandle: record.proofHandle,
+      record: isolatedSnapshot,
       reason: `CONCLUSION_NOT_SUCCESS: Verified run '${runIdStr}' status is '${record.status}', conclusion is '${record.conclusion}'.`,
     };
   }
@@ -106,7 +122,8 @@ export function lookupVerifiedRemoteCiRun(
   if (record.event !== "push" && record.event !== "workflow_dispatch") {
     return {
       verified: false,
-      record,
+      proofHandle: record.proofHandle,
+      record: isolatedSnapshot,
       reason: `EVENT_MISMATCH: Verified run '${runIdStr}' event is '${record.event}'. Only 'push' and 'workflow_dispatch' are permitted.`,
     };
   }
@@ -117,7 +134,8 @@ export function lookupVerifiedRemoteCiRun(
   if (isNaN(verifiedTimestamp) || now - verifiedTimestamp > 24 * 60 * 60 * 1000 || verifiedTimestamp > now + 60000) {
     return {
       verified: false,
-      record,
+      proofHandle: record.proofHandle,
+      record: isolatedSnapshot,
       reason: `TTL_EXPIRED: Verified run record for '${runIdStr}' has expired or has an invalid timestamp.`,
     };
   }
@@ -125,14 +143,16 @@ export function lookupVerifiedRemoteCiRun(
   if (record.isUnitTestMock) {
     return {
       verified: false,
-      record,
+      proofHandle: record.proofHandle,
+      record: isolatedSnapshot,
       reason: `MOCK_QUARANTINE: Run '${runIdStr}' is marked as a UNIT_TEST_MOCK and cannot be admitted for commercial release.`,
     };
   }
 
   return {
     verified: true,
-    record,
+    proofHandle: record.proofHandle,
+    record: isolatedSnapshot,
   };
 }
 
@@ -188,7 +208,8 @@ function _registerVerifiedRemoteCiRun(
     isUnitTestMock: isMock,
   };
 
-  VERIFIED_PROVIDER_RUNS.set(recordKey, record);
+  const frozenRecord = deepCloneAndFreeze(record);
+  VERIFIED_PROVIDER_RUNS.set(recordKey, frozenRecord);
   return { registered: true, proofHandle };
 }
 
@@ -315,9 +336,10 @@ export function computeCiAttestationDigest(evidence: {
 
 /**
  * Internal private signer for authenticated GitHub Actions CI evidence.
+ * Genuinely module-private; NEVER exported to arbitrary imported modules.
  * Invoked exclusively by verifyRemoteGitHubActionsRun upon authentic provider verification.
  */
-export function _privateMintCiAttestationToken(
+function _privateMintCiAttestationToken(
   evidence: any,
   key: string
 ): string {
@@ -332,6 +354,7 @@ export function _privateMintCiAttestationToken(
  * STRICTLY ENFORCES that a run MUST already be verified and registered in the private server
  * registry by verifyRemoteGitHubActionsRun (and NOT a mock).
  * Any caller attempting to mint tokens for arbitrary or unregistered runs receives an untrusted token (swai_ci_untrusted_*).
+ * Raw key injection and testKey bypasses are strictly forbidden.
  */
 export function mintCiAttestationToken(
   evidence: {
@@ -348,13 +371,9 @@ export function mintCiAttestationToken(
     workflowId?: number | string;
     workflowName?: string;
     isUnitTestMock?: boolean;
-  },
-  options?: {
-    testKey?: string;
   }
 ): string {
   const resolution = getCiVerifierSecret();
-  const testKey = options?.testKey;
 
   const runIdStr = String(evidence.runId || "").trim();
   const repo = (evidence.repository || CANONICAL_REPOSITORY).toLowerCase();
@@ -374,14 +393,13 @@ export function mintCiAttestationToken(
     return `swai_ci_untrusted_${untrustedDigest}`;
   }
 
-  if (resolution.status !== "CONFIGURED" && !testKey) {
+  if (resolution.status !== "CONFIGURED") {
     const payload = computeCiAttestationDigest(evidence);
     const untrustedDigest = crypto.createHash("sha256").update(`MISSING_SECRET:${payload}`).digest("hex");
     return `swai_ci_untrusted_${untrustedDigest}`;
   }
 
-  const key = testKey || resolution.key!;
-  return _privateMintCiAttestationToken(evidence, key);
+  return _privateMintCiAttestationToken(evidence, resolution.key!);
 }
 
 export function verifyCiAttestationToken(
@@ -823,6 +841,16 @@ export async function verifyRemoteGitHubActionsRun(
   };
 
   const reg = _registerVerifiedRemoteCiRun(rawEvidence);
+  if (!reg.registered) {
+    return {
+      verified: false,
+      status: "CI_FAIL",
+      level: "CI_FAIL",
+      rejectionReason: reg.error || "REGISTRATION_FAILED: Authentic run registration could not be completed.",
+      verifiedAt,
+      isUnitTestMock: isMock,
+    };
+  }
 
   let attestationSignature: string | undefined;
   const resolution = getCiVerifierSecret();
@@ -938,11 +966,12 @@ export function verifyAuthenticCiProof(
   }
 
   if (Array.isArray(options.allowedWorkflows) && options.allowedWorkflows.length > 0) {
-    const wf = attestation.workflowName || String(attestation.workflowId);
-    if (!options.allowedWorkflows.some((allowed) => wf.includes(allowed))) {
+    const wf = String(attestation.workflowName || attestation.workflowId || "").trim();
+    const matched = options.allowedWorkflows.some((allowed) => wf === allowed);
+    if (!matched) {
       return {
         verified: false,
-        error: `Workflow '${wf}' is not in allowed workflows list.`,
+        error: `Workflow '${wf}' is not in allowed workflows list (${options.allowedWorkflows.join(", ")}).`,
         status: "CI_FAIL",
       };
     }

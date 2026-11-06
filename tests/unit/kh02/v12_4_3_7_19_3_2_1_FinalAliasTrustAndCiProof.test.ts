@@ -54,9 +54,9 @@ import {
   ReleaseEvidenceInput,
 } from "@/services/kh02/release/releaseGateEvaluatorV19";
 
+import { testMintCiAttestationToken } from "../../setupTestEnvironment";
 import {
   TRUSTED_VERIFIER_ID,
-  _privateMintCiAttestationToken,
   _testOnlyRegisterVerifiedRemoteCiRun,
 } from "@/services/kh02/release/githubActionsCiEvidence";
 
@@ -1312,7 +1312,7 @@ describe("KH-02 V12.4.3.7.19.3.2.1: Final Alias Trust & CI Proof Closure Matrix 
       responseDigest: rawProof.responseDigest,
     });
 
-    const token = _privateMintCiAttestationToken(
+    const token = testMintCiAttestationToken(
       {
         ...rawProof,
         headSha: commitSha,

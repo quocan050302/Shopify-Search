@@ -29,7 +29,7 @@ describe("KH-02 V12.4.3.7.18: Strict CSV Row Authority (R01 - R28)", () => {
   let sampleCsvContent = "Category: All categories\nWeek,automatic cat feeder: (United States)\n";
   const dates: string[] = [];
   for (let i = 0; i < 13; i++) {
-    const d = new Date(Date.UTC(2026, 4, 3 + i * 7));
+    const d = new Date(Date.UTC(2025, 4, 3 + i * 7));
     const dt = d.toISOString().slice(0, 10);
     dates.push(dt);
     sampleCsvContent += `${dt},${50 + i * 3}\n`;
@@ -41,7 +41,9 @@ describe("KH-02 V12.4.3.7.18: Strict CSV Row Authority (R01 - R28)", () => {
 
   beforeEach(async () => {
     fs.mkdirSync(GOOGLE_TRENDS_CSV_STORAGE_DIR, { recursive: true });
-    fs.writeFileSync(csvFilePath, sampleCsvContent, "utf8");
+    if (!fs.existsSync(csvFilePath) || fs.readFileSync(csvFilePath, "utf8") !== sampleCsvContent) {
+      fs.writeFileSync(csvFilePath, sampleCsvContent, "utf8");
+    }
 
     await prisma.workspace.upsert({
       where: { id: testWorkspaceId },

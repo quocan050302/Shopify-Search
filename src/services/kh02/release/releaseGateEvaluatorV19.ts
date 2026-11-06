@@ -12,7 +12,11 @@
  * 4. CI: PASS / FAIL / NOT_RUN / NOT_CONFIGURED
  */
 
-import { verifyCiAttestationToken, lookupVerifiedRemoteCiRun } from "./githubActionsCiEvidence";
+import {
+  verifyCiAttestationToken,
+  lookupVerifiedRemoteCiRun,
+  CANONICAL_RELEASE_WORKFLOWS,
+} from "./githubActionsCiEvidence";
 
 export interface ReleaseEvidenceInput {
   version: string;
@@ -300,6 +304,7 @@ export function evaluateReleaseEvidence(
       att.status === "completed" &&
       att.conclusion === "success" &&
       (att.event === "push" || att.event === "workflow_dispatch") &&
+      CANONICAL_RELEASE_WORKFLOWS.some((w) => w === att.workflowName || w === att.workflowPath) &&
       typeof att.responseDigest === "string" &&
       att.responseDigest.length === 64 &&
       (!input.testedCodeSha || (att.headSha && att.headSha === input.testedCodeSha) || (att.commitSha && att.commitSha === input.testedCodeSha));

@@ -29,8 +29,8 @@ import {
   sanitizeCiLog,
   _testOnlyRegisterVerifiedRemoteCiRun,
   clearVerifiedRemoteCiRunsForTesting,
-  _privateMintCiAttestationToken,
 } from "@/services/kh02/release/githubActionsCiEvidence";
+import { testMintCiAttestationToken } from "../../setupTestEnvironment";
 
 import {
   validateVerifiedCiAttestation,
@@ -124,7 +124,7 @@ describe("KH-02 V12.4.3.7.19.3.2.3: Trusted CI Proof Boundary & Observable Execu
       };
 
       _testOnlyRegisterVerifiedRemoteCiRun(authenticPayload);
-      const validToken = _privateMintCiAttestationToken(authenticPayload, process.env.KH02_CI_VERIFIER_SECRET!);
+      const validToken = testMintCiAttestationToken(authenticPayload, process.env.KH02_CI_VERIFIER_SECRET!);
 
       // Attacker copies validToken to an evidence object with an older SHA
       const tampered = {
@@ -154,7 +154,7 @@ describe("KH-02 V12.4.3.7.19.3.2.3: Trusted CI Proof Boundary & Observable Execu
       };
 
       _testOnlyRegisterVerifiedRemoteCiRun(authenticPayload);
-      const validToken = _privateMintCiAttestationToken(authenticPayload, process.env.KH02_CI_VERIFIER_SECRET!);
+      const validToken = testMintCiAttestationToken(authenticPayload, process.env.KH02_CI_VERIFIER_SECRET!);
 
       const tampered = {
         ...authenticPayload,
@@ -182,7 +182,7 @@ describe("KH-02 V12.4.3.7.19.3.2.3: Trusted CI Proof Boundary & Observable Execu
         isUnitTestMock: false,
       };
 
-      const failedToken = _privateMintCiAttestationToken(failedPayload as any, process.env.KH02_CI_VERIFIER_SECRET!);
+      const failedToken = testMintCiAttestationToken(failedPayload as any, process.env.KH02_CI_VERIFIER_SECRET!);
 
       const tampered = {
         ...failedPayload,
@@ -212,7 +212,7 @@ describe("KH-02 V12.4.3.7.19.3.2.3: Trusted CI Proof Boundary & Observable Execu
 
       _testOnlyRegisterVerifiedRemoteCiRun(authenticPayload);
       _testOnlyRegisterVerifiedRemoteCiRun(authenticPayload);
-      const validToken = _privateMintCiAttestationToken(authenticPayload, process.env.KH02_CI_VERIFIER_SECRET!);
+      const validToken = testMintCiAttestationToken(authenticPayload, process.env.KH02_CI_VERIFIER_SECRET!);
       const proofWithToken = {
         ...authenticPayload,
         attestationSignature: validToken,
@@ -302,7 +302,7 @@ describe("KH-02 V12.4.3.7.19.3.2.3: Trusted CI Proof Boundary & Observable Execu
       };
 
       _testOnlyRegisterVerifiedRemoteCiRun(authenticPayload);
-      const validToken = _privateMintCiAttestationToken(authenticPayload, process.env.KH02_CI_VERIFIER_SECRET!);
+      const validToken = testMintCiAttestationToken(authenticPayload, process.env.KH02_CI_VERIFIER_SECRET!);
 
       const tampered = {
         ...authenticPayload,
@@ -413,7 +413,7 @@ describe("KH-02 V12.4.3.7.19.3.2.3: Trusted CI Proof Boundary & Observable Execu
         headBranch: proofPayload.branch,
         responseDigest: sample64HexDigest,
       });
-      const token = _privateMintCiAttestationToken(
+      const token = testMintCiAttestationToken(
         {
           ...proofPayload,
           headSha: proofPayload.commitSha,
@@ -492,7 +492,7 @@ describe("KH-02 V12.4.3.7.19.3.2.3: Trusted CI Proof Boundary & Observable Execu
       };
 
       _testOnlyRegisterVerifiedRemoteCiRun(authenticPayload);
-      const validToken = _privateMintCiAttestationToken(authenticPayload, process.env.KH02_CI_VERIFIER_SECRET!);
+      const validToken = testMintCiAttestationToken(authenticPayload, process.env.KH02_CI_VERIFIER_SECRET!);
 
       const verdict = evaluateReleaseEvidence({
         version: "12.4.3.7.19.3.2.3",

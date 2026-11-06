@@ -47,9 +47,9 @@ import {
   evaluateDemandHistoryEvidence,
   type DemandDataPoint,
 } from "@/services/kh02/demand/temporalDemandEngine";
+import { testMintCiAttestationToken } from "../../setupTestEnvironment";
 import {
   TRUSTED_VERIFIER_ID,
-  _privateMintCiAttestationToken,
   _testOnlyRegisterVerifiedRemoteCiRun,
 } from "@/services/kh02/release/githubActionsCiEvidence";
 
@@ -992,7 +992,7 @@ describe("KH-02 V12.4.3.7.19.3.2: Durable Alias Authorization & Exact-SHA Eviden
       responseDigest: rawProof.responseDigest,
     });
 
-    const token = _privateMintCiAttestationToken(
+    const token = testMintCiAttestationToken(
       {
         ...rawProof,
         headSha: commitSha,

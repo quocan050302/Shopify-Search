@@ -7,7 +7,18 @@ import { createClient } from "@libsql/client";
 import { canonicalizeSqliteDatabasePath } from "@/lib/database/databaseConfig";
 import { assertSafeTestDatabase } from "@/lib/database/databaseSafety";
 
-import { clearVerifiedRemoteCiRunsForTesting } from "@/services/kh02/release/githubActionsCiEvidence";
+import { clearVerifiedRemoteCiRunsForTesting, computeCiAttestationDigest } from "@/services/kh02/release/githubActionsCiEvidence";
+
+/**
+ * Isolated unit-test-only signer fixture for adversarial forgery tests.
+ * NEVER exposed in production release code paths.
+ */
+export function testMintCiAttestationToken(evidence: any, key: string): string {
+  const payload = computeCiAttestationDigest(evidence);
+  const hmac = crypto.createHmac("sha256", key);
+  hmac.update(payload, "utf-8");
+  return `swai_ci_v1_${hmac.digest("hex")}`;
+}
 
 function sanitizeLeakedTestAuthEnv() {
   delete process.env.ADMIN_API_KEY;
