@@ -218,6 +218,16 @@ export interface SourceDiagnosticResult {
   authStatus?: "AUTHENTICATED" | "AUTHENTICATION_FAILED" | "AUTH_NOT_REQUIRED" | "CREDENTIALS_REQUIRED" | "NOT_PROBED" | "DISABLED";
   transportStatus?: "CONNECTED" | "TRANSPORT_FAILED" | "NOT_CONFIGURED" | "NOT_TESTED" | "DISABLED";
   capabilityStatus?: "VERIFIED" | "UNSUPPORTED" | "NOT_TESTED" | "DISABLED";
+
+  // V12.4.3.7.19.2 Diagnostic Truth & Evidence State
+  importCapabilityReady?: boolean;
+  sourceArtifactPresent?: boolean;
+  sourceArtifactIntegrityVerified?: boolean;
+  sourceOriginVerified?: boolean;
+  relevantRowsVerified?: boolean;
+  verifiedApplicableRowCount?: number;
+  provenanceScopeEvaluation?: "VERIFIED" | "NOT_EVALUATED" | "NO_RELEVANT_DATA" | "UNVERIFIED";
+  explanationCode?: string;
 }
 
 export interface SourceDiagnosticContext {
@@ -794,14 +804,17 @@ export async function diagnoseKH02Source(
       const demandMode = resolveDemandProviderMode();
       if (demandMode === "GOOGLE_FREE_ONLY") {
         const freeDiag = await googleFreeDemandProvider.diagnose();
+        const isBqConnected = freeDiag.transportConnected === true;
+        const isBqAuth = freeDiag.authenticated === true;
+
         const dimensions: ProviderReadinessDimensions = applyTelemetry({
           adapterInstalled: true,
           configured: true,
-          transportConnected: true,
-          authenticated: true,
+          transportConnected: isBqConnected ? true : false,
+          authenticated: isBqAuth ? true : null,
           supportedOperationsVerified: true,
           queryExecuted: false,
-          sourceDataVerified: demandCount > 0,
+          sourceDataVerified: false,
           lastLiveQueryAt: null,
           blockerCode: null,
           storedRecordCount: demandCount,
@@ -809,9 +822,17 @@ export async function diagnoseKH02Source(
           currentRunRecordCount: null,
           lastSuccessfulLiveQueryAt: null,
           lastProbeAt: lastCheckedAt,
-          authStatus: "AUTH_NOT_REQUIRED",
-          transportStatus: "CONNECTED",
+          authStatus: isBqAuth ? "AUTHENTICATED" : "AUTH_NOT_REQUIRED",
+          transportStatus: isBqConnected ? "CONNECTED" : "NOT_CONFIGURED",
           capabilityStatus: "VERIFIED",
+          importCapabilityReady: true,
+          sourceArtifactPresent: false,
+          sourceArtifactIntegrityVerified: false,
+          sourceOriginVerified: false,
+          relevantRowsVerified: false,
+          verifiedApplicableRowCount: 0,
+          provenanceScopeEvaluation: "NOT_EVALUATED",
+          explanationCode: "IMPORT_READY_NO_RELEVANT_ARTIFACT",
         }, "DEMAND_HISTORY");
 
         return {
@@ -819,8 +840,8 @@ export async function diagnoseKH02Source(
           upstreamConfigured: true,
           adapterInstalled: true,
           configured: true,
-          transportConnected: true,
-          authenticated: true,
+          transportConnected: isBqConnected ? true : false,
+          authenticated: isBqAuth ? true : null,
           discoverySupported: true,
           queryExecuted: dimensions.queryExecuted,
           recordsReturned: dimensions.lastLiveQueryRecordCount ?? null,
@@ -829,14 +850,22 @@ export async function diagnoseKH02Source(
           currentRunRecordCount: null,
           lastSuccessfulLiveQueryAt: dimensions.lastSuccessfulLiveQueryAt ?? null,
           lastProbeAt: lastCheckedAt,
-          authStatus: "AUTH_NOT_REQUIRED",
-          transportStatus: "CONNECTED",
+          authStatus: isBqAuth ? "AUTHENTICATED" : "AUTH_NOT_REQUIRED",
+          transportStatus: isBqConnected ? "CONNECTED" : "NOT_CONFIGURED",
           capabilityStatus: "VERIFIED",
-          provenanceVerified: dimensions.queryExecuted,
+          provenanceVerified: false,
           lastCheckedAt,
           status: "ENGINE_READY",
-          reason: "Demand stability policy engine active with Google Free Demand pipeline (BigQuery Sandbox + Official CSV exports). SerpApi is not required.",
+          reason: `Demand stability policy engine active with Google Free Demand pipeline (CSV import capability ready; BigQuery Sandbox ${(freeDiag.dimensions as any)?.bigqueryStatus || "NOT_CONFIGURED"}). Stored workspace observations: ${demandCount} (candidate-specific validation required).`,
           missingRequirements: [],
+          importCapabilityReady: true,
+          sourceArtifactPresent: false,
+          sourceArtifactIntegrityVerified: false,
+          sourceOriginVerified: false,
+          relevantRowsVerified: false,
+          verifiedApplicableRowCount: 0,
+          provenanceScopeEvaluation: "NOT_EVALUATED",
+          explanationCode: "IMPORT_READY_NO_RELEVANT_ARTIFACT",
           dimensions,
           estimatedQueryCost: {
             estimatedCredits: 0,
@@ -871,7 +900,7 @@ export async function diagnoseKH02Source(
         authenticated: authStatus === "AUTHENTICATED" ? true : null,
         supportedOperationsVerified: true, // Evaluation engine algorithms are verified
         queryExecuted: false, // Do not infer from DB count!
-        sourceDataVerified: demandCount > 0,
+        sourceDataVerified: false,
         lastLiveQueryAt: null,
         blockerCode: hasUpstreamApiKey ? null : "UPSTREAM_PROVIDER_NOT_CONFIGURED",
         storedRecordCount: demandCount,
@@ -882,6 +911,14 @@ export async function diagnoseKH02Source(
         authStatus,
         transportStatus: upstreamStatus,
         capabilityStatus: "VERIFIED",
+        importCapabilityReady: false,
+        sourceArtifactPresent: false,
+        sourceArtifactIntegrityVerified: false,
+        sourceOriginVerified: false,
+        relevantRowsVerified: false,
+        verifiedApplicableRowCount: 0,
+        provenanceScopeEvaluation: "NOT_EVALUATED",
+        explanationCode: "UNVERIFIED_APPLICABLE_DATA",
       }, "DEMAND_HISTORY");
 
       return {
@@ -893,7 +930,7 @@ export async function diagnoseKH02Source(
         authenticated: authStatus === "AUTHENTICATED" ? true : null,
         discoverySupported: true,
         queryExecuted: dimensions.queryExecuted,
-        recordsReturned: demandCount,
+        recordsReturned: null,
         storedRecordCount: demandCount,
         lastLiveQueryRecordCount: dimensions.lastLiveQueryRecordCount,
         currentRunRecordCount: null,
@@ -902,11 +939,19 @@ export async function diagnoseKH02Source(
         authStatus,
         transportStatus: upstreamStatus,
         capabilityStatus: "VERIFIED",
-        provenanceVerified: demandCount > 0,
+        provenanceVerified: false,
         lastCheckedAt,
         status: "ENGINE_READY",
         reason: `Demand stability policy engine is active (ENGINE_READY). Upstream live provider: ${hasUpstreamApiKey ? (upstreamStatus === "CONNECTED" ? "Account verified (no data query)" : "Configured (not verified)") : "Not configured"}. Workspace stored observations: ${demandCount}. Individual product policy requires 3+ temporal observations across 60+ days.${accountNote}`,
         missingRequirements: hasUpstreamApiKey ? [] : ["SERPAPI_API_KEY"],
+        importCapabilityReady: false,
+        sourceArtifactPresent: false,
+        sourceArtifactIntegrityVerified: false,
+        sourceOriginVerified: false,
+        relevantRowsVerified: false,
+        verifiedApplicableRowCount: 0,
+        provenanceScopeEvaluation: "NOT_EVALUATED",
+        explanationCode: "UNVERIFIED_APPLICABLE_DATA",
         dimensions,
         requiredAction: demandCount === 0 && !hasUpstreamApiKey ? "Get a Free plan key from https://serpapi.com/manage-api-key and set SERPAPI_API_KEY, or import Google Trends CSV. GOOGLE_TRENDS_API_KEY alone is not implemented." : undefined,
         estimatedQueryCost: {

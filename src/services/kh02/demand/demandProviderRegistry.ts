@@ -210,11 +210,19 @@ export class GoogleTrendsBigQueryProvider implements HistoricalDemandProvider {
       discoverySupported: true,
       queryExecuted: false,
       recordsReturned: null,
-      provenanceVerified: true,
+      provenanceVerified: false,
       lastCheckedAt: new Date().toISOString(),
       status: "CONFIGURED",
       reason: `BigQuery project '${projectId}' configured for Google Trends public dataset queries within 1TB/mo free sandbox.`,
       missingRequirements: [],
+      importCapabilityReady: false,
+      sourceArtifactPresent: false,
+      sourceArtifactIntegrityVerified: false,
+      sourceOriginVerified: false,
+      relevantRowsVerified: false,
+      verifiedApplicableRowCount: 0,
+      provenanceScopeEvaluation: "NOT_EVALUATED",
+      explanationCode: "TRANSPORT_CONFIGURED_NO_QUERY",
     };
   }
 
@@ -324,11 +332,19 @@ export class GoogleTrendsCsvImportProvider implements HistoricalDemandProvider {
       discoverySupported: true,
       queryExecuted: false,
       recordsReturned: null,
-      provenanceVerified: true,
+      provenanceVerified: false,
       lastCheckedAt: new Date().toISOString(),
       status: "CONFIGURED",
-      reason: "Local Google Trends CSV import repository ready (local filesystem/database adapter; no external transport connection).",
+      reason: "Local Google Trends CSV import repository ready (import capability ready; no relevant validated artifact supplied for target candidate).",
       missingRequirements: [],
+      importCapabilityReady: true,
+      sourceArtifactPresent: false,
+      sourceArtifactIntegrityVerified: false,
+      sourceOriginVerified: false,
+      relevantRowsVerified: false,
+      verifiedApplicableRowCount: 0,
+      provenanceScopeEvaluation: "NOT_EVALUATED",
+      explanationCode: "IMPORT_READY_NO_RELEVANT_ARTIFACT",
     };
   }
 
@@ -551,13 +567,21 @@ export class GoogleFreeDemandProvider implements HistoricalDemandProvider {
       discoverySupported: true,
       queryExecuted: false,
       recordsReturned: null,
-      provenanceVerified: isConfigured,
+      provenanceVerified: false,
       lastCheckedAt: new Date().toISOString(),
       status: isConfigured ? "CONFIGURED" : (bqDiag.status.startsWith("BLOCKED") ? bqDiag.status : "NOT_CONFIGURED"),
       reason: isConfigured
-        ? "Using Google Free Demand pipeline (BigQuery public datasets, official Explore CSV imports, and Trending Now discovery signals). SerpApi is not required."
+        ? `Using Google Free Demand pipeline (CSV import capability ready; BigQuery Sandbox ${isBqConfigured ? "configured" : "not configured"}; no relevant candidate data artifact validated).`
         : (bqDiag.reason || "Google Free Demand pipeline requires verified BigQuery Sandbox or official Google Trends CSV imports."),
       missingRequirements,
+      importCapabilityReady: isCsvConfigured,
+      sourceArtifactPresent: false,
+      sourceArtifactIntegrityVerified: false,
+      sourceOriginVerified: false,
+      relevantRowsVerified: false,
+      verifiedApplicableRowCount: 0,
+      provenanceScopeEvaluation: "NOT_EVALUATED",
+      explanationCode: "IMPORT_READY_NO_RELEVANT_ARTIFACT",
       dimensions: {
         bigqueryStatus: bqDiag.status,
         csvImportStatus: csvDiag.status,

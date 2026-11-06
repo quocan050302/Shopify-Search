@@ -228,6 +228,16 @@ export interface ProviderReadinessDimensions {
   liveError?: string | null;
   cachedRecordsCount?: number | null;
   freshLiveCount?: number | null;
+
+  // V12.4.3.7.19.2 Diagnostic Truth & Evidence State
+  importCapabilityReady?: boolean;
+  sourceArtifactPresent?: boolean;
+  sourceArtifactIntegrityVerified?: boolean;
+  sourceOriginVerified?: boolean;
+  relevantRowsVerified?: boolean;
+  verifiedApplicableRowCount?: number;
+  provenanceScopeEvaluation?: "VERIFIED" | "NOT_EVALUATED" | "NO_RELEVANT_DATA" | "UNVERIFIED";
+  explanationCode?: string;
 }
 
 export interface ProviderSourceTelemetry {
