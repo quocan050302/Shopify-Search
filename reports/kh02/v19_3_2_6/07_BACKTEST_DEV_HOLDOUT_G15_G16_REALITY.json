@@ -1,0 +1,61 @@
+{
+  "version": "12.4.3.7.19.3.2.6",
+  "evaluatedAt": "2026-11-06T15:22:29.814Z",
+  "evaluatedCodeSha": "fe03d6a0915d86111bcad3dcdef7ded2ebbae90d",
+  "evaluatedTreeSha": "64a8577a4e924a45ab956aa9659af0b05564629d",
+  "niche": "Pet Gadgets",
+  "pointInTimeCutoff": "2026-10-30T12:00:00.000Z",
+  "policyScenarioReplay": {
+    "totalScenarios": 21,
+    "passedScenarios": 21,
+    "failedScenarios": 0,
+    "verdict": "PASS"
+  },
+  "devSplit": {
+    "recordsEvaluated": 60,
+    "datasetFingerprintSha256": "f9e80915cea9901a325fec6da7c8654cf37ffcec1a0aea29be60b120f067a72c",
+    "shortlistCount": 0,
+    "nicheMatchedCount": 0,
+    "nicheCoverageStatus": "INSUFFICIENT_NICHE_COVERAGE",
+    "demandCoverageStatus": "INSUFFICIENT_HISTORICAL_EVIDENCE",
+    "verdict": "INSUFFICIENT_HISTORICAL_EVIDENCE"
+  },
+  "holdoutSplit": {
+    "recordsEvaluated": 377,
+    "nonSyntheticRecords": 376,
+    "datasetFingerprintSha256": "3e677412e40dc8850911b597712c12c8209f58cec1f212bb8ea57a3f33be26b5",
+    "shortlistCount": 3,
+    "shortlistItems": [
+      {
+        "title": "Automatic Dog Feeder for Easy Daily Meals",
+        "observationCount": 0,
+        "coveredDays": 0,
+        "status": "INSUFFICIENT_HISTORY",
+        "eligibleForEvergreen": false
+      },
+      {
+        "title": "The #1 Vet-Recommended Cat Fountain",
+        "observationCount": 0,
+        "coveredDays": 0,
+        "status": "INSUFFICIENT_HISTORY",
+        "eligibleForEvergreen": false
+      },
+      {
+        "title": "The #1 Pet Hair/Lint/Dust Cleaner",
+        "observationCount": 0,
+        "coveredDays": 0,
+        "status": "INSUFFICIENT_HISTORY",
+        "eligibleForEvergreen": false
+      }
+    ],
+    "demandCoverageStatus": "INSUFFICIENT_HISTORICAL_EVIDENCE",
+    "verdict": "INSUFFICIENT_HISTORICAL_EVIDENCE"
+  },
+  "overallVerdict": "INSUFFICIENT_HISTORICAL_EVIDENCE",
+  "businessGroundTruth": {
+    "g15DemandPassed": false,
+    "g15Reason": "Database records contain only unverified pseudo-references ('verified-merchant-demand'); zero official Google Trends Explore CSV records with verified SHA-256 integrity exist covering >=60 calendar days.",
+    "g16Top3CandidatesPassed": false,
+    "g16Reason": "Top 3 candidates lack authenticated external provider demand evidence covering the required window."
+  }
+}

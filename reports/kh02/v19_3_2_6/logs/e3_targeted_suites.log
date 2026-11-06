@@ -1,0 +1,26 @@
+
+[1m[30m[46m RUN [49m[39m[22m [36mv5.0.5 [39m[90m/Users/macbook/Documents/Project_Github/Meta-Ads/Shopify-Search[39m
+
+ [32m✓[39m tests/unit/kh02/v12_4_3_7_19_3_2_6_CiTrustBoundaryAndFailClosedRunner.test.ts [2m([22m[2m20 tests[22m[2m)[22m[32m 111[2mms[22m[39m
+ [32m✓[39m tests/unit/kh02/v12_4_3_7_19_3_2_DurableAliasAuthorization.test.ts [2m([22m[2m43 tests[22m[2m)[22m[32m 103[2mms[22m[39m
+ [32m✓[39m tests/unit/kh02/v12_4_3_7_19_3_2_4_CiHmacTrustBoundary.test.ts [2m([22m[2m15 tests[22m[2m)[22m[32m 14[2mms[22m[39m
+ [32m✓[39m tests/unit/kh02/v12_4_3_7_19_3_2_5_CiTrustBoundaryClosure.test.ts [2m([22m[2m10 tests[22m[2m)[22m[32m 13[2mms[22m[39m
+ [32m✓[39m tests/unit/kh02/v12_4_3_7_19_3_2_2_MandatoryBusinessScopeAndCiProof.test.ts [2m([22m[2m52 tests[22m[2m)[22m[33m 1179[2mms[22m[39m
+   [32m✓[39m KH-02 V12.4.3.7.19.3.2.2: Mandatory Business Scope & Authentic CI Proof Matrix (52 Tests) [2m(52)[22m
+     [33m[2m✓[22m[39m A04: real history resolver with cached test-alias row excludes observation before G15 assessment[33m 700[2mms[22m[39m
+ [32m✓[39m tests/unit/kh02/v12_4_3_7_19_3_2_3_TrustedCiProofAndObservableExecution.test.ts [2m([22m[2m28 tests[22m[2m)[22m[33m 2517[2mms[22m[39m
+   [32m✓[39m KH-02 V12.4.3.7.19.3.2.3: Trusted CI Proof Boundary & Observable Execution [2m(28)[22m
+     [32m✓[39m Group C: Gate E9 Candidate Database Readback Script [2m(4)[22m
+       [33m[2m✓[22m[39m C04: CLI runCandidateDbReadback process returns exitCode 0 and valid JSON with rawRecordCount=6[33m 1664[2mms[22m[39m
+     [32m✓[39m Group D: Gate E10 Remote CI Proof Diagnostic Script [2m(3)[22m
+       [33m[2m✓[22m[39m D03: CLI runRemoteCiProofDiagnostic process returns exitCode 0 and valid JSON with CI_NOT_CONFIGURED[33m 576[2mms[22m[39m
+ [32m✓[39m tests/unit/kh02/v12_4_3_7_19_3_2_1_FinalAliasTrustAndCiProof.test.ts [2m([22m[2m75 tests[22m[2m)[22m[33m 10139[2mms[22m[39m
+   [32m✓[39m KH-02 V12.4.3.7.19.3.2.1: Final Alias Trust & CI Proof Closure Matrix (75 Tests) [2m(75)[22m
+     [33m[2m✓[22m[39m B14: live lock owner on host is not reclaimed prematurely[33m 5008[2mms[22m[39m
+     [33m[2m✓[22m[39m B16: foreign-host lock is never reclaimed based on PID namespace alone[33m 5016[2mms[22m[39m
+
+[2m Test Files [22m [1m[32m7 passed[39m[22m[90m (7)[39m
+[2m      Tests [22m [1m[32m243 passed[39m[22m[90m (243)[39m
+[2m   Start at [22m 22:20:15
+[2m   Duration [22m 10.93s[2m (tests 80%, import 12%, setup 4%, transform 3%)[22m
+

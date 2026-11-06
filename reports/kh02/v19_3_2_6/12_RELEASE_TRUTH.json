@@ -1,0 +1,32 @@
+{
+  "version": "12.4.3.7.19.3.2.6",
+  "evaluatedAt": "2026-11-06T15:28:00.000Z",
+  "repository": "quocan050302/Shopify-Search",
+  "branch": "feature/kh02-walmart-us-jina-reader-v12.4.3.5.1",
+  "testedCodeSha": "fe03d6a0915d86111bcad3dcdef7ded2ebbae90d",
+  "testedTreeSha": "64a8577a4e924a45ab956aa9659af0b05564629d",
+  "baselineCommitSha": "b96c4b903d9e4eaa59ed81944d5ec0a407fab697",
+  "baselineTreeSha": "f7c5245022cc3e1ed45c23849f46a166b80bd7e3",
+  "engineeringStatus": "ENGINEERING_PASS",
+  "stagingStatus": "STAGING_SHADOW_CONTRACT_READY",
+  "businessStatus": "INSUFFICIENT_EVIDENCE",
+  "ciStatus": "CI_NOT_CONFIGURED",
+  "overallReleaseAllowed": false,
+  "verdictSummary": "RELEASE_NO_GO",
+  "reasons": [
+    "Engineering gates E1 through E10 all passed synchronously/bounded-async against exact code SHA fe03d6a0915d86111bcad3dcdef7ded2ebbae90d.",
+    "Forgeable CI registry vulnerability completely closed: TRUSTED_ORCHESTRATOR_CAPABILITY removed, _registerVerifiedRemoteCiRun unexported, test helper _testOnlyRegisterVerifiedRemoteCiRun strictly forces isUnitTestMock: true.",
+    "Async DAG gate runner implements fail-closed resource checks (1 GiB disk, 150 MB RAM via Darwin vm_stat), process group signal handling, and 50 MB log truncation limits.",
+    "Full unit test suite (E4) passed with 2,382/2,382 tests across 101 files.",
+    "Full integration test suite (E5) passed with 77/77 tests across 16 files.",
+    "Targeted three-source free MCP smoke completed at $0.00 spend: Google Ads Transparency FastMCP operational, Meta/TikTok Organic unconfigured (NOT_RUN), TikTok Ads US DEFERRED.",
+    "Candidate database readback diagnostic (E9) confirms 6 raw rows exist but 0 are official verified Google Trends Explore CSV records; G15 and G16 remain INSUFFICIENT_EVIDENCE.",
+    "Remote CI proof diagnostic (E10) truthfully reports CI_NOT_CONFIGURED due to absence of configured remote workflow runId."
+  ],
+  "blockerList": [
+    "G15_INSUFFICIENT_DEMAND_EVIDENCE",
+    "G16_TOP3_UNVERIFIED",
+    "CI_NOT_RUN"
+  ],
+  "evaluatorVersion": "SWAI_RELEASE_EVALUATOR_V19_3_2_6"
+}

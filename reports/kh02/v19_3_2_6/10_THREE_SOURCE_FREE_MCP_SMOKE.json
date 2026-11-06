@@ -1,0 +1,100 @@
+{
+  "version": "12.4.3.7.19.3.2.6",
+  "executedAt": "2026-11-06T15:23:44.606Z",
+  "commitSha": "fe03d6a0915d86111bcad3dcdef7ded2ebbae90d",
+  "totalCostUsd": 0,
+  "sources": {
+    "S1": {
+      "sourceId": "S1",
+      "name": "Meta Ads (Ad Library / Collector)",
+      "status": "NOT_RUN_EXTERNAL_DEPENDENCY",
+      "costUsd": 0,
+      "transport": "HTTP_REST_OR_MCP",
+      "sourceIdentity": "META_ADS_API",
+      "providerVerified": false,
+      "details": {
+        "hasAccessToken": false,
+        "tokenMasked": null,
+        "collectorEnabled": false
+      },
+      "reason": "META_AD_LIBRARY_ACCESS_TOKEN is not configured. Zero spend incurred; truthfully marked NOT_RUN_EXTERNAL_DEPENDENCY."
+    },
+    "S2": {
+      "sourceId": "S2",
+      "name": "Google Ads Transparency (Free FastMCP stdio)",
+      "status": "VERIFIED_MCP_CONFIGURED",
+      "costUsd": 0,
+      "transport": "STDIO_FASTMCP",
+      "sourceIdentity": "GOOGLE_ADS_TRANSPARENCY_MCP",
+      "providerVerified": true,
+      "details": {
+        "commandConfigured": true,
+        "commandPath": "/Users/macbook/Documents/Project_Github/Meta-Ads/Shopify-Search/services/google-transparency/.venv/bin/python",
+        "args": [
+          "/Users/macbook/Documents/Project_Github/Meta-Ads/Shopify-Search/scripts/googleTransparencyServer.py"
+        ],
+        "pythonExists": true,
+        "serverScriptExists": true,
+        "importCheck": "MCP_IMPORT_OK"
+      },
+      "reason": "Google Ads Transparency stdio FastMCP environment and bridge script verified operational at zero cost."
+    },
+    "S3": {
+      "sourceId": "S3",
+      "name": "TikTok Organic Video Intelligence",
+      "status": "NOT_RUN_EXTERNAL_DEPENDENCY",
+      "costUsd": 0,
+      "transport": "HTTP_REST_HASDATA",
+      "sourceIdentity": "HASDATA_TIKTOK_ORGANIC",
+      "providerVerified": false,
+      "details": {
+        "hasApiKey": false,
+        "keyMasked": null
+      },
+      "reason": "HASDATA_API_KEY is not configured in environment. Truthfully marked NOT_RUN_EXTERNAL_DEPENDENCY."
+    },
+    "S4": {
+      "sourceId": "S4",
+      "name": "TikTok Commercial Ads US",
+      "status": "DEFERRED_DO_NOT_TEST",
+      "costUsd": 0,
+      "transport": "NONE",
+      "sourceIdentity": "TIKTOK_ADS_US",
+      "providerVerified": false,
+      "details": {
+        "policyDirective": "KH-02 mandate explicitly defers TikTok Ads US to eliminate unauthorized spend."
+      },
+      "reason": "TikTok Ads US is explicitly DEFERRED by engineering directive. Zero calls made."
+    },
+    "S5": {
+      "sourceId": "S5",
+      "name": "Google Cloud BigQuery",
+      "status": "NOT_CONFIGURED_NO_BILLING",
+      "costUsd": 0,
+      "transport": "GRPC_GCP",
+      "sourceIdentity": "BIGQUERY_DEMAND_WAREHOUSE",
+      "providerVerified": false,
+      "details": {
+        "configured": false,
+        "billingEnabled": false
+      },
+      "reason": "BigQuery is not configured for production demand warehouse; billing disabled. Zero cost."
+    },
+    "S6": {
+      "sourceId": "S6",
+      "name": "Google Trends Explore Official Export Ingestion",
+      "status": "NOT_AVAILABLE_NO_OFFICIAL_EXPORT",
+      "costUsd": 0,
+      "transport": "LOCAL_FS_OFFICIAL_EXPORT",
+      "sourceIdentity": "GOOGLE_TRENDS_EXPLORE_CSV",
+      "providerVerified": false,
+      "details": {
+        "importsDirExists": true,
+        "rawFilesFound": 17,
+        "officialLongitudinalExportsFound": 0
+      },
+      "reason": "No official Google-issued >=60-day longitudinal CSV export found in ingestion store. Scraping is prohibited."
+    }
+  },
+  "summaryVerdict": "All 6 source checks evaluated strictly within zero-cost bounds. S2 FastMCP verified operational; unconfigured external sources truthfully marked NOT_RUN; TikTok Ads US DEFERRED."
+}

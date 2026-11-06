@@ -1,0 +1,86 @@
+{
+  "version": "12.4.3.7.19.3.2.6",
+  "runnerScript": "scripts/kh02/runV19_3_2_6Gates.ts",
+  "evaluatedCodeSha": "fe03d6a0915d86111bcad3dcdef7ded2ebbae90d",
+  "testedTreeSha": "64a8577a4e924a45ab956aa9659af0b05564629d",
+  "environment": {
+    "platform": "darwin",
+    "arch": "arm64",
+    "memoryDetectionMechanism": "vm_stat_page_math",
+    "diskDetectionMechanism": "fs.statfs"
+  },
+  "safeguards": [
+    {
+      "guardId": "SG01_DISK_MINIMUM",
+      "name": "Minimum Available Disk Space (1 GiB)",
+      "thresholdBytes": 1073741824,
+      "failureAction": "FAIL_CLOSED_IMMEDIATE",
+      "testedInT15": true,
+      "simulatedScenario": "Simulated disk space < 1 GiB throws SAFE_CHECK_FAILED",
+      "verdict": "VERIFIED_FAIL_CLOSED"
+    },
+    {
+      "guardId": "SG02_RAM_MINIMUM",
+      "name": "Minimum Available RAM (150 MB)",
+      "thresholdBytes": 157286400,
+      "failureAction": "FAIL_CLOSED_IMMEDIATE",
+      "testedInT15": true,
+      "simulatedScenario": "Simulated available RAM < 150 MB throws SAFE_CHECK_FAILED",
+      "verdict": "VERIFIED_FAIL_CLOSED"
+    },
+    {
+      "guardId": "SG03_STATFS_ERROR",
+      "name": "Disk / RAM Query Exception Handling",
+      "thresholdBytes": null,
+      "failureAction": "FAIL_CLOSED_ON_ERROR",
+      "testedInT15": true,
+      "simulatedScenario": "statfs returning ENOENT or permission denied throws SAFE_CHECK_FAILED (no optimistic pass)",
+      "verdict": "VERIFIED_FAIL_CLOSED"
+    },
+    {
+      "guardId": "SG04_LOG_SIZE_CAP",
+      "name": "Per-Gate Log Buffer Cap (50 MB)",
+      "thresholdBytes": 52428800,
+      "failureAction": "TERMINATE_CHILD_AND_FLAG_TRUNCATED_FAIL",
+      "testedInT18": true,
+      "simulatedScenario": "Stream exceeding 50 MB triggers child termination and gate fail",
+      "verdict": "VERIFIED_FAIL_CLOSED"
+    },
+    {
+      "guardId": "SG05_WORKTREE_MUTATION",
+      "name": "Git Worktree & HEAD Immutability Check",
+      "thresholdBytes": null,
+      "failureAction": "ABORT_EXECUTION_TREE_DIRTY",
+      "testedInT16": true,
+      "simulatedScenario": "Modifying working tree or advancing branch during run is detected and rejected",
+      "verdict": "VERIFIED_FAIL_CLOSED"
+    },
+    {
+      "guardId": "SG06_PROCESS_GROUP_TERMINATION",
+      "name": "Orphan Process Group Cleanup",
+      "thresholdBytes": null,
+      "failureAction": "SIGKILL_NEGATIVE_PID_PGID",
+      "testedInT17": true,
+      "simulatedScenario": "Killing gate process targets -child.pid so Vitest worker threads are also reaped",
+      "verdict": "VERIFIED_FAIL_CLOSED"
+    },
+    {
+      "guardId": "SG07_CONCURRENCY_BOUNDING",
+      "name": "Bounded Concurrency Semaphore",
+      "thresholdBytes": null,
+      "failureAction": "LIMIT_MAX_CONCURRENT_TASKS_TO_2",
+      "testedInT17": true,
+      "simulatedScenario": "Semaphore prevents more than 2 async child processes executing simultaneously",
+      "verdict": "VERIFIED_BOUNDED"
+    },
+    {
+      "guardId": "SG08_DB_SERIALIZATION",
+      "name": "SQLite Pipeline Sequential Dependency",
+      "thresholdBytes": null,
+      "failureAction": "SERIALIZE_E5_E8_E9_WITH_MAX_WORKERS_1",
+      "testedInT17": true,
+      "simulatedScenario": "E5, E8, and E9 execute sequentially to eliminate SQLite SQLITE_BUSY write lock contention",
+      "verdict": "VERIFIED_SERIALIZED"
+    }
+  ]
+}

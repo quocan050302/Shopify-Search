@@ -1,0 +1,153 @@
+{
+  "version": "12.4.3.7.19.3.2.6",
+  "testSuite": "tests/unit/kh02/v12_4_3_7_19_3_2_6_CiTrustBoundaryAndFailClosedRunner.test.ts",
+  "evaluatedCodeSha": "fe03d6a0915d86111bcad3dcdef7ded2ebbae90d",
+  "evaluatedTreeSha": "64a8577a4e924a45ab956aa9659af0b05564629d",
+  "allPassed": true,
+  "testsTotal": 20,
+  "testsPassed": 20,
+  "testsFailed": 0,
+  "testsSkipped": 0,
+  "matrix": [
+    {
+      "testId": "T01",
+      "name": "Global Symbol.for capability is eliminated and forged payload yields untrusted token",
+      "category": "CAPABILITY_ELIMINATION",
+      "assertion": "TRUSTED_ORCHESTRATOR_CAPABILITY is undefined; unbacked payload generates swai_ci_untrusted_* token",
+      "verdict": "PASS"
+    },
+    {
+      "testId": "T02",
+      "name": "Public register helper is unexported; test-only helper strictly forces mock quarantine",
+      "category": "REGISTRY_ENCAPSULATION",
+      "assertion": "registerVerifiedRemoteCiRun is undefined; _testOnlyRegisterVerifiedRemoteCiRun forces isUnitTestMock: true",
+      "verdict": "PASS"
+    },
+    {
+      "testId": "T03",
+      "name": "Signed forged HMAC without authentic server fetch fails across verifier, validator, and evaluator",
+      "category": "FORGERY_PREVENTION",
+      "assertion": "HMAC token signed by external secret without registry presence fails all verification gates",
+      "verdict": "PASS"
+    },
+    {
+      "testId": "T04",
+      "name": "Private source admit requires genuine provider result; customFetch mock is quarantined",
+      "category": "CUSTOM_FETCH_QUARANTINE",
+      "assertion": "verifyRemoteGitHubActionsRun with customFetch tags proof as isUnitTestMock: true",
+      "verdict": "PASS"
+    },
+    {
+      "testId": "T05",
+      "name": "NODE_ENV tampering and spoofing isUnitTestMock:false cannot bypass mock quarantine",
+      "category": "ENVIRONMENT_TAMPER_RESISTANCE",
+      "assertion": "Setting NODE_ENV=production or isUnitTestMock:false in test helper fails to bypass quarantine",
+      "verdict": "PASS"
+    },
+    {
+      "testId": "T06",
+      "name": "Parser test fixtures registered via test helper are explicitly UNIT_TEST_MOCK",
+      "category": "FIXTURE_QUARANTINE",
+      "assertion": "Fixtures registered via test helper fail release evaluation with RELEASE_EVALUATOR_REJECTED_MOCK_CI",
+      "verdict": "PASS"
+    },
+    {
+      "testId": "T07",
+      "name": "Wrong workflow path, branch, SHA, repo, event, conclusion, or status fails closed",
+      "category": "METADATA_STRICTNESS",
+      "assertion": "Mismatches in repository, branch, workflowPath, headSha, status, or conclusion reject token minting",
+      "verdict": "PASS"
+    },
+    {
+      "testId": "T08",
+      "name": "Proof registered for C0 fails when validated against C1; expired TTL fails",
+      "category": "COMMIT_SHA_AND_TTL_BINDING",
+      "assertion": "Valid token for C0 fails validation against C1; tokens older than max TTL are rejected",
+      "verdict": "PASS"
+    },
+    {
+      "testId": "T09",
+      "name": "Identical run registration is idempotent; conflicting metadata throws or rejects",
+      "category": "REGISTRY_IDEMPOTENCY",
+      "assertion": "Re-registering same runId with identical data succeeds; conflicting data throws error",
+      "verdict": "PASS"
+    },
+    {
+      "testId": "T10",
+      "name": "Release is blocked when all other gates pass but CI proof is unverified",
+      "category": "RELEASE_EVALUATION_GATE",
+      "assertion": "evaluateReleaseEvidence returns RELEASE_NO_GO when ciStatus is not CI_PASS",
+      "verdict": "PASS"
+    },
+    {
+      "testId": "T11",
+      "name": "Exported module surface contains zero private registration or token-minting primitives",
+      "category": "API_SURFACE_MINIMALITY",
+      "assertion": "githubActionsCiEvidence exports only safe query, validation, and test mock helpers",
+      "verdict": "PASS"
+    },
+    {
+      "testId": "T12",
+      "name": "Provider check without credentials truthfully returns CI_NOT_CONFIGURED / CI_NOT_RUN",
+      "category": "AUTHENTIC_FAILURE_REPORTING",
+      "assertion": "verifyRemoteGitHubActionsRun without token or runId returns unverified CI_NOT_CONFIGURED",
+      "verdict": "PASS"
+    },
+    {
+      "testId": "T13",
+      "name": "Gate validation rejects exit code 0 when Vitest summary is absent",
+      "category": "RUNNER_RESULT_VALIDATION",
+      "assertion": "Command returning exit 0 without parseable test summary is rejected as FAILED",
+      "verdict": "PASS"
+    },
+    {
+      "testId": "T14",
+      "name": "Gate validation rejects exit 0 if tests failed or total tests is zero",
+      "category": "RUNNER_ZERO_TEST_REJECTION",
+      "assertion": "Tests failed > 0 or total tests === 0 causes gate validation to fail",
+      "verdict": "PASS"
+    },
+    {
+      "testId": "T15",
+      "name": "Resource safety checker fails closed on statfs error, insufficient disk, or insufficient RAM",
+      "category": "RESOURCE_SAFETY",
+      "assertion": "Disk < 1 GiB or RAM < 150 MB causes checkResourceSafety to throw SAFE_CHECK_FAILED",
+      "verdict": "PASS"
+    },
+    {
+      "testId": "T16",
+      "name": "Worktree integrity check detects HEAD or Tree mutation",
+      "category": "WORKTREE_IMMUTABILITY",
+      "assertion": "Modifying files or HEAD commit during gate execution is detected and fails closed",
+      "verdict": "PASS"
+    },
+    {
+      "testId": "T17",
+      "name": "DAG structure maintains concurrency limits and serializes database-dependent gates",
+      "category": "DAG_CONCURRENCY_CONTROL",
+      "assertion": "Max concurrency 2 is enforced; E5, E8, E9 have strict dependency ordering",
+      "verdict": "PASS"
+    },
+    {
+      "testId": "T18",
+      "name": "TailRingBuffer retains recent log tail; gate validator flags TRUNCATED_FAIL on overflow",
+      "category": "LOG_BUFFERING_AND_LIMITS",
+      "assertion": "Ring buffer retains last 100 lines; logs exceeding 50 MB flag TRUNCATED_FAIL",
+      "verdict": "PASS"
+    },
+    {
+      "testId": "T19",
+      "name": "HTTP 401, 403, 404, 429, 500 all fail closed with CI_NOT_RUN and verified: false",
+      "category": "HTTP_ERROR_HANDLING",
+      "assertion": "Non-200 HTTP responses from GitHub API fail closed without verified proof",
+      "verdict": "PASS"
+    },
+    {
+      "testId": "T20",
+      "name": "Fixture records, pseudo-references, and <60-day series remain strictly INSUFFICIENT_EVIDENCE",
+      "category": "DATA_PROVENANCE_INTEGRITY",
+      "assertion": "Pseudo-references like 'verified-merchant-demand' and series <60 days fail G15/G16",
+      "verdict": "PASS"
+    }
+  ]
+}
