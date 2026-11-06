@@ -1,0 +1,52 @@
+{
+  "version": "12.4.3.7.19",
+  "evaluatedAt": "2026-11-06T09:12:00+07:00",
+  "testedCodeCommitSha": "0cd5bdec55db2c34ddc62c7413f50adbf8ed51ef",
+  "baselineSha": "812018d4eaf3d51bcaa35b9ccb16f3f7ca92a916",
+  "branch": "feature/kh02-walmart-us-jina-reader-v12.4.3.5.1",
+  "sentinelReceipts": {
+    "04f4d039cdd4a884134914fdb9d2ed86ebbfa353991d714b78df545a96fd4b14": {
+      "cadence": "WEEKLY",
+      "sha256": "04f4d039cdd4a884134914fdb9d2ed86ebbfa353991d714b78df545a96fd4b14",
+      "file": "data/provider_receipts/04f4d039cdd4a884134914fdb9d2ed86ebbfa353991d714b78df545a96fd4b14.json",
+      "verified": true,
+      "bitwiseMatch": true
+    },
+    "3440f19057ac7d1ac535150d1bbcc9a3078e0b7a5d46ad3f4bbd2c46235f61c8": {
+      "cadence": "DAILY",
+      "sha256": "3440f19057ac7d1ac535150d1bbcc9a3078e0b7a5d46ad3f4bbd2c46235f61c8",
+      "file": "data/provider_receipts/3440f19057ac7d1ac535150d1bbcc9a3078e0b7a5d46ad3f4bbd2c46235f61c8.json",
+      "verified": true,
+      "bitwiseMatch": true
+    },
+    "366cfeb156347d783c227be3fd7e10e397c8cd00c49c909673fc5208f36b841f": {
+      "cadence": "HOURLY",
+      "sha256": "366cfeb156347d783c227be3fd7e10e397c8cd00c49c909673fc5208f36b841f",
+      "file": "data/provider_receipts/366cfeb156347d783c227be3fd7e10e397c8cd00c49c909673fc5208f36b841f.json",
+      "verified": true,
+      "bitwiseMatch": true
+    }
+  },
+  "rawObservationBinding": {
+    "engine": "src/services/kh02/demand/providerObservationRawBinding.ts",
+    "verificationFunction": "verifyProviderObservationAgainstRawArtifact",
+    "parserFunction": "parseProviderTimeseriesPayload",
+    "canonicalQueryMatcher": "areExactOrCanonicalEquivalentQueries",
+    "defectsFixed": {
+      "P1-A": "Authentic receipt without raw row verification. Fixed by strictly verifying that the raw provider JSON timeline_data contains the exact date, query, and demand value.",
+      "P1-B": "Loose token/family overlap improperly used as query identity. Fixed by replacing areCompatibleProductKeywords with areExactOrCanonicalEquivalentQueries for row-level proof."
+    },
+    "conjunctiveRequirements": [
+      "desc.verified === true",
+      "desc.verifiedOrigin === true",
+      "desc.providerOriginVerified === true",
+      "desc.originKind === \"ACTUAL_PROVIDER_INVOCATION\"",
+      "desc.eligible === true",
+      "desc.eligibleForBusiness === true",
+      "desc.durablePersistenceVerified === true",
+      "desc.commitState === \"EVIDENCE_ELIGIBLE\"",
+      "desc.responseStatus === 200",
+      "desc.exactObservationVerified === true"
+    ]
+  }
+}

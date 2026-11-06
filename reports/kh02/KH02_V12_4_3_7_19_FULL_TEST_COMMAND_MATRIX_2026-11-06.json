@@ -1,0 +1,102 @@
+{
+  "version": "12.4.3.7.19",
+  "evaluatedAt": "2026-11-06T09:12:00+07:00",
+  "testedCodeCommitSha": "0cd5bdec55db2c34ddc62c7413f50adbf8ed51ef",
+  "baselineSha": "812018d4eaf3d51bcaa35b9ccb16f3f7ca92a916",
+  "branch": "feature/kh02-walmart-us-jina-reader-v12.4.3.5.1",
+  "overallEngineeringVerdict": "PASS",
+  "stagingReadinessVerdict": "CONTRACT_READY",
+  "businessEvidenceVerdict": "INSUFFICIENT_AND_BLOCKED",
+  "gates": {
+    "S0": {
+      "name": "Baseline and Source Hygiene",
+      "commands": [
+        "git status --short --branch",
+        "npx tsc --noEmit",
+        "git diff --check"
+      ],
+      "exitCode": 0,
+      "durationMs": 4200,
+      "verdict": "PASS"
+    },
+    "S1": {
+      "name": "V19 Provider Observation Raw Row Binding Targeted Suites",
+      "command": "npx vitest run tests/unit/kh02/v12_4_3_7_19_ExactProviderRawRowBinding.test.ts tests/unit/kh02/v12_4_3_7_19_BatchWriteAndReadAuthority.test.ts tests/unit/kh02/v12_4_3_7_19_ReleaseGateFromRealResults.test.ts",
+      "testFiles": 3,
+      "testsTotal": 66,
+      "testsPassed": 66,
+      "testsFailed": 0,
+      "testsSkipped": 0,
+      "durationMs": 1860,
+      "exitCode": 0,
+      "verdict": "PASS"
+    },
+    "S2": {
+      "name": "V18 & V18.2 Provenance & Concurrency Regression",
+      "command": "npx vitest run tests/integration/kh02/v12_4_3_7_18* tests/unit/kh02/v12_4_3_7_18* --maxWorkers=2",
+      "testFiles": 14,
+      "testsTotal": 160,
+      "testsPassed": 160,
+      "testsFailed": 0,
+      "testsSkipped": 0,
+      "durationMs": 31880,
+      "exitCode": 0,
+      "verdict": "PASS"
+    },
+    "S3": {
+      "name": "Core Provenance & Uniqueness Regression (11, 14, 15, 17)",
+      "command": "npx vitest run tests/unit/kh02/v12_4_3_7_11_AtomicReceiptCommitReadback.test.ts tests/unit/kh02/v12_4_3_7_14_TrustedProofIsolationDurableRecovery.test.ts tests/unit/kh02/v12_4_3_7_15_HmacTrustPathHardening.test.ts tests/unit/kh02/v12_4_3_7_17_DbUniquenessMultiProcess.test.ts",
+      "testFiles": 4,
+      "testsTotal": 149,
+      "testsPassed": 149,
+      "testsFailed": 0,
+      "testsSkipped": 0,
+      "durationMs": 21290,
+      "exitCode": 0,
+      "verdict": "PASS"
+    },
+    "S5": {
+      "name": "KH-01 Cross-System Regression",
+      "command": "npm run kh01:verify",
+      "testFiles": 5,
+      "testsTotal": 69,
+      "testsPassed": 69,
+      "testsFailed": 0,
+      "testsSkipped": 0,
+      "durationMs": 3890,
+      "exitCode": 0,
+      "verdict": "PASS"
+    },
+    "S6": {
+      "name": "Point-in-Time Historical Backtest",
+      "command": "npx tsx scripts/kh02/runBacktestV12_4_3_4_2.ts",
+      "policyScenarioVerdict": "PASS",
+      "devSplitVerdict": "INSUFFICIENT_HISTORICAL_EVIDENCE",
+      "holdoutSplitVerdict": "INSUFFICIENT_HISTORICAL_EVIDENCE",
+      "overallHistoricalVerdict": "INSUFFICIENT_HISTORICAL_EVIDENCE",
+      "durationMs": 2300,
+      "exitCode": 0,
+      "verdict": "PASS (Engineering / Policy Replay)"
+    },
+    "S7": {
+      "name": "Staging Shadow Runtime Execution & Report Validation",
+      "commands": [
+        "npx tsx scripts/kh02/runStagingShadowValidationV12_4_3_7_19.ts",
+        "npx tsx scripts/kh02/validateStagingShadowReportV12_4_3_7_19.ts"
+      ],
+      "status": "CONTRACT_READY",
+      "mode": "OFFLINE_CONTRACT_CHECK",
+      "exitCode": 0,
+      "durationMs": 1450,
+      "verdict": "PASS"
+    },
+    "S10": {
+      "name": "Sentinel Receipts Bitwise Preserved",
+      "command": "Get-FileHash data/provider_receipts/*",
+      "receiptCount": 3,
+      "bitwiseIntegrityPreserved": true,
+      "exitCode": 0,
+      "verdict": "PASS"
+    }
+  }
+}

@@ -1,0 +1,219 @@
+{
+  "version": "12.4.3.7.19",
+  "evaluatedAt": "2026-11-06T09:12:00+07:00",
+  "testedCodeCommitSha": "0cd5bdec55db2c34ddc62c7413f50adbf8ed51ef",
+  "baselineSha": "812018d4eaf3d51bcaa35b9ccb16f3f7ca92a916",
+  "branch": "feature/kh02-walmart-us-jina-reader-v12.4.3.5.1",
+  "vectors": [
+    {
+      "id": "A01",
+      "vector": "Missing timeline_data in raw provider JSON",
+      "expectedErrorCode": "RAW_SERIES_MISSING",
+      "actualErrorCode": "RAW_SERIES_MISSING",
+      "result": "PASS"
+    },
+    {
+      "id": "A02",
+      "vector": "Empty timeline_data array in raw provider JSON",
+      "expectedErrorCode": "RAW_SERIES_MISSING",
+      "actualErrorCode": "RAW_SERIES_MISSING",
+      "result": "PASS"
+    },
+    {
+      "id": "A03",
+      "vector": "Timeseries wrong schema (timeline_data is not an array)",
+      "expectedErrorCode": "RAW_SERIES_MISSING",
+      "actualErrorCode": "RAW_SERIES_MISSING",
+      "result": "PASS"
+    },
+    {
+      "id": "A04",
+      "vector": "Raw JSON points missing values array",
+      "expectedErrorCode": "UNSUPPORTED_RAW_SCHEMA",
+      "actualErrorCode": "UNSUPPORTED_RAW_SCHEMA",
+      "result": "PASS"
+    },
+    {
+      "id": "A05",
+      "vector": "Row demand value mismatch (e.g. 75 in raw vs 85 requested)",
+      "expectedErrorCode": "RAW_VALUE_MISMATCH",
+      "actualErrorCode": "RAW_VALUE_MISMATCH",
+      "result": "PASS"
+    },
+    {
+      "id": "A06",
+      "vector": "Row date mismatch (date absent from raw series)",
+      "expectedErrorCode": "RAW_ROW_NOT_FOUND",
+      "actualErrorCode": "RAW_ROW_NOT_FOUND",
+      "result": "PASS"
+    },
+    {
+      "id": "A07",
+      "vector": "Same value occurs on a different date only",
+      "expectedErrorCode": "RAW_ROW_NOT_FOUND",
+      "actualErrorCode": "RAW_ROW_NOT_FOUND",
+      "result": "PASS"
+    },
+    {
+      "id": "A08",
+      "vector": "Same date appears only in wrong keyword series",
+      "expectedErrorCode": "RAW_SERIES_IDENTITY_MISMATCH",
+      "actualErrorCode": "RAW_SERIES_IDENTITY_MISMATCH",
+      "result": "PASS"
+    },
+    {
+      "id": "A09",
+      "vector": "Ambiguous multi-keyword series without labels",
+      "expectedErrorCode": "RAW_ROW_AMBIGUOUS",
+      "actualErrorCode": "RAW_ROW_AMBIGUOUS",
+      "result": "PASS"
+    },
+    {
+      "id": "A10",
+      "vector": "Conflicting duplicate dates and values in series",
+      "expectedErrorCode": "RAW_ROW_AMBIGUOUS",
+      "actualErrorCode": "RAW_ROW_AMBIGUOUS",
+      "result": "PASS"
+    },
+    {
+      "id": "A11",
+      "vector": "Query semantic-family overlap but not exact identity (Defect P1-B)",
+      "expectedErrorCode": "RAW_SERIES_IDENTITY_MISMATCH",
+      "actualErrorCode": "RAW_SERIES_IDENTITY_MISMATCH",
+      "result": "PASS"
+    },
+    {
+      "id": "A12",
+      "vector": "Brand or model mismatch hidden by token overlap",
+      "expectedErrorCode": "RAW_SERIES_IDENTITY_MISMATCH",
+      "actualErrorCode": "RAW_SERIES_IDENTITY_MISMATCH",
+      "result": "PASS"
+    },
+    {
+      "id": "A13",
+      "vector": "Observation region mismatch with raw search_parameters.geo",
+      "expectedErrorCode": "REGION_MISMATCH",
+      "actualErrorCode": "REGION_MISMATCH",
+      "result": "PASS"
+    },
+    {
+      "id": "A14",
+      "vector": "Timezone boundary 23:00 UTC date parse sanity check",
+      "expectedErrorCode": "RAW_ROW_NOT_FOUND",
+      "actualErrorCode": "RAW_ROW_NOT_FOUND",
+      "result": "PASS"
+    },
+    {
+      "id": "A15",
+      "vector": "Unix seconds vs ms invalid conversion (< year 2000)",
+      "expectedErrorCode": "RAW_ROW_NOT_FOUND",
+      "actualErrorCode": "RAW_ROW_NOT_FOUND",
+      "result": "PASS"
+    },
+    {
+      "id": "A16",
+      "vector": "Weekly periodEnd mismatch (>7 days diff)",
+      "expectedErrorCode": "INTERVAL_MISMATCH",
+      "actualErrorCode": "INTERVAL_MISMATCH",
+      "result": "PASS"
+    },
+    {
+      "id": "A17",
+      "vector": "Hourly cadence viewed as daily interval",
+      "expectedErrorCode": "INTERVAL_MISMATCH",
+      "actualErrorCode": "INTERVAL_MISMATCH",
+      "result": "PASS"
+    },
+    {
+      "id": "A18",
+      "vector": "Future capturedAt or as-of timestamp before capturedAt",
+      "expectedErrorCode": "POINT_IN_TIME_VIOLATION",
+      "actualErrorCode": "POINT_IN_TIME_VIOLATION",
+      "result": "PASS"
+    },
+    {
+      "id": "A19",
+      "vector": "Null vs zero/NaN/Infinity/string placeholder in raw value",
+      "expectedErrorCode": "INVALID_NUMERIC_VALUE",
+      "actualErrorCode": "INVALID_NUMERIC_VALUE",
+      "result": "PASS"
+    },
+    {
+      "id": "A20",
+      "vector": "Raw response SHA-256 mismatch with receipt pointer",
+      "expectedErrorCode": "HASH_MISMATCH",
+      "actualErrorCode": "HASH_MISMATCH",
+      "result": "PASS"
+    },
+    {
+      "id": "A21",
+      "vector": "Swapped receipt ID across products (productId mismatch)",
+      "expectedErrorCode": "PRODUCT_MISMATCH",
+      "actualErrorCode": "PRODUCT_MISMATCH",
+      "result": "PASS"
+    },
+    {
+      "id": "A22",
+      "vector": "Non-timeseries product/ad response payload",
+      "expectedErrorCode": "NO_TIMESERIES_SUPPORT",
+      "actualErrorCode": "NO_TIMESERIES_SUPPORT",
+      "result": "PASS"
+    },
+    {
+      "id": "A23",
+      "vector": "Empty rawBytes buffer or artifact missing",
+      "expectedErrorCode": "MISSING_ARTIFACT",
+      "actualErrorCode": "MISSING_ARTIFACT",
+      "result": "PASS"
+    },
+    {
+      "id": "A24",
+      "vector": "Corrupt JSON payload unable to be parsed",
+      "expectedErrorCode": "UNSUPPORTED_RAW_SCHEMA",
+      "actualErrorCode": "UNSUPPORTED_RAW_SCHEMA",
+      "result": "PASS"
+    },
+    {
+      "id": "A25",
+      "vector": "Raw row missing explicit query attribution in multi-series",
+      "expectedErrorCode": "RAW_SERIES_IDENTITY_MISMATCH",
+      "actualErrorCode": "RAW_SERIES_IDENTITY_MISMATCH",
+      "result": "PASS"
+    },
+    {
+      "id": "A26",
+      "vector": "Multiple points on date with conflicting values",
+      "expectedErrorCode": "RAW_ROW_AMBIGUOUS",
+      "actualErrorCode": "RAW_ROW_AMBIGUOUS",
+      "result": "PASS"
+    },
+    {
+      "id": "A27",
+      "vector": "Cross-tenant workspaceId swap between receipt and observation",
+      "expectedErrorCode": "RUN_MISMATCH",
+      "actualErrorCode": "RUN_MISMATCH",
+      "result": "PASS"
+    },
+    {
+      "id": "A28",
+      "vector": "Cross-run researchRunId swap between receipt and observation",
+      "expectedErrorCode": "RUN_MISMATCH",
+      "actualErrorCode": "RUN_MISMATCH",
+      "result": "PASS"
+    },
+    {
+      "id": "A29",
+      "vector": "Observation periodStart is in the future relative to current time",
+      "expectedErrorCode": "POINT_IN_TIME_VIOLATION",
+      "actualErrorCode": "POINT_IN_TIME_VIOLATION",
+      "result": "PASS"
+    },
+    {
+      "id": "A30",
+      "vector": "Invalid prefix date match (e.g. '2026-07' vs complete '2026-07-01')",
+      "expectedErrorCode": "RAW_ROW_NOT_FOUND",
+      "actualErrorCode": "RAW_ROW_NOT_FOUND",
+      "result": "PASS"
+    }
+  ]
+}

@@ -1,0 +1,21 @@
+{
+  "mode": "OFFLINE_CONTRACT_CHECK",
+  "status": "CONTRACT_READY",
+  "isProductionDenylisted": true,
+  "shadowWorkspaceId": "shadow_ws_shadow_1793931074351_153a51ba",
+  "operations": {
+    "totalAttempts": 1,
+    "successes": 1,
+    "failures": 0,
+    "blockedCalls": 0
+  },
+  "isolationVerified": true,
+  "zeroProductionMutations": true,
+  "executionTrace": [
+    "Executing OFFLINE_CONTRACT_CHECK on isolated database pragmas.",
+    "Created temporary shadow workspace 'shadow_ws_shadow_1793931074351_153a51ba'.",
+    "Cleaned up shadow workspace 'shadow_ws_shadow_1793931074351_153a51ba'."
+  ],
+  "reportDigest": "ed9b4b7eb3a5cafea7555ec792175460c6efed9f6b5256c992f20c4f9c4a5433",
+  "executedAt": "2026-11-06T02:11:14.350Z"
+}

@@ -1,0 +1,45 @@
+{
+  "version": "12.4.3.7.19",
+  "auditDate": "2026-11-06T09:12:00+07:00",
+  "repository": "quocan050302/Shopify-Search",
+  "branch": "feature/kh02-walmart-us-jina-reader-v12.4.3.5.1",
+  "baselineSha": "812018d4eaf3d51bcaa35b9ccb16f3f7ca92a916",
+  "testedCodeCommitSha": "0cd5bdec55db2c34ddc62c7413f50adbf8ed51ef",
+  "treeSha": "b96831d1ea17366b5791fe691b07223011a007b8",
+  "engineeringVerdict": "PASS",
+  "stagingVerdict": "CONTRACT_READY",
+  "businessVerdict": "INSUFFICIENT_AND_BLOCKED",
+  "ciTruthVerdict": "CI_NOT_CONFIGURED_OR_NOT_RUN",
+  "engineeringGates": {
+    "S0_baselineAndHygiene": "PASS (tsc 0 errors, git diff --check clean)",
+    "S1_v19_TargetedSuites": "PASS (66/66 across 3 suites: A01-A30, B01-B08, C01-C12, D01-D16)",
+    "S2_v18_RegressionSuites": "PASS (160/160 across 14 test files)",
+    "S3_coreProvenanceRegression": "PASS (149/149 across 4 test suites 11, 14, 15, 17)",
+    "S5_kh01CrossRegression": "PASS (69/69 across 5 test files)",
+    "S6_historicalBacktestReplay": "PASS (Policy=PASS, Dev=INSUFFICIENT, Holdout=INSUFFICIENT, Exit 0)",
+    "S7_stagingShadowRuntime": "PASS (CONTRACT_READY in OFFLINE_CONTRACT_CHECK mode)",
+    "S8_ciTruthGate": "CI_NOT_CONFIGURED_OR_NOT_RUN",
+    "S10_sentinelHashes": "PASS (bitwise match on all 3 sentinel receipts)"
+  },
+  "sentinelHashes": {
+    "receipt_04f4d039_sha256": "04f4d039cdd4a884134914fdb9d2ed86ebbfa353991d714b78df545a96fd4b14",
+    "receipt_3440f190_sha256": "3440f19057ac7d1ac535150d1bbcc9a3078e0b7a5d46ad3f4bbd2c46235f61c8",
+    "receipt_366cfeb1_sha256": "366cfeb156347d783c227be3fd7e10e397c8cd00c49c909673fc5208f36b841f",
+    "bitwiseIntegrityPreserved": true
+  },
+  "businessGates": {
+    "G06_GoogleAds": "TRANSPORT_READY_NOT_VERIFIED",
+    "G07_TikTokAds": "BLOCKED",
+    "G15_LongitudinalDemand": "INSUFFICIENT_EVIDENCE",
+    "G16_Top3WinningProducts": "INSUFFICIENT_EVIDENCE"
+  },
+  "artifactFiles": [
+    "reports/kh02/KH02_V12_4_3_7_19_PROVIDER_RAW_ROW_BINDING_AUDIT_2026-11-06.md",
+    "reports/kh02/KH02_V12_4_3_7_19_RAW_OBSERVATION_NEGATIVE_MATRIX_2026-11-06.json",
+    "reports/kh02/KH02_V12_4_3_7_19_FINAL_RELEASE_GATE_2026-11-06.json",
+    "reports/kh02/KH02_V12_4_3_7_19_FULL_TEST_COMMAND_MATRIX_2026-11-06.json",
+    "reports/kh02/KH02_V12_4_3_7_19_PROVENANCE_TRACE_2026-11-06.json",
+    "reports/kh02/KH02_V12_4_3_7_19_STAGING_SHADOW_RUNTIME_REPORT_2026-11-06.json",
+    "reports/kh02/KH02_V12_4_3_7_19_MANIFEST_2026-11-06.json"
+  ]
+}
