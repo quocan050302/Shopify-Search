@@ -50,6 +50,8 @@ import {
 import {
   mintCiAttestationToken,
   TRUSTED_VERIFIER_ID,
+  TRUSTED_ORCHESTRATOR_CAPABILITY,
+  _testOnlyRegisterVerifiedRemoteCiRun,
 } from "@/services/kh02/release/githubActionsCiEvidence";
 
 describe("KH-02 V12.4.3.7.19.3.2: Durable Alias Authorization & Exact-SHA Evidence Matrix (A01 - A42)", () => {
@@ -983,11 +985,22 @@ describe("KH-02 V12.4.3.7.19.3.2: Durable Alias Authorization & Exact-SHA Eviden
       isUnitTestMock: false,
     };
 
-    const token = mintCiAttestationToken({
-      ...rawProof,
+    _testOnlyRegisterVerifiedRemoteCiRun({
+      runId: rawProof.runId,
+      repository: rawProof.repository,
       headSha: commitSha,
       headBranch: rawProof.branch,
+      responseDigest: rawProof.responseDigest,
     });
+
+    const token = mintCiAttestationToken(
+      {
+        ...rawProof,
+        headSha: commitSha,
+        headBranch: rawProof.branch,
+      },
+      { trustedExecutionCapability: TRUSTED_ORCHESTRATOR_CAPABILITY }
+    );
 
     const report = validateTestSuiteEvidenceInputHelper({
       stdout: fakeLog,

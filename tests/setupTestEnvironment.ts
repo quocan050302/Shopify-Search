@@ -7,6 +7,8 @@ import { createClient } from "@libsql/client";
 import { canonicalizeSqliteDatabasePath } from "@/lib/database/databaseConfig";
 import { assertSafeTestDatabase } from "@/lib/database/databaseSafety";
 
+import { clearVerifiedRemoteCiRunsForTesting } from "@/services/kh02/release/githubActionsCiEvidence";
+
 function sanitizeLeakedTestAuthEnv() {
   delete process.env.ADMIN_API_KEY;
   delete process.env.SWAI_ADMIN_TOKEN;
@@ -21,15 +23,17 @@ function sanitizeLeakedTestAuthEnv() {
 sanitizeLeakedTestAuthEnv();
 
 if (!process.env.KH02_CI_VERIFIER_SECRET) {
-  process.env.KH02_CI_VERIFIER_SECRET = "SWAI_TEST_ISOLATED_SECRET_KEY_FOR_UNIT_TESTS_V19_3_2_4";
+  process.env.KH02_CI_VERIFIER_SECRET = "SWAI_TEST_ISOLATED_SECRET_KEY_FOR_UNIT_TESTS_V19_3_2_5";
 }
 
 beforeAll(() => {
   sanitizeLeakedTestAuthEnv();
+  clearVerifiedRemoteCiRunsForTesting();
 });
 
 afterAll(() => {
   sanitizeLeakedTestAuthEnv();
+  clearVerifiedRemoteCiRunsForTesting();
 });
 
 // Ensure every Vitest worker runs against a completely isolated SQLite test database

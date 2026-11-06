@@ -12,7 +12,7 @@
  * 4. CI: PASS / FAIL / NOT_RUN / NOT_CONFIGURED
  */
 
-import { verifyCiAttestationToken } from "./githubActionsCiEvidence";
+import { verifyCiAttestationToken, lookupVerifiedRemoteCiRun } from "./githubActionsCiEvidence";
 
 export interface ReleaseEvidenceInput {
   version: string;
@@ -284,8 +284,11 @@ export function evaluateReleaseEvidence(
   } else if (input.ciStatus.runStatus === "SUCCESS") {
     const proof = input.ciStatus.verifiedProof;
     const att = proof?.attestation || (proof as any)?.evidence || proof;
+    const runId = att?.runId || (proof as any)?.runId;
+    const storeCheck = runId ? lookupVerifiedRemoteCiRun(runId, input.testedCodeSha) : { verified: false };
     const tokenCheck = att ? verifyCiAttestationToken(att) : { valid: false };
     const isAuthenticVerifier =
+      storeCheck.verified === true &&
       proof?.verified === true &&
       att &&
       tokenCheck.valid === true &&
@@ -306,7 +309,7 @@ export function evaluateReleaseEvidence(
       reasons.push("Remote CI workflow run succeeded with verified provider attestation.");
     } else {
       ciStatus = "CI_NOT_RUN";
-      reasons.push("Caller-asserted CI SUCCESS rejected: unverified CI claim without authentic provider attestation (CI_CLAIM_UNVERIFIED).");
+      reasons.push("Caller-asserted CI SUCCESS rejected: unverified CI claim without authentic server-orchestrated provider attestation (CI_CLAIM_UNVERIFIED).");
       blockerList.push("CI_CLAIM_UNVERIFIED");
     }
   } else if (input.ciStatus.runStatus === "FAILURE") {

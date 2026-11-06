@@ -21,6 +21,14 @@ export const TRUSTED_GITHUB_HOST = "api.github.com" as const;
 export const CANONICAL_REPOSITORY = "quocan050302/Shopify-Search" as const;
 export const LOCKED_BRANCH = "feature/kh02-walmart-us-jina-reader-v12.4.3.5.1" as const;
 
+export const CANONICAL_RELEASE_WORKFLOWS = [
+  "KH-02 Continuous Integration",
+  ".github/workflows/kh02-ci.yml",
+  ".github/workflows/ci.yml",
+] as const;
+
+export const TRUSTED_ORCHESTRATOR_CAPABILITY = Symbol.for("SWAI_KH02_INTERNAL_TRUSTED_ORCHESTRATOR_CAPABILITY_V19_3_2_5");
+
 export const KNOWN_INSECURE_DEFAULT_KEYS = [
   "SWAI_KH02_INTERNAL_HMAC_VERIFIER_KEY_V19_3_2_3_SECURE",
   "default",
@@ -30,6 +38,157 @@ export const KNOWN_INSECURE_DEFAULT_KEYS = [
   "dev",
   "changeme",
 ] as const;
+
+export interface VerifiedRemoteCiRecord {
+  runId: string;
+  repository: string;
+  headSha: string;
+  headBranch: string;
+  workflowId: number | string;
+  workflowName?: string;
+  event: string;
+  status: string;
+  conclusion: string;
+  responseDigest: string;
+  verifiedAt: string;
+  proofHandle: string;
+  isUnitTestMock: boolean;
+}
+
+const VERIFIED_PROVIDER_RUNS = new Map<string, VerifiedRemoteCiRecord>();
+
+/**
+ * Server-only protected lookup for verified GitHub Actions CI runs.
+ * A run is ONLY verified if it was authenticated by verifyRemoteGitHubActionsRun in this runtime session.
+ */
+export function lookupVerifiedRemoteCiRun(
+  runId: string | number,
+  expectedSha?: string,
+  expectedRepo?: string
+): { verified: boolean; record?: VerifiedRemoteCiRecord; reason?: string } {
+  if (!runId || String(runId).trim() === "") {
+    return { verified: false, reason: "MISSING_RUN_ID: No CI runId provided for lookup." };
+  }
+  const runIdStr = String(runId).trim();
+  const repo = (expectedRepo || CANONICAL_REPOSITORY).toLowerCase();
+  const recordKey = `${repo}#${runIdStr}`;
+  const record = VERIFIED_PROVIDER_RUNS.get(recordKey);
+
+  if (!record) {
+    return {
+      verified: false,
+      reason: `NO_PROVIDER_RUN_REGISTERED: Run '${runIdStr}' on repository '${repo}' was not verified by authentic remote GitHub Actions verifier in this server runtime.`,
+    };
+  }
+
+  if (record.isUnitTestMock) {
+    return {
+      verified: false,
+      record,
+      reason: `MOCK_QUARANTINE: Run '${runIdStr}' is marked as a UNIT_TEST_MOCK and cannot be admitted for commercial release.`,
+    };
+  }
+
+  if (expectedSha && record.headSha !== expectedSha) {
+    return {
+      verified: false,
+      record,
+      reason: `SHA_MISMATCH: Verified run '${runIdStr}' headSha '${record.headSha}' does not match expected tested SHA '${expectedSha}'.`,
+    };
+  }
+
+  return {
+    verified: true,
+    record,
+  };
+}
+
+/**
+ * Server-only protected registration for verified GitHub Actions CI runs.
+ * Only callable with internal orchestrator capability token.
+ */
+export function registerVerifiedRemoteCiRun(
+  evidence: GitHubWorkflowRunEvidence,
+  capability?: symbol
+): { registered: boolean; proofHandle?: string; error?: string } {
+  if (capability !== TRUSTED_ORCHESTRATOR_CAPABILITY) {
+    return {
+      registered: false,
+      error: "UNAUTHORIZED_CAPABILITY: Only the trusted server orchestrator can register verified CI runs.",
+    };
+  }
+
+  const repo = (evidence.repository || CANONICAL_REPOSITORY).toLowerCase();
+  const runIdStr = String(evidence.runId).trim();
+  const recordKey = `${repo}#${runIdStr}`;
+  const proofHandle = `swai_proof_handle_${crypto.createHash("sha256").update(`${repo}|${runIdStr}|${evidence.headSha}|${evidence.responseDigest}|${evidence.fetchedAt}`).digest("hex")}`;
+
+  const record: VerifiedRemoteCiRecord = {
+    runId: runIdStr,
+    repository: evidence.repository,
+    headSha: evidence.headSha,
+    headBranch: evidence.headBranch,
+    workflowId: evidence.workflowId,
+    workflowName: evidence.workflowName,
+    event: evidence.event,
+    status: evidence.status,
+    conclusion: evidence.conclusion,
+    responseDigest: evidence.responseDigest,
+    verifiedAt: evidence.fetchedAt,
+    proofHandle,
+    isUnitTestMock: evidence.isUnitTestMock === true || evidence.source === "UNIT_TEST_MOCK",
+  };
+
+  VERIFIED_PROVIDER_RUNS.set(recordKey, record);
+  return { registered: true, proofHandle };
+}
+
+/**
+ * Unit-test-only helper for registering test fixtures in memory.
+ * Prohibited when NODE_ENV === 'production'.
+ */
+export function _testOnlyRegisterVerifiedRemoteCiRun(record: {
+  runId: string | number;
+  repository?: string;
+  headSha: string;
+  headBranch?: string;
+  workflowId?: number | string;
+  workflowName?: string;
+  event?: string;
+  status?: string;
+  conclusion?: string;
+  responseDigest: string;
+  isUnitTestMock?: boolean;
+}): void {
+  if (process.env.NODE_ENV === "production") {
+    throw new Error("PROHIBITED_IN_PRODUCTION: _testOnlyRegisterVerifiedRemoteCiRun cannot be used in production.");
+  }
+  const repo = (record.repository || CANONICAL_REPOSITORY).toLowerCase();
+  const runIdStr = String(record.runId).trim();
+  const recordKey = `${repo}#${runIdStr}`;
+  VERIFIED_PROVIDER_RUNS.set(recordKey, {
+    runId: runIdStr,
+    repository: record.repository || CANONICAL_REPOSITORY,
+    headSha: record.headSha,
+    headBranch: record.headBranch || LOCKED_BRANCH,
+    workflowId: record.workflowId || 100,
+    workflowName: record.workflowName || "KH-02 Continuous Integration",
+    event: record.event || "push",
+    status: record.status || "completed",
+    conclusion: record.conclusion || "success",
+    responseDigest: record.responseDigest,
+    verifiedAt: new Date().toISOString(),
+    proofHandle: `swai_handle_test_${recordKey}`,
+    isUnitTestMock: record.isUnitTestMock ?? false,
+  });
+}
+
+/**
+ * Unit-test-only helper to clear registry state between test cases.
+ */
+export function clearVerifiedRemoteCiRunsForTesting(): void {
+  VERIFIED_PROVIDER_RUNS.clear();
+}
 
 export interface CiVerifierSecretResolution {
   key?: string;
@@ -80,9 +239,12 @@ export function computeCiAttestationDigest(evidence: {
   conclusion?: string;
   event?: string;
   responseDigest?: string;
+  workflowId?: number | string;
+  workflowName?: string;
   isUnitTestMock?: boolean;
 }): string {
   const parts = [
+    "v1",
     evidence.provider || "github-actions",
     evidence.source || "",
     (evidence.repository || "").toLowerCase(),
@@ -93,6 +255,8 @@ export function computeCiAttestationDigest(evidence: {
     evidence.conclusion || "",
     evidence.event || "",
     evidence.responseDigest || "",
+    String(evidence.workflowId || ""),
+    evidence.workflowName || "",
     evidence.isUnitTestMock ? "MOCK" : "PROD",
   ];
   return parts.join("|");
@@ -110,6 +274,8 @@ export function mintCiAttestationToken(
     conclusion?: string;
     event?: string;
     responseDigest?: string;
+    workflowId?: number | string;
+    workflowName?: string;
     isUnitTestMock?: boolean;
   },
   options?: {
@@ -119,10 +285,24 @@ export function mintCiAttestationToken(
 ): string {
   const resolution = getCiVerifierSecret();
   const testKey = options?.testKey;
+  const hasCapability = options?.trustedExecutionCapability === TRUSTED_ORCHESTRATOR_CAPABILITY;
+
+  // Check if run was verified in server registry
+  const runIdStr = String(evidence.runId || "").trim();
+  const repo = (evidence.repository || CANONICAL_REPOSITORY).toLowerCase();
+  const serverRecord = runIdStr ? VERIFIED_PROVIDER_RUNS.get(`${repo}#${runIdStr}`) : undefined;
+  const isRegisteredByServer = serverRecord !== undefined;
+
+  // Fail closed if unauthenticated caller tries to mint without server execution or internal capability
+  if (!hasCapability && !isRegisteredByServer) {
+    const payload = computeCiAttestationDigest(evidence);
+    const untrustedDigest = crypto.createHash("sha256").update(`CALLER_UNAUTHORIZED:${payload}`).digest("hex");
+    return `swai_ci_untrusted_${untrustedDigest}`;
+  }
 
   if (resolution.status !== "CONFIGURED" && !testKey) {
     const payload = computeCiAttestationDigest(evidence);
-    const untrustedDigest = crypto.createHash("sha256").update(`CALLER_UNVERIFIED:${payload}`).digest("hex");
+    const untrustedDigest = crypto.createHash("sha256").update(`MISSING_SECRET:${payload}`).digest("hex");
     return `swai_ci_untrusted_${untrustedDigest}`;
   }
 
@@ -181,9 +361,14 @@ export function verifyCiAttestationToken(
       conclusion: evidence.conclusion,
       event: evidence.event,
       responseDigest: evidence.responseDigest,
+      workflowId: evidence.workflowId,
+      workflowName: evidence.workflowName,
       isUnitTestMock: isMock,
     },
-    { testKey: resolution.key }
+    {
+      trustedExecutionCapability: TRUSTED_ORCHESTRATOR_CAPABILITY,
+      testKey: resolution.key,
+    }
   );
 
   const sigBuf = Buffer.from(sig);
@@ -221,6 +406,7 @@ export interface GitHubWorkflowRunEvidence {
   responseDigest: string; // SHA-256 of raw API response body
   verifier: typeof TRUSTED_VERIFIER_ID;
   attestationSignature?: string;
+  proofHandle?: string;
   isUnitTestMock?: boolean;
 }
 
@@ -474,6 +660,18 @@ export async function verifyRemoteGitHubActionsRun(
     };
   }
 
+  // Exact numeric runId equality validation
+  const actualRunId = String(data.id || "").trim();
+  if (!actualRunId || actualRunId !== runIdStr) {
+    return {
+      verified: false,
+      status: "CI_FAIL",
+      level: "CI_FAIL",
+      rejectionReason: `CI runId mismatch: GitHub API returned runId '${actualRunId}', expected '${runIdStr}'.`,
+      verifiedAt,
+    };
+  }
+
   // Validate head_branch
   const actualBranch = String(data.head_branch || "").trim();
   if (actualBranch !== expectedBranch) {
@@ -519,16 +717,17 @@ export async function verifyRemoteGitHubActionsRun(
     };
   }
 
-  // Optional workflow path/name allowlist check
+  // Workflow path/name allowlist check (exact match, no loose substring matching)
   if (Array.isArray(options.allowedWorkflows) && options.allowedWorkflows.length > 0) {
-    const wfName = data.name || data.path || "";
-    const matched = options.allowedWorkflows.some((w) => wfName.includes(w) || w.includes(wfName));
+    const wfName = String(data.name || "").trim();
+    const wfPath = String(data.path || "").trim();
+    const matched = options.allowedWorkflows.some((allowed) => wfName === allowed || wfPath === allowed);
     if (!matched) {
       return {
         verified: false,
         status: "CI_FAIL",
         level: "CI_FAIL",
-        rejectionReason: `Workflow '${wfName}' is not in the allowed release workflows list (${options.allowedWorkflows.join(", ")}).`,
+        rejectionReason: `Workflow '${wfName || wfPath}' is not in the allowed release workflows list (${options.allowedWorkflows.join(", ")}).`,
         verifiedAt,
       };
     }
@@ -555,11 +754,16 @@ export async function verifyRemoteGitHubActionsRun(
     isUnitTestMock: isMock,
   };
 
-  const attestationSignature = mintCiAttestationToken(rawEvidence);
+  const reg = registerVerifiedRemoteCiRun(rawEvidence, TRUSTED_ORCHESTRATOR_CAPABILITY);
+
+  const attestationSignature = mintCiAttestationToken(rawEvidence, {
+    trustedExecutionCapability: TRUSTED_ORCHESTRATOR_CAPABILITY,
+  });
 
   const evidence: GitHubWorkflowRunEvidence = {
     ...rawEvidence,
     attestationSignature,
+    proofHandle: reg.proofHandle,
   };
 
   return {
@@ -688,6 +892,16 @@ export function verifyAuthenticCiProof(
     return {
       verified: false,
       error: `CI_CLAIM_UNVERIFIED: Caller-supplied CI proof for runId '${runId}' is marked as a UNIT_TEST_MOCK and cannot be admitted for commercial release.`,
+      status: "CI_NOT_RUN",
+    };
+  }
+
+  // Strict server-side verified provider run check (Trust Boundary Closure)
+  const storeCheck = lookupVerifiedRemoteCiRun(runId, options.expectedSha || attestation.headSha || attestation.commitSha, expectedRepo);
+  if (!storeCheck.verified) {
+    return {
+      verified: false,
+      error: `CI_CLAIM_UNVERIFIED: RunId '${runId}' has not been verified by authentic remote GitHub Actions verifier in this server runtime (${storeCheck.reason || "NOT_FOUND"}). Caller assertions cannot grant CI_PASS.`,
       status: "CI_NOT_RUN",
     };
   }

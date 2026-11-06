@@ -10,7 +10,7 @@
 
 import fs from "fs";
 import crypto from "crypto";
-import { verifyCiAttestationToken } from "../release/githubActionsCiEvidence";
+import { verifyCiAttestationToken, lookupVerifiedRemoteCiRun } from "../release/githubActionsCiEvidence";
 
 export type TestSuiteExecutionStatus = "PASS" | "FAIL" | "INCOMPLETE" | "STALE" | "NOT_RUN";
 
@@ -135,8 +135,11 @@ export function validateVerifiedCiAttestation(
   }
 
   const tokenCheck = verifyCiAttestationToken(proof, options);
+  const runId = proof.runId || (proof as any).id;
+  const storeCheck = runId ? lookupVerifiedRemoteCiRun(runId, options.expectedSha || proof.commitSha || (proof as any).headSha) : { verified: false };
 
   const providerVerified =
+    storeCheck.verified === true &&
     tokenCheck.valid &&
     !tokenCheck.isUnitTestMock &&
     proof.source === "GITHUB_API" &&
@@ -182,7 +185,8 @@ export function verifyGitHubActionsRunProof(
     if (!val.valid) {
       return { verified: false, error: val.reason };
     }
-    if (options.requireTrustedVerifier !== false && !val.providerVerified) {
+    // Production bypass eliminated: require authentic provider verification regardless of options flag
+    if (!val.providerVerified) {
       return {
         verified: false,
         error: "CI_CLAIM_UNVERIFIED: Authenticated proof lacks authentic cryptographic SWAI_TRUSTED_GITHUB_VERIFIER_V1 attestation token or is a unit test mock.",
