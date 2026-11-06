@@ -277,6 +277,7 @@ export function evaluateReleaseEvidence(
   if (!input.ciStatus || input.ciStatus.configured === false) {
     ciStatus = "CI_NOT_CONFIGURED";
     reasons.push("Remote CI workflow is not configured or not observable from local environment.");
+    blockerList.push("CI_NOT_CONFIGURED");
   } else if (input.ciStatus.runStatus === "NOT_RUN") {
     ciStatus = "CI_NOT_RUN";
     reasons.push("Remote CI workflow configured but not run for tested commit.");

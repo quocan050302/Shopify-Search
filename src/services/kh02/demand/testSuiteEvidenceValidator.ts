@@ -116,11 +116,13 @@ export function validateVerifiedCiAttestation(
   if (proof.repository !== expectedRepo) {
     return { valid: false, reason: `CI repository mismatch: got '${proof.repository}', expected '${expectedRepo}'.`, structurallyValid: false, providerVerified: false };
   }
-  if (options.expectedSha && proof.commitSha !== options.expectedSha) {
-    return { valid: false, reason: `CI commit SHA mismatch: proof commit '${proof.commitSha}' != expected '${options.expectedSha}'.`, structurallyValid: false, providerVerified: false };
+  const sha = proof.commitSha || (proof as any).headSha;
+  if (options.expectedSha && sha !== options.expectedSha) {
+    return { valid: false, reason: `CI commit SHA mismatch: proof commit '${sha}' != expected '${options.expectedSha}'.`, structurallyValid: false, providerVerified: false };
   }
-  if (options.expectedBranch && proof.branch !== options.expectedBranch) {
-    return { valid: false, reason: `CI branch mismatch: proof branch '${proof.branch}' != expected '${options.expectedBranch}'.`, structurallyValid: false, providerVerified: false };
+  const branch = proof.branch || (proof as any).headBranch;
+  if (options.expectedBranch && branch !== options.expectedBranch) {
+    return { valid: false, reason: `CI branch mismatch: proof branch '${branch}' != expected '${options.expectedBranch}'.`, structurallyValid: false, providerVerified: false };
   }
   if (proof.status !== "completed") {
     return { valid: false, reason: `CI run status is '${proof.status}', expected 'completed'.`, structurallyValid: false, providerVerified: false };

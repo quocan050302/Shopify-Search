@@ -20,10 +20,53 @@ export const TRUSTED_VERIFIER_ID = "SWAI_TRUSTED_GITHUB_VERIFIER_V1" as const;
 export const TRUSTED_GITHUB_HOST = "api.github.com" as const;
 export const CANONICAL_REPOSITORY = "quocan050302/Shopify-Search" as const;
 export const LOCKED_BRANCH = "feature/kh02-walmart-us-jina-reader-v12.4.3.5.1" as const;
-export const DEFAULT_CI_VERIFIER_KEY = "SWAI_KH02_INTERNAL_HMAC_VERIFIER_KEY_V19_3_2_3_SECURE";
 
-export function getCiVerifierKey(): string {
-  return process.env.KH02_CI_VERIFIER_SECRET || DEFAULT_CI_VERIFIER_KEY;
+export const KNOWN_INSECURE_DEFAULT_KEYS = [
+  "SWAI_KH02_INTERNAL_HMAC_VERIFIER_KEY_V19_3_2_3_SECURE",
+  "default",
+  "secret",
+  "password",
+  "test",
+  "dev",
+  "changeme",
+] as const;
+
+export interface CiVerifierSecretResolution {
+  key?: string;
+  status: "CONFIGURED" | "NOT_CONFIGURED" | "INSECURE_OR_DEFAULT";
+  reason?: string;
+}
+
+/**
+ * Privileged server-only configuration accessor for CI HMAC verifier secret.
+ * Enforces strict fail-closed policy: returns explicit NOT_CONFIGURED or INSECURE_OR_DEFAULT
+ * if absent, weak, or matching known insecure default keys. Never quietly selects a fallback key.
+ */
+export function getCiVerifierSecret(): CiVerifierSecretResolution {
+  const secret = process.env.KH02_CI_VERIFIER_SECRET;
+  if (!secret || !secret.trim()) {
+    return {
+      status: "NOT_CONFIGURED",
+      reason: "MISSING_TRUST_ANCHOR: KH02_CI_VERIFIER_SECRET environment variable is not configured.",
+    };
+  }
+  const trimmed = secret.trim();
+  if (KNOWN_INSECURE_DEFAULT_KEYS.some((k) => trimmed.toLowerCase() === k.toLowerCase())) {
+    return {
+      status: "INSECURE_OR_DEFAULT",
+      reason: "PROHIBITED_KEY: KH02_CI_VERIFIER_SECRET matches a known insecure/default key.",
+    };
+  }
+  if (trimmed.length < 32) {
+    return {
+      status: "INSECURE_OR_DEFAULT",
+      reason: "INSUFFICIENT_ENTROPY: KH02_CI_VERIFIER_SECRET must be at least 32 characters.",
+    };
+  }
+  return {
+    key: trimmed,
+    status: "CONFIGURED",
+  };
 }
 
 export function computeCiAttestationDigest(evidence: {
@@ -55,21 +98,37 @@ export function computeCiAttestationDigest(evidence: {
   return parts.join("|");
 }
 
-export function mintCiAttestationToken(evidence: {
-  provider?: string;
-  source?: string;
-  repository?: string;
-  runId?: string | number;
-  headSha?: string;
-  headBranch?: string;
-  status?: string;
-  conclusion?: string;
-  event?: string;
-  responseDigest?: string;
-  isUnitTestMock?: boolean;
-}): string {
+export function mintCiAttestationToken(
+  evidence: {
+    provider?: string;
+    source?: string;
+    repository?: string;
+    runId?: string | number;
+    headSha?: string;
+    headBranch?: string;
+    status?: string;
+    conclusion?: string;
+    event?: string;
+    responseDigest?: string;
+    isUnitTestMock?: boolean;
+  },
+  options?: {
+    trustedExecutionCapability?: symbol;
+    testKey?: string;
+  }
+): string {
+  const resolution = getCiVerifierSecret();
+  const testKey = options?.testKey;
+
+  if (resolution.status !== "CONFIGURED" && !testKey) {
+    const payload = computeCiAttestationDigest(evidence);
+    const untrustedDigest = crypto.createHash("sha256").update(`CALLER_UNVERIFIED:${payload}`).digest("hex");
+    return `swai_ci_untrusted_${untrustedDigest}`;
+  }
+
+  const key = testKey || resolution.key!;
   const payload = computeCiAttestationDigest(evidence);
-  const hmac = crypto.createHmac("sha256", getCiVerifierKey());
+  const hmac = crypto.createHmac("sha256", key);
   hmac.update(payload, "utf-8");
   return `swai_ci_v1_${hmac.digest("hex")}`;
 }
@@ -92,26 +151,40 @@ export function verifyCiAttestationToken(
 
   const sig = evidence.attestationSignature || evidence.attestationToken;
   if (!sig || typeof sig !== "string" || !sig.startsWith("swai_ci_v1_")) {
+    const isUntrusted = typeof sig === "string" && sig.startsWith("swai_ci_untrusted_");
     return {
       valid: false,
-      reason: "Missing or invalid cryptographic attestation signature/token.",
+      reason: isUntrusted
+        ? "UNAUTHORIZED_MINT: Attestation token was minted outside trusted verifier boundary without provider verification capability."
+        : "Missing or invalid cryptographic attestation signature/token.",
+    };
+  }
+
+  const resolution = getCiVerifierSecret();
+  if (resolution.status !== "CONFIGURED") {
+    return {
+      valid: false,
+      reason: `MISSING_TRUST_ANCHOR: ${resolution.reason}`,
     };
   }
 
   const isMock = evidence.isUnitTestMock === true || evidence.source === "UNIT_TEST_MOCK";
-  const expectedSig = mintCiAttestationToken({
-    provider: evidence.provider,
-    source: evidence.source,
-    repository: evidence.repository,
-    runId: evidence.runId,
-    headSha: evidence.headSha || evidence.commitSha,
-    headBranch: evidence.headBranch || evidence.branch,
-    status: evidence.status,
-    conclusion: evidence.conclusion,
-    event: evidence.event,
-    responseDigest: evidence.responseDigest,
-    isUnitTestMock: isMock,
-  });
+  const expectedSig = mintCiAttestationToken(
+    {
+      provider: evidence.provider,
+      source: evidence.source,
+      repository: evidence.repository,
+      runId: evidence.runId,
+      headSha: evidence.headSha || evidence.commitSha,
+      headBranch: evidence.headBranch || evidence.branch,
+      status: evidence.status,
+      conclusion: evidence.conclusion,
+      event: evidence.event,
+      responseDigest: evidence.responseDigest,
+      isUnitTestMock: isMock,
+    },
+    { testKey: resolution.key }
+  );
 
   const sigBuf = Buffer.from(sig);
   const expectedBuf = Buffer.from(expectedSig);
@@ -244,6 +317,19 @@ export async function verifyRemoteGitHubActionsRun(
       rejectionReason: "GITHUB_TOKEN / GH_TOKEN environment variable not configured. Remote CI workflow cannot be authenticated.",
       verifiedAt,
     };
+  }
+
+  if (!isMock) {
+    const verifierSecret = getCiVerifierSecret();
+    if (verifierSecret.status !== "CONFIGURED") {
+      return {
+        verified: false,
+        status: "CI_NOT_CONFIGURED",
+        level: "CI_NOT_RUN",
+        rejectionReason: `CI_NOT_CONFIGURED: ${verifierSecret.reason}`,
+        verifiedAt,
+      };
+    }
   }
 
   const targetUrl = `https://${TRUSTED_GITHUB_HOST}/repos/${repo}/actions/runs/${runIdStr}`;

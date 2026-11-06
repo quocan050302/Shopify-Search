@@ -20,6 +20,10 @@ function sanitizeLeakedTestAuthEnv() {
 
 sanitizeLeakedTestAuthEnv();
 
+if (!process.env.KH02_CI_VERIFIER_SECRET) {
+  process.env.KH02_CI_VERIFIER_SECRET = "SWAI_TEST_ISOLATED_SECRET_KEY_FOR_UNIT_TESTS_V19_3_2_4";
+}
+
 beforeAll(() => {
   sanitizeLeakedTestAuthEnv();
 });
