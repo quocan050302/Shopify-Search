@@ -1,0 +1,51 @@
+{
+  "version": "12.4.3.7.19.1",
+  "auditDate": "2026-11-06T10:15:00+07:00",
+  "testedCodeCommitSha": "562e58621674d48d0f79c02de1f402c716562d66",
+  "repository": "quocan050302/Shopify-Search",
+  "branch": "feature/kh02-walmart-us-jina-reader-v12.4.3.5.1",
+  "boundaryEnforcement": {
+    "singleAuthorizedWriter": "src/services/kh02/demand/demandObservationBatchImport.ts::executeDemandObservationBatchImport",
+    "directBypassCallsInSrc": 0,
+    "totalPrismaWriteCallsInSrc": 1,
+    "proofEnforcementBeforeWrite": "assertVerifiedProviderOriginForImport + verifyProviderObservationAgainstRawArtifact",
+    "strictProvenanceMandatory": true,
+    "atomicTransaction": true
+  },
+  "callsiteInventory": [
+    {
+      "filePath": "src/services/kh02/demand/demandObservationBatchImport.ts",
+      "line": 316,
+      "method": "tx.productDemandObservation.create",
+      "classification": "AUTHORIZED_SINGLE_WRITE_BOUNDARY",
+      "gatedBy": [
+        "assertVerifiedProviderOriginForImport",
+        "verifyProviderObservationAgainstRawArtifact",
+        "prisma.$transaction"
+      ],
+      "status": "APPROVED"
+    },
+    {
+      "filePath": "src/services/kh02/demand/historicalDemandIngestion.ts",
+      "line": 427,
+      "method": "executeDemandObservationBatchImport",
+      "classification": "DELEGATED_CALLER_UNIFIED",
+      "gatedBy": [
+        "executeDemandObservationBatchImport({ strictProvenance: true })"
+      ],
+      "status": "APPROVED"
+    }
+  ],
+  "eliminatedBypasses": [
+    {
+      "filePath": "src/services/kh02/demand/historicalDemandIngestion.ts",
+      "previousCode": "await prisma.productDemandObservation.create({ data: { ... } })",
+      "resolution": "Replaced with executeDemandObservationBatchImport. Provider success without proof verification is rejected; livePoints is emptied, providerStatus set to FAILED, zero rows written, and no merge with authoritative cache.",
+      "defectResolved": "P0-A"
+    }
+  ],
+  "verification": {
+    "automatedCodeScan": "grep -rn 'prisma\\.productDemandObservation\\.(create|createMany|upsert)' src/",
+    "result": "1 callsite found in src/services/kh02/demand/demandObservationBatchImport.ts (authorized transaction batch writer). Zero bypass calls in production application code."
+  }
+}

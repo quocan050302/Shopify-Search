@@ -1,0 +1,61 @@
+{
+  "version": "12.4.3.7.19.1",
+  "auditDate": "2026-11-06T10:15:00+07:00",
+  "repository": "quocan050302/Shopify-Search",
+  "branch": "feature/kh02-walmart-us-jina-reader-v12.4.3.5.1",
+  "baselineSha": "dd9037320100d765ff6527c425acb256b910bd6a",
+  "testedCodeCommitSha": "562e58621674d48d0f79c02de1f402c716562d66",
+  "releaseVerdicts": {
+    "engineeringReadiness": "ENGINEERING_PASS",
+    "stagingReadiness": "STAGING_SHADOW_CONTRACT_READY",
+    "businessEvidenceReadiness": "INSUFFICIENT_AND_BLOCKED",
+    "ciTruthReadiness": "CI_NOT_CONFIGURED",
+    "overallReleaseAllowed": false
+  },
+  "verdictJustifications": {
+    "engineeringReadiness": "All engineering gates E0-E10 passed with zero failures. Strict unified write boundary (P0-A fix) eliminates direct bypass calls in historicalDemandIngestion. Exact raw series point selector (P1-B fix) verifies canonical queryKey and pointer alignment. Staging shadow runner (P0-C fix) proves physical ephemeral DB isolation. Durable release gate evaluator (P0-D fix) requires full suite coverage and backtests.",
+    "stagingReadiness": "Staging shadow runtime validator executed in safe OFFLINE_CONTRACT_CHECK mode on a separate ephemeral database, certifying CONTRACT_READY. Live network requests remain disabled by default.",
+    "businessEvidenceReadiness": "Business gates fail-closed: G06 (Google Ads Transparency) is TRANSPORT_READY_NOT_VERIFIED, G07 (TikTok Ads) is BLOCKED, G15 (Longitudinal Demand >=60d) is INSUFFICIENT_EVIDENCE, G16 (Top 3 Evergreen Winners) is INSUFFICIENT_EVIDENCE. DEV (9 products) and HOLDOUT (21 products) splits lack authentic live external provider evidence.",
+    "ciTruthReadiness": "GitHub Actions remote workflow execution was not run during local offline verification."
+  },
+  "securityAndIsolation": {
+    "unifiedWriteBoundary": "VERIFIED_ACTIVE",
+    "exactObservationRawBinding": "VERIFIED_ACTIVE",
+    "canonicalQueryMatchingStrict": "VERIFIED_ACTIVE",
+    "stagingPhysicalDbIsolation": "VERIFIED_ACTIVE",
+    "stagingSsrfProtection": "VERIFIED_ACTIVE",
+    "realTlsSocketAttestation": "VERIFIED_ACTIVE",
+    "timeTravelRejection": "VERIFIED_ACTIVE",
+    "crossTenantReplayRejection": "VERIFIED_ACTIVE",
+    "crossProductReplayRejection": "VERIFIED_ACTIVE",
+    "sentinelReceiptsBitwiseMatch": "VERIFIED_ACTIVE"
+  },
+  "gates": {
+    "RG01_unifiedWriteBoundary": "PASS",
+    "RG02_exactRawSeriesPointIdentity": "PASS",
+    "RG03_stagingPhysicalIsolation": "PASS",
+    "RG04_durableReleaseEvidence": "PASS",
+    "RG05_sentinelHygieneBitwiseMatch": "PASS",
+    "RG06_independentVerdictsEvaluated": "PASS"
+  },
+  "unresolvedLimitations": [
+    {
+      "code": "G06_NO_LIVE_ADS_CREDENTIALS",
+      "impact": "Google Ads live signal collection unverified in production",
+      "owner": "Data Partnerships / Marketing Ops",
+      "action": "Provide authorized Google Ads read API token for staging shadow run"
+    },
+    {
+      "code": "G07_TIKTOK_ADS_BLOCKED",
+      "impact": "TikTok Ads API unintegrated and deferred out of scope",
+      "owner": "Data Engineering",
+      "action": "Establish developer account and compliant proxy transport"
+    },
+    {
+      "code": "G15_LONGITUDINAL_DATA_ABSENT",
+      "impact": "Cannot certify evergreen winners without >=60d authentic provider series",
+      "owner": "Product Operations",
+      "action": "Acquire authenticated SerpApi or Google Trends historical dataset for target niches"
+    }
+  ]
+}

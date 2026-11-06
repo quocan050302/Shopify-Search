@@ -1,0 +1,28 @@
+{
+  "version": "12.4.3.7.19.1",
+  "evaluatedAt": "2026-11-06T10:15:00+07:00",
+  "testedCodeCommitSha": "562e58621674d48d0f79c02de1f402c716562d66",
+  "baselineSha": "dd9037320100d765ff6527c425acb256b910bd6a",
+  "branch": "feature/kh02-walmart-us-jina-reader-v12.4.3.5.1",
+  "niche": "Pet Gadgets",
+  "results": {
+    "policyScenarioVerdict": "PASS",
+    "policyScenariosTotal": 21,
+    "policyScenariosPassed": 21,
+    "pointInTimeIntegrityVerdict": "PASS",
+    "devSplitVerdict": "INSUFFICIENT_HISTORICAL_EVIDENCE",
+    "devProductsTotal": 9,
+    "devEvergreenCertified": 0,
+    "holdoutSplitVerdict": "INSUFFICIENT_HISTORICAL_EVIDENCE",
+    "holdoutProductsTotal": 21,
+    "holdoutEvergreenCertified": 0,
+    "overallHistoricalDemandVerdict": "INSUFFICIENT_HISTORICAL_EVIDENCE"
+  },
+  "businessGateImplications": {
+    "G15_LongitudinalDemand": "INSUFFICIENT_EVIDENCE",
+    "G16_Top3EvergreenWinners": "INSUFFICIENT_EVIDENCE",
+    "explanation": "No mock or simulated data may unlock commercial evergreen status. Zero-spend policy preserved; production deployment must wait for genuine live external provider evidence."
+  },
+  "command": "npx tsx scripts/kh02/runBacktestV12_4_3_4_2.ts",
+  "exitCode": 0
+}

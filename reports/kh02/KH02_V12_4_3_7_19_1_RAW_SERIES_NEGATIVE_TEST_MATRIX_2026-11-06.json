@@ -1,0 +1,155 @@
+{
+  "version": "12.4.3.7.19.1",
+  "auditDate": "2026-11-06T10:15:00+07:00",
+  "testedCodeCommitSha": "562e58621674d48d0f79c02de1f402c716562d66",
+  "suite": "tests/unit/kh02/v12_4_3_7_19_1_RawSeriesPointIdentity.test.ts",
+  "totalTests": 24,
+  "passed": 24,
+  "failed": 0,
+  "testCases": [
+    {
+      "id": "R01",
+      "category": "SERIES_IDENTITY_EXPLOIT_P1_B",
+      "description": "Single point on date: global q cat / value.query dog => reject RAW_SERIES_IDENTITY_MISMATCH",
+      "verdict": "PASS"
+    },
+    {
+      "id": "R02",
+      "category": "SERIES_IDENTITY_EXPLOIT_P1_B",
+      "description": "Multi-value point on date: query matching value[1] must bind pointer /values/1, not /values/0",
+      "verdict": "PASS"
+    },
+    {
+      "id": "R03",
+      "category": "AMBIGUITY_RESOLUTION",
+      "description": "Multi-value point with duplicate queries on same date => reject RAW_ROW_AMBIGUOUS",
+      "verdict": "PASS"
+    },
+    {
+      "id": "R04",
+      "category": "FALLBACK_IDENTITY",
+      "description": "Point without value.query: uses search_parameters.q only if canonical matches",
+      "verdict": "PASS"
+    },
+    {
+      "id": "R05",
+      "category": "FALLBACK_IDENTITY",
+      "description": "Point without value.query AND without search_parameters.q: receipt only q rejected unless signed attestation",
+      "verdict": "PASS"
+    },
+    {
+      "id": "R06",
+      "category": "INTERVAL_END_MISMATCH",
+      "description": "Date matching point with different interval end date => reject INTERVAL_MISMATCH",
+      "verdict": "PASS"
+    },
+    {
+      "id": "R07",
+      "category": "VALUE_TOLERANCE",
+      "description": "Numeric tolerance: extracted_value 75 vs demandValue 76 (>0.01 delta) => reject RAW_VALUE_MISMATCH",
+      "verdict": "PASS"
+    },
+    {
+      "id": "R08",
+      "category": "VALUE_TOLERANCE",
+      "description": "Floating point within tolerance (75.0001 vs 75.0) => accept",
+      "verdict": "PASS"
+    },
+    {
+      "id": "R09",
+      "category": "DATE_PARSING",
+      "description": "Unix timestamp in seconds vs observation ISO date: correctly aligns and verifies",
+      "verdict": "PASS"
+    },
+    {
+      "id": "R10",
+      "category": "DATE_PARSING",
+      "description": "Unix timestamp in milliseconds vs observation ISO date: correctly aligns and verifies",
+      "verdict": "PASS"
+    },
+    {
+      "id": "R11",
+      "category": "POINT_IN_TIME",
+      "description": "As-of cutoff enforcement: future date relative to asOfTimestamp => reject POINT_IN_TIME_VIOLATION",
+      "verdict": "PASS"
+    },
+    {
+      "id": "R12",
+      "category": "POINT_IN_TIME",
+      "description": "Captured-at timestamp after observation date: historical observation is valid",
+      "verdict": "PASS"
+    },
+    {
+      "id": "R13",
+      "category": "REGION_ISOLATION",
+      "description": "Region mismatch: payload US vs observation GB => reject REGION_MISMATCH",
+      "verdict": "PASS"
+    },
+    {
+      "id": "R14",
+      "category": "CROSS_TENANT_ISOLATION",
+      "description": "Scope mismatch: workspaceId or researchRunId cross-tenant pollution => reject RUN_MISMATCH",
+      "verdict": "PASS"
+    },
+    {
+      "id": "R15",
+      "category": "CROSS_PRODUCT_ISOLATION",
+      "description": "Product mismatch: observation productId != receipt productId => reject PRODUCT_MISMATCH",
+      "verdict": "PASS"
+    },
+    {
+      "id": "R16",
+      "category": "SCHEMA_VALIDATION",
+      "description": "Non-timeseries ad creative response => reject NO_TIMESERIES_SUPPORT",
+      "verdict": "PASS"
+    },
+    {
+      "id": "R17",
+      "category": "SCHEMA_VALIDATION",
+      "description": "Non-timeseries merchant PDP response => reject NO_TIMESERIES_SUPPORT",
+      "verdict": "PASS"
+    },
+    {
+      "id": "R18",
+      "category": "SCHEMA_VALIDATION",
+      "description": "Malformed JSON payload => reject UNSUPPORTED_RAW_SCHEMA",
+      "verdict": "PASS"
+    },
+    {
+      "id": "R19",
+      "category": "SCHEMA_VALIDATION",
+      "description": "Empty timeline_data array => reject RAW_SERIES_MISSING",
+      "verdict": "PASS"
+    },
+    {
+      "id": "R20",
+      "category": "HASH_INTEGRITY",
+      "description": "Tampered raw payload (hash mismatch against receipt) => reject HASH_MISMATCH",
+      "verdict": "PASS"
+    },
+    {
+      "id": "R21",
+      "category": "CANONICAL_QUERY_EQUALITY",
+      "description": "Punctuation and casing differences match canonically => accept",
+      "verdict": "PASS"
+    },
+    {
+      "id": "R22",
+      "category": "CANONICAL_QUERY_EQUALITY",
+      "description": "Token overlap without full match ('water fountain' vs 'pet water fountain') => reject RAW_SERIES_IDENTITY_MISMATCH",
+      "verdict": "PASS"
+    },
+    {
+      "id": "R23",
+      "category": "CADENCE_DETECTION",
+      "description": "Cadence detection: daily intervals detected as DAILY, weekly detected as WEEKLY",
+      "verdict": "PASS"
+    },
+    {
+      "id": "R24",
+      "category": "CADENCE_DETECTION",
+      "description": "Hourly interval spanning midnight detected as HOURLY",
+      "verdict": "PASS"
+    }
+  ]
+}

@@ -1,0 +1,23 @@
+{
+  "mode": "OFFLINE_CONTRACT_CHECK",
+  "status": "CONTRACT_READY",
+  "isProductionDenylisted": true,
+  "shadowWorkspaceId": "shadow_ws_shadow_1793934831866_002ee71e",
+  "operations": {
+    "totalAttempts": 1,
+    "successes": 1,
+    "failures": 0,
+    "blockedCalls": 0
+  },
+  "isolationVerified": true,
+  "zeroProductionMutations": true,
+  "executionTrace": [
+    "Executing OFFLINE_CONTRACT_CHECK on physically isolated ephemeral SQLite DB.",
+    "Verified physical DB isolation from production. Ephemeral DB: C:\\Users\\ADMIN\\AppData\\Local\\Temp\\swai-staging-shadow-isolated\\shadow_shadow_1793934831866_002ee71e.db",
+    "Created temporary shadow workspace in ephemeral DB: 'shadow_ws_shadow_1793934831866_002ee71e'.",
+    "Cleaned up shadow workspace in ephemeral DB: 'shadow_ws_shadow_1793934831866_002ee71e'.",
+    "Verified 0 lingering rows in ephemeral database after cleanup."
+  ],
+  "reportDigest": "22a7a877bc9d960e5856bdad81fe3c243842d21524d7490c915f8302d283a578",
+  "executedAt": "2026-11-06T03:13:51.866Z"
+}

@@ -1,0 +1,47 @@
+{
+  "version": "12.4.3.7.19.1",
+  "auditDate": "2026-11-06T10:15:00+07:00",
+  "repository": "quocan050302/Shopify-Search",
+  "branch": "feature/kh02-walmart-us-jina-reader-v12.4.3.5.1",
+  "baselineSha": "dd9037320100d765ff6527c425acb256b910bd6a",
+  "testedCodeCommitSha": "562e58621674d48d0f79c02de1f402c716562d66",
+  "engineeringVerdict": "PASS",
+  "stagingVerdict": "STAGING_SHADOW_CONTRACT_READY",
+  "businessVerdict": "INSUFFICIENT_AND_BLOCKED",
+  "ciTruthVerdict": "CI_NOT_CONFIGURED",
+  "overallReleaseAllowed": false,
+  "engineeringGates": {
+    "E0_baselineAndHygiene": "PASS (tsc 0 errors, git diff --check clean)",
+    "E1_v19_1_TargetedSuites": "PASS (90/90 across 4 suites: W01-W24, R01-R24, S01-S20, E01-E22)",
+    "E2_v19_RegressionSuites": "PASS (66/66 across 3 suites)",
+    "E3_v18_UnitRegression": "PASS (116/116 across 7 suites)",
+    "E4_v18_IntegrationRegression": "PASS (44/44 across 7 suites)",
+    "E5_kh01CrossRegression": "PASS (69/69 across 5 suites)",
+    "E6_coreProvenanceRegression": "PASS (149/149 across 4 suites 11, 14, 15, 17)",
+    "E7_historicalBacktestReplay": "PASS (Policy=PASS, Dev=INSUFFICIENT, Holdout=INSUFFICIENT, Exit 0)",
+    "E8_stagingShadowRuntime": "PASS (CONTRACT_READY in OFFLINE_CONTRACT_CHECK mode on ephemeral DB)",
+    "E10_sentinelHashes": "PASS (bitwise match on all 3 sentinel receipts)"
+  },
+  "sentinelHashes": {
+    "receipt_04f4d039_sha256": "04f4d039cdd4a884134914fdb9d2ed86ebbfa353991d714b78df545a96fd4b14",
+    "receipt_3440f190_sha256": "3440f19057ac7d1ac535150d1bbcc9a3078e0b7a5d46ad3f4bbd2c46235f61c8",
+    "receipt_366cfeb1_sha256": "366cfeb156347d783c227be3fd7e10e397c8cd00c49c909673fc5208f36b841f",
+    "bitwiseIntegrityPreserved": true
+  },
+  "businessGates": {
+    "G06_GoogleAds": "TRANSPORT_READY_NOT_VERIFIED",
+    "G07_TikTokAds": "BLOCKED",
+    "G15_LongitudinalDemand": "INSUFFICIENT_EVIDENCE",
+    "G16_Top3WinningProducts": "INSUFFICIENT_EVIDENCE"
+  },
+  "artifactFiles": [
+    "reports/kh02/KH02_V12_4_3_7_19_1_UNIFIED_WRITE_BOUNDARY_AUDIT_2026-11-06.md",
+    "reports/kh02/KH02_V12_4_3_7_19_1_WRITER_CALLSITE_INVENTORY_2026-11-06.json",
+    "reports/kh02/KH02_V12_4_3_7_19_1_RAW_SERIES_NEGATIVE_TEST_MATRIX_2026-11-06.json",
+    "reports/kh02/KH02_V12_4_3_7_19_1_STAGING_RUNTIME_PROOF_2026-11-06.json",
+    "reports/kh02/KH02_V12_4_3_7_19_1_RELEASE_GATE_EVIDENCE_2026-11-06.json",
+    "reports/kh02/KH02_V12_4_3_7_19_1_FULL_TEST_COMMAND_MATRIX_2026-11-06.json",
+    "reports/kh02/KH02_V12_4_3_7_19_1_BACKTEST_PROVENANCE_2026-11-06.json",
+    "reports/kh02/KH02_V12_4_3_7_19_1_MANIFEST_2026-11-06.json"
+  ]
+}
