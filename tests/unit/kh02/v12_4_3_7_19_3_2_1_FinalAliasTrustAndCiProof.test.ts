@@ -54,6 +54,11 @@ import {
   ReleaseEvidenceInput,
 } from "@/services/kh02/release/releaseGateEvaluatorV19";
 
+import {
+  mintCiAttestationToken,
+  TRUSTED_VERIFIER_ID,
+} from "@/services/kh02/release/githubActionsCiEvidence";
+
 describe("KH-02 V12.4.3.7.19.3.2.1: Final Alias Trust & CI Proof Closure Matrix (75 Tests)", () => {
   const testStorageDir = path.join(
     os.tmpdir(),
@@ -1282,6 +1287,28 @@ describe("KH-02 V12.4.3.7.19.3.2.1: Final Alias Trust & CI Proof Closure Matrix 
 
   it("C18: authentic verified CI attestation elevates verification level to CI_PROVIDER_VERIFIED", () => {
     const commitSha = "36d559465ece26ac872144d61c58117130ac00c9";
+    const rawProof = {
+      provider: "github-actions" as const,
+      repository: "quocan050302/Shopify-Search",
+      runId: "1234567890",
+      commitSha: commitSha,
+      branch: "feature/kh02-walmart-us-jina-reader-v12.4.3.5.1",
+      status: "completed" as const,
+      conclusion: "success" as const,
+      event: "push" as const,
+      verifiedAt: new Date().toISOString(),
+      source: "GITHUB_API" as const,
+      verifier: TRUSTED_VERIFIER_ID,
+      responseDigest: crypto.createHash("sha256").update("authentic_ci_test_c18").digest("hex"),
+      isUnitTestMock: false,
+    };
+
+    const token = mintCiAttestationToken({
+      ...rawProof,
+      headSha: commitSha,
+      headBranch: rawProof.branch,
+    });
+
     const report = validateTestSuiteExecutionEvidence({
       command: "npx vitest run tests/unit/kh02/foo.test.ts",
       exitCode: 0,
@@ -1293,15 +1320,8 @@ describe("KH-02 V12.4.3.7.19.3.2.1: Final Alias Trust & CI Proof Closure Matrix 
         commitSha: commitSha,
         verified: true,
         authenticatedProof: {
-          provider: "github-actions",
-          repository: "quocan050302/Shopify-Search",
-          runId: "1234567890",
-          commitSha: commitSha,
-          branch: "feature/kh02-walmart-us-jina-reader-v12.4.3.5.1",
-          status: "completed",
-          conclusion: "success",
-          event: "push",
-          verifiedAt: new Date().toISOString(),
+          ...rawProof,
+          attestationSignature: token,
         },
       },
     });

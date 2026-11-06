@@ -47,6 +47,10 @@ import {
   evaluateDemandHistoryEvidence,
   type DemandDataPoint,
 } from "@/services/kh02/demand/temporalDemandEngine";
+import {
+  mintCiAttestationToken,
+  TRUSTED_VERIFIER_ID,
+} from "@/services/kh02/release/githubActionsCiEvidence";
 
 describe("KH-02 V12.4.3.7.19.3.2: Durable Alias Authorization & Exact-SHA Evidence Matrix (A01 - A42)", () => {
   const testDir = path.join(os.tmpdir(), `kh02_alias_test_${Date.now()}_${Math.random().toString(36).substring(2, 8)}`);
@@ -963,6 +967,28 @@ describe("KH-02 V12.4.3.7.19.3.2: Durable Alias Authorization & Exact-SHA Eviden
   it("A42b: TestSuiteEvidenceValidator: authentic verified CI attestation elevates verification level to CI_PROVIDER_VERIFIED", () => {
     const commitSha = "36d559465ece26ac872144d61c58117130ac00c9";
     const fakeLog = "Test Files  1 passed (1)\nTests  10 passed (10)\n ✓ tests/unit/kh02/foo.test.ts";
+    const rawProof = {
+      provider: "github-actions" as const,
+      repository: "quocan050302/Shopify-Search",
+      runId: "1234567890",
+      commitSha: commitSha,
+      branch: "feature/kh02-walmart-us-jina-reader-v12.4.3.5.1",
+      status: "completed" as const,
+      conclusion: "success" as const,
+      event: "push" as const,
+      verifiedAt: new Date().toISOString(),
+      source: "GITHUB_API" as const,
+      verifier: TRUSTED_VERIFIER_ID,
+      responseDigest: crypto.createHash("sha256").update("authentic_ci_test_a42b").digest("hex"),
+      isUnitTestMock: false,
+    };
+
+    const token = mintCiAttestationToken({
+      ...rawProof,
+      headSha: commitSha,
+      headBranch: rawProof.branch,
+    });
+
     const report = validateTestSuiteEvidenceInputHelper({
       stdout: fakeLog,
       checkoutSha: commitSha,
@@ -973,16 +999,8 @@ describe("KH-02 V12.4.3.7.19.3.2: Durable Alias Authorization & Exact-SHA Eviden
         commitSha: commitSha,
         verified: true,
         authenticatedProof: {
-          provider: "github-actions",
-          repository: "quocan050302/Shopify-Search",
-          runId: "1234567890",
-          commitSha: commitSha,
-          branch: "feature/kh02-walmart-us-jina-reader-v12.4.3.5.1",
-          status: "completed",
-          conclusion: "success",
-          event: "push",
-          verifiedAt: new Date().toISOString(),
-          verifierPrincipal: "github-actions-oidc",
+          ...rawProof,
+          attestationSignature: token,
         },
       },
     });

@@ -20,6 +20,114 @@ export const TRUSTED_VERIFIER_ID = "SWAI_TRUSTED_GITHUB_VERIFIER_V1" as const;
 export const TRUSTED_GITHUB_HOST = "api.github.com" as const;
 export const CANONICAL_REPOSITORY = "quocan050302/Shopify-Search" as const;
 export const LOCKED_BRANCH = "feature/kh02-walmart-us-jina-reader-v12.4.3.5.1" as const;
+export const DEFAULT_CI_VERIFIER_KEY = "SWAI_KH02_INTERNAL_HMAC_VERIFIER_KEY_V19_3_2_3_SECURE";
+
+export function getCiVerifierKey(): string {
+  return process.env.KH02_CI_VERIFIER_SECRET || DEFAULT_CI_VERIFIER_KEY;
+}
+
+export function computeCiAttestationDigest(evidence: {
+  provider?: string;
+  source?: string;
+  repository?: string;
+  runId?: string | number;
+  headSha?: string;
+  headBranch?: string;
+  status?: string;
+  conclusion?: string;
+  event?: string;
+  responseDigest?: string;
+  isUnitTestMock?: boolean;
+}): string {
+  const parts = [
+    evidence.provider || "github-actions",
+    evidence.source || "",
+    (evidence.repository || "").toLowerCase(),
+    String(evidence.runId || ""),
+    evidence.headSha || "",
+    evidence.headBranch || "",
+    evidence.status || "",
+    evidence.conclusion || "",
+    evidence.event || "",
+    evidence.responseDigest || "",
+    evidence.isUnitTestMock ? "MOCK" : "PROD",
+  ];
+  return parts.join("|");
+}
+
+export function mintCiAttestationToken(evidence: {
+  provider?: string;
+  source?: string;
+  repository?: string;
+  runId?: string | number;
+  headSha?: string;
+  headBranch?: string;
+  status?: string;
+  conclusion?: string;
+  event?: string;
+  responseDigest?: string;
+  isUnitTestMock?: boolean;
+}): string {
+  const payload = computeCiAttestationDigest(evidence);
+  const hmac = crypto.createHmac("sha256", getCiVerifierKey());
+  hmac.update(payload, "utf-8");
+  return `swai_ci_v1_${hmac.digest("hex")}`;
+}
+
+export function verifyCiAttestationToken(
+  evidence: any,
+  _options: {
+    expectedRepo?: string;
+    expectedSha?: string;
+    expectedBranch?: string;
+  } = {}
+): {
+  valid: boolean;
+  reason?: string;
+  isUnitTestMock?: boolean;
+} {
+  if (!evidence || typeof evidence !== "object") {
+    return { valid: false, reason: "Evidence object is null or not an object." };
+  }
+
+  const sig = evidence.attestationSignature || evidence.attestationToken;
+  if (!sig || typeof sig !== "string" || !sig.startsWith("swai_ci_v1_")) {
+    return {
+      valid: false,
+      reason: "Missing or invalid cryptographic attestation signature/token.",
+    };
+  }
+
+  const isMock = evidence.isUnitTestMock === true || evidence.source === "UNIT_TEST_MOCK";
+  const expectedSig = mintCiAttestationToken({
+    provider: evidence.provider,
+    source: evidence.source,
+    repository: evidence.repository,
+    runId: evidence.runId,
+    headSha: evidence.headSha || evidence.commitSha,
+    headBranch: evidence.headBranch || evidence.branch,
+    status: evidence.status,
+    conclusion: evidence.conclusion,
+    event: evidence.event,
+    responseDigest: evidence.responseDigest,
+    isUnitTestMock: isMock,
+  });
+
+  const sigBuf = Buffer.from(sig);
+  const expectedBuf = Buffer.from(expectedSig);
+
+  if (sigBuf.length !== expectedBuf.length || !crypto.timingSafeEqual(sigBuf, expectedBuf)) {
+    return {
+      valid: false,
+      reason: "Cryptographic attestation signature mismatch or forged token.",
+    };
+  }
+
+  return {
+    valid: true,
+    isUnitTestMock: isMock,
+  };
+}
 
 export interface GitHubWorkflowRunEvidence {
   provider: "github-actions";
@@ -39,6 +147,8 @@ export interface GitHubWorkflowRunEvidence {
   fetchedAt: string;
   responseDigest: string; // SHA-256 of raw API response body
   verifier: typeof TRUSTED_VERIFIER_ID;
+  attestationSignature?: string;
+  isUnitTestMock?: boolean;
 }
 
 export interface VerifyRemoteCiRunOptions {
@@ -124,7 +234,7 @@ export async function verifyRemoteGitHubActionsRun(
 
   // Resolve authorization token
   const token = options.token || process.env.GITHUB_TOKEN || process.env.GH_TOKEN;
-  const isMock = options.isUnitTestMock === true;
+  const isMock = options.isUnitTestMock === true || !!options.customFetch;
 
   if (!token && !isMock) {
     return {
@@ -338,9 +448,11 @@ export async function verifyRemoteGitHubActionsRun(
     }
   }
 
-  const evidence: GitHubWorkflowRunEvidence = {
-    provider: "github-actions",
-    source: isMock ? "UNIT_TEST_MOCK" : "GITHUB_API",
+  const source: "UNIT_TEST_MOCK" | "GITHUB_API" = isMock ? "UNIT_TEST_MOCK" : "GITHUB_API";
+
+  const rawEvidence = {
+    provider: "github-actions" as const,
+    source,
     repository: actualRepo,
     runId: String(data.id),
     runUrl: data.html_url || `https://github.com/${actualRepo}/actions/runs/${data.id}`,
@@ -349,17 +461,25 @@ export async function verifyRemoteGitHubActionsRun(
     headSha: actualSha,
     headBranch: actualBranch,
     event: data.event,
-    status: "completed",
-    conclusion: "success",
+    status: "completed" as const,
+    conclusion: "success" as const,
     fetchedAt: verifiedAt,
     responseDigest,
     verifier: TRUSTED_VERIFIER_ID,
+    isUnitTestMock: isMock,
+  };
+
+  const attestationSignature = mintCiAttestationToken(rawEvidence);
+
+  const evidence: GitHubWorkflowRunEvidence = {
+    ...rawEvidence,
+    attestationSignature,
   };
 
   return {
     verified: true,
-    status: "CI_PASS",
-    level: "CI_PROVIDER_VERIFIED",
+    status: isMock ? "CI_NOT_RUN" : "CI_PASS",
+    level: isMock ? "PARSED_CLAIM" : "CI_PROVIDER_VERIFIED",
     evidence,
     verifiedAt,
     isUnitTestMock: isMock,
@@ -368,7 +488,8 @@ export async function verifyRemoteGitHubActionsRun(
 
 /**
  * Verifies that a pre-parsed or caller-supplied CI proof is authentic.
- * Strictly rejects any caller object lacking authentic SWAI_TRUSTED_GITHUB_VERIFIER_V1 provenance.
+ * Strictly rejects any caller object lacking authentic SWAI_TRUSTED_GITHUB_VERIFIER_V1 provenance
+ * and authentic cryptographic attestation signature.
  */
 export function verifyAuthenticCiProof(
   proofInput: any,
@@ -386,10 +507,10 @@ export function verifyAuthenticCiProof(
   const runId = String(proofInput.runId || proofInput.id).trim();
   const attestation = proofInput.authenticatedProof || proofInput.evidence || proofInput;
 
-  // Strict authenticity check: must have source === "GITHUB_API" and verifier === TRUSTED_VERIFIER_ID
+  // Strict authenticity check: must have source === "GITHUB_API" or "UNIT_TEST_MOCK" and verifier === TRUSTED_VERIFIER_ID
   if (
     !attestation ||
-    attestation.source !== "GITHUB_API" ||
+    (attestation.source !== "GITHUB_API" && attestation.source !== "UNIT_TEST_MOCK") ||
     attestation.verifier !== TRUSTED_VERIFIER_ID ||
     typeof attestation.responseDigest !== "string" ||
     attestation.responseDigest.length !== 64
@@ -465,6 +586,24 @@ export function verifyAuthenticCiProof(
         status: "CI_FAIL",
       };
     }
+  }
+
+  // Strict cryptographic attestation token verification
+  const tokenCheck = verifyCiAttestationToken(attestation, options);
+  if (!tokenCheck.valid) {
+    return {
+      verified: false,
+      error: `CI_CLAIM_UNVERIFIED: Caller-supplied CI proof for runId '${runId}' lacks authentic cryptographic attestation signature signed by trusted SWAI verifier (${tokenCheck.reason}).`,
+      status: "CI_NOT_RUN",
+    };
+  }
+
+  if (tokenCheck.isUnitTestMock || attestation.source === "UNIT_TEST_MOCK" || attestation.isUnitTestMock === true) {
+    return {
+      verified: false,
+      error: `CI_CLAIM_UNVERIFIED: Caller-supplied CI proof for runId '${runId}' is marked as a UNIT_TEST_MOCK and cannot be admitted for commercial release.`,
+      status: "CI_NOT_RUN",
+    };
   }
 
   return {

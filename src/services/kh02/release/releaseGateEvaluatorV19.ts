@@ -12,6 +12,8 @@
  * 4. CI: PASS / FAIL / NOT_RUN / NOT_CONFIGURED
  */
 
+import { verifyCiAttestationToken } from "./githubActionsCiEvidence";
+
 export interface ReleaseEvidenceInput {
   version: string;
   branch: string;
@@ -280,12 +282,16 @@ export function evaluateReleaseEvidence(
     reasons.push("Remote CI workflow configured but not run for tested commit.");
   } else if (input.ciStatus.runStatus === "SUCCESS") {
     const proof = input.ciStatus.verifiedProof;
-    const att = proof?.attestation;
+    const att = proof?.attestation || (proof as any)?.evidence || proof;
+    const tokenCheck = att ? verifyCiAttestationToken(att) : { valid: false };
     const isAuthenticVerifier =
       proof?.verified === true &&
       att &&
+      tokenCheck.valid === true &&
+      tokenCheck.isUnitTestMock !== true &&
       att.provider === "github-actions" &&
       att.source === "GITHUB_API" &&
+      att.isUnitTestMock !== true &&
       att.verifier === "SWAI_TRUSTED_GITHUB_VERIFIER_V1" &&
       att.status === "completed" &&
       att.conclusion === "success" &&

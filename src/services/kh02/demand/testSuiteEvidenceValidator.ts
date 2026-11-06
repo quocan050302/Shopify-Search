@@ -10,6 +10,7 @@
 
 import fs from "fs";
 import crypto from "crypto";
+import { verifyCiAttestationToken } from "../release/githubActionsCiEvidence";
 
 export type TestSuiteExecutionStatus = "PASS" | "FAIL" | "INCOMPLETE" | "STALE" | "NOT_RUN";
 
@@ -131,7 +132,11 @@ export function validateVerifiedCiAttestation(
     return { valid: false, reason: `CI trigger event '${proof.event}' is not in allowed events (push, workflow_dispatch).`, structurallyValid: false, providerVerified: false };
   }
 
+  const tokenCheck = verifyCiAttestationToken(proof, options);
+
   const providerVerified =
+    tokenCheck.valid &&
+    !tokenCheck.isUnitTestMock &&
     proof.source === "GITHUB_API" &&
     proof.verifier === "SWAI_TRUSTED_GITHUB_VERIFIER_V1" &&
     typeof proof.responseDigest === "string" &&
@@ -175,10 +180,10 @@ export function verifyGitHubActionsRunProof(
     if (!val.valid) {
       return { verified: false, error: val.reason };
     }
-    if (options.requireTrustedVerifier && !val.providerVerified) {
+    if (options.requireTrustedVerifier !== false && !val.providerVerified) {
       return {
         verified: false,
-        error: "CI_CLAIM_UNVERIFIED: Authenticated proof lacks authentic SWAI_TRUSTED_GITHUB_VERIFIER_V1 provenance or GITHUB_API origin.",
+        error: "CI_CLAIM_UNVERIFIED: Authenticated proof lacks authentic cryptographic SWAI_TRUSTED_GITHUB_VERIFIER_V1 attestation token or is a unit test mock.",
       };
     }
     return { verified: true, attestation: proofInput.authenticatedProof };
