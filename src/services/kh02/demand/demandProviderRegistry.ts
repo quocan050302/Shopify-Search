@@ -389,6 +389,9 @@ export class GoogleTrendsCsvImportProvider implements HistoricalDemandProvider {
         candidateCanonicalName: query.canonicalProductName || query.term || null,
         authorizedKeywords: [query.canonicalProductName, query.term].filter((k): k is string => Boolean(k && k.trim())),
         region: query.region || "US",
+        evaluationScope: "BUSINESS",
+        strictProvenance: true,
+        verifiedAliases: (query as any).verifiedAliases || [],
       };
 
       const verifiedPoints: DemandDataPointResult[] = [];
@@ -411,8 +414,8 @@ export class GoogleTrendsCsvImportProvider implements HistoricalDemandProvider {
 
         // Shared Candidate-Scoped Attribution Evaluation
         const attrRes = classifyCandidateObservationAttribution(r, attrContext);
-        if (!attrRes.isAttributable) {
-          continue; // Keyword cannot be attributed to candidate product
+        if (!attrRes.isAttributable || !attrRes.businessAttributable) {
+          continue; // Keyword cannot be attributed to candidate product for commercial business evaluation
         }
 
         verifiedPoints.push({

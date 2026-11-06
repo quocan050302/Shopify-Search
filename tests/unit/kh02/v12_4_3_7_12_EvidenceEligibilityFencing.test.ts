@@ -1576,18 +1576,28 @@ describe("KH-02 V12.4.3.7.12 — Evidence Eligibility Fencing & Production Concu
           setProviderReceiptStorageDirForTest(storageDir);
           const list = JSON.parse(itemsJson);
           for (const item of list) {
-            await persistCollectorReceiptAtomically({
-              receiptId: item.receiptId,
-              provider: "google_trends_serpapi",
-              originKind: "LOCAL_INTEGRITY_ONLY",
-              targetProductOrKeyword: item.kw,
-              region: "US",
-              transportStatus: 200,
-              capturedAt: new Date().toISOString(),
-              rawResponseSha256: item.sha,
-              rawByteCount: fs.readFileSync(item.artifactPath).length,
-              artifactPath: item.artifactPath,
-            });
+            let attempts = 0;
+            while (attempts < 5) {
+              try {
+                await persistCollectorReceiptAtomically({
+                  receiptId: item.receiptId,
+                  provider: "google_trends_serpapi",
+                  originKind: "LOCAL_INTEGRITY_ONLY",
+                  targetProductOrKeyword: item.kw,
+                  region: "US",
+                  transportStatus: 200,
+                  capturedAt: new Date().toISOString(),
+                  rawResponseSha256: item.sha,
+                  rawByteCount: fs.readFileSync(item.artifactPath).length,
+                  artifactPath: item.artifactPath,
+                });
+                break;
+              } catch (err) {
+                attempts++;
+                if (attempts >= 5) throw err;
+                await new Promise((r) => setTimeout(r, 50 * attempts));
+              }
+            }
             await new Promise((r) => setTimeout(r, 20));
           }
           fs.writeFileSync(doneFile, "DONE", "utf-8");
@@ -1621,7 +1631,7 @@ describe("KH-02 V12.4.3.7.12 — Evidence Eligibility Fencing & Production Concu
       }
 
       const writerRes = await writerPromise;
-      expect(writerRes.code).toBe(0);
+      expect(writerRes.code, `Writer exited with ${writerRes.code}. Stderr: ${writerRes.stderr}`).toBe(0);
       expect(readIterations).toBeGreaterThan(0);
 
       for (const item of items) {

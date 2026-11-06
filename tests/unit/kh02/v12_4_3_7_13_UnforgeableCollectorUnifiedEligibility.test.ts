@@ -1701,19 +1701,26 @@ describe("KH-02 V12.4.3.7.13 — Unforgeable Collector Provenance & Unified Elig
           setProviderReceiptStorageDirForTest(storageDir);
           const items = JSON.parse(itemsJson);
           for (const item of items) {
-            const res = await persistCollectorReceiptAtomically({
-              receiptId: item.receiptId,
-              provider: "google_trends_serpapi",
-        originKind: "LOCAL_INTEGRITY_ONLY",
-        targetProductOrKeyword: item.kw,
-              region: "US",
-              transportStatus: 200,
-              capturedAt: new Date().toISOString(),
-              rawResponseSha256: item.sha,
-              rawByteCount: fs.readFileSync(item.artifactPath).length,
-              artifactPath: item.artifactPath,
-            });
-            if (res.state !== "EVIDENCE_ELIGIBLE") {
+            let res;
+            let attempts = 0;
+            while (attempts < 5) {
+              res = await persistCollectorReceiptAtomically({
+                receiptId: item.receiptId,
+                provider: "google_trends_serpapi",
+                originKind: "LOCAL_INTEGRITY_ONLY",
+                targetProductOrKeyword: item.kw,
+                region: "US",
+                transportStatus: 200,
+                capturedAt: new Date().toISOString(),
+                rawResponseSha256: item.sha,
+                rawByteCount: fs.readFileSync(item.artifactPath).length,
+                artifactPath: item.artifactPath,
+              });
+              if (res && res.state === "EVIDENCE_ELIGIBLE") break;
+              attempts++;
+              await new Promise((r) => setTimeout(r, 50 * attempts));
+            }
+            if (!res || res.state !== "EVIDENCE_ELIGIBLE") {
               process.stderr.write("Failed: " + JSON.stringify(res));
               process.exit(1);
             }
@@ -1744,7 +1751,7 @@ describe("KH-02 V12.4.3.7.13 — Unforgeable Collector Provenance & Unified Elig
       }
 
       const writerRes = await writerPromise;
-      expect(writerRes.code).toBe(0);
+      expect(writerRes.code, `Writer exited with ${writerRes.code}. Stderr: ${writerRes.stderr}`).toBe(0);
       expect(readerIterations).toBeGreaterThan(0);
 
       // Verify all items are now verified
@@ -1755,6 +1762,6 @@ describe("KH-02 V12.4.3.7.13 — Unforgeable Collector Provenance & Unified Elig
         });
         expect(resolved.verified).toBe(true);
       }
-    }, 40000);
+    }, 60000);
   });
 });

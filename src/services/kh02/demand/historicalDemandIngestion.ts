@@ -356,13 +356,14 @@ export async function resolveProductDemandHistory(
     strictChronological: options.strictChronological || false,
     verifiedAliases: options.verifiedAliases || [],
     strictProvenance: options.strictProvenance || false,
+    evaluationScope: "BUSINESS",
   };
 
   const partitionSummary = filterAttributableObservations(rawRecords, candidateAttributionContext);
 
   // Convert candidate-attributable records to demand data points and evaluate authority/coverage
   let currentPoints: DemandDataPoint[] = [];
-  for (const r of partitionSummary.attributableObservations) {
+  for (const r of partitionSummary.businessAttributableObservations) {
     let verifiedDescriptor: any;
     if (r.evidenceReference) {
       const resolved = await resolveVerifiedDemandEvidence(r.evidenceReference, {
@@ -482,7 +483,7 @@ export async function resolveProductDemandHistory(
           let batchImportSucceeded = false;
           let batchImportError: string | null = null;
 
-          if (freshPartition.attributableCount === 0) {
+          if (freshPartition.attributableCount === 0 || freshPartition.businessAttributableCount === 0) {
             batchImportSucceeded = false;
             providerStatus = "INSUFFICIENT_DATA";
             providerError = `Provider returned ${seriesResult.points.length} points, but 0 were attributable to candidate '${candidateObj.canonicalName || searchTerm}' (${freshPartition.excludedCount} excluded).`;
@@ -491,7 +492,7 @@ export async function resolveProductDemandHistory(
             providerStatus = "INSUFFICIENT_DATA";
             providerError = "Candidate lacks canonical targetProductId; fresh observations cannot be committed to durable verified history.";
           } else {
-            const pointsToImport = freshPartition.attributableObservations.map((pt) => {
+            const pointsToImport = freshPartition.businessAttributableObservations.map((pt) => {
               const evidenceRef =
                 (pt as any).evidenceReference ||
                 ((seriesResult as any).receiptId
@@ -541,7 +542,7 @@ export async function resolveProductDemandHistory(
 
           const livePoints: DemandDataPoint[] = [];
           if (batchImportSucceeded) {
-            for (const p of freshPartition.attributableObservations) {
+            for (const p of freshPartition.businessAttributableObservations) {
               const evidenceRef =
                 (p as any).evidenceReference ||
                 ((seriesResult as any).receiptId

@@ -151,6 +151,7 @@ export interface DemandHistoryPolicy {
   strictSourceProvenance?: boolean;
   strictLiveOrigin?: boolean;
   allowUnitFixtures?: boolean;
+  evaluationScope?: "ENGINEERING" | "BUSINESS";
   providerReceiptDescriptor?: VerifiedDemandEvidenceDescriptor | null;
   verifiedAliases?: Array<{
     aliasKeyword: string;
@@ -4327,13 +4328,14 @@ export function evaluateDemandSourceAuthority(
         {
           candidateCanonicalName: policy.candidateCanonicalName,
           searchTermUsed: policy.searchTermUsed,
-          authorizedKeywords: [policy.candidateCanonicalName, policy.searchTermUsed].filter((k): k is string => Boolean(k)),
+          authorizedKeywords: [policy.candidateCanonicalName, policy.candidateCanonicalTitle].filter((k): k is string => Boolean(k)),
           canonicalProductId: policy.targetProductId || policy.candidateProductId,
           verifiedAliases: policy.verifiedAliases,
+          evaluationScope: policy.evaluationScope || "BUSINESS",
         }
       );
 
-      if (!attr.isAttributable) {
+      if (!attr.isAttributable || !attr.businessAttributable) {
         reasons.push(
           `Candidate demand attribution failure (${attr.classification}): ${attr.reason}`
         );

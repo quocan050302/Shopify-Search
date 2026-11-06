@@ -172,6 +172,7 @@ export interface CandidateObservationRecord {
 export interface CandidateAttributionResult {
   classification: CandidateAttributionClassification;
   isAttributable: boolean;
+  businessAttributable: boolean;
   reason: string;
   candidateId: string | null;
   canonicalProductId: string | null;
@@ -207,6 +208,7 @@ export function classifyCandidateObservationAttribution(
     return {
       classification: "INSUFFICIENT_CANDIDATE_IDENTITY",
       isAttributable: false,
+      businessAttributable: false,
       reason: "Candidate lacks an unambiguous canonical productId, candidateId, or authorized search keyword.",
       candidateId,
       canonicalProductId,
@@ -226,6 +228,7 @@ export function classifyCandidateObservationAttribution(
     return {
       classification: "EXCLUDED_FIXTURE_OR_PROXY",
       isAttributable: false,
+      businessAttributable: false,
       reason: "Demand observation is a test fixture or synthetic mock and cannot verify production Evergreen demand.",
       candidateId,
       canonicalProductId,
@@ -239,6 +242,7 @@ export function classifyCandidateObservationAttribution(
     return {
       classification: "EXCLUDED_CROSS_PRODUCT",
       isAttributable: false,
+      businessAttributable: false,
       reason: `Observation productId '${observationProductId}' does not match candidate canonical productId '${canonicalProductId}'.`,
       candidateId,
       canonicalProductId,
@@ -252,6 +256,7 @@ export function classifyCandidateObservationAttribution(
     return {
       classification: "KEYWORD_ONLY_UNBOUND",
       isAttributable: false,
+      businessAttributable: false,
       reason: `Observation specifies productId '${observationProductId}' but candidate has no canonical product ID linking them.`,
       candidateId,
       canonicalProductId,
@@ -265,6 +270,7 @@ export function classifyCandidateObservationAttribution(
     return {
       classification: "INSUFFICIENT_CANDIDATE_IDENTITY",
       isAttributable: false,
+      businessAttributable: false,
       reason: `Observation lacks productId while candidate requires canonical productId '${canonicalProductId}'.`,
       candidateId,
       canonicalProductId,
@@ -282,6 +288,7 @@ export function classifyCandidateObservationAttribution(
     return {
       classification: "EXCLUDED_WORKSPACE_OR_RUN",
       isAttributable: false,
+      businessAttributable: false,
       reason: `Observation workspaceId '${observation.workspaceId}' does not match candidate workspaceId '${context.workspaceId}'.`,
       candidateId,
       canonicalProductId,
@@ -299,6 +306,7 @@ export function classifyCandidateObservationAttribution(
     return {
       classification: "EXCLUDED_WORKSPACE_OR_RUN",
       isAttributable: false,
+      businessAttributable: false,
       reason: `Observation researchRunId '${observation.researchRunId}' does not match candidate researchRunId '${context.researchRunId}'.`,
       candidateId,
       canonicalProductId,
@@ -315,6 +323,7 @@ export function classifyCandidateObservationAttribution(
       return {
         classification: "EXCLUDED_REGION",
         isAttributable: false,
+        businessAttributable: false,
         reason: `Observation region '${obsRegion}' does not match required region '${requiredRegion}'.`,
         candidateId,
         canonicalProductId,
@@ -336,6 +345,7 @@ export function classifyCandidateObservationAttribution(
         return {
           classification: "EXCLUDED_FUTURE_OR_POST_CUTOFF",
           isAttributable: false,
+          businessAttributable: false,
           reason: `Observation periodStart '${startDate}' is in the future relative to execution cutoff.`,
           candidateId,
           canonicalProductId,
@@ -347,6 +357,7 @@ export function classifyCandidateObservationAttribution(
         return {
           classification: "EXCLUDED_FUTURE_OR_POST_CUTOFF",
           isAttributable: false,
+          businessAttributable: false,
           reason: `Observation periodStart '${startDate}' exceeds as-of cutoff '${context.asOfTimestamp}'.`,
           candidateId,
           canonicalProductId,
@@ -370,6 +381,7 @@ export function classifyCandidateObservationAttribution(
         return {
           classification: "EXCLUDED_FUTURE_OR_POST_CUTOFF",
           isAttributable: false,
+          businessAttributable: false,
           reason: `Observation availability timestamp '${ts}' exceeds as-of cutoff '${context.asOfTimestamp}'.`,
           candidateId,
           canonicalProductId,
@@ -389,6 +401,7 @@ export function classifyCandidateObservationAttribution(
     return {
       classification: "EXCLUDED_MISSING_PROVENANCE",
       isAttributable: false,
+      businessAttributable: false,
       reason: isMerchantDomainPseudoRef
         ? "Observation uses 'verified-merchant-demand:<domain>' pseudo-reference without raw CSV checksum or provider receipt."
         : "Observation lacks verifiable evidenceReference under strict provenance policy.",
@@ -415,6 +428,7 @@ export function classifyCandidateObservationAttribution(
     return {
       classification: "EXCLUDED_KEYWORD_MISMATCH",
       isAttributable: false,
+      businessAttributable: false,
       reason: "Observation has null or empty keyword.",
       candidateId,
       canonicalProductId,
@@ -436,6 +450,7 @@ export function classifyCandidateObservationAttribution(
     return {
       classification: "EXACT_CANDIDATE_KEYWORD_MATCH",
       isAttributable: true,
+      businessAttributable: !isFixture && context.evaluationScope !== "ENGINEERING",
       reason: `Observation keyword '${observationKeyword}' canonically matches authorized candidate query.`,
       candidateId,
       canonicalProductId,
@@ -465,6 +480,7 @@ export function classifyCandidateObservationAttribution(
     return {
       classification: "EXCLUDED_UNVERIFIED_ALIAS",
       isAttributable: false,
+      businessAttributable: false,
       reason: `Observation keyword '${observationKeyword}' contains conflicting SKU variant attribute(s) relative to candidate '${context.candidateCanonicalName}'.`,
       candidateId,
       canonicalProductId,
@@ -480,6 +496,7 @@ export function classifyCandidateObservationAttribution(
     return {
       classification: "EXCLUDED_KEYWORD_MISMATCH",
       isAttributable: false,
+      businessAttributable: false,
       reason: `Observation keyword '${observationKeyword}' is an accessory/replacement part rather than candidate product '${context.candidateCanonicalName}'.`,
       candidateId,
       canonicalProductId,
@@ -493,6 +510,7 @@ export function classifyCandidateObservationAttribution(
     return {
       classification: "EXCLUDED_KEYWORD_MISMATCH",
       isAttributable: false,
+      businessAttributable: false,
       reason: `Observation keyword family '${obsFamily}' does not match candidate family '${candFamily}' despite shared brand or token overlap.`,
       candidateId,
       canonicalProductId,
@@ -510,9 +528,16 @@ export function classifyCandidateObservationAttribution(
       if (areExactOrCanonicalEquivalentQueries(observationKeyword, alias.aliasKeyword)) {
         const aliasAuth = isAuthenticVerifiedCandidateAlias(alias, context);
         if (aliasAuth.valid) {
+          const isBusinessAttributable =
+            !isFixture &&
+            context.evaluationScope !== "ENGINEERING" &&
+            aliasAuth.businessEligible === true &&
+            aliasAuth.isTestOnly !== true;
+
           return {
             classification: "VERIFIED_EXPLICIT_ALIAS_MATCH",
             isAttributable: true,
+            businessAttributable: isBusinessAttributable,
             reason: `Observation keyword '${observationKeyword}' matches verified alias '${alias.aliasKeyword}' (approvedBy: ${alias.approvedBy}, ref: ${alias.provenanceReference}).`,
             candidateId,
             canonicalProductId,
@@ -527,6 +552,7 @@ export function classifyCandidateObservationAttribution(
           return {
             classification: "EXCLUDED_UNVERIFIED_ALIAS",
             isAttributable: false,
+            businessAttributable: false,
             reason: `Observation keyword '${observationKeyword}' matched alias descriptor but authorization was rejected: ${aliasAuth.reason}`,
             candidateId,
             canonicalProductId,
@@ -552,6 +578,7 @@ export function classifyCandidateObservationAttribution(
       return {
         classification: "EXACT_CANDIDATE_KEYWORD_MATCH",
         isAttributable: true,
+        businessAttributable: !isFixture && context.evaluationScope !== "ENGINEERING",
         reason: `Observation keyword '${observationKeyword}' is the legitimate brand ('${brandToken}') core product query for candidate '${context.candidateCanonicalName}'.`,
         candidateId,
         canonicalProductId,
@@ -571,6 +598,7 @@ export function classifyCandidateObservationAttribution(
       return {
         classification: "EXACT_CANDIDATE_KEYWORD_MATCH",
         isAttributable: true,
+        businessAttributable: !isFixture && context.evaluationScope !== "ENGINEERING",
         reason: `Observation keyword '${observationKeyword}' is the core functional prefix of unbranded candidate '${context.candidateCanonicalName}'.`,
         candidateId,
         canonicalProductId,
@@ -591,6 +619,7 @@ export function classifyCandidateObservationAttribution(
     return {
       classification: "EXCLUDED_UNVERIFIED_ALIAS",
       isAttributable: false,
+      businessAttributable: false,
       reason: `Observation keyword '${observationKeyword}' shares family ('${obsFamily || "none"}') or tokens with candidate '${context.candidateCanonicalName || ""}' but lacks an explicit verified alias.`,
       candidateId,
       canonicalProductId,
@@ -602,6 +631,7 @@ export function classifyCandidateObservationAttribution(
   return {
     classification: "EXCLUDED_KEYWORD_MISMATCH",
     isAttributable: false,
+    businessAttributable: false,
     reason: `Observation keyword '${observationKeyword}' does not match candidate query and has no verified alias.`,
     candidateId,
     canonicalProductId,
@@ -613,9 +643,11 @@ export function classifyCandidateObservationAttribution(
 export interface AttributionPartitionSummary {
   totalInputObservations: number;
   attributableCount: number;
+  businessAttributableCount: number;
   excludedCount: number;
   classifications: Record<CandidateAttributionClassification, number>;
   attributableObservations: CandidateObservationRecord[];
+  businessAttributableObservations: CandidateObservationRecord[];
   excludedObservations: Array<{
     observation: CandidateObservationRecord;
     result: CandidateAttributionResult;
@@ -630,6 +662,7 @@ export function filterAttributableObservations(
   context: CandidateAttributionContext
 ): AttributionPartitionSummary {
   const attributableObservations: CandidateObservationRecord[] = [];
+  const businessAttributableObservations: CandidateObservationRecord[] = [];
   const excludedObservations: Array<{
     observation: CandidateObservationRecord;
     result: CandidateAttributionResult;
@@ -658,14 +691,19 @@ export function filterAttributableObservations(
     } else {
       excludedObservations.push({ observation: obs, result: res });
     }
+    if (res.businessAttributable) {
+      businessAttributableObservations.push(obs);
+    }
   }
 
   return {
     totalInputObservations: observations.length,
     attributableCount: attributableObservations.length,
+    businessAttributableCount: businessAttributableObservations.length,
     excludedCount: excludedObservations.length,
     classifications,
     attributableObservations,
+    businessAttributableObservations,
     excludedObservations,
   };
 }

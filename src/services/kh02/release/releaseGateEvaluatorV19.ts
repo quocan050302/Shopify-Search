@@ -279,7 +279,22 @@ export function evaluateReleaseEvidence(
     ciStatus = "CI_NOT_RUN";
     reasons.push("Remote CI workflow configured but not run for tested commit.");
   } else if (input.ciStatus.runStatus === "SUCCESS") {
-    if (input.ciStatus.verifiedProof?.verified === true) {
+    const proof = input.ciStatus.verifiedProof;
+    const att = proof?.attestation;
+    const isAuthenticVerifier =
+      proof?.verified === true &&
+      att &&
+      att.provider === "github-actions" &&
+      att.source === "GITHUB_API" &&
+      att.verifier === "SWAI_TRUSTED_GITHUB_VERIFIER_V1" &&
+      att.status === "completed" &&
+      att.conclusion === "success" &&
+      (att.event === "push" || att.event === "workflow_dispatch") &&
+      typeof att.responseDigest === "string" &&
+      att.responseDigest.length === 64 &&
+      (!input.testedCodeSha || (att.headSha && att.headSha === input.testedCodeSha) || (att.commitSha && att.commitSha === input.testedCodeSha));
+
+    if (isAuthenticVerifier) {
       ciStatus = "CI_PASS";
       reasons.push("Remote CI workflow run succeeded with verified provider attestation.");
     } else {

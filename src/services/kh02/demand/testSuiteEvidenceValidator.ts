@@ -34,6 +34,9 @@ export interface AuthenticatedCiProof {
   verifiedAt: string;
   attestationSignature?: string;
   verifierPrincipal?: string;
+  source?: "GITHUB_API" | "UNIT_TEST_MOCK";
+  verifier?: string;
+  responseDigest?: string;
 }
 
 export interface CiProviderProofInput {
@@ -101,33 +104,40 @@ export function validateVerifiedCiAttestation(
     expectedSha?: string;
     expectedBranch?: string;
   } = {}
-): { valid: boolean; reason?: string } {
+): { valid: boolean; reason?: string; structurallyValid?: boolean; providerVerified?: boolean } {
   if (!proof) {
-    return { valid: false, reason: "CI proof object is null or missing." };
+    return { valid: false, reason: "CI proof object is null or missing.", structurallyValid: false, providerVerified: false };
   }
   if (proof.provider !== "github-actions") {
-    return { valid: false, reason: `Unsupported CI provider '${(proof as any).provider}'.` };
+    return { valid: false, reason: `Unsupported CI provider '${(proof as any).provider}'.`, structurallyValid: false, providerVerified: false };
   }
   const expectedRepo = options.expectedRepo || "quocan050302/Shopify-Search";
   if (proof.repository !== expectedRepo) {
-    return { valid: false, reason: `CI repository mismatch: got '${proof.repository}', expected '${expectedRepo}'.` };
+    return { valid: false, reason: `CI repository mismatch: got '${proof.repository}', expected '${expectedRepo}'.`, structurallyValid: false, providerVerified: false };
   }
   if (options.expectedSha && proof.commitSha !== options.expectedSha) {
-    return { valid: false, reason: `CI commit SHA mismatch: proof commit '${proof.commitSha}' != expected '${options.expectedSha}'.` };
+    return { valid: false, reason: `CI commit SHA mismatch: proof commit '${proof.commitSha}' != expected '${options.expectedSha}'.`, structurallyValid: false, providerVerified: false };
   }
   if (options.expectedBranch && proof.branch !== options.expectedBranch) {
-    return { valid: false, reason: `CI branch mismatch: proof branch '${proof.branch}' != expected '${options.expectedBranch}'.` };
+    return { valid: false, reason: `CI branch mismatch: proof branch '${proof.branch}' != expected '${options.expectedBranch}'.`, structurallyValid: false, providerVerified: false };
   }
   if (proof.status !== "completed") {
-    return { valid: false, reason: `CI run status is '${proof.status}', expected 'completed'.` };
+    return { valid: false, reason: `CI run status is '${proof.status}', expected 'completed'.`, structurallyValid: false, providerVerified: false };
   }
   if (proof.conclusion !== "success") {
-    return { valid: false, reason: `CI run conclusion is '${proof.conclusion}', expected 'success'.` };
+    return { valid: false, reason: `CI run conclusion is '${proof.conclusion}', expected 'success'.`, structurallyValid: false, providerVerified: false };
   }
   if (proof.event !== "push" && proof.event !== "workflow_dispatch") {
-    return { valid: false, reason: `CI trigger event '${proof.event}' is not in allowed events (push, workflow_dispatch).` };
+    return { valid: false, reason: `CI trigger event '${proof.event}' is not in allowed events (push, workflow_dispatch).`, structurallyValid: false, providerVerified: false };
   }
-  return { valid: true };
+
+  const providerVerified =
+    proof.source === "GITHUB_API" &&
+    proof.verifier === "SWAI_TRUSTED_GITHUB_VERIFIER_V1" &&
+    typeof proof.responseDigest === "string" &&
+    proof.responseDigest.length === 64;
+
+  return { valid: true, structurallyValid: true, providerVerified };
 }
 
 /**
@@ -140,6 +150,7 @@ export function verifyGitHubActionsRunProof(
     expectedRepo?: string;
     expectedSha?: string;
     expectedBranch?: string;
+    requireTrustedVerifier?: boolean;
   } = {}
 ): { verified: boolean; error?: string; attestation?: AuthenticatedCiProof } {
   if (!proofInput || !proofInput.runId) {
@@ -163,6 +174,12 @@ export function verifyGitHubActionsRunProof(
     });
     if (!val.valid) {
       return { verified: false, error: val.reason };
+    }
+    if (options.requireTrustedVerifier && !val.providerVerified) {
+      return {
+        verified: false,
+        error: "CI_CLAIM_UNVERIFIED: Authenticated proof lacks authentic SWAI_TRUSTED_GITHUB_VERIFIER_V1 provenance or GITHUB_API origin.",
+      };
     }
     return { verified: true, attestation: proofInput.authenticatedProof };
   }
