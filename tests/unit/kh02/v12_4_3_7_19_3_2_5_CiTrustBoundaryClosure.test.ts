@@ -29,10 +29,8 @@ import {
   verifyRemoteGitHubActionsRun,
   verifyAuthenticCiProof,
   lookupVerifiedRemoteCiRun,
-  registerVerifiedRemoteCiRun,
   _testOnlyRegisterVerifiedRemoteCiRun,
   clearVerifiedRemoteCiRunsForTesting,
-  TRUSTED_ORCHESTRATOR_CAPABILITY,
   CANONICAL_RELEASE_WORKFLOWS,
 } from "@/services/kh02/release/githubActionsCiEvidence";
 
@@ -303,9 +301,9 @@ describe("KH-02 V12.4.3.7.19.3.2.5: Real CI Trust-Boundary Closure (T01 - T10)",
   });
 
   // ============================================================================
-  // T06: Authentic Provider Run Lifecycle
+  // T06: Authentic Provider Run Lifecycle & Mock Quarantine Regression
   // ============================================================================
-  it("T06: Authentic Provider Run Lifecycle — genuine verified run registers in server store with opaque proofHandle", () => {
+  it("T06: Authentic Provider Run Lifecycle & Mock Quarantine — handcrafted registry entry cannot yield commercial CI_PASS", async () => {
     const evidence = {
       provider: "github-actions" as const,
       source: "GITHUB_API" as const,
@@ -325,27 +323,25 @@ describe("KH-02 V12.4.3.7.19.3.2.5: Real CI Trust-Boundary Closure (T01 - T10)",
       isUnitTestMock: false,
     };
 
-    // Register run using trusted orchestrator capability
-    const regResult = registerVerifiedRemoteCiRun(evidence, TRUSTED_ORCHESTRATOR_CAPABILITY);
-    expect(regResult.registered).toBe(true);
-    expect(regResult.proofHandle?.startsWith("swai_proof_handle_")).toBe(true);
+    // Caller attempts to register handcrafted entry via test seam:
+    _testOnlyRegisterVerifiedRemoteCiRun(evidence);
 
-    // Verify lookup succeeds
+    // Test seam strictly stamps isUnitTestMock: true, so lookup in release context MUST fail closed:
     const lookup = lookupVerifiedRemoteCiRun("55554444", currentTestedSha);
-    expect(lookup.verified).toBe(true);
-    expect(lookup.record?.proofHandle).toBe(regResult.proofHandle);
+    expect(lookup.verified).toBe(false);
+    expect(lookup.reason).toContain("MOCK_QUARANTINE");
 
-    // Attestation signature minted with internal capability
-    const token = mintCiAttestationToken(evidence, { trustedExecutionCapability: TRUSTED_ORCHESTRATOR_CAPABILITY });
-    expect(token.startsWith("swai_ci_v1_")).toBe(true);
+    // Minting token without authentic server execution returns untrusted token
+    const token = mintCiAttestationToken(evidence);
+    expect(token.startsWith("swai_ci_untrusted_")).toBe(true);
 
-    // verifyAuthenticCiProof succeeds
+    // verifyAuthenticCiProof fails closed
     const proofCheck = verifyAuthenticCiProof(
       { runId: "55554444", authenticatedProof: { ...evidence, attestationSignature: token } },
       { expectedSha: currentTestedSha }
     );
-    expect(proofCheck.verified).toBe(true);
-    expect(proofCheck.status).toBe("CI_PASS");
+    expect(proofCheck.verified).toBe(false);
+    expect(proofCheck.status).toBe("CI_NOT_RUN");
   });
 
   // ============================================================================
@@ -387,7 +383,12 @@ describe("KH-02 V12.4.3.7.19.3.2.5: Real CI Trust-Boundary Closure (T01 - T10)",
     };
 
     _testOnlyRegisterVerifiedRemoteCiRun(evidence);
-    const token = mintCiAttestationToken(evidence, { trustedExecutionCapability: TRUSTED_ORCHESTRATOR_CAPABILITY });
+    const token =
+      "swai_ci_v1_" +
+      crypto
+        .createHmac("sha256", process.env.KH02_CI_VERIFIER_SECRET!)
+        .update(computeCiAttestationDigest(evidence))
+        .digest("hex");
 
     // Tamper with commitSha
     const tamperedSha = {
@@ -414,11 +415,17 @@ describe("KH-02 V12.4.3.7.19.3.2.5: Real CI Trust-Boundary Closure (T01 - T10)",
       responseDigest: valid64HexDigest,
     });
 
-    expect(lookupVerifiedRemoteCiRun("11112222", currentTestedSha).verified).toBe(true);
+    const beforeClear = lookupVerifiedRemoteCiRun("11112222", currentTestedSha);
+    expect(beforeClear.record?.runId).toBe("11112222");
+    expect(beforeClear.verified).toBe(false);
+    expect(beforeClear.reason).toContain("MOCK_QUARANTINE");
 
     clearVerifiedRemoteCiRunsForTesting();
 
-    expect(lookupVerifiedRemoteCiRun("11112222", currentTestedSha).verified).toBe(false);
+    const afterClear = lookupVerifiedRemoteCiRun("11112222", currentTestedSha);
+    expect(afterClear.record).toBeUndefined();
+    expect(afterClear.verified).toBe(false);
+    expect(afterClear.reason).toContain("NO_PROVIDER_RUN_REGISTERED");
   });
 
   // ============================================================================
