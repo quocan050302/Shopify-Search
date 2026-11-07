@@ -1,0 +1,216 @@
+{
+  "version": "12.4.3.7.19.3.2.9",
+  "baselineC0Sha": "3c60dfc7c1657c8c3c3e6bbeee19809e29a49df4",
+  "baselineC0TreeSha": "d002df2d091b2a1721391e2adf258ba509e08d1d",
+  "testedCodeSha": "cbc2eddfad582800f4bc26c9691216e413ab0666",
+  "testedTreeSha": "1d906fb040de164e3d365fd7b5449d81b1fed7aa",
+  "branch": "feature/kh02-walmart-us-jina-reader-v12.4.3.5.1",
+  "allGatesPassed": true,
+  "completedGates": 13,
+  "totalGates": 13,
+  "wallClockDurationMs": 182867,
+  "sumGateDurationsMs": 188679,
+  "generatedAt": "2026-11-07T04:49:36.912Z",
+  "testExecutionTotalsNote": "Totals across E13, E3, E4, E5, E6, E7 represent test executions across gates (E13 and E3 are subsets of E4; E7 shares 3 files with E4). Unique test counts: KH-02 Unit (E4) = 104 files / 2,442 tests; KH-02 Integration (E5) = 16 files / 77 tests; KH-01 Verify (E6) = 5 files / 69 tests; non-overlapping KH-02 Security file (kh02ProductMetadataSecurity.test.ts in E7) = 1 file / 18 tests -> 126 unique Vitest files / 2,606 unique Vitest tests, 0 failed, 0 skipped.",
+  "gates": [
+    {
+      "gateId": "E1",
+      "name": "TypeScript Compilation & Typecheck",
+      "command": "npx tsc --noEmit",
+      "exitCode": 0,
+      "status": "PASS",
+      "durationMs": 5475,
+      "logFile": "reports/kh02/v19_3_2_9/logs/e1_typecheck.log",
+      "logSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "logSizeBytes": 0
+    },
+    {
+      "gateId": "E2",
+      "name": "Git Diff Whitespace & Conflict Check",
+      "command": "git diff --check HEAD~1 HEAD",
+      "exitCode": 0,
+      "status": "PASS",
+      "durationMs": 67,
+      "logFile": "reports/kh02/v19_3_2_9/logs/e2_diff_check.log",
+      "logSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "logSizeBytes": 0
+    },
+    {
+      "gateId": "E12",
+      "name": "GitHub Actions Workflow Contract Verification (Gate E12)",
+      "command": "npx tsx scripts/kh02/verifyWorkflowContractV19_3_2_9.ts",
+      "exitCode": 0,
+      "status": "PASS",
+      "durationMs": 1267,
+      "logFile": "reports/kh02/v19_3_2_9/logs/e12_workflow_contract.log",
+      "logSha256": "73831bfe5adc6c30a9861995a20c2cd6a9a31e11e853318a7fa319eaf4a7bd87",
+      "logSizeBytes": 2405
+    },
+    {
+      "gateId": "E13",
+      "name": "Dedicated V19.3.2.9 Real GitHub CI & Required-Jobs Adversarial Suite (Gate E13)",
+      "command": "npx vitest run tests/unit/kh02/v12_4_3_7_19_3_2_9_RealGithubCiAndRequiredJobsProof.test.ts",
+      "exitCode": 0,
+      "status": "PASS",
+      "durationMs": 2846,
+      "testMetrics": {
+        "filesTotal": 1,
+        "filesPassed": 1,
+        "filesFailed": 0,
+        "testsTotal": 24,
+        "testsPassed": 24,
+        "testsFailed": 0,
+        "testsSkipped": 0
+      },
+      "logFile": "reports/kh02/v19_3_2_9/logs/e13_v19_3_2_9_unit.log",
+      "logSha256": "6490de4d9bc32d2bc63c8afe0d5f401aa0f085357076045e599739344fc2662e",
+      "logSizeBytes": 2828
+    },
+    {
+      "gateId": "E3",
+      "name": "Targeted V19.3.2.x CI Proof & Adversarial Runner Suites",
+      "command": "npx vitest run tests/unit/kh02/v12_4_3_7_19_3_2_9_RealGithubCiAndRequiredJobsProof.test.ts tests/unit/kh02/v12_4_3_7_19_3_2_8_GithubApiRunWorkflowJobsBinding.test.ts tests/unit/kh02/v12_4_3_7_19_3_2_7_MutableRegistryAndRunnerTruth.test.ts tests/unit/kh02/v12_4_3_7_19_3_2_6_CiTrustBoundaryAndFailClosedRunner.test.ts tests/unit/kh02/v12_4_3_7_19_3_2_5_CiTrustBoundaryClosure.test.ts tests/unit/kh02/v12_4_3_7_19_3_2_4_CiHmacTrustBoundary.test.ts tests/unit/kh02/v12_4_3_7_19_3_2_3_TrustedCiProofAndObservableExecution.test.ts tests/unit/kh02/v12_4_3_7_19_3_2_2_MandatoryBusinessScopeAndCiProof.test.ts tests/unit/kh02/v12_4_3_7_19_3_2_1_FinalAliasTrustAndCiProof.test.ts tests/unit/kh02/v12_4_3_7_19_3_2_DurableAliasAuthorization.test.ts",
+      "exitCode": 0,
+      "status": "PASS",
+      "durationMs": 12297,
+      "testMetrics": {
+        "filesTotal": 10,
+        "filesPassed": 10,
+        "filesFailed": 0,
+        "testsTotal": 303,
+        "testsPassed": 303,
+        "testsFailed": 0,
+        "testsSkipped": 0
+      },
+      "logFile": "reports/kh02/v19_3_2_9/logs/e3_targeted_suites.log",
+      "logSha256": "cfb0a82a63ff381f8b230c1f84632994766656ee34846f561829460a4c081167",
+      "logSizeBytes": 6571
+    },
+    {
+      "gateId": "E4",
+      "name": "KH-02 Full Unit Test Suite",
+      "command": "npm run kh02:test:unit -- --maxWorkers=4",
+      "exitCode": 0,
+      "status": "PASS",
+      "durationMs": 74682,
+      "testMetrics": {
+        "filesTotal": 104,
+        "filesPassed": 104,
+        "filesFailed": 0,
+        "testsTotal": 2442,
+        "testsPassed": 2442,
+        "testsFailed": 0,
+        "testsSkipped": 0
+      },
+      "logFile": "reports/kh02/v19_3_2_9/logs/e4_unit_tests.log",
+      "logSha256": "b617a7a8182d3b12b1852596086c1e48a56ff249c41d7742019a1d742a749073",
+      "logSizeBytes": 37548
+    },
+    {
+      "gateId": "E6",
+      "name": "KH-01 Baseline Verification Suite",
+      "command": "npm run kh01:verify",
+      "exitCode": 0,
+      "status": "PASS",
+      "durationMs": 4016,
+      "testMetrics": {
+        "filesTotal": 5,
+        "filesPassed": 5,
+        "filesFailed": 0,
+        "testsTotal": 69,
+        "testsPassed": 69,
+        "testsFailed": 0,
+        "testsSkipped": 0
+      },
+      "logFile": "reports/kh02/v19_3_2_9/logs/e6_kh01_verify.log",
+      "logSha256": "b71c33f825acaa50ecbbd27465ba3ea08333958e1ae6fcd38e7f0971be8acd4e",
+      "logSizeBytes": 3960
+    },
+    {
+      "gateId": "E7",
+      "name": "Security Negative Suites",
+      "command": "npx vitest run tests/unit/kh02ProductMetadataSecurity.test.ts tests/unit/kh02/v12_4_3_7_17_NetworkSsrfRedirect.test.ts tests/unit/kh02/v12_4_3_7_18_SocketPeerTlsTrust.test.ts tests/unit/kh02/v12_4_3_7_18_1_SocketTrustNoTestBypass.test.ts",
+      "exitCode": 0,
+      "status": "PASS",
+      "durationMs": 2188,
+      "testMetrics": {
+        "filesTotal": 4,
+        "filesPassed": 4,
+        "filesFailed": 0,
+        "testsTotal": 65,
+        "testsPassed": 65,
+        "testsFailed": 0,
+        "testsSkipped": 0
+      },
+      "logFile": "reports/kh02/v19_3_2_9/logs/e7_security_negative.log",
+      "logSha256": "690557e93a7803bec31a7f2799adf63d90e1a182f4748c0942345ffea162086b",
+      "logSizeBytes": 885
+    },
+    {
+      "gateId": "E10",
+      "name": "Remote CI Proof Diagnostic (Gate E10)",
+      "command": "npx tsx scripts/kh02/runRemoteCiProofDiagnostic.ts",
+      "exitCode": 0,
+      "status": "PASS",
+      "durationMs": 1211,
+      "logFile": "reports/kh02/v19_3_2_9/logs/e10_remote_ci.log",
+      "logSha256": "4d219261a6b3e7ec2e1e7f51920b62b333bbf11efb46b9b72360a2f4a0562628",
+      "logSizeBytes": 1709
+    },
+    {
+      "gateId": "E11",
+      "name": "Read-Only GitHub REST Three-Endpoint & Discovery Smoke (Gate E11)",
+      "command": "npx tsx scripts/kh02/runRemoteCiProofDiagnostic.ts --probe-public",
+      "exitCode": 0,
+      "status": "PASS",
+      "durationMs": 1964,
+      "logFile": "reports/kh02/v19_3_2_9/logs/e11_github_rest_smoke.log",
+      "logSha256": "bfde49ef2c080843022d519378ca97c32ae014ee9d68eb44adff9f556e3e1a1d",
+      "logSizeBytes": 2145
+    },
+    {
+      "gateId": "E5",
+      "name": "KH-02 Full Integration Test Suite",
+      "command": "npx vitest run tests/integration/kh02 --no-file-parallelism",
+      "exitCode": 0,
+      "status": "PASS",
+      "durationMs": 78205,
+      "testMetrics": {
+        "filesTotal": 16,
+        "filesPassed": 16,
+        "filesFailed": 0,
+        "testsTotal": 77,
+        "testsPassed": 77,
+        "testsFailed": 0,
+        "testsSkipped": 0
+      },
+      "logFile": "reports/kh02/v19_3_2_9/logs/e5_integration_tests.log",
+      "logSha256": "9cf4c876fca7f2309a2193f21e0079bb70fe681233bf9a1b820d8f255558d2ab",
+      "logSizeBytes": 6875
+    },
+    {
+      "gateId": "E8",
+      "name": "Historical Demand Backtest (Dev & Holdout)",
+      "command": "npx tsx scripts/kh02/runBacktestV12_4_3_4_2.ts",
+      "exitCode": 0,
+      "status": "PASS",
+      "durationMs": 2657,
+      "businessDataStatus": "INSUFFICIENT_EVIDENCE",
+      "logFile": "reports/kh02/v19_3_2_9/logs/e8_backtest.log",
+      "logSha256": "b21963392a1dd307a48ceb21e3cb24cf8d7c29b4999148a76586b76f3362f709",
+      "logSizeBytes": 723
+    },
+    {
+      "gateId": "E9",
+      "name": "Candidate Database Readback (Gate E9)",
+      "command": "npx tsx scripts/kh02/runCandidateDbReadback.ts",
+      "exitCode": 0,
+      "status": "PASS",
+      "durationMs": 1804,
+      "businessDataStatus": "INSUFFICIENT_EVIDENCE",
+      "logFile": "reports/kh02/v19_3_2_9/logs/e9_db_readback.log",
+      "logSha256": "38da49f820bfaa110a4782dcd780c0f273b8382c6d990e803553134b3ae2c7c4",
+      "logSizeBytes": 1243
+    }
+  ]
+}

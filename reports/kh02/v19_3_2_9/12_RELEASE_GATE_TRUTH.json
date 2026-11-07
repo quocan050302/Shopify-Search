@@ -1,0 +1,105 @@
+{
+  "version": "12.4.3.7.19.3.2.9",
+  "repository": "quocan050302/Shopify-Search",
+  "lockedBranch": "feature/kh02-walmart-us-jina-reader-v12.4.3.5.1",
+  "baselineC0Sha": "3c60dfc7c1657c8c3c3e6bbeee19809e29a49df4",
+  "baselineC0TreeSha": "d002df2d091b2a1721391e2adf258ba509e08d1d",
+  "testedC1Sha": "cbc2eddfad582800f4bc26c9691216e413ab0666",
+  "finalPushedHeadSha": "cbc2eddfad582800f4bc26c9691216e413ab0666",
+  "testedTreeSha": "1d906fb040de164e3d365fd7b5449d81b1fed7aa",
+  "localEngineering": {
+    "status": "ENGINEERING_PASS",
+    "gatesPassed": 13,
+    "gatesTotal": 13,
+    "wallClockDurationMs": 182867,
+    "sumGateDurationsMs": 188679,
+    "uniqueVitestFiles": 126,
+    "uniqueVitestTests": 2606,
+    "uniqueVitestFailed": 0,
+    "uniqueVitestSkipped": 0,
+    "kh02UnitTests": 2442,
+    "kh02IntegrationTests": 77,
+    "kh01VerifyTests": 69,
+    "securityNegativeTests": 65,
+    "v19_3_2_9AdversarialTests": 24,
+    "backtestPolicyScenariosPassed": 14,
+    "runnerSafetyStatus": "SAFE_VERIFIED",
+    "maxConcurrency": 2,
+    "resourcePreflight": {
+      "safe": true,
+      "freeDiskBytes": 66968055808,
+      "freeRamBytes": 5202878464
+    }
+  },
+  "remoteCi": {
+    "workflowConfigured": true,
+    "workflowPathInRepo": ".github/workflows/kh02-ci.yml",
+    "workflowFileSha256": "8183d7366720cbbb3cf21df89da1480f12094c671bd3a1da3d701fca9131588f",
+    "workflowId": 410038523,
+    "runId": "42338996172",
+    "runAttempt": 1,
+    "githubApiTransport": "HTTP_200_3_ENDPOINTS_OBSERVED",
+    "remoteRunObserved": true,
+    "remoteRunCompleted": true,
+    "remoteRunConclusion": "success",
+    "remoteRunHeadSha": "cbc2eddfad582800f4bc26c9691216e413ab0666",
+    "mandatoryJobsRequired": [
+      "typecheck",
+      "kh02-unit",
+      "kh02-integration",
+      "kh01-regression",
+      "security-negative",
+      "backtest-policy"
+    ],
+    "mandatoryJobsSucceededOnProvider": [
+      "typecheck",
+      "kh02-unit",
+      "kh02-integration",
+      "kh01-regression",
+      "security-negative",
+      "backtest-policy"
+    ],
+    "mandatoryJobsMissingOnProvider": [],
+    "localAuthenticatedAttestationStatus": "CI_NOT_CONFIGURED",
+    "ciProviderVerified": false,
+    "localMissingTrustAnchors": [
+      "GITHUB_TOKEN",
+      "KH02_CI_VERIFIER_SECRET"
+    ],
+    "workflowCostSafeStatus": "PUBLIC_REPO_FREE_TIER_GUARDED_ZERO_SPEND"
+  },
+  "stagingRuntimeEvidence": {
+    "status": "NOT_RUN",
+    "stagingShadowOnly": true
+  },
+  "businessEvidence": {
+    "g15Status": "INSUFFICIENT_EVIDENCE",
+    "g16Status": "INSUFFICIENT_EVIDENCE",
+    "historicalDevBacktestVerdict": "INSUFFICIENT_HISTORICAL_EVIDENCE",
+    "historicalHoldoutBacktestVerdict": "INSUFFICIENT_HISTORICAL_EVIDENCE",
+    "verifiedOfficialCsvRows": 0,
+    "coveredCalendarDays": 0,
+    "requiredCalendarDays": 60
+  },
+  "releaseVerdict": {
+    "engineeringVerdict": "PASS",
+    "ciAttestationVerdict": "CI_NOT_CONFIGURED",
+    "stagingVerdict": "NOT_RUN",
+    "businessVerdict": "INSUFFICIENT_EVIDENCE",
+    "overallReleaseAllowed": false,
+    "finalDecision": "NO-GO"
+  },
+  "gitPushAndBlockers": {
+    "ordinaryFastForwardPushSucceeded": true,
+    "confirmedRemoteHeadSha": "cbc2eddfad582800f4bc26c9691216e413ab0666",
+    "postCiEvidenceKeptLocalToPreserveExactC1Head": true,
+    "pushErrorsOrPermissionIssues": null,
+    "currentBlockers": [
+      "CI_NOT_CONFIGURED_LOCAL_TRUST_ANCHOR: Local workstation lacks GITHUB_TOKEN and KH02_CI_VERIFIER_SECRET to mint signed V2 HMAC attestation (even though remote GitHub Actions runId=42338996172 completed with conclusion='success' across all 6 required jobs on commit cbc2eddfad582800f4bc26c9691216e413ab0666).",
+      "STAGING_NOT_EXECUTED: Staging runtime evidence remains NOT_RUN (shadow-only).",
+      "G15_INSUFFICIENT_DEMAND_HISTORY: 0 verified official Google Trends Explore CSV rows with valid SHA-256 checksums (< 60 required calendar days for candidate cmvsy7zqh000jp0orhypwohho).",
+      "G16_INSUFFICIENT_CROSS_PLATFORM_EVIDENCE: Multi-source live commercial winning-product thresholds not yet met."
+    ]
+  },
+  "generatedAt": "2026-11-07T04:55:55.000Z"
+}

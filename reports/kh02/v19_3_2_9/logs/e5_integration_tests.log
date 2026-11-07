@@ -1,0 +1,60 @@
+
+[1m[30m[46m RUN [49m[39m[22m [36mv5.0.5 [39m[90mD:/Project_github/Running-Ads[39m
+
+[90mstdout[2m | tests/integration/kh02BrowserAcceptance.test.ts[2m > [22m[2mSWAI KH-02 V12.1.1 — Chromium Browser E2E Acceptance[2m > [22m[2mlaunches Chromium, interacts with /products, and captures visual artifacts
+[22m[39m[Chromium E2E] Navigating to: http://127.0.0.1:58910/products
+
+[90mstdout[2m | tests/integration/kh02BrowserAcceptance.test.ts[2m > [22m[2mSWAI KH-02 V12.1.1 — Chromium Browser E2E Acceptance[2m > [22m[2mlaunches Chromium, interacts with /products, and captures visual artifacts
+[22m[39m[Chromium E2E] Triggering async research for 'Pet Hair Remover'...
+
+[90mstdout[2m | tests/integration/kh02BrowserAcceptance.test.ts[2m > [22m[2mSWAI KH-02 V12.1.1 — Chromium Browser E2E Acceptance[2m > [22m[2mlaunches Chromium, interacts with /products, and captures visual artifacts
+[22m[39m[Chromium E2E] Testing reload persistence...
+
+ [32m✓[39m tests/integration/kh02BrowserAcceptance.test.ts [2m([22m[2m1 test[22m[2m)[22m[33m 38121[2mms[22m[39m
+   [32m✓[39m SWAI KH-02 V12.1.1 — Chromium Browser E2E Acceptance [2m(1)[22m
+     [33m[2m✓[22m[39m launches Chromium, interacts with /products, and captures visual artifacts[33m 38118[2mms[22m[39m
+ [32m✓[39m tests/integration/kh02/v12_4_3_7_18_MultiProcessAtomicImport.test.ts [2m([22m[2m4 tests[22m[2m)[22m[33m 6694[2mms[22m[39m
+   [32m✓[39m KH-02 V12.4.3.7.18: MultiProcessAtomicImport Integration [2m(4)[22m
+     [33m[2m✓[22m[39m MP01: Two real OS child processes compete concurrently inserting separate products (50 points each)[33m 1619[2mms[22m[39m
+     [33m[2m✓[22m[39m MP02: Two real OS child processes compete to insert identical rows for Product A simultaneously[33m 1099[2mms[22m[39m
+     [33m[2m✓[22m[39m MP03: Concurrently running invalid worker rolls back while valid worker completes 50 rows[33m 1122[2mms[22m[39m
+     [33m[2m✓[22m[39m MP04: Sequential rapid spawns verify no lingering SQLite database locks[33m 2852[2mms[22m[39m
+ [32m✓[39m tests/integration/kh02/v12_4_3_7_18_1_OsProcessConflict.test.ts [2m([22m[2m10 tests[22m[2m)[22m[33m 4977[2mms[22m[39m
+   [32m✓[39m KH-02 V12.4.3.7.18.1: Workstream C — OS Process Conflict & Concurrency (C01 - C10) [2m(10)[22m
+     [33m[2m✓[22m[39m C01: two OS processes inserting identical rows -> one inserts, one idempotent skip, exactly 50 total rows[33m 1184[2mms[22m[39m
+     [33m[2m✓[22m[39m C02: same key but differing demand values (30 vs 80) -> exactly one succeeds, other fails 409[33m 1946[2mms[22m[39m
+     [33m[2m✓[22m[39m C08: four distinct product batches concurrently -> all expected rows, no duplicate or lost rows[33m 1338[2mms[22m[39m
+ [32m✓[39m tests/integration/kh02HttpServerE2E.test.ts [2m([22m[2m6 tests[22m[2m)[22m[33m 6365[2mms[22m[39m
+   [32m✓[39m SWAI KH-02 V12.1 — HTTP Route Handlers Acceptance [2m(6)[22m
+     [33m[2m✓[22m[39m GET /api/v1/kh02/providers/status reports live capability and truthful readiness[33m 328[2mms[22m[39m
+     [33m[2m✓[22m[39m POST /api/v1/kh02/research creates a persistent run, executes research, and records snapshot[33m 4618[2mms[22m[39m
+     [33m[2m✓[22m[39m GET /api/v1/kh02/leaderboard restores the latest completed snapshot on reload[33m 693[2mms[22m[39m
+     [33m[2m✓[22m[39m GET /api/v1/kh02/research/runs returns historical runs with workspace scoping[33m 452[2mms[22m[39m
+ [32m✓[39m tests/integration/kh02WalmartUsJinaIntegrationV12_4_3_5_1.test.ts [2m([22m[2m6 tests[22m[2m)[22m[33m 2598[2mms[22m[39m
+   [32m✓[39m KH-02 V12.4.3.5.1 — Walmart US Integration, Persistence, Fencing, Worker & API Suite [2m(6)[22m
+     [33m[2m✓[22m[39m W38, W39, W40, W41, W51: Orchestrator non-vacuous score non-inflation (>=3 candidates), source independence, and point-in-time backtest anti-leakage[33m 1651[2mms[22m[39m
+     [33m[2m✓[22m[39m D3: End-to-End Local HTTP Capture -> KH-01 Persistence -> Raw Schema ResearchEvidence + Semantic LandingPageSnapshot -> Readback & G16 Proof Verification[33m 361[2mms[22m[39m
+ [32m✓[39m tests/integration/kh02/geminiWorkerPipeline.test.ts [2m([22m[2m2 tests[22m[2m)[22m[33m 1161[2mms[22m[39m
+   [32m✓[39m SWAI KH-02 V12.4 — Production Worker Pipeline with Gemini AI Integration [2m(2)[22m
+     [33m[2m✓[22m[39m executes complete research orchestrator pipeline and applies AI Product Reality Gate[33m 872[2mms[22m[39m
+ [32m✓[39m tests/integration/kh02V12_1_3_Acceptance.test.ts [2m([22m[2m4 tests[22m[2m)[22m[33m 1912[2mms[22m[39m
+   [32m✓[39m SWAI KH-02 V12.1.3 — Final Integration Acceptance & Deterministic E2E [2m(4)[22m
+     [33m[2m✓[22m[39m executes Track A deterministic pipeline: HTTP 202 -> Worker Claim & Execution -> Readback[33m 1101[2mms[22m[39m
+     [33m[2m✓[22m[39m reconciles research across database, HTTP readback, and snapshot layers[33m 444[2mms[22m[39m
+ [32m✓[39m tests/integration/kh02V12_1_4_2_LongResearch.test.ts [2m([22m[2m3 tests[22m[2m)[22m[33m 629[2mms[22m[39m
+   [32m✓[39m SWAI KH-02 V12.1.4.2 — Integration: Long-Running Research & Worker Lifecycle [2m(3)[22m
+     [33m[2m✓[22m[39m executes complete async research lifecycle from enqueue to worker claim and terminal snapshot[33m 379[2mms[22m[39m
+ [32m✓[39m tests/integration/kh02/v12_4_3_7_18_ActualSocketRebinding.test.ts [2m([22m[2m6 tests[22m[2m)[22m[33m 630[2mms[22m[39m
+ [32m✓[39m tests/integration/kh02V12_1_Persistence.test.ts [2m([22m[2m4 tests[22m[2m)[22m[33m 426[2mms[22m[39m
+ [32m✓[39m tests/integration/kh02/v12_4_3_7_18_1_RealTlsPeerCertIsolation.test.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 172[2mms[22m[39m
+ [32m✓[39m tests/integration/kh02/v12_4_3_7_18_2_ProviderReceiptWriteBoundary.test.ts [2m([22m[2m8 tests[22m[2m)[22m[33m 459[2mms[22m[39m
+ [32m✓[39m tests/integration/kh02ResearchApi.test.ts [2m([22m[2m5 tests[22m[2m)[22m[33m 311[2mms[22m[39m
+ [32m✓[39m tests/integration/kh02V12_1_4_1_LegacyMigration.test.ts [2m([22m[2m2 tests[22m[2m)[22m[33m 328[2mms[22m[39m
+ [32m✓[39m tests/integration/kh02/v12_4_3_7_18_ResourceAndAbortControls.test.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 184[2mms[22m[39m
+ [32m✓[39m tests/integration/kh02/v12_4_3_7_18_2_FinalReleaseGate.test.ts [2m([22m[2m6 tests[22m[2m)[22m[32m 11[2mms[22m[39m
+
+[2m Test Files [22m [1m[32m16 passed[39m[22m[90m (16)[39m
+[2m      Tests [22m [1m[32m77 passed[39m[22m[90m (77)[39m
+[2m   Start at [22m 11:48:15
+[2m   Duration [22m 77.03s[2m (tests 87%, import 9%, setup 3%, transform 1%)[22m
+

@@ -1,0 +1,187 @@
+{
+  "version": "12.4.3.7.19.3.2.9",
+  "baselineC0Sha": "3c60dfc7c1657c8c3c3e6bbeee19809e29a49df4",
+  "baselineC0TreeSha": "d002df2d091b2a1721391e2adf258ba509e08d1d",
+  "testedCodeSha": "cbc2eddfad582800f4bc26c9691216e413ab0666",
+  "testedTreeSha": "1d906fb040de164e3d365fd7b5449d81b1fed7aa",
+  "branch": "feature/kh02-walmart-us-jina-reader-v12.4.3.5.1",
+  "testFile": "tests/unit/kh02/v12_4_3_7_19_3_2_9_RealGithubCiAndRequiredJobsProof.test.ts",
+  "testCommand": "npx vitest run tests/unit/kh02/v12_4_3_7_19_3_2_9_RealGithubCiAndRequiredJobsProof.test.ts",
+  "exitCode": 0,
+  "totalCases": 24,
+  "passedCases": 24,
+  "failedCases": 0,
+  "skippedCases": 0,
+  "logFile": "reports/kh02/v19_3_2_9/logs/e13_v19_3_2_9_unit.log",
+  "logSha256": "6490de4d9bc32d2bc63c8afe0d5f401aa0f085357076045e599739344fc2662e",
+  "cases": [
+    {
+      "id": "A01",
+      "description": "Rejects canonical workflow name with non-canonical workflow path and blocks caller allowedPaths widening",
+      "prePatchBehavior": "RED (allowed .github/workflows/ci.yml or caller-supplied allowedWorkflowPaths widening)",
+      "postPatchBehavior": "GREEN (rejected with NON_CANONICAL_WORKFLOW_PATH; CANONICAL_WORKFLOW_PATHS locked to ['.github/workflows/kh02-ci.yml'])",
+      "passed": true
+    },
+    {
+      "id": "A02",
+      "description": "Rejects cross-repo, fork, and pull_request-driven workflow runs",
+      "prePatchBehavior": "GREEN (retained & hardened)",
+      "postPatchBehavior": "GREEN (rejected with FORK_RUN_REJECTED, REPOSITORY_MISMATCH, UNAUTHORIZED_TRIGGER_EVENT)",
+      "passed": true
+    },
+    {
+      "id": "A03",
+      "description": "Rejects SHA mismatch, branch mismatch, runId mismatch, and invalid run_attempt",
+      "prePatchBehavior": "GREEN (retained & hardened)",
+      "postPatchBehavior": "GREEN (rejected with HEAD_SHA_MISMATCH, BRANCH_MISMATCH, RUN_ID_MISMATCH, INVALID_RUN_ATTEMPT)",
+      "passed": true
+    },
+    {
+      "id": "A04",
+      "description": "Rejects workflow_id mismatch and inactive/disabled workflow state",
+      "prePatchBehavior": "GREEN (retained & hardened)",
+      "postPatchBehavior": "GREEN (rejected with WORKFLOW_ID_MISMATCH and WORKFLOW_NOT_ACTIVE)",
+      "passed": true
+    },
+    {
+      "id": "A05",
+      "description": "Rejects a workflow run with only a single dummy/docs-only green job even when caller omits requiredJobs",
+      "prePatchBehavior": "RED (verifyRequiredJobs defaulted requiredJobs to [] when caller omitted it, passing any single green job)",
+      "postPatchBehavior": "GREEN (rejected with REQUIRED_JOBS_MISSING; CANONICAL_REQUIRED_JOBS enforced unconditionally)",
+      "passed": true
+    },
+    {
+      "id": "A06",
+      "description": "Rejects when any canonical required job is skipped, failed, incomplete, or has a failed step",
+      "prePatchBehavior": "RED (did not enforce all 6 canonical jobs or step-level failure rejection)",
+      "postPatchBehavior": "GREEN (rejected with REQUIRED_JOB_NOT_SUCCESS, REQUIRED_JOB_NOT_COMPLETED, REQUIRED_JOB_STEP_FAILED)",
+      "passed": true
+    },
+    {
+      "id": "A07",
+      "description": "Rejects duplicate job IDs, job run_attempt conflicts, and incomplete/truncated pagination in fetchGitHubRunJobs",
+      "prePatchBehavior": "RED (accepted truncated job lists when page returned fewer items than total_count)",
+      "postPatchBehavior": "GREEN (rejected with DUPLICATE_JOB_ID, JOB_ATTEMPT_MISMATCH, JOBS_COUNT_MISMATCH_PAGINATION_INCOMPLETE)",
+      "passed": true
+    },
+    {
+      "id": "A08",
+      "description": "Rejects forged HMAC token and verifiedProof without genuine 3-endpoint verification registration",
+      "prePatchBehavior": "GREEN (retained & hardened with private _resolveCiVerifierSecretInternal)",
+      "postPatchBehavior": "GREEN (getCiVerifierSecret returns key: undefined; unverified attestation rejected with CI_ATTESTATION_NOT_FROM_VERIFIED_GITHUB_API_CALL)",
+      "passed": true
+    },
+    {
+      "id": "A09",
+      "description": "Rejects mutation of workflowPath, jobsDigest, or responseDigest after V2 signature minting",
+      "prePatchBehavior": "GREEN (retained & hardened)",
+      "postPatchBehavior": "GREEN (rejected with CI_ATTESTATION_SIGNATURE_MISMATCH)",
+      "passed": true
+    },
+    {
+      "id": "A10",
+      "description": "Rejects legacy V1 token (swai_ci_v1_...) for release gate promotion",
+      "prePatchBehavior": "GREEN (retained & hardened)",
+      "postPatchBehavior": "GREEN (rejected with LEGACY_V1_ATTESTATION_REJECTED)",
+      "passed": true
+    },
+    {
+      "id": "A11",
+      "description": "Returns CI_NOT_CONFIGURED (never CI_PASS) when GitHub token or HMAC trust anchor is missing",
+      "prePatchBehavior": "GREEN (retained & hardened)",
+      "postPatchBehavior": "GREEN (classified as CI_NOT_CONFIGURED with ciProviderVerified: false)",
+      "passed": true
+    },
+    {
+      "id": "A12",
+      "description": "Rejects HTTP 401/403/404/429/500, redirects, and aborts streaming body before 2 MiB overflow",
+      "prePatchBehavior": "RED (called await res.text() before checking byte length)",
+      "postPatchBehavior": "GREEN (readBoundedResponseBytes aborts stream immediately on >2 MiB or >6 MiB total budget; 429 classified as RATE_LIMITED)",
+      "passed": true
+    },
+    {
+      "id": "A13",
+      "description": "Gate E10/E11 validator rejects contradictory status='CI_PASS' with providerVerified=false",
+      "prePatchBehavior": "RED (only checked status !== 'CI_PASS' with ciProviderVerified=true; did not reject status === 'CI_PASS' with providerVerified=false)",
+      "postPatchBehavior": "GREEN (two-way CI_PASS <=> ciProviderVerified && providerVerified invariant enforced)",
+      "passed": true
+    },
+    {
+      "id": "A14",
+      "description": "Gate E8/E9 validator rejects missing, invalid, or contradictory JSON",
+      "prePatchBehavior": "GREEN (retained & hardened)",
+      "postPatchBehavior": "GREEN (rejected with ENGINEERING_FAIL)",
+      "passed": true
+    },
+    {
+      "id": "A15",
+      "description": "runSingleGate returns ABORTED_FAIL (pass=false) when child times out even if it traps SIGTERM and exits 0",
+      "prePatchBehavior": "RED (close handler checked exitCode === 0 without checking timedOut first)",
+      "postPatchBehavior": "GREEN (if (timedOut) takes unconditional precedence -> ABORTED_FAIL, pass: false)",
+      "passed": true
+    },
+    {
+      "id": "A16",
+      "description": "ByteTailRingBuffer enforces 64 KiB cap and sanitizeCiLog redacts secrets while verifying flushed log SHA-256",
+      "prePatchBehavior": "GREEN (retained & hardened with post-flush disk size + SHA-256 verification)",
+      "postPatchBehavior": "GREEN (verified)",
+      "passed": true
+    },
+    {
+      "id": "A17",
+      "description": "checkResourceSafety fails closed when disk/RAM is below threshold or when probe throws",
+      "prePatchBehavior": "GREEN (retained & hardened with Linux MemAvailable + cgroup v1/v2 support)",
+      "postPatchBehavior": "GREEN (verified)",
+      "passed": true
+    },
+    {
+      "id": "A18",
+      "description": "Enforces MAX_CONCURRENT_GATES === 2 and defines all 13 mandatory gates (E1..E13)",
+      "prePatchBehavior": "RED (E12 and E13 were not defined in V19.3.2.8)",
+      "postPatchBehavior": "GREEN (all 13 gates E1..E13 defined with MAX_CONCURRENT_GATES === 2)",
+      "passed": true
+    },
+    {
+      "id": "A19",
+      "description": "verifyWorktreeIntegrity fails closed on HEAD SHA or Tree SHA drift",
+      "prePatchBehavior": "GREEN (retained & hardened)",
+      "postPatchBehavior": "GREEN (rejected with HEAD_MUTATED / TREE_MUTATED)",
+      "passed": true
+    },
+    {
+      "id": "A20",
+      "description": "executeRemoteCiProofDiagnostic reports truthful status and all new V19.3.2.9 diagnostic fields when token/runId absent",
+      "prePatchBehavior": "RED (did not expose workflowFileConfigured, remoteRunObserved, remoteRunCompleted, requiredJobsVerified, jobsDigest, errorClassification)",
+      "postPatchBehavior": "GREEN (all V19.3.2.9 diagnostic fields populated truthfully)",
+      "passed": true
+    },
+    {
+      "id": "A21",
+      "description": "verifyWorkflowContractV19_3_2_9 validates .github/workflows/kh02-ci.yml and rejects tampered YAML",
+      "prePatchBehavior": "RED (no .github/workflows/kh02-ci.yml or contract validator existed)",
+      "postPatchBehavior": "GREEN (verifies permissions, 40-hex SHA-pinned actions, public guard, no continue-on-error, and all 6 canonical jobs)",
+      "passed": true
+    },
+    {
+      "id": "A22",
+      "description": "Only GITHUB_ACTIONS_API source with all 6 canonical required jobs can register a verified CI run",
+      "prePatchBehavior": "RED (_registerVerifiedRemoteCiRun did not enforce all 6 canonical required jobs)",
+      "postPatchBehavior": "GREEN (_registerVerifiedRemoteCiRun throws if any canonical required job is missing)",
+      "passed": true
+    },
+    {
+      "id": "A23",
+      "description": ".github/workflows/kh02-ci.yml contains no paid external API triggers or live paid provider flags",
+      "prePatchBehavior": "RED (workflow did not exist)",
+      "postPatchBehavior": "GREEN (verified zero paid API keys or live paid flags in .github/workflows/kh02-ci.yml)",
+      "passed": true
+    },
+    {
+      "id": "A24",
+      "description": "Passing extra optional jobs (e.g. lint-docs) cannot mask a missing or failed mandatory canonical job",
+      "prePatchBehavior": "RED (optional jobs could satisfy caller-specified requiredJobs when canonical jobs were omitted)",
+      "postPatchBehavior": "GREEN (evaluateReleaseEvidence and validateCiRunBinding reject with CI_CLAIM_UNVERIFIED / REQUIRED_JOBS_MISSING)",
+      "passed": true
+    }
+  ]
+}

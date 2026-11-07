@@ -1,0 +1,96 @@
+=== WORKFLOW CONTRACT VALIDATION (GATE E12) ===
+{
+  "gateId": "E12",
+  "workflowFileExists": true,
+  "workflowPath": ".github/workflows/kh02-ci.yml",
+  "workflowFileSha256": "8183d7366720cbbb3cf21df89da1480f12094c671bd3a1da3d701fca9131588f",
+  "testedCodeSha": "cbc2eddfad582800f4bc26c9691216e413ab0666",
+  "testedTreeSha": "1d906fb040de164e3d365fd7b5449d81b1fed7aa",
+  "permissionsValid": true,
+  "actionsShaPinned": true,
+  "continueOnErrorAbsent": true,
+  "publicVisibilityGuardPresent": true,
+  "triggersValid": true,
+  "concurrencyBounded": true,
+  "requiredJobsConfigured": [
+    "typecheck",
+    "kh02-unit",
+    "kh02-integration",
+    "kh01-regression",
+    "security-negative",
+    "backtest-policy"
+  ],
+  "missingRequiredJobs": [],
+  "jobDetails": {
+    "typecheck": {
+      "present": true,
+      "nameMatchesId": true,
+      "publicGuard": true,
+      "runsOnValid": true,
+      "timeoutValid": true,
+      "expectedCommandPresent": true,
+      "needs": []
+    },
+    "kh02-unit": {
+      "present": true,
+      "nameMatchesId": true,
+      "publicGuard": true,
+      "runsOnValid": true,
+      "timeoutValid": true,
+      "expectedCommandPresent": true,
+      "needs": [
+        "typecheck",
+        "security-negative"
+      ]
+    },
+    "kh02-integration": {
+      "present": true,
+      "nameMatchesId": true,
+      "publicGuard": true,
+      "runsOnValid": true,
+      "timeoutValid": true,
+      "expectedCommandPresent": true,
+      "needs": [
+        "kh02-unit",
+        "kh01-regression"
+      ]
+    },
+    "kh01-regression": {
+      "present": true,
+      "nameMatchesId": true,
+      "publicGuard": true,
+      "runsOnValid": true,
+      "timeoutValid": true,
+      "expectedCommandPresent": true,
+      "needs": [
+        "typecheck",
+        "security-negative"
+      ]
+    },
+    "security-negative": {
+      "present": true,
+      "nameMatchesId": true,
+      "publicGuard": true,
+      "runsOnValid": true,
+      "timeoutValid": true,
+      "expectedCommandPresent": true,
+      "needs": []
+    },
+    "backtest-policy": {
+      "present": true,
+      "nameMatchesId": true,
+      "publicGuard": true,
+      "runsOnValid": true,
+      "timeoutValid": true,
+      "expectedCommandPresent": true,
+      "needs": [
+        "kh02-unit",
+        "kh01-regression"
+      ]
+    }
+  },
+  "errors": [],
+  "verdict": "PASS",
+  "evaluatedAt": "2026-11-07T04:46:40.968Z"
+}
+STATUS: PASS

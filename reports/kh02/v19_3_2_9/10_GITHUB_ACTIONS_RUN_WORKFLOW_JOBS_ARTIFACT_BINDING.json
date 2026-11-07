@@ -1,0 +1,118 @@
+{
+  "version": "12.4.3.7.19.3.2.9",
+  "repository": "quocan050302/Shopify-Search",
+  "branch": "feature/kh02-walmart-us-jina-reader-v12.4.3.5.1",
+  "baselineC0Sha": "3c60dfc7c1657c8c3c3e6bbeee19809e29a49df4",
+  "testedCodeSha": "cbc2eddfad582800f4bc26c9691216e413ab0666",
+  "testedTreeSha": "1d906fb040de164e3d365fd7b5449d81b1fed7aa",
+  "workflowFile": {
+    "path": ".github/workflows/kh02-ci.yml",
+    "fileSha256": "8183d7366720cbbb3cf21df89da1480f12094c671bd3a1da3d701fca9131588f",
+    "workflowId": 410038523,
+    "name": "KH-02 Continuous Integration",
+    "state": "active"
+  },
+  "liveGithubActionsRun": {
+    "runId": 42338996172,
+    "runAttempt": 1,
+    "workflowId": 410038523,
+    "workflowPath": ".github/workflows/kh02-ci.yml",
+    "headSha": "cbc2eddfad582800f4bc26c9691216e413ab0666",
+    "headBranch": "feature/kh02-walmart-us-jina-reader-v12.4.3.5.1",
+    "event": "push",
+    "status": "completed",
+    "conclusion": "success",
+    "endpoints": {
+      "runEndpoint": {
+        "url": "https://api.github.com/repos/quocan050302/Shopify-Search/actions/runs/42338996172",
+        "httpStatus": 200,
+        "responseSha256": "e80f6ad860bb763e19170dd237976c152f2501c7c2f686bfabdd77b4f310636f"
+      },
+      "workflowEndpoint": {
+        "url": "https://api.github.com/repos/quocan050302/Shopify-Search/actions/workflows/410038523",
+        "httpStatus": 200,
+        "responseSha256": "4a4fa5418f91eb34308a68e56f5ba58e9ade771cd50c6f1663386789c4715ca9"
+      },
+      "jobsEndpoint": {
+        "url": "https://api.github.com/repos/quocan050302/Shopify-Search/actions/runs/42338996172/jobs?per_page=100&page=1",
+        "httpStatus": 200,
+        "responseSha256": "3a4162224087c321d4e4a17bcd993506b6d1db66702d15084ef620a9c4eef12e",
+        "totalCount": 6
+      },
+      "combinedThreeEndpointDigestSha256": "b38a0225e6fe715b0384563eff91f9adfcd5252d3b7ec927ed1b4a160c4ab44c"
+    },
+    "requiredJobsPolicy": [
+      "typecheck",
+      "kh02-unit",
+      "kh02-integration",
+      "kh01-regression",
+      "security-negative",
+      "backtest-policy"
+    ],
+    "requiredJobsMissing": [],
+    "allRequiredJobsSucceededOnProvider": true,
+    "jobs": [
+      {
+        "id": 128302260625,
+        "name": "security-negative",
+        "status": "completed",
+        "conclusion": "success",
+        "startedAt": "2026-11-07T04:33:47Z",
+        "completedAt": "2026-11-07T04:34:21Z",
+        "stepsCount": 9
+      },
+      {
+        "id": 128302260860,
+        "name": "typecheck",
+        "status": "completed",
+        "conclusion": "success",
+        "startedAt": "2026-11-07T04:33:47Z",
+        "completedAt": "2026-11-07T04:34:43Z",
+        "stepsCount": 9
+      },
+      {
+        "id": 128302472249,
+        "name": "kh01-regression",
+        "status": "completed",
+        "conclusion": "success",
+        "startedAt": "2026-11-07T04:34:45Z",
+        "completedAt": "2026-11-07T04:35:26Z",
+        "stepsCount": 9
+      },
+      {
+        "id": 128302472270,
+        "name": "kh02-unit",
+        "status": "completed",
+        "conclusion": "success",
+        "startedAt": "2026-11-07T04:34:45Z",
+        "completedAt": "2026-11-07T04:38:50Z",
+        "stepsCount": 9
+      },
+      {
+        "id": 128303367230,
+        "name": "kh02-integration",
+        "status": "completed",
+        "conclusion": "success",
+        "startedAt": "2026-11-07T04:38:52Z",
+        "completedAt": "2026-11-07T04:40:53Z",
+        "stepsCount": 9
+      },
+      {
+        "id": 128303367239,
+        "name": "backtest-policy",
+        "status": "completed",
+        "conclusion": "success",
+        "startedAt": "2026-11-07T04:38:52Z",
+        "completedAt": "2026-11-07T04:39:28Z",
+        "stepsCount": 9
+      }
+    ],
+    "localTrustAnchorStatus": {
+      "githubTokenPresentInEnv": false,
+      "ciVerifierSecretPresentInEnv": false,
+      "localVerifierStatus": "CI_NOT_CONFIGURED",
+      "ciProviderVerified": false,
+      "explanation": "GitHub Actions run 42338996172 executed and passed all 6 required jobs on GitHub's ubuntu-24.04 runners for exact SHA cbc2eddfad582800f4bc26c9691216e413ab0666. In the local workstation shell, GITHUB_TOKEN and KH02_CI_VERIFIER_SECRET are unset, so the local verifier truthfully withholds CI_PASS (status='CI_NOT_CONFIGURED', ciProviderVerified=false) rather than fabricating a secret or bypassing the trust anchor."
+    }
+  }
+}

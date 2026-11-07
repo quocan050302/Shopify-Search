@@ -1,0 +1,246 @@
+{
+  "version": "12.4.3.7.19.3.2.9",
+  "baselineC0Sha": "3c60dfc7c1657c8c3c3e6bbeee19809e29a49df4",
+  "testedCodeSha": "cbc2eddfad582800f4bc26c9691216e413ab0666",
+  "testedTreeSha": "1d906fb040de164e3d365fd7b5449d81b1fed7aa",
+  "branch": "feature/kh02-walmart-us-jina-reader-v12.4.3.5.1",
+  "generatedAt": "2026-11-07T04:57:24.616Z",
+  "totalFilesVerified": 39,
+  "allFilesExistAndMatchHash": true,
+  "files": [
+    {
+      "path": ".github/workflows/kh02-ci.yml",
+      "sizeBytes": 9021,
+      "sha256": "8183d7366720cbbb3cf21df89da1480f12094c671bd3a1da3d701fca9131588f",
+      "exists": true
+    },
+    {
+      "path": "src/services/kh02/release/githubActionsCiEvidence.ts",
+      "sizeBytes": 91961,
+      "sha256": "1a703e4619ba2e2561e741e47e67cfbf50f08b7a5c29ae2e7490719032c10ad7",
+      "exists": true
+    },
+    {
+      "path": "src/services/kh02/demand/testSuiteEvidenceValidator.ts",
+      "sizeBytes": 17551,
+      "sha256": "a40fede0ba0e9d8ab22e6f71d930236fc17e6bf1dc6a6613d7ef73169b9bc0f4",
+      "exists": true
+    },
+    {
+      "path": "src/services/kh02/release/releaseGateEvaluatorV19.ts",
+      "sizeBytes": 15252,
+      "sha256": "6ef327daebc7bded7a756e4785054ef9950a435c3e8266d37d0b9eae29d570fc",
+      "exists": true
+    },
+    {
+      "path": "scripts/kh02/runRemoteCiProofDiagnostic.ts",
+      "sizeBytes": 15800,
+      "sha256": "01b090ce8d48788b7f216495cf5cad4d7b531c990f2735d3f1f5b7bad777e712",
+      "exists": true
+    },
+    {
+      "path": "scripts/kh02/verifyWorkflowContractV19_3_2_9.ts",
+      "sizeBytes": 18368,
+      "sha256": "c95b8d0932fa139b24af05176b42d9be72fa0cb105c092cbc24289bbe87840bf",
+      "exists": true
+    },
+    {
+      "path": "scripts/kh02/runV19_3_2_9Gates.ts",
+      "sizeBytes": 49014,
+      "sha256": "7942443da416d0036c19ade9043d64e0a1c766b2cf90e2bb99e0d9f6101fa37f",
+      "exists": true
+    },
+    {
+      "path": "scripts/kh02/setupCiEnvironmentV19_3_2_9.ts",
+      "sizeBytes": 12992,
+      "sha256": "8bf40ac4ea2060437a8f7b0816460cddaa6d274ede058566ce8cf9a22d79a7ba",
+      "exists": true
+    },
+    {
+      "path": "scripts/kh02/runThreeSourceFreeMcpSmoke.ts",
+      "sizeBytes": 11884,
+      "sha256": "9d15599dc48367d5b6900188812d2a2035040f09edd5e60017c191474a533b69",
+      "exists": true
+    },
+    {
+      "path": "scripts/kh02/runKh02BrowserE2E.ts",
+      "sizeBytes": 31958,
+      "sha256": "3f3133add1522d2b437c7201415bd35f2869ed0011a7c0cc0a6649667fddb637",
+      "exists": true
+    },
+    {
+      "path": "tests/e2e/helpers/startSwaiTestServer.ts",
+      "sizeBytes": 7638,
+      "sha256": "ac91f964745171518e71216452614ad5a7fab84da11accbe3e4b3e0dbb58f576",
+      "exists": true
+    },
+    {
+      "path": "tests/unit/kh02/v12_4_3_7_19_3_2_8_GithubApiRunWorkflowJobsBinding.test.ts",
+      "sizeBytes": 39131,
+      "sha256": "80138cb83f0a8af8fd40eee32eb7558f850a5ac76082a7cf41a3ed9a810ba3ad",
+      "exists": true
+    },
+    {
+      "path": "tests/unit/kh02/v12_4_3_7_19_3_2_9_RealGithubCiAndRequiredJobsProof.test.ts",
+      "sizeBytes": 38457,
+      "sha256": "353baa8374beb97e9b025da4e7d03cae72b692ac7c481e9efd8866b3f57550e4",
+      "exists": true
+    },
+    {
+      "path": "reports/kh02/v19_3_2_9/01_BASELINE_AND_CALLGRAPH.md",
+      "sizeBytes": 2291,
+      "sha256": "379df07127af152a38d589ec7bcb851dfeb5b0ac4113954eea1f5a6224cc6d4d",
+      "exists": true
+    },
+    {
+      "path": "reports/kh02/v19_3_2_9/01_BASELINE_C0_BRANCH_TREE_AND_CALLGRAPH.md",
+      "sizeBytes": 5072,
+      "sha256": "edd13205715b8f1d7d9c4f634cba82cbe2e9b81c424ddef5a9f262b209c8cc7f",
+      "exists": true
+    },
+    {
+      "path": "reports/kh02/v19_3_2_9/02_WORKFLOW_YAML_REQUIRED_JOBS_AND_COST_AUDIT.md",
+      "sizeBytes": 2922,
+      "sha256": "721c0fea658d9fcccbee672eb6e16249ed156e3a5f3c95cb2c43dea54dbebc39",
+      "exists": true
+    },
+    {
+      "path": "reports/kh02/v19_3_2_9/03_FUNCTION_BY_FUNCTION_SECURITY_FIXES.md",
+      "sizeBytes": 5408,
+      "sha256": "7ed68c2c7dc5f4dd8bf288a329413413c15ced740e9c42315ba9efdb840fba52",
+      "exists": true
+    },
+    {
+      "path": "reports/kh02/v19_3_2_9/04_RED_GREEN_ADVERSARIAL_MATRIX.json",
+      "sizeBytes": 9744,
+      "sha256": "b629d69a1d50fc14184b3536c1654f3c9ff7a891e9ca5e1923fac45e30da388f",
+      "exists": true
+    },
+    {
+      "path": "reports/kh02/v19_3_2_9/05_BOUNDED_ASYNC_DISK_RAM_TIMEOUT_LOG_PROOF.json",
+      "sizeBytes": 1750,
+      "sha256": "320b82e1e2fd727bdc8421ee6e93996643d9e333a7d62c36fa6de34e470fb97f",
+      "exists": true
+    },
+    {
+      "path": "reports/kh02/v19_3_2_9/06_FULL_REGRESSION_EXACT_SHA_COUNTS.json",
+      "sizeBytes": 8758,
+      "sha256": "b5ad6352ca778b5ac700c6f4336767257c88c783f460a04c1ac939f241bb8511",
+      "exists": true
+    },
+    {
+      "path": "reports/kh02/v19_3_2_9/07_BACKTEST_DEV_HOLDOUT_G15_G16_GROUND_TRUTH.json",
+      "sizeBytes": 2105,
+      "sha256": "581072d11a266174976746253a0374c1a6a73cbf2b935dd4c0b8791b5181423c",
+      "exists": true
+    },
+    {
+      "path": "reports/kh02/v19_3_2_9/08_E9_REAL_DB_READBACK.json",
+      "sizeBytes": 1523,
+      "sha256": "7df71eb3701039eec562a72d8e2d7f629e02a51c01090a2903f667cc742d5f2d",
+      "exists": true
+    },
+    {
+      "path": "reports/kh02/v19_3_2_9/09_E10_E11_GITHUB_API_PROVIDER_TRUTH.json",
+      "sizeBytes": 3571,
+      "sha256": "8e27a4e62ace58560d7b321eb45fd0b4c94599f2d4731d3fd861fbfe0d798963",
+      "exists": true
+    },
+    {
+      "path": "reports/kh02/v19_3_2_9/10_GITHUB_ACTIONS_RUN_WORKFLOW_JOBS_ARTIFACT_BINDING.json",
+      "sizeBytes": 4375,
+      "sha256": "d3f7800c1e626a0dbb18a8cdf64cb5f18ec0de1f3cb3650a25492d4a3f4f8093",
+      "exists": true
+    },
+    {
+      "path": "reports/kh02/v19_3_2_9/12_RELEASE_GATE_TRUTH.json",
+      "sizeBytes": 4089,
+      "sha256": "8e51463e4dc3e5441bcc8d5274bdcc2eb75662fc7d30ec0197e651459ee98b33",
+      "exists": true
+    },
+    {
+      "path": "reports/kh02/v19_3_2_9/logs/e10_remote_ci.log",
+      "sizeBytes": 1709,
+      "sha256": "4d219261a6b3e7ec2e1e7f51920b62b333bbf11efb46b9b72360a2f4a0562628",
+      "exists": true
+    },
+    {
+      "path": "reports/kh02/v19_3_2_9/logs/e11_github_rest_smoke.log",
+      "sizeBytes": 2145,
+      "sha256": "bfde49ef2c080843022d519378ca97c32ae014ee9d68eb44adff9f556e3e1a1d",
+      "exists": true
+    },
+    {
+      "path": "reports/kh02/v19_3_2_9/logs/e12_workflow_contract.log",
+      "sizeBytes": 2405,
+      "sha256": "73831bfe5adc6c30a9861995a20c2cd6a9a31e11e853318a7fa319eaf4a7bd87",
+      "exists": true
+    },
+    {
+      "path": "reports/kh02/v19_3_2_9/logs/e13_v19_3_2_9_unit.log",
+      "sizeBytes": 2828,
+      "sha256": "6490de4d9bc32d2bc63c8afe0d5f401aa0f085357076045e599739344fc2662e",
+      "exists": true
+    },
+    {
+      "path": "reports/kh02/v19_3_2_9/logs/e1_typecheck.log",
+      "sizeBytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "exists": true
+    },
+    {
+      "path": "reports/kh02/v19_3_2_9/logs/e2_diff_check.log",
+      "sizeBytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "exists": true
+    },
+    {
+      "path": "reports/kh02/v19_3_2_9/logs/e3_targeted_suites.log",
+      "sizeBytes": 6571,
+      "sha256": "cfb0a82a63ff381f8b230c1f84632994766656ee34846f561829460a4c081167",
+      "exists": true
+    },
+    {
+      "path": "reports/kh02/v19_3_2_9/logs/e4_unit_tests.log",
+      "sizeBytes": 37548,
+      "sha256": "b617a7a8182d3b12b1852596086c1e48a56ff249c41d7742019a1d742a749073",
+      "exists": true
+    },
+    {
+      "path": "reports/kh02/v19_3_2_9/logs/e5_integration_tests.log",
+      "sizeBytes": 6875,
+      "sha256": "9cf4c876fca7f2309a2193f21e0079bb70fe681233bf9a1b820d8f255558d2ab",
+      "exists": true
+    },
+    {
+      "path": "reports/kh02/v19_3_2_9/logs/e6_kh01_verify.log",
+      "sizeBytes": 3960,
+      "sha256": "b71c33f825acaa50ecbbd27465ba3ea08333958e1ae6fcd38e7f0971be8acd4e",
+      "exists": true
+    },
+    {
+      "path": "reports/kh02/v19_3_2_9/logs/e7_security_negative.log",
+      "sizeBytes": 885,
+      "sha256": "690557e93a7803bec31a7f2799adf63d90e1a182f4748c0942345ffea162086b",
+      "exists": true
+    },
+    {
+      "path": "reports/kh02/v19_3_2_9/logs/e8_backtest.log",
+      "sizeBytes": 723,
+      "sha256": "b21963392a1dd307a48ceb21e3cb24cf8d7c29b4999148a76586b76f3362f709",
+      "exists": true
+    },
+    {
+      "path": "reports/kh02/v19_3_2_9/logs/e9_db_readback.log",
+      "sizeBytes": 1243,
+      "sha256": "38da49f820bfaa110a4782dcd780c0f273b8382c6d990e803553134b3ae2c7c4",
+      "exists": true
+    },
+    {
+      "path": "reports/kh02/v19_3_2_9/logs/gates_summary.json",
+      "sizeBytes": 18649,
+      "sha256": "930458994ab0033a36e81539854f0a061e6ba40a15bb5c65af572021805a2b50",
+      "exists": true
+    }
+  ]
+}

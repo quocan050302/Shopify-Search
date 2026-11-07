@@ -1,0 +1,27 @@
+
+[1m[30m[46m RUN [49m[39m[22m [36mv5.0.5 [39m[90mD:/Project_github/Running-Ads[39m
+
+[90mstdout[2m | tests/unit/kh02/v12_4_3_7_19_3_2_9_RealGithubCiAndRequiredJobsProof.test.ts[2m > [22m[2mKH-02 V12.4.3.7.19.3.2.9: Real GitHub CI, Mandatory Required-Jobs Policy & Bounded Runner (A01 - A24)[2m > [22m[2mA19: runSingleGate forces status='ABORTED_FAIL' and pass=false when timeout fires even if child exits 0
+[22m[39m[GATE START] E1_TIMEOUT_TEST: Simulated Slow Gate Exiting 0 After Timeout
+
+[90mstderr[2m | tests/unit/kh02/v12_4_3_7_19_3_2_9_RealGithubCiAndRequiredJobsProof.test.ts[2m > [22m[2mKH-02 V12.4.3.7.19.3.2.9: Real GitHub CI, Mandatory Required-Jobs Policy & Bounded Runner (A01 - A24)[2m > [22m[2mA19: runSingleGate forces status='ABORTED_FAIL' and pass=false when timeout fires even if child exits 0
+[22m[39m[GATE TIMEOUT] E1_TIMEOUT_TEST timed out after 150ms.
+
+[90mstdout[2m | tests/unit/kh02/v12_4_3_7_19_3_2_9_RealGithubCiAndRequiredJobsProof.test.ts[2m > [22m[2mKH-02 V12.4.3.7.19.3.2.9: Real GitHub CI, Mandatory Required-Jobs Policy & Bounded Runner (A01 - A24)[2m > [22m[2mA19: runSingleGate forces status='ABORTED_FAIL' and pass=false when timeout fires even if child exits 0
+[22m[39m[GATE END] E1_TIMEOUT_TEST -> ABORTED_FAIL (timeout after 150ms, exit 1)
+
+[90mstdout[2m | tests/unit/kh02/v12_4_3_7_19_3_2_9_RealGithubCiAndRequiredJobsProof.test.ts[2m > [22m[2mKH-02 V12.4.3.7.19.3.2.9: Real GitHub CI, Mandatory Required-Jobs Policy & Bounded Runner (A01 - A24)[2m > [22m[2mA21: runSingleGate flushes log stream, matches incremental SHA-256 against disk file, and redacts credentials
+[22m[39m[GATE START] E1_LOG_TEST: Log Integrity & Redaction Gate
+
+[90mstdout[2m | tests/unit/kh02/v12_4_3_7_19_3_2_9_RealGithubCiAndRequiredJobsProof.test.ts[2m > [22m[2mKH-02 V12.4.3.7.19.3.2.9: Real GitHub CI, Mandatory Required-Jobs Policy & Bounded Runner (A01 - A24)[2m > [22m[2mA21: runSingleGate flushes log stream, matches incremental SHA-256 against disk file, and redacts credentials
+[22m[39m[GATE END] E1_LOG_TEST -> PASS (exit 0, 82ms, 31 bytes)
+
+ [32m✓[39m tests/unit/kh02/v12_4_3_7_19_3_2_9_RealGithubCiAndRequiredJobsProof.test.ts [2m([22m[2m24 tests[22m[2m)[22m[33m 897[2mms[22m[39m
+   [32m✓[39m KH-02 V12.4.3.7.19.3.2.9: Real GitHub CI, Mandatory Required-Jobs Policy & Bounded Runner (A01 - A24) [2m(24)[22m
+     [33m[2m✓[22m[39m A19: runSingleGate forces status='ABORTED_FAIL' and pass=false when timeout fires even if child exits 0[33m 442[2mms[22m[39m
+
+[2m Test Files [22m [1m[32m1 passed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[32m24 passed[39m[22m[90m (24)[39m
+[2m   Start at [22m 11:46:41
+[2m   Duration [22m 1.51s[2m (tests 67%, setup 29%, transform 2%, import 1%, worker 1%)[22m
+

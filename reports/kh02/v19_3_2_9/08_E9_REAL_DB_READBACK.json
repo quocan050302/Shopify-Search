@@ -1,0 +1,36 @@
+{
+  "version": "12.4.3.7.19.3.2.9",
+  "baselineC0Sha": "3c60dfc7c1657c8c3c3e6bbeee19809e29a49df4",
+  "testedCodeSha": "cbc2eddfad582800f4bc26c9691216e413ab0666",
+  "testedTreeSha": "1d906fb040de164e3d365fd7b5449d81b1fed7aa",
+  "branch": "feature/kh02-walmart-us-jina-reader-v12.4.3.5.1",
+  "command": "npx tsx scripts/kh02/runCandidateDbReadback.ts",
+  "exitCode": 0,
+  "logFile": "reports/kh02/v19_3_2_9/logs/e9_db_readback.log",
+  "logSha256": "38da49f820bfaa110a4782dcd780c0f273b8382c6d990e803553134b3ae2c7c4",
+  "dbConnected": true,
+  "dbReadbackExecuted": true,
+  "dbPathOrMaskedDsn": "file:./prisma/dev.db",
+  "candidateId": "cand_uahpet_feeder",
+  "canonicalProductId": "cmvsy7zqh000jp0orhypwohho",
+  "canonicalTitleFromDB": "Automatic Wet Food Cat Feeder with Cooling & Warming",
+  "rawRecordCount": 6,
+  "distinctKeywords": [
+    "Automatic Wet Food Cat Feeder with Cooling & Warming"
+  ],
+  "sourceClassifications": [
+    "GOOGLE_TRENDS_CSV"
+  ],
+  "distinctEvidenceRefs": [
+    "verified-merchant-demand"
+  ],
+  "candidateAttributableCount": 0,
+  "businessAttributableCount": 0,
+  "verifiedOfficialCsvRows": 0,
+  "coveredCalendarDays": 0,
+  "g15Verdict": "INSUFFICIENT_EVIDENCE",
+  "g16Verdict": "INSUFFICIENT_EVIDENCE",
+  "identityAmbiguity": null,
+  "discrepancyNote": "Database contains 6 raw observation rows with 'verified-merchant-demand' pseudo-reference, but 0 are official verified Google Trends Explore CSV records with valid SHA-256 integrity checksums.",
+  "executedAt": "2026-11-07T04:49:36.146Z"
+}

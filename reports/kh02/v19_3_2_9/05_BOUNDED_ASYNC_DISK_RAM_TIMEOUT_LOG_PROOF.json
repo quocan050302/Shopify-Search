@@ -1,0 +1,43 @@
+{
+  "version": "12.4.3.7.19.3.2.9",
+  "baselineC0Sha": "3c60dfc7c1657c8c3c3e6bbeee19809e29a49df4",
+  "testedCodeSha": "cbc2eddfad582800f4bc26c9691216e413ab0666",
+  "testedTreeSha": "1d906fb040de164e3d365fd7b5449d81b1fed7aa",
+  "branch": "feature/kh02-walmart-us-jina-reader-v12.4.3.5.1",
+  "runnerScript": "scripts/kh02/runV19_3_2_9Gates.ts",
+  "resourceGuards": {
+    "minFreeDiskBytes": 2147483648,
+    "minFreeRamBytes": 1610612736,
+    "observedPreflightFreeDiskBytes": 66968055808,
+    "observedPreflightFreeRamBytes": 5202878464,
+    "preflightSafe": true,
+    "periodicSampleIntervalMs": 5000,
+    "linuxCgroupAndMemAvailableSupported": true,
+    "failClosedOnProbeException": true,
+    "resourceAbortTriggered": false
+  },
+  "concurrencyAndIsolation": {
+    "maxConcurrentGates": 2,
+    "vitestUnitMaxWorkers": 4,
+    "vitestIntegrationMaxWorkers": 1,
+    "wave4DatabaseGatesSerialized": ["E5", "E8", "E9"],
+    "worktreeCleanBeforeAndAfter": true
+  },
+  "streamingAndLogIntegrity": {
+    "tailRingBufferCapBytes": 65536,
+    "maxGateLogBytes": 10485760,
+    "maxGithubApiResponseBytes": 2097152,
+    "maxGithubTotalVerificationBytes": 6291456,
+    "timeoutPrecedenceEnforced": true,
+    "postFlushDiskSizeAndSha256Verified": true
+  },
+  "timingComparison": {
+    "v19_3_2_8_wallClockDurationMs": 175684,
+    "v19_3_2_8_sumGateDurationsMs": 182112,
+    "v19_3_2_8_totalGates": 11,
+    "v19_3_2_9_wallClockDurationMs": 182867,
+    "v19_3_2_9_sumGateDurationsMs": 188679,
+    "v19_3_2_9_totalGates": 13,
+    "note": "V19.3.2.9 adds 2 new gates (E12 Workflow Contract Verification + E13 24-case V19.3.2.9 Adversarial Suite) and 24 additional tests in E3/E4 while keeping wall-clock time bounded at 182.87s (concurrency saving = 5,812ms)."
+  }
+}

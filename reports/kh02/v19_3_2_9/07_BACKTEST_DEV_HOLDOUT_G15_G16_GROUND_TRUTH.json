@@ -1,0 +1,48 @@
+{
+  "version": "12.4.3.7.19.3.2.9",
+  "baselineC0Sha": "3c60dfc7c1657c8c3c3e6bbeee19809e29a49df4",
+  "testedCodeSha": "cbc2eddfad582800f4bc26c9691216e413ab0666",
+  "evaluatedCodeSha": "cbc2eddfad582800f4bc26c9691216e413ab0666",
+  "testedTreeSha": "1d906fb040de164e3d365fd7b5449d81b1fed7aa",
+  "evaluatedTreeSha": "1d906fb040de164e3d365fd7b5449d81b1fed7aa",
+  "branch": "feature/kh02-walmart-us-jina-reader-v12.4.3.5.1",
+  "niche": "Pet Gadgets",
+  "command": "npx tsx scripts/kh02/runBacktestV12_4_3_4_2.ts",
+  "exitCode": 0,
+  "policyScenarioVerdict": "PASS",
+  "policyScenariosPassed": 14,
+  "policyScenariosTotal": 14,
+  "pointInTimeIntegrityVerdict": "PASS",
+  "zeroFutureLeakageVerified": true,
+  "historicalDevVerdict": "INSUFFICIENT_HISTORICAL_EVIDENCE",
+  "historicalHoldoutVerdict": "INSUFFICIENT_HISTORICAL_EVIDENCE",
+  "overallHistoricalBacktestVerdict": "INSUFFICIENT_HISTORICAL_EVIDENCE",
+  "g15Verdict": "INSUFFICIENT_EVIDENCE",
+  "g16Verdict": "INSUFFICIENT_EVIDENCE",
+  "logFile": "reports/kh02/v19_3_2_9/logs/e8_backtest.log",
+  "logSha256": "b21963392a1dd307a48ceb21e3cb24cf8d7c29b4999148a76586b76f3362f709",
+  "temporalPartitions": {
+    "devWindow": {
+      "start": "2026-06-01T00:00:00.000Z",
+      "end": "2026-10-24T00:00:00.000Z"
+    },
+    "holdoutWindow": {
+      "start": "2026-10-24T00:00:00.000Z",
+      "end": "2026-10-30T12:00:00.000Z"
+    },
+    "zeroOverlapVerified": true,
+    "devRecordsEvaluated": 19,
+    "holdoutRecordsEvaluated": 380,
+    "devDatasetFingerprintSha256": "9855ac11a972adc0a558c23b7608309f158301c12ad8dcb0de3e3a5fd65af6a4",
+    "holdoutDatasetFingerprintSha256": "26bcffb0d900f14f43614918e4f1102015fbb2b9308292c6461acf6e582650b3",
+    "devShortlistCount": 0,
+    "devShortlistNicheMatchedCount": 0,
+    "devNicheCoverageStatus": "INSUFFICIENT_NICHE_COVERAGE",
+    "holdoutShortlistCount": 3,
+    "holdoutShortlistNicheMatchedCount": 3,
+    "holdoutNicheCoverageStatus": "SUFFICIENT_NICHE_COVERAGE",
+    "walmartPointInTimeVacuousAsHistoricalParityProof": false,
+    "zeroFutureLeakageVerified": true
+  },
+  "evaluatedAt": "2026-11-07T04:49:34.821Z"
+}

@@ -1,0 +1,31 @@
+=== CANDIDATE DATABASE READBACK DIAGNOSTIC (GATE E9) ===
+{
+  "dbConnected": true,
+  "dbReadbackExecuted": true,
+  "dbPathOrMaskedDsn": "file:./prisma/dev.db",
+  "testedCodeSha": "cbc2eddfad582800f4bc26c9691216e413ab0666",
+  "testedTreeSha": "1d906fb040de164e3d365fd7b5449d81b1fed7aa",
+  "candidateId": "cand_uahpet_feeder",
+  "canonicalProductId": "cmvsy7zqh000jp0orhypwohho",
+  "canonicalTitleFromDB": "Automatic Wet Food Cat Feeder with Cooling & Warming",
+  "rawRecordCount": 6,
+  "distinctKeywords": [
+    "Automatic Wet Food Cat Feeder with Cooling & Warming"
+  ],
+  "sourceClassifications": [
+    "GOOGLE_TRENDS_CSV"
+  ],
+  "distinctEvidenceRefs": [
+    "verified-merchant-demand"
+  ],
+  "candidateAttributableCount": 0,
+  "businessAttributableCount": 0,
+  "verifiedOfficialCsvRows": 0,
+  "coveredCalendarDays": 0,
+  "g15Verdict": "INSUFFICIENT_EVIDENCE",
+  "g16Verdict": "INSUFFICIENT_EVIDENCE",
+  "identityAmbiguity": null,
+  "discrepancyNote": "Database contains 6 raw observation rows with 'verified-merchant-demand' pseudo-reference, but 0 are official verified Google Trends Explore CSV records with valid SHA-256 integrity checksums.",
+  "executedAt": "2026-11-07T04:49:36.146Z"
+}
+STATUS: SUCCESS (dbConnected=true, rawRecords=6)
