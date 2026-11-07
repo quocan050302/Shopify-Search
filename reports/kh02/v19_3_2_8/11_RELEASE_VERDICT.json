@@ -1,0 +1,23 @@
+{
+  "version": "12.4.3.7.19.3.2.8",
+  "baselineSha": "0b2520dfb991b7bc191cff7abd1e6fb226616238",
+  "testedCodeSha": "16e6f1ca3ea5ab08d9b40afe89795c050e7545e3",
+  "testedTreeSha": "2f9adfbaf91ca986929d6972c8b6e800051215f6",
+  "branch": "feature/kh02-walmart-us-jina-reader-v12.4.3.5.1",
+  "engineeringStatus": "ENGINEERING_PASS",
+  "ciStatus": "CI_NOT_CONFIGURED",
+  "ciProviderVerified": false,
+  "businessStatus": "INSUFFICIENT_EVIDENCE",
+  "g15Verdict": "INSUFFICIENT_EVIDENCE",
+  "g16Verdict": "INSUFFICIENT_EVIDENCE",
+  "stagingStatus": "STAGING_RUNTIME_NOT_RUN",
+  "paidApiSpendUsd": 0,
+  "overallReleaseAllowed": false,
+  "overallReleaseVerdict": "NO-GO",
+  "blockerList": [
+    "CI_NOT_CONFIGURED: GITHUB_TOKEN / GH_TOKEN and KH02_CI_VERIFIER_SECRET are not configured in the local environment, and repository has 0 remote GitHub Actions workflows/runs on head_sha 16e6f1ca3ea5ab08d9b40afe89795c050e7545e3.",
+    "INSUFFICIENT_EVIDENCE (G15/G16): Database contains 6 raw observation rows with 'verified-merchant-demand' pseudo-reference, but 0 official verified Google Trends Explore CSV rows (candidateAttributableCount=0, businessAttributableCount=0, coveredCalendarDays=0 < 90).",
+    "STAGING_RUNTIME_NOT_RUN: Offline contract checks passed on isolated local SQLite; no remote staging shadow deployment executed."
+  ],
+  "evaluatedAt": "2026-11-07T02:03:30.000Z"
+}

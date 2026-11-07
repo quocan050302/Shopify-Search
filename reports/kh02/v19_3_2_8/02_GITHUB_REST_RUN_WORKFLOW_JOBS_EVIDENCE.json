@@ -1,0 +1,43 @@
+{
+  "version": "12.4.3.7.19.3.2.8",
+  "baselineSha": "0b2520dfb991b7bc191cff7abd1e6fb226616238",
+  "testedCodeSha": "16e6f1ca3ea5ab08d9b40afe89795c050e7545e3",
+  "testedTreeSha": "2f9adfbaf91ca986929d6972c8b6e800051215f6",
+  "repository": "quocan050302/Shopify-Search",
+  "branch": "feature/kh02-walmart-us-jina-reader-v12.4.3.5.1",
+  "threeEndpointContract": {
+    "endpoint1_run": "GET https://api.github.com/repos/quocan050302/Shopify-Search/actions/runs/{run_id}",
+    "endpoint2_workflow": "GET https://api.github.com/repos/quocan050302/Shopify-Search/actions/workflows/{workflow_id}",
+    "endpoint3_jobs": "GET https://api.github.com/repos/quocan050302/Shopify-Search/actions/runs/{run_id}/jobs?filter=latest&per_page=100&page={page}",
+    "canonicalWorkflowPaths": [
+      ".github/workflows/kh02-ci.yml",
+      ".github/workflows/ci.yml"
+    ],
+    "ssrfProtection": {
+      "trustedHostOnly": "api.github.com",
+      "scheme": "https:",
+      "redirects": "error",
+      "maxResponseBytes": 2097152,
+      "maxJobsPaginationPages": 5
+    }
+  },
+  "liveReadOnlyPublicGitHubRestProbe": {
+    "executedAt": "2026-11-07T02:03:24.007Z",
+    "command": "npx tsx scripts/kh02/runRemoteCiProofDiagnostic.ts --probe-public",
+    "transportAttempted": true,
+    "workflowsEndpoint": {
+      "url": "https://api.github.com/repos/quocan050302/Shopify-Search/actions/workflows",
+      "httpStatus": 200,
+      "totalCount": 0
+    },
+    "runsEndpoint": {
+      "url": "https://api.github.com/repos/quocan050302/Shopify-Search/actions/runs?head_sha=16e6f1ca3ea5ab08d9b40afe89795c050e7545e3&per_page=5",
+      "httpStatus": 200,
+      "totalCount": 0
+    },
+    "githubTokenConfigured": false,
+    "verifierSecretConfigured": false,
+    "observedStatus": "CI_NOT_CONFIGURED",
+    "ciProviderVerified": false
+  }
+}

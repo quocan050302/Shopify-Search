@@ -1,0 +1,41 @@
+=== REMOTE GITHUB ACTIONS CI PROOF DIAGNOSTIC (GATE E10) ===
+{
+  "diagnosticExecuted": true,
+  "networkAttempted": false,
+  "transportAttempted": true,
+  "remoteRunObserved": false,
+  "remoteVerificationLevel": "CI_NOT_RUN",
+  "status": "CI_NOT_CONFIGURED",
+  "ciProviderVerified": false,
+  "providerVerified": false,
+  "trustAnchorConfigured": false,
+  "providerHttpStatus": 200,
+  "workflowId": null,
+  "workflowPath": null,
+  "workflowName": null,
+  "runId": null,
+  "runAttempt": null,
+  "headSha": null,
+  "testedCodeSha": "16e6f1ca3ea5ab08d9b40afe89795c050e7545e3",
+  "testedTreeSha": "2f9adfbaf91ca986929d6972c8b6e800051215f6",
+  "repository": "quocan050302/Shopify-Search",
+  "branch": "feature/kh02-walmart-us-jina-reader-v12.4.3.5.1",
+  "event": null,
+  "conclusion": null,
+  "jobsChecked": [],
+  "jobsMissing": [],
+  "source": "NONE",
+  "isUnitTestMock": false,
+  "publicApiProbe": {
+    "attempted": true,
+    "workflowsEndpointStatus": 200,
+    "workflowsTotalCount": 0,
+    "runsEndpointStatus": 200,
+    "runsTotalCount": 0
+  },
+  "elapsedMs": 968,
+  "evidenceSha256": null,
+  "reason": "No remote GitHub Actions workflow runId specified, and repository has no active public workflow runs for this branch. Truthfully classified as CI_NOT_CONFIGURED.",
+  "executedAt": "2026-11-07T02:01:18.304Z"
+}
+STATUS: SUCCESS (status=CI_NOT_CONFIGURED, ciProviderVerified=false)

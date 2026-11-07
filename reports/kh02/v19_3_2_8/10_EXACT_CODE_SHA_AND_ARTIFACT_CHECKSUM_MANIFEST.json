@@ -1,0 +1,122 @@
+{
+  "version": "12.4.3.7.19.3.2.8",
+  "baselineSha": "0b2520dfb991b7bc191cff7abd1e6fb226616238",
+  "baselineTreeSha": "104ee6fd0d73b779201040b36cc23bd69d3fa8f4",
+  "testedCodeSha": "16e6f1ca3ea5ab08d9b40afe89795c050e7545e3",
+  "testedTreeSha": "2f9adfbaf91ca986929d6972c8b6e800051215f6",
+  "branch": "feature/kh02-walmart-us-jina-reader-v12.4.3.5.1",
+  "generatedAt": "2026-11-07T02:12:12.838Z",
+  "artifactCount": 22,
+  "artifacts": [
+    {
+      "path": "reports/kh02/v19_3_2_8/01_BASELINE_BRANCH_CODE_SHA_AND_CALLGRAPH.md",
+      "sizeBytes": 5309,
+      "sha256": "7d10934c40600eb0c3f209f9b97acf1b5dcde1395587bab692d3cca0865ec4c2"
+    },
+    {
+      "path": "reports/kh02/v19_3_2_8/02_GITHUB_REST_RUN_WORKFLOW_JOBS_EVIDENCE.json",
+      "sizeBytes": 1809,
+      "sha256": "e5b7b62f4a15ceb5491963cfb71cca91e256c5d428e44a3a97f5876be9ba65e5"
+    },
+    {
+      "path": "reports/kh02/v19_3_2_8/03_WORKFLOW_IDENTITY_AND_V2_ATTESTATION_AUDIT.md",
+      "sizeBytes": 4352,
+      "sha256": "f2bde3b85e9657ebf77c31db3a07b917827d553ce528601113dfb38affdec07d"
+    },
+    {
+      "path": "reports/kh02/v19_3_2_8/04_RED_GREEN_ADVERSARIAL_SECURITY_MATRIX.json",
+      "sizeBytes": 6125,
+      "sha256": "d8595b2b5a3b11e1906ac260df7ceb7c5d5b84d874344efc7e1fa64b7d2c51c2"
+    },
+    {
+      "path": "reports/kh02/v19_3_2_8/05_BOUNDED_ASYNC_DISK_RAM_AND_FAILURE_PROOF.json",
+      "sizeBytes": 1858,
+      "sha256": "eebc92acaa6d005ba1a7b45559f624a2791316e877151fb7d182e9348afdf57e"
+    },
+    {
+      "path": "reports/kh02/v19_3_2_8/06_FULL_REGRESSION_COMMANDS_COUNTS_SHA.json",
+      "sizeBytes": 5828,
+      "sha256": "2f692c1c6b4443f33e992bf223f51dfe4b135ae1c1162a45e6efad02b6ba4fb5"
+    },
+    {
+      "path": "reports/kh02/v19_3_2_8/07_DEV_HOLDOUT_BACKTEST_G15_G16_TRUTH.json",
+      "sizeBytes": 1774,
+      "sha256": "c893d9865fa392844fa799dfd48efb870ca466b8d79924826135dc865e49401f"
+    },
+    {
+      "path": "reports/kh02/v19_3_2_8/08_E9_REAL_DB_CANDIDATE_READBACK.json",
+      "sizeBytes": 1295,
+      "sha256": "acfc9adacf25c0ad670fd9e04f557d7e55f490dc25364bd7aba603ba3af35a35"
+    },
+    {
+      "path": "reports/kh02/v19_3_2_8/09_E10_GITHUB_CI_PROVIDER_TRUTH.json",
+      "sizeBytes": 1346,
+      "sha256": "a20d5d417b65c46f4b31c46e7258d133d1085da81935161073142273f9965c1b"
+    },
+    {
+      "path": "reports/kh02/v19_3_2_8/11_RELEASE_VERDICT.json",
+      "sizeBytes": 1376,
+      "sha256": "e0b0ffdfb57cb411cfc6111a79acd1460dd1b0afb5980c872c33415e96519ece"
+    },
+    {
+      "path": "reports/kh02/v19_3_2_8/logs/e1_typecheck.log",
+      "sizeBytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "reports/kh02/v19_3_2_8/logs/e10_remote_ci.log",
+      "sizeBytes": 1212,
+      "sha256": "9e6ab699d765cc26e1670d04fff03902806b8cd8f67ff3e9c9d6675a7311f811"
+    },
+    {
+      "path": "reports/kh02/v19_3_2_8/logs/e11_github_rest_smoke.log",
+      "sizeBytes": 1381,
+      "sha256": "89005cb845c100134d61c4f5e75aae4d393555a6e46d5405a152c8f1bd616546"
+    },
+    {
+      "path": "reports/kh02/v19_3_2_8/logs/e2_diff_check.log",
+      "sizeBytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "reports/kh02/v19_3_2_8/logs/e3_targeted_suites.log",
+      "sizeBytes": 3933,
+      "sha256": "d7b69338d99e528ce74d6d877672ddd409d10472dc8deb05bd0a44ea292df1d3"
+    },
+    {
+      "path": "reports/kh02/v19_3_2_8/logs/e4_unit_tests.log",
+      "sizeBytes": 33919,
+      "sha256": "52274b6446210277c9a532076c9e55e9428f0f093d475d4998692651519c8442"
+    },
+    {
+      "path": "reports/kh02/v19_3_2_8/logs/e5_integration_tests.log",
+      "sizeBytes": 6798,
+      "sha256": "9098e49f87edcd18d795f371e335a79fd06202a661945c02914793636db3dce3"
+    },
+    {
+      "path": "reports/kh02/v19_3_2_8/logs/e6_kh01_verify.log",
+      "sizeBytes": 3959,
+      "sha256": "4dc3be808b21b3403ef5600025971cdb4a5d0f348ff25ad99854412a3fb2f795"
+    },
+    {
+      "path": "reports/kh02/v19_3_2_8/logs/e7_security_negative.log",
+      "sizeBytes": 886,
+      "sha256": "423ea6f9a92e15fd24b0ab65dd8ea15641244619027c2601240abf76fec5daa9"
+    },
+    {
+      "path": "reports/kh02/v19_3_2_8/logs/e8_backtest.log",
+      "sizeBytes": 723,
+      "sha256": "d1001756bd316fd5c96983505042f311b74bdecac7d14107dbce06ed064bbc9a"
+    },
+    {
+      "path": "reports/kh02/v19_3_2_8/logs/e9_db_readback.log",
+      "sizeBytes": 1243,
+      "sha256": "ad60b62e93b5198ec4c88d9b8984710e5915d6bf6aa3d58b7292ad078262cd71"
+    },
+    {
+      "path": "reports/kh02/v19_3_2_8/logs/gates_summary.json",
+      "sizeBytes": 12701,
+      "sha256": "10848a0507d1864a9a99f0961fac2989c0640a89b64ccfcdd89f41e224d693d9"
+    }
+  ]
+}

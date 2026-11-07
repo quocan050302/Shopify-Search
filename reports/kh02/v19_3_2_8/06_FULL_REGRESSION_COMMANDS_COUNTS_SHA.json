@@ -1,0 +1,156 @@
+{
+  "version": "12.4.3.7.19.3.2.8",
+  "baselineSha": "0b2520dfb991b7bc191cff7abd1e6fb226616238",
+  "testedCodeSha": "16e6f1ca3ea5ab08d9b40afe89795c050e7545e3",
+  "testedTreeSha": "2f9adfbaf91ca986929d6972c8b6e800051215f6",
+  "branch": "feature/kh02-walmart-us-jina-reader-v12.4.3.5.1",
+  "allPassed": true,
+  "completedGates": 11,
+  "totalGates": 11,
+  "totalDurationMs": 175052,
+  "aggregatedTestMetrics": {
+    "e3_targetedSuites": {
+      "filesPassed": 9,
+      "testsPassed": 279,
+      "testsFailed": 0,
+      "testsSkipped": 0
+    },
+    "e4_kh02UnitSuite": {
+      "filesPassed": 103,
+      "testsPassed": 2418,
+      "testsFailed": 0,
+      "testsSkipped": 0
+    },
+    "e5_kh02IntegrationSuite": {
+      "filesPassed": 16,
+      "testsPassed": 77,
+      "testsFailed": 0,
+      "testsSkipped": 0
+    },
+    "e6_kh01VerifySuite": {
+      "filesPassed": 5,
+      "testsPassed": 69,
+      "testsFailed": 0,
+      "testsSkipped": 0
+    },
+    "e7_securityNegativeSuites": {
+      "filesPassed": 4,
+      "testsPassed": 65,
+      "testsFailed": 0,
+      "testsSkipped": 0
+    }
+  },
+  "gates": [
+    {
+      "gateId": "E1",
+      "command": "npx tsc --noEmit",
+      "exitCode": 0,
+      "status": "PASS",
+      "durationMs": 5436,
+      "logFile": "reports/kh02/v19_3_2_8/logs/e1_typecheck.log",
+      "logSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "gateId": "E2",
+      "command": "git diff --check HEAD~1 HEAD",
+      "exitCode": 0,
+      "status": "PASS",
+      "durationMs": 49,
+      "logFile": "reports/kh02/v19_3_2_8/logs/e2_diff_check.log",
+      "logSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "gateId": "E3",
+      "command": "npx vitest run tests/unit/kh02/v12_4_3_7_19_3_2_8_GithubApiRunWorkflowJobsBinding.test.ts tests/unit/kh02/v12_4_3_7_19_3_2_7_MutableRegistryAndRunnerTruth.test.ts tests/unit/kh02/v12_4_3_7_19_3_2_6_CiTrustBoundaryAndFailClosedRunner.test.ts tests/unit/kh02/v12_4_3_7_19_3_2_5_CiTrustBoundaryClosure.test.ts tests/unit/kh02/v12_4_3_7_19_3_2_4_CiHmacTrustBoundary.test.ts tests/unit/kh02/v12_4_3_7_19_3_2_3_TrustedCiProofAndObservableExecution.test.ts tests/unit/kh02/v12_4_3_7_19_3_2_2_MandatoryBusinessScopeAndCiProof.test.ts tests/unit/kh02/v12_4_3_7_19_3_2_1_FinalAliasTrustAndCiProof.test.ts tests/unit/kh02/v12_4_3_7_19_3_2_DurableAliasAuthorization.test.ts",
+      "exitCode": 0,
+      "status": "PASS",
+      "durationMs": 12649,
+      "filesPassed": 9,
+      "testsPassed": 279,
+      "logFile": "reports/kh02/v19_3_2_8/logs/e3_targeted_suites.log",
+      "logSha256": "d7b69338d99e528ce74d6d877672ddd409d10472dc8deb05bd0a44ea292df1d3"
+    },
+    {
+      "gateId": "E4",
+      "command": "npm run kh02:test:unit -- --maxWorkers=4",
+      "exitCode": 0,
+      "status": "PASS",
+      "durationMs": 72024,
+      "filesPassed": 103,
+      "testsPassed": 2418,
+      "logFile": "reports/kh02/v19_3_2_8/logs/e4_unit_tests.log",
+      "logSha256": "52274b6446210277c9a532076c9e55e9428f0f093d475d4998692651519c8442"
+    },
+    {
+      "gateId": "E5",
+      "command": "npx vitest run tests/integration/kh02 --no-file-parallelism",
+      "exitCode": 0,
+      "status": "PASS",
+      "durationMs": 72622,
+      "filesPassed": 16,
+      "testsPassed": 77,
+      "logFile": "reports/kh02/v19_3_2_8/logs/e5_integration_tests.log",
+      "logSha256": "9098e49f87edcd18d795f371e335a79fd06202a661945c02914793636db3dce3"
+    },
+    {
+      "gateId": "E6",
+      "command": "npm run kh01:verify",
+      "exitCode": 0,
+      "status": "PASS",
+      "durationMs": 3171,
+      "filesPassed": 5,
+      "testsPassed": 69,
+      "logFile": "reports/kh02/v19_3_2_8/logs/e6_kh01_verify.log",
+      "logSha256": "4dc3be808b21b3403ef5600025971cdb4a5d0f348ff25ad99854412a3fb2f795"
+    },
+    {
+      "gateId": "E7",
+      "command": "npx vitest run tests/unit/kh02ProductMetadataSecurity.test.ts tests/unit/kh02/v12_4_3_7_17_NetworkSsrfRedirect.test.ts tests/unit/kh02/v12_4_3_7_18_SocketPeerTlsTrust.test.ts tests/unit/kh02/v12_4_3_7_18_1_SocketTrustNoTestBypass.test.ts",
+      "exitCode": 0,
+      "status": "PASS",
+      "durationMs": 2145,
+      "filesPassed": 4,
+      "testsPassed": 65,
+      "logFile": "reports/kh02/v19_3_2_8/logs/e7_security_negative.log",
+      "logSha256": "423ea6f9a92e15fd24b0ab65dd8ea15641244619027c2601240abf76fec5daa9"
+    },
+    {
+      "gateId": "E8",
+      "command": "npx tsx scripts/kh02/runBacktestV12_4_3_4_2.ts",
+      "exitCode": 0,
+      "status": "PASS",
+      "businessDataStatus": "INSUFFICIENT_EVIDENCE",
+      "durationMs": 2278,
+      "logFile": "reports/kh02/v19_3_2_8/logs/e8_backtest.log",
+      "logSha256": "d1001756bd316fd5c96983505042f311b74bdecac7d14107dbce06ed064bbc9a"
+    },
+    {
+      "gateId": "E9",
+      "command": "npx tsx scripts/kh02/runCandidateDbReadback.ts",
+      "exitCode": 0,
+      "status": "PASS",
+      "businessDataStatus": "INSUFFICIENT_EVIDENCE",
+      "durationMs": 1557,
+      "logFile": "reports/kh02/v19_3_2_8/logs/e9_db_readback.log",
+      "logSha256": "ad60b62e93b5198ec4c88d9b8984710e5915d6bf6aa3d58b7292ad078262cd71"
+    },
+    {
+      "gateId": "E10",
+      "command": "npx tsx scripts/kh02/runRemoteCiProofDiagnostic.ts",
+      "exitCode": 0,
+      "status": "PASS",
+      "durationMs": 1182,
+      "logFile": "reports/kh02/v19_3_2_8/logs/e10_remote_ci.log",
+      "logSha256": "9e6ab699d765cc26e1670d04fff03902806b8cd8f67ff3e9c9d6675a7311f811"
+    },
+    {
+      "gateId": "E11",
+      "command": "npx tsx scripts/kh02/runRemoteCiProofDiagnostic.ts --probe-public",
+      "exitCode": 0,
+      "status": "PASS",
+      "durationMs": 1939,
+      "logFile": "reports/kh02/v19_3_2_8/logs/e11_github_rest_smoke.log",
+      "logSha256": "89005cb845c100134d61c4f5e75aae4d393555a6e46d5405a152c8f1bd616546"
+    }
+  ]
+}

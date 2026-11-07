@@ -1,0 +1,122 @@
+{
+  "version": "12.4.3.7.19.3.2.8",
+  "baselineSha": "0b2520dfb991b7bc191cff7abd1e6fb226616238",
+  "testedCodeSha": "16e6f1ca3ea5ab08d9b40afe89795c050e7545e3",
+  "testedTreeSha": "2f9adfbaf91ca986929d6972c8b6e800051215f6",
+  "branch": "feature/kh02-walmart-us-jina-reader-v12.4.3.5.1",
+  "suiteFile": "tests/unit/kh02/v12_4_3_7_19_3_2_8_GithubApiRunWorkflowJobsBinding.test.ts",
+  "totalTests": 18,
+  "passedTests": 18,
+  "failedTests": 0,
+  "skippedTests": 0,
+  "matrix": [
+    {
+      "testId": "T01",
+      "description": "Authentic three-endpoint positive verification with customFetch: Run + Workflow + Jobs all match tested SHA, branch, canonical workflowPath, and required jobs; V2 token verifies;UNIT_TEST_MOCK stays quarantined from release CI_PASS",
+      "redBeforeFix": "verifyRemoteGitHubActionsRun only called Run endpoint and omitted Workflow/Jobs endpoints and V2 fields",
+      "greenAfterFix": "PASS"
+    },
+    {
+      "testId": "T02",
+      "description": "Workflow path spoofing after token minting: run verified under .github/workflows/lint.yml with workflowPath mutated to .github/workflows/kh02-ci.yml is rejected by verifyCiAttestationToken and evaluateReleaseEvidence",
+      "redBeforeFix": "V19.3.2.7 computeCiAttestationDigest omitted workflowPath, allowing post-mint workflowPath overwrite",
+      "greenAfterFix": "PASS"
+    },
+    {
+      "testId": "T03",
+      "description": "Display-name spoofing: workflow.name='KH-02 Continuous Integration' but workflow.path='.github/workflows/smoke.yml' is rejected by default",
+      "redBeforeFix": "CANONICAL_RELEASE_WORKFLOWS accepted display name without canonical file path",
+      "greenAfterFix": "PASS"
+    },
+    {
+      "testId": "T04",
+      "description": "Workflow endpoint mismatch: run.workflow_id != workflow.id or HTTP 404 from workflow endpoint fails closed",
+      "redBeforeFix": "Workflow endpoint was not queried",
+      "greenAfterFix": "PASS"
+    },
+    {
+      "testId": "T05",
+      "description": "Jobs endpoint failure: total_count=0 or required job conclusion='failure'/'cancelled'/'skipped' fails closed even when run.conclusion='success'",
+      "redBeforeFix": "Jobs endpoint was not queried",
+      "greenAfterFix": "PASS"
+    },
+    {
+      "testId": "T06",
+      "description": "Jobs run_id or run_attempt mismatch: job.run_id != run.id or job.run_attempt != run.run_attempt fails closed",
+      "redBeforeFix": "Job run_id and run_attempt were not cross-checked",
+      "greenAfterFix": "PASS"
+    },
+    {
+      "testId": "T07",
+      "description": "Fork/PR run rejection: pull_request event, non-empty pull_requests array, or foreign head_repository.full_name fails closed",
+      "redBeforeFix": "pull_requests array and head_repository.full_name were not checked against canonical repository",
+      "greenAfterFix": "PASS"
+    },
+    {
+      "testId": "T08",
+      "description": "Wrong SHA or wrong branch on Run or Jobs endpoint fails closed with SHA/branch mismatch",
+      "redBeforeFix": "Job-level head_sha was not cross-checked",
+      "greenAfterFix": "PASS"
+    },
+    {
+      "testId": "T09",
+      "description": "V2 attestation digest tamper resistance: mutating workflowPath, workflowId, workflowName, runAttempt, jobsDigest, responseDigest, workflowResponseDigest, or jobsResponseDigest invalidates signature",
+      "redBeforeFix": "V1 digest did not bind workflow/jobs fields",
+      "greenAfterFix": "PASS"
+    },
+    {
+      "testId": "T10",
+      "description": "Legacy V1 / incomplete attestation object missing workflowPath, workflowId, runAttempt, or jobsDigest is rejected for release (requireReleaseV2: true)",
+      "redBeforeFix": "Incomplete V1 objects were accepted if signature matched V1 fields",
+      "greenAfterFix": "PASS"
+    },
+    {
+      "testId": "T11",
+      "description": "Recursive deep-freeze: mutating nested jobsSummary or successfulJobs on returned evidence or lookupVerifiedRemoteCiRun record throws TypeError and leaves registry untouched",
+      "redBeforeFix": "Object.freeze was shallow in deepCloneAndFreeze",
+      "greenAfterFix": "PASS"
+    },
+    {
+      "testId": "T12",
+      "description": "SSRF, redirect, HTTP, foreign host, userinfo, path traversal, and >2 MiB oversized response bodies on Run, Workflow, or Jobs endpoints are rejected",
+      "redBeforeFix": "Workflow and Jobs URL validators and 2 MiB size caps were not present",
+      "greenAfterFix": "PASS"
+    },
+    {
+      "testId": "T13",
+      "description": "Missing or weak KH02_CI_VERIFIER_SECRET or missing GITHUB_TOKEN returns CI_NOT_CONFIGURED and never CI_PASS",
+      "redBeforeFix": "Baseline regression guard",
+      "greenAfterFix": "PASS"
+    },
+    {
+      "testId": "T14",
+      "description": "Gate runner E8 schema validator rejects prose-only output, wrong SHA, failed policyScenarioVerdict, or failed pointInTimeIntegrityVerdict",
+      "redBeforeFix": "Runner checked substring heuristics instead of parsed JSON schema + SHA",
+      "greenAfterFix": "PASS"
+    },
+    {
+      "testId": "T15",
+      "description": "Gate runner E9 schema validator rejects missing JSON, wrong SHA, dbConnected=false, or rawRecordCount != 6",
+      "redBeforeFix": "Runner checked substring heuristics instead of parsed JSON schema + SHA",
+      "greenAfterFix": "PASS"
+    },
+    {
+      "testId": "T16",
+      "description": "Gate runner E10 schema validator rejects status='CI_PASS' when ciProviderVerified=false or when SHA mismatches",
+      "redBeforeFix": "Runner checked substring heuristics instead of parsed JSON schema + SHA",
+      "greenAfterFix": "PASS"
+    },
+    {
+      "testId": "T17",
+      "description": "Gate runner Vitest summary parser rejects exitCode=0 when 0 tests ran or failed > 0",
+      "redBeforeFix": "Baseline regression guard",
+      "greenAfterFix": "PASS"
+    },
+    {
+      "testId": "T18",
+      "description": "Candidate-scoped demand attribution & zero spend guard: unverified merchant aliases and pseudo-references remain excluded; $0.00 paid spend",
+      "redBeforeFix": "Baseline regression guard",
+      "greenAfterFix": "PASS"
+    }
+  ]
+}
