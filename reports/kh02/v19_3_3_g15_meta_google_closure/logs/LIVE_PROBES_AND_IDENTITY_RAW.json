@@ -1,0 +1,566 @@
+{
+  "executedAt": "2026-11-07T16:29:00.140Z",
+  "totalWallMs": 21209,
+  "stageDurationsMs": {
+    "metaLiveProbeMs": 15868,
+    "googleLiveProbeMs": 705,
+    "merchantLiveCheckMs": 3743
+  },
+  "memoryUsageBytes": {
+    "before": {
+      "rss": 92323840,
+      "heapTotal": 17448960,
+      "heapUsed": 10611728,
+      "external": 4463166,
+      "arrayBuffers": 2220184
+    },
+    "after": {
+      "rss": 174309376,
+      "heapTotal": 93192192,
+      "heapUsed": 72065920,
+      "external": 12910586,
+      "arrayBuffers": 6658707
+    }
+  },
+  "metaLiveProvenance": {
+    "evaluatedAt": "2026-11-07T16:28:55.610Z",
+    "costUsd": 0,
+    "transport": "STDIO_MCP_PUBLIC_AD_LIBRARY",
+    "requiresGraphApiToken": false,
+    "diagnostics": {
+      "source": "META_ADS",
+      "adapterInstalled": true,
+      "configured": true,
+      "transportConnected": true,
+      "authenticated": true,
+      "discoverySupported": true,
+      "queryExecuted": false,
+      "recordsReturned": 0,
+      "provenanceVerified": true,
+      "lastCheckedAt": "2026-11-07T16:28:39.736Z",
+      "status": "SOURCE_ACCESS_VERIFIED",
+      "reason": "Meta competitor ads indexed in database (23 records); live collector active (v1.7.0).",
+      "missingRequirements": [],
+      "pythonBin": "/Users/macbook/Documents/Project_Github/Meta-Ads/Shopify-Search/services/meta-ads-collector/.venv/bin/python",
+      "collectorVersion": null,
+      "databaseRecordsIndexed": 23,
+      "collectorInstalled": true,
+      "collectorConfigured": true,
+      "transportReachable": true,
+      "queryCapabilityAvailable": true,
+      "actualQueryAttempted": false,
+      "upstreamQueryCompleted": false,
+      "rawAdsReturned": 0,
+      "validObservationsNormalized": 0,
+      "recordsPersisted": 0,
+      "recordsAssociatedWithCandidates": 0
+    },
+    "boundedBudget": {
+      "topic": "Pet Gadgets",
+      "country": "US",
+      "maxLiveQueries": 2,
+      "maxRequestsPerQuery": 1,
+      "maxLiveSeconds": 15
+    },
+    "elapsedMs": 15868,
+    "executionStatus": "PASSED",
+    "plannedQueriesCount": 0,
+    "liveObservationsReturnedCount": 21,
+    "totalObservationsReturnedCount": 21,
+    "sampleObservations": [
+      {
+        "sourceRecordId": "cmw6mbkqq0000pwg9723oo85o",
+        "sourceExternalAdId": "1536941208479218",
+        "upstreamAdId": "1536941208479218",
+        "landingPageUrl": "https://cc.uprootclean.com/main/phr",
+        "provenance": "LIVE_PROVIDER",
+        "observedAt": "2026-11-07T16:28:55.603Z",
+        "queryId": "subquery_1",
+        "matchedQueryIds": [
+          "subquery_1"
+        ]
+      },
+      {
+        "sourceRecordId": "cmw6mbkra0006pwg9f8cpndes",
+        "sourceExternalAdId": "1133000522848754",
+        "upstreamAdId": "1133000522848754",
+        "landingPageUrl": "https://cc.uprootclean.com/main/phr",
+        "provenance": "LIVE_PROVIDER",
+        "observedAt": "2026-11-07T16:28:55.603Z",
+        "queryId": "subquery_1",
+        "matchedQueryIds": [
+          "subquery_1"
+        ]
+      },
+      {
+        "sourceRecordId": "cmw6mbkrg000cpwg9cwn60cfg",
+        "sourceExternalAdId": "1464108218882438",
+        "upstreamAdId": "1464108218882438",
+        "landingPageUrl": "https://cc.uprootclean.com/main/phr",
+        "provenance": "LIVE_PROVIDER",
+        "observedAt": "2026-11-07T16:28:55.603Z",
+        "queryId": "subquery_1",
+        "matchedQueryIds": [
+          "subquery_1"
+        ]
+      },
+      {
+        "sourceRecordId": "cmw6mbkrn000ipwg9jsh7qmbf",
+        "sourceExternalAdId": "1641348457417375",
+        "upstreamAdId": "1641348457417375",
+        "landingPageUrl": "https://cc.uprootclean.com/main/phr",
+        "provenance": "LIVE_PROVIDER",
+        "observedAt": "2026-11-07T16:28:55.603Z",
+        "queryId": "subquery_1",
+        "matchedQueryIds": [
+          "subquery_1"
+        ]
+      },
+      {
+        "sourceRecordId": "cmw6mbkrv000opwg9dyhgznny",
+        "sourceExternalAdId": "2249466188957796",
+        "upstreamAdId": "2249466188957796",
+        "landingPageUrl": "https://cc.uprootclean.com/main/phr",
+        "provenance": "LIVE_PROVIDER",
+        "observedAt": "2026-11-07T16:28:55.604Z",
+        "queryId": "subquery_1",
+        "matchedQueryIds": [
+          "subquery_1"
+        ]
+      }
+    ],
+    "persistedDbVerification": {
+      "isolatedDbUsed": true,
+      "adObservationRowsFound": 25,
+      "samplePersistedRows": [
+        {
+          "adObservationId": "cmw6mblnn003wpwg9574eewn9",
+          "competitorAdId": "cmw6mblnl003tpwg9h2e70thl",
+          "providerId": "meta-ads-collector",
+          "sourceExternalId": "1080025064911842",
+          "hasRawEvidenceReference": true,
+          "hasSourceEvidence": true,
+          "hasSourceTimestamp": true,
+          "marketEvidenceType": "QUERY_FILTER"
+        },
+        {
+          "adObservationId": "cmw6mbldl003qpwg9yquivk2o",
+          "competitorAdId": "cmw6mbldj003npwg9oan2hw86",
+          "providerId": "meta-ads-collector",
+          "sourceExternalId": "838823519312438",
+          "hasRawEvidenceReference": true,
+          "hasSourceEvidence": true,
+          "hasSourceTimestamp": true,
+          "marketEvidenceType": "QUERY_FILTER"
+        },
+        {
+          "adObservationId": "cmw6mbld9003jpwg961xvpl57",
+          "competitorAdId": "cmw6mbld7003gpwg9rwr9g5q1",
+          "providerId": "meta-ads-collector",
+          "sourceExternalId": "28380730701590903",
+          "hasRawEvidenceReference": true,
+          "hasSourceEvidence": true,
+          "hasSourceTimestamp": true,
+          "marketEvidenceType": "QUERY_FILTER"
+        },
+        {
+          "adObservationId": "cmw6mblcu003cpwg9tap5nty6",
+          "competitorAdId": "cmw6mblcs0039pwg9z9i9p718",
+          "providerId": "meta-ads-collector",
+          "sourceExternalId": "1515536880322662",
+          "hasRawEvidenceReference": true,
+          "hasSourceEvidence": true,
+          "hasSourceTimestamp": true,
+          "marketEvidenceType": "QUERY_FILTER"
+        },
+        {
+          "adObservationId": "cmw6mblch0036pwg96gv0w5q0",
+          "competitorAdId": "cmw6mblcd0033pwg93hyne0kv",
+          "providerId": "meta-ads-collector",
+          "sourceExternalId": "2067942207178599",
+          "hasRawEvidenceReference": true,
+          "hasSourceEvidence": true,
+          "hasSourceTimestamp": true,
+          "marketEvidenceType": "QUERY_FILTER"
+        }
+      ]
+    }
+  },
+  "googleLiveProvenance": {
+    "evaluatedAt": "2026-11-07T16:28:56.319Z",
+    "costUsd": 0,
+    "transport": "STDIO_FASTMCP",
+    "pinnedUpstreamCommit": "8180b10a338be0d825d59797084df6bb8c06cca6",
+    "protocolHandshakeAndTools": {
+      "available": true,
+      "toolsDiscovered": [],
+      "error": null
+    },
+    "boundedBudget": {
+      "knownDomains": [
+        "uahpet.com",
+        "kittyspout.com"
+      ],
+      "maxDomains": 2,
+      "maxAdsCallsPerDomain": 1,
+      "count": 3,
+      "country": "US"
+    },
+    "elapsedMs": 705,
+    "executionStatus": "SKIPPED",
+    "invocationRecordsCount": 0,
+    "invocationRecords": [],
+    "liveObservationsReturnedCount": 0,
+    "totalObservationsReturnedCount": 0,
+    "sampleObservations": [],
+    "persistenceSummary": [],
+    "persistedDbVerification": {
+      "isolatedDbUsed": true,
+      "adObservationRowsFound": 0,
+      "samplePersistedRows": []
+    }
+  },
+  "merchantIdentityResults": {
+    "evaluatedAt": "2026-11-07T16:29:00.140Z",
+    "elapsedMs": 3743,
+    "checks": [
+      {
+        "label": "UAHPET Product PDP",
+        "url": "https://uahpet.com/products/uahpet-zero-wireless-cat-water-fountain",
+        "expectedKind": "PRODUCT_PAGE",
+        "urlSlugMetadata": {
+          "isValidEcommerceUrl": true,
+          "isShopifyProductUrl": true,
+          "isCollectionUrl": false,
+          "isHomepageUrl": false,
+          "cleanCanonicalUrl": "https://uahpet.com/products/uahpet-zero-wireless-cat-water-fountain",
+          "normalizedBaseProductUrl": "https://uahpet.com/products/uahpet-zero-wireless-cat-water-fountain",
+          "variantUrl": null,
+          "originalCleanUrl": "https://uahpet.com/products/uahpet-zero-wireless-cat-water-fountain",
+          "storeDomain": "uahpet.com",
+          "productHandle": "uahpet-zero-wireless-cat-water-fountain",
+          "collectionHandle": null,
+          "variantId": null,
+          "queryProductId": null,
+          "skuFromQuery": null,
+          "modelFromQuery": null,
+          "derivedTitleFromSlug": "Uahpet Zero Wireless Cat Water Fountain"
+        },
+        "liveFetchResult": {
+          "merchantProductId": null,
+          "sku": null,
+          "price": null,
+          "currency": null,
+          "canonicalUrl": null,
+          "rejectionReason": null
+        }
+      },
+      {
+        "label": "KittySpout Product PDP",
+        "url": "https://www.kittyspout.com/products/kittyspout-wireless-fountain",
+        "expectedKind": "PRODUCT_PAGE",
+        "urlSlugMetadata": {
+          "isValidEcommerceUrl": true,
+          "isShopifyProductUrl": true,
+          "isCollectionUrl": false,
+          "isHomepageUrl": false,
+          "cleanCanonicalUrl": "https://kittyspout.com/products/kittyspout-wireless-fountain",
+          "normalizedBaseProductUrl": "https://kittyspout.com/products/kittyspout-wireless-fountain",
+          "variantUrl": null,
+          "originalCleanUrl": "https://kittyspout.com/products/kittyspout-wireless-fountain",
+          "storeDomain": "kittyspout.com",
+          "productHandle": "kittyspout-wireless-fountain",
+          "collectionHandle": null,
+          "variantId": null,
+          "queryProductId": null,
+          "skuFromQuery": null,
+          "modelFromQuery": null,
+          "derivedTitleFromSlug": "Kittyspout Wireless Fountain"
+        },
+        "liveFetchResult": {
+          "merchantProductId": "8369671045340",
+          "sku": "WF-F6-V1-B1",
+          "price": "2087000",
+          "currency": "VND",
+          "canonicalUrl": "https://www.kittyspout.com/products/kittyspout-wireless-fountain",
+          "rejectionReason": null
+        }
+      },
+      {
+        "label": "Uproot Clean CheckoutChamp Funnel",
+        "url": "https://cc.uprootclean.com/main/phr",
+        "expectedKind": "FUNNEL_PAGE",
+        "urlSlugMetadata": {
+          "isValidEcommerceUrl": true,
+          "isShopifyProductUrl": false,
+          "isCollectionUrl": false,
+          "isHomepageUrl": false,
+          "cleanCanonicalUrl": "https://cc.uprootclean.com/main/phr",
+          "normalizedBaseProductUrl": "https://cc.uprootclean.com/main/phr",
+          "variantUrl": null,
+          "originalCleanUrl": "https://cc.uprootclean.com/main/phr",
+          "storeDomain": "cc.uprootclean.com",
+          "productHandle": null,
+          "collectionHandle": null,
+          "variantId": null,
+          "queryProductId": null,
+          "skuFromQuery": null,
+          "modelFromQuery": null,
+          "derivedTitleFromSlug": null
+        },
+        "liveFetchResult": {
+          "merchantProductId": null,
+          "sku": null,
+          "price": null,
+          "currency": null,
+          "canonicalUrl": "https://cc.uprootclean.com/main/phr",
+          "rejectionReason": null
+        }
+      },
+      {
+        "label": "UAHPET Collection Page (Negative Check)",
+        "url": "https://uahpet.com/collections/all",
+        "expectedKind": "COLLECTION_OR_STOREFRONT",
+        "urlSlugMetadata": {
+          "isValidEcommerceUrl": true,
+          "isShopifyProductUrl": false,
+          "isCollectionUrl": true,
+          "isHomepageUrl": false,
+          "cleanCanonicalUrl": "https://uahpet.com/collections/all",
+          "normalizedBaseProductUrl": null,
+          "variantUrl": null,
+          "originalCleanUrl": "https://uahpet.com/collections/all",
+          "storeDomain": "uahpet.com",
+          "productHandle": null,
+          "collectionHandle": null,
+          "variantId": null,
+          "queryProductId": null,
+          "skuFromQuery": null,
+          "modelFromQuery": null,
+          "derivedTitleFromSlug": null,
+          "rejectionReason": "URL is a collection/category page, not a single SKU product page"
+        },
+        "liveFetchResult": {
+          "merchantProductId": null,
+          "sku": null,
+          "price": null,
+          "currency": null,
+          "canonicalUrl": "https://www.uahpet.com/collections/all",
+          "rejectionReason": null
+        }
+      }
+    ]
+  },
+  "canonicalProductAndFamilyLedger": {
+    "evaluatedAt": "2026-11-07T16:29:00.140Z",
+    "inputObservationsCount": 24,
+    "rawCandidatesCount": 9,
+    "consolidatedCandidatesCount": 9,
+    "shortlistSelectedCount": 3,
+    "distinctFamiliesInShortlistCount": 3,
+    "liveVerifiedProductCount": 0,
+    "liveVerifiedTop3": false,
+    "distinctnessAudit": {
+      "isDistinct": true,
+      "isFamilyDiverse": true,
+      "totalCandidatesEvaluated": 3,
+      "distinctCount": 3,
+      "distinctProductCount": 3,
+      "distinctFamilyCount": 3,
+      "distinctListingCount": 3,
+      "independentOpportunityCount": 3,
+      "homogeneousFamilyDetected": false,
+      "dominantFamilyKey": "pet_hair_remover_roller",
+      "dominantFamilyLabel": "Pet Hair & Fur Remover Roller/Scraper",
+      "duplicateGroupsCount": 0,
+      "uncertainties": [],
+      "pairwiseDecisions": [
+        {
+          "candidateIds": [
+            "cand_1613504636",
+            "cand_1422143654"
+          ],
+          "listingKeys": [
+            "url::https://cc.uprootclean.com/main/phr",
+            "url::https://selenepets.com/products/fun-25-cro-90-c-11"
+          ],
+          "productKeys": [
+            "merchant_tokens::cc.uprootclean.com::pet_hair_remover_roller::clean_hair_remover_uproot",
+            "url::https://selenepets.com/products/fun-25-cro-90-c-11"
+          ],
+          "familyKeys": [
+            "pet_hair_remover_roller",
+            "pet_water_fountain"
+          ],
+          "decision": "DIFFERENT_PRODUCTS",
+          "areSameListing": false,
+          "areSameActualProduct": false,
+          "areSameVariant": false,
+          "areSameFamily": false,
+          "areDistinctOpportunitiesForBroadNiche": true,
+          "areDistinctOpportunitiesForSpecificQuery": true,
+          "confidence": "EXACT",
+          "uncertainty": null,
+          "supportingEvidence": [],
+          "conflictingEvidence": [
+            "Different product families: 'pet_hair_remover_roller' (Pet Hair & Fur Remover Roller/Scraper) vs 'pet_water_fountain' (Automatic Pet Water Fountain)."
+          ],
+          "reason": "Candidates represent different physical product families ('Pet Hair & Fur Remover Roller/Scraper' vs 'Automatic Pet Water Fountain')."
+        },
+        {
+          "candidateIds": [
+            "cand_1613504636",
+            "cand_784006181"
+          ],
+          "listingKeys": [
+            "url::https://cc.uprootclean.com/main/phr",
+            "url::https://feederspetsupply.com/products/petsafe-black-freshfeed-refrigerated-pet-feeder"
+          ],
+          "productKeys": [
+            "merchant_tokens::cc.uprootclean.com::pet_hair_remover_roller::clean_hair_remover_uproot",
+            "url::https://feederspetsupply.com/products/petsafe-black-freshfeed-refrigerated-pet-feeder"
+          ],
+          "familyKeys": [
+            "pet_hair_remover_roller",
+            "refrigerated_feeder"
+          ],
+          "decision": "DIFFERENT_PRODUCTS",
+          "areSameListing": false,
+          "areSameActualProduct": false,
+          "areSameVariant": false,
+          "areSameFamily": false,
+          "areDistinctOpportunitiesForBroadNiche": true,
+          "areDistinctOpportunitiesForSpecificQuery": true,
+          "confidence": "EXACT",
+          "uncertainty": null,
+          "supportingEvidence": [],
+          "conflictingEvidence": [
+            "Different product families: 'pet_hair_remover_roller' (Pet Hair & Fur Remover Roller/Scraper) vs 'refrigerated_feeder' (Refrigerated Feeder)."
+          ],
+          "reason": "Candidates represent different physical product families ('Pet Hair & Fur Remover Roller/Scraper' vs 'Refrigerated Feeder')."
+        },
+        {
+          "candidateIds": [
+            "cand_1422143654",
+            "cand_784006181"
+          ],
+          "listingKeys": [
+            "url::https://selenepets.com/products/fun-25-cro-90-c-11",
+            "url::https://feederspetsupply.com/products/petsafe-black-freshfeed-refrigerated-pet-feeder"
+          ],
+          "productKeys": [
+            "url::https://selenepets.com/products/fun-25-cro-90-c-11",
+            "url::https://feederspetsupply.com/products/petsafe-black-freshfeed-refrigerated-pet-feeder"
+          ],
+          "familyKeys": [
+            "pet_water_fountain",
+            "refrigerated_feeder"
+          ],
+          "decision": "DIFFERENT_PRODUCTS",
+          "areSameListing": false,
+          "areSameActualProduct": false,
+          "areSameVariant": false,
+          "areSameFamily": false,
+          "areDistinctOpportunitiesForBroadNiche": true,
+          "areDistinctOpportunitiesForSpecificQuery": true,
+          "confidence": "EXACT",
+          "uncertainty": null,
+          "supportingEvidence": [],
+          "conflictingEvidence": [
+            "Different product families: 'pet_water_fountain' (Automatic Pet Water Fountain) vs 'refrigerated_feeder' (Refrigerated Feeder)."
+          ],
+          "reason": "Candidates represent different physical product families ('Automatic Pet Water Fountain' vs 'Refrigerated Feeder')."
+        }
+      ],
+      "details": [
+        {
+          "candidateId": "cand_1613504636",
+          "title": "Uproot Clean Pet Hair Remover",
+          "canonicalKey": "merchant_tokens::cc.uprootclean.com::pet_hair_remover_roller::clean_hair_remover_uproot",
+          "listingKey": "url::https://cc.uprootclean.com/main/phr",
+          "productKey": "merchant_tokens::cc.uprootclean.com::pet_hair_remover_roller::clean_hair_remover_uproot",
+          "variantKey": null,
+          "familyKey": "pet_hair_remover_roller",
+          "familyLabel": "Pet Hair & Fur Remover Roller/Scraper",
+          "storeDomain": "cc.uprootclean.com",
+          "isDuplicate": false
+        },
+        {
+          "candidateId": "cand_1422143654",
+          "title": "Fun 25 Cro 90 C 11",
+          "canonicalKey": "url::https://selenepets.com/products/fun-25-cro-90-c-11",
+          "listingKey": "url::https://selenepets.com/products/fun-25-cro-90-c-11",
+          "productKey": "url::https://selenepets.com/products/fun-25-cro-90-c-11",
+          "variantKey": null,
+          "familyKey": "pet_water_fountain",
+          "familyLabel": "Automatic Pet Water Fountain",
+          "storeDomain": "selenepets.com",
+          "isDuplicate": false
+        },
+        {
+          "candidateId": "cand_784006181",
+          "title": "Petsafe Black Freshfeed Refrigerated Pet Feeder",
+          "canonicalKey": "url::https://feederspetsupply.com/products/petsafe-black-freshfeed-refrigerated-pet-feeder",
+          "listingKey": "url::https://feederspetsupply.com/products/petsafe-black-freshfeed-refrigerated-pet-feeder",
+          "productKey": "url::https://feederspetsupply.com/products/petsafe-black-freshfeed-refrigerated-pet-feeder",
+          "variantKey": "url::https://feederspetsupply.com/products/petsafe-black-freshfeed-refrigerated-pet-feeder::variant::44829216505944",
+          "familyKey": "refrigerated_feeder",
+          "familyLabel": "Refrigerated Feeder",
+          "storeDomain": "feederspetsupply.com",
+          "isDuplicate": false
+        }
+      ]
+    },
+    "shortlistCandidates": [
+      {
+        "candidateId": "cand_1613504636",
+        "title": "Uproot Clean Pet Hair Remover",
+        "storeDomain": "cc.uprootclean.com",
+        "canonicalProductUrl": "https://cc.uprootclean.com/main/phr",
+        "familyKey": "pet_hair_remover_roller",
+        "identityStatus": "PROBABLE",
+        "supportingAdIdsCount": 9,
+        "supportingAdIds": [
+          "cmw6mbkqq0000pwg9723oo85o",
+          "cmw6mbkra0006pwg9f8cpndes",
+          "cmw6mbkrg000cpwg9cwn60cfg",
+          "cmw6mbkrn000ipwg9jsh7qmbf",
+          "cmw6mbkrv000opwg9dyhgznny",
+          "cmw6mbksm0012pwg9kvpdxcwf",
+          "cmw6mbkst0018pwg9a5829qx1",
+          "cmw6mbl1j001epwg9scwlwv59",
+          "derived_obs_0a7bf3b599f9281a"
+        ]
+      },
+      {
+        "candidateId": "cand_1422143654",
+        "title": "Fun 25 Cro 90 C 11",
+        "storeDomain": "selenepets.com",
+        "canonicalProductUrl": "https://selenepets.com/products/fun-25-cro-90-c-11",
+        "familyKey": "pet_water_fountain",
+        "identityStatus": "PROBABLE",
+        "supportingAdIdsCount": 6,
+        "supportingAdIds": [
+          "cmw6mblav0025pwg9pi87yng6",
+          "cmw6mblb8002cpwg9r68si0yi",
+          "cmw6mblcd0033pwg93hyne0kv",
+          "cmw6mblcs0039pwg9z9i9p718",
+          "cmw6mbld7003gpwg9rwr9g5q1",
+          "cmw6mblnl003tpwg9h2e70thl"
+        ]
+      },
+      {
+        "candidateId": "cand_784006181",
+        "title": "Petsafe Black Freshfeed Refrigerated Pet Feeder",
+        "storeDomain": "feederspetsupply.com",
+        "canonicalProductUrl": "https://feederspetsupply.com/products/petsafe-black-freshfeed-refrigerated-pet-feeder",
+        "familyKey": "refrigerated_feeder",
+        "identityStatus": "PROBABLE",
+        "supportingAdIdsCount": 1,
+        "supportingAdIds": [
+          "cmw6mblaf001ypwg9ogllb95m"
+        ]
+      }
+    ]
+  }
+}

@@ -1,0 +1,127 @@
+{
+  "version": "12.4.3.7.19.3.2.7",
+  "executedAt": "2026-11-07T16:42:53.167Z",
+  "commitSha": "6e71c24a311bffac200fb888554023f0d2e7c6b2",
+  "treeSha": "2d928a6986844dc610d78cd84745ec9436cbf63b",
+  "totalCostUsd": 0,
+  "sources": {
+    "S1": {
+      "sourceId": "S1",
+      "name": "Meta Ads (Public Ad Library stdio MCP Collector)",
+      "status": "NOT_RUN_EXTERNAL_DEPENDENCY",
+      "costUsd": 0,
+      "transport": "STDIO_MCP_PUBLIC_AD_LIBRARY",
+      "sourceIdentity": "META_ADS_COLLECTOR_MCP",
+      "providerVerified": false,
+      "details": {
+        "requiresGraphApiAccessToken": false,
+        "collectorEnabled": true,
+        "pythonBin": "services/meta-ads-collector/.venv/bin/python",
+        "pythonExists": true,
+        "dataDir": "services/meta-ads-collector/data",
+        "handshakeChecked": false,
+        "handshakeOk": false,
+        "collectorVersion": null,
+        "handshakeError": null,
+        "providerContentObserved": false
+      },
+      "reason": "MetaAdsCollector public Ad Library stdio MCP environment present (no paid Graph API token required); live upstream query skipped in protocol smoke to preserve deterministic zero-spend bounds (providerContentObserved=false, providerVerified=false)."
+    },
+    "S2": {
+      "sourceId": "S2",
+      "name": "Google Ads Transparency (Free FastMCP stdio)",
+      "status": "PROTOCOL_HANDSHAKE_VERIFIED",
+      "costUsd": 0,
+      "transport": "STDIO_FASTMCP",
+      "sourceIdentity": "GOOGLE_ADS_TRANSPARENCY_MCP",
+      "providerVerified": false,
+      "details": {
+        "commandConfigured": true,
+        "commandPath": "services/google-transparency/.venv/bin/python",
+        "args": [
+          "scripts/googleTransparencyServer.py"
+        ],
+        "pythonExists": true,
+        "serverScriptExists": true,
+        "moduleImported": true,
+        "processStarted": true,
+        "handshakeOk": true,
+        "toolsListed": true,
+        "toolsFound": [
+          "search_advertiser",
+          "get_advertiser_ads"
+        ],
+        "toolCallAttempted": false,
+        "providerContentObserved": false,
+        "providerVerified": false,
+        "importCheck": "MCP_IMPORT_OK"
+      },
+      "reason": "Local stdio FastMCP handshake succeeded and declared tools discovered; upstream live provider query not performed to adhere to zero-spend/read-only test bounds (providerContentObserved=false, providerVerified=false)."
+    },
+    "S3": {
+      "sourceId": "S3",
+      "name": "TikTok Organic Video Intelligence",
+      "status": "NOT_RUN_EXTERNAL_DEPENDENCY",
+      "policyStatus": "POLICY_DISABLED",
+      "costUsd": 0,
+      "transport": "HTTP_REST_HASDATA",
+      "sourceIdentity": "HASDATA_TIKTOK_ORGANIC",
+      "providerVerified": false,
+      "details": {
+        "policyStatus": "POLICY_DISABLED",
+        "serverSideHardDisabled": true,
+        "hasApiKey": false,
+        "keyMasked": null,
+        "providerContentObserved": false
+      },
+      "reason": "TikTok Organic is hard-disabled server-side by KH-02 policy (POLICY_DISABLED); zero external calls or spend permitted."
+    },
+    "S4": {
+      "sourceId": "S4",
+      "name": "TikTok Commercial Ads US",
+      "status": "DEFERRED_DO_NOT_TEST",
+      "costUsd": 0,
+      "transport": "NONE",
+      "sourceIdentity": "TIKTOK_ADS_US",
+      "providerVerified": false,
+      "details": {
+        "policyDirective": "KH-02 mandate explicitly defers TikTok Ads US to eliminate unauthorized spend.",
+        "providerContentObserved": false
+      },
+      "reason": "TikTok Ads US is explicitly DEFERRED by engineering directive. Zero calls made."
+    },
+    "S5": {
+      "sourceId": "S5",
+      "name": "Google Cloud BigQuery",
+      "status": "NOT_CONFIGURED_NO_BILLING",
+      "costUsd": 0,
+      "transport": "GRPC_GCP",
+      "sourceIdentity": "BIGQUERY_DEMAND_WAREHOUSE",
+      "providerVerified": false,
+      "details": {
+        "configured": false,
+        "billingEnabled": false,
+        "providerContentObserved": false
+      },
+      "reason": "BigQuery is not configured for production demand warehouse; billing disabled. Zero cost."
+    },
+    "S6": {
+      "sourceId": "S6",
+      "name": "Google Trends Explore Official Export Ingestion",
+      "status": "NOT_AVAILABLE_NO_OFFICIAL_EXPORT",
+      "costUsd": 0,
+      "transport": "LOCAL_FS_OFFICIAL_EXPORT",
+      "sourceIdentity": "GOOGLE_TRENDS_EXPLORE_CSV",
+      "providerVerified": false,
+      "details": {
+        "importsDirExists": true,
+        "rawFilesFound": 3,
+        "localIntegrityOnlyFilesFound": 3,
+        "officialLongitudinalExportsFound": 0,
+        "providerContentObserved": false
+      },
+      "reason": "No official Google-issued >=60-day longitudinal CSV export with durable origin authority registration found in ingestion store (raw local CSV files are LOCAL_INTEGRITY_ONLY, providerVerified=false)."
+    }
+  },
+  "summaryVerdict": "All 6 source checks evaluated strictly within zero-cost bounds. S2 FastMCP protocol handshake and tool discovery verified operational ($0.00, protocol-only, providerVerified=false); S1 Meta collector inspected without paid token; S3 TikTok Organic POLICY_DISABLED; S4 TikTok Ads US DEFERRED; S6 raw CSV files classified as LOCAL_INTEGRITY_ONLY."
+}

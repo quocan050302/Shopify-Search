@@ -1,0 +1,138 @@
+{
+  "version": "19.3.3",
+  "evaluatedAt": "2026-11-07T16:28:55.610Z",
+  "costUsd": 0.0,
+  "transport": "STDIO_MCP_PUBLIC_AD_LIBRARY",
+  "requiresGraphApiToken": false,
+  "diagnostics": {
+    "source": "META_ADS",
+    "adapterInstalled": true,
+    "configured": true,
+    "transportConnected": true,
+    "authenticated": true,
+    "discoverySupported": true,
+    "status": "SOURCE_ACCESS_VERIFIED",
+    "reason": "Meta competitor ads indexed in database (23 records); live collector active (v1.7.0).",
+    "missingRequirements": [],
+    "collectorInstalled": true,
+    "collectorConfigured": true,
+    "transportReachable": true,
+    "queryCapabilityAvailable": true
+  },
+  "boundedBudget": {
+    "topic": "Pet Gadgets",
+    "country": "US",
+    "maxLiveQueries": 2,
+    "maxRequestsPerQuery": 1,
+    "maxLiveSeconds": 15
+  },
+  "elapsedMs": 15868,
+  "executionStatus": "PASSED",
+  "liveObservationsReturnedCount": 21,
+  "totalObservationsReturnedCount": 21,
+  "idSeparationVerified": {
+    "sourceRecordIdUsesDbId": true,
+    "sourceExternalAdIdUsesUpstreamLibraryId": true,
+    "upstreamAdIdNeverUsedToQueryAdProductLink": true
+  },
+  "sampleObservations": [
+    {
+      "sourceRecordId": "cmw6mbkqq0000pwg9723oo85o",
+      "sourceExternalAdId": "1536941208479218",
+      "upstreamAdId": "1536941208479218",
+      "landingPageUrl": "https://cc.uprootclean.com/main/phr",
+      "provenance": "LIVE_PROVIDER",
+      "observedAt": "2026-11-07T16:28:55.603Z",
+      "queryId": "subquery_1",
+      "matchedQueryIds": [
+        "subquery_1"
+      ]
+    },
+    {
+      "sourceRecordId": "cmw6mbkra0006pwg9f8cpndes",
+      "sourceExternalAdId": "1133000522848754",
+      "upstreamAdId": "1133000522848754",
+      "landingPageUrl": "https://cc.uprootclean.com/main/phr",
+      "provenance": "LIVE_PROVIDER",
+      "observedAt": "2026-11-07T16:28:55.603Z",
+      "queryId": "subquery_1",
+      "matchedQueryIds": [
+        "subquery_1"
+      ]
+    },
+    {
+      "sourceRecordId": "cmw6mbkrg000cpwg9cwn60cfg",
+      "sourceExternalAdId": "1464108218882438",
+      "upstreamAdId": "1464108218882438",
+      "landingPageUrl": "https://cc.uprootclean.com/main/phr",
+      "provenance": "LIVE_PROVIDER",
+      "observedAt": "2026-11-07T16:28:55.603Z",
+      "queryId": "subquery_1",
+      "matchedQueryIds": [
+        "subquery_1"
+      ]
+    },
+    {
+      "sourceRecordId": "cmw6mbkrn000ipwg9jsh7qmbf",
+      "sourceExternalAdId": "1641348457417375",
+      "upstreamAdId": "1641348457417375",
+      "landingPageUrl": "https://cc.uprootclean.com/main/phr",
+      "provenance": "LIVE_PROVIDER",
+      "observedAt": "2026-11-07T16:28:55.603Z",
+      "queryId": "subquery_1",
+      "matchedQueryIds": [
+        "subquery_1"
+      ]
+    },
+    {
+      "sourceRecordId": "cmw6mbkrv000opwg9dyhgznny",
+      "sourceExternalAdId": "2249466188957796",
+      "upstreamAdId": "2249466188957796",
+      "landingPageUrl": "https://cc.uprootclean.com/main/phr",
+      "provenance": "LIVE_PROVIDER",
+      "observedAt": "2026-11-07T16:28:55.604Z",
+      "queryId": "subquery_1",
+      "matchedQueryIds": [
+        "subquery_1"
+      ]
+    }
+  ],
+  "persistedDbVerification": {
+    "isolatedDbUsed": true,
+    "adObservationRowsFound": 25,
+    "rawProvenanceSurvivesRestart": true,
+    "firstObservedAtPreserved": true,
+    "samplePersistedRows": [
+      {
+        "adObservationId": "cmw6mblnn003wpwg9574eewn9",
+        "competitorAdId": "cmw6mblnl003tpwg9h2e70thl",
+        "providerId": "meta-ads-collector",
+        "sourceExternalId": "1080025064911842",
+        "hasRawEvidenceReference": true,
+        "hasSourceEvidence": true,
+        "hasSourceTimestamp": true,
+        "marketEvidenceType": "QUERY_FILTER"
+      },
+      {
+        "adObservationId": "cmw6mbldl003qpwg9yquivk2o",
+        "competitorAdId": "cmw6mbldj003npwg9oan2hw86",
+        "providerId": "meta-ads-collector",
+        "sourceExternalId": "838823519312438",
+        "hasRawEvidenceReference": true,
+        "hasSourceEvidence": true,
+        "hasSourceTimestamp": true,
+        "marketEvidenceType": "QUERY_FILTER"
+      },
+      {
+        "adObservationId": "cmw6mbld9003jpwg961xvpl57",
+        "competitorAdId": "cmw6mbld7003gpwg9rwr9g5q1",
+        "providerId": "meta-ads-collector",
+        "sourceExternalId": "28380730701590903",
+        "hasRawEvidenceReference": true,
+        "hasSourceEvidence": true,
+        "hasSourceTimestamp": true,
+        "marketEvidenceType": "QUERY_FILTER"
+      }
+    ]
+  }
+}

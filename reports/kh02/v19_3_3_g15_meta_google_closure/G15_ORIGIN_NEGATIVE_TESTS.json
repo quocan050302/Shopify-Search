@@ -1,0 +1,224 @@
+{
+  "version": "19.3.3",
+  "testSuite": "tests/unit/kh02/g15CsvOriginIntegrity.test.ts",
+  "totalNegativeCases": 30,
+  "passedNegativeCases": 30,
+  "failedNegativeCases": 0,
+  "preFixReproductionArtifact": "reports/kh02/v19_3_3_g15_meta_google_closure/logs/G15_PRE_FIX_REPRODUCTION_FAILURE.json",
+  "cases": [
+    {
+      "caseId": "N01",
+      "description": "Rejects exact reproduced pet_water_fountain_12w_us.csv fixture with valid SHA-256 and 12 weekly rows",
+      "observedOriginKind": "LOCAL_INTEGRITY_ONLY",
+      "observedSourceAuthority": "UNVERIFIED_SOURCE",
+      "observedStatus": "UNVERIFIED_SOURCE",
+      "observedEligibleForEvergreen": false,
+      "passed": true
+    },
+    {
+      "caseId": "N02",
+      "description": "Rejects modified/renamed fixture CSV with newly computed valid SHA-256 on disk without durable import authority",
+      "observedOriginKind": "LOCAL_INTEGRITY_ONLY",
+      "observedSourceAuthority": "UNVERIFIED_SOURCE",
+      "observedStatus": "UNVERIFIED_SOURCE",
+      "observedEligibleForEvergreen": false,
+      "passed": true
+    },
+    {
+      "caseId": "N03",
+      "description": "Rejects CSV reference when file is missing from disk",
+      "observedRejectionCode": "FILE_MISSING",
+      "observedEligibleForEvergreen": false,
+      "passed": true
+    },
+    {
+      "caseId": "N04",
+      "description": "Rejects CSV reference when raw file bytes do not match SHA-256 in reference",
+      "observedRejectionCode": "SHA_MISMATCH",
+      "observedEligibleForEvergreen": false,
+      "passed": true
+    },
+    {
+      "caseId": "N05",
+      "description": "Rejects CSV observation when periodStart date is missing from CSV rows",
+      "observedRejectionCode": "ROW_DATE_NOT_FOUND",
+      "observedEligibleForEvergreen": false,
+      "passed": true
+    },
+    {
+      "caseId": "N06",
+      "description": "Rejects CSV observation when demandValue does not match CSV row value",
+      "observedRejectionCode": "ROW_VALUE_MISMATCH",
+      "observedEligibleForEvergreen": false,
+      "passed": true
+    },
+    {
+      "caseId": "N07",
+      "description": "Rejects CSV observation when region is non-US (GB)",
+      "observedRejectionCode": "REGION_MISMATCH",
+      "observedEligibleForEvergreen": false,
+      "passed": true
+    },
+    {
+      "caseId": "N08",
+      "description": "Rejects CSV observation when region is empty/missing under US demand gate",
+      "observedRejectionCode": "REGION_MISMATCH",
+      "observedEligibleForEvergreen": false,
+      "passed": true
+    },
+    {
+      "caseId": "N09",
+      "description": "Rejects CSV observation when keyword in reference does not match CSV header keyword",
+      "observedRejectionCode": "KEYWORD_MISMATCH",
+      "observedEligibleForEvergreen": false,
+      "passed": true
+    },
+    {
+      "caseId": "N10",
+      "description": "Rejects CSV observation when observation periodStart is missing in strict mode",
+      "observedRejectionCode": "ROW_CONTEXT_INCOMPLETE",
+      "observedEligibleForEvergreen": false,
+      "passed": true
+    },
+    {
+      "caseId": "N11",
+      "description": "Rejects CSV observation when observation demandValue is NaN/missing in strict mode",
+      "observedRejectionCode": "ROW_CONTEXT_INCOMPLETE",
+      "observedEligibleForEvergreen": false,
+      "passed": true
+    },
+    {
+      "caseId": "N12",
+      "description": "Rejects CSV observation attributed to a different productId (cand_other_product)",
+      "observedRejectionCode": "FOREIGN_PRODUCT_ID_MISMATCH",
+      "observedEligibleForEvergreen": false,
+      "passed": true
+    },
+    {
+      "caseId": "N13",
+      "description": "Rejects CSV observation when candidate keyword is unrelated (cat litter mat vs uahpet water fountain)",
+      "observedRejectionCode": "KEYWORD_DOES_NOT_ATTRIBUTE_CANDIDATE",
+      "observedEligibleForEvergreen": false,
+      "passed": true
+    },
+    {
+      "caseId": "N14",
+      "description": "Rejects generic niche term (pet gadgets) as candidate-specific demand for a specific product",
+      "observedRejectionCode": "NICHE_GENERIC_TERM_NOT_PRODUCT_SPECIFIC",
+      "observedEligibleForEvergreen": false,
+      "passed": true
+    },
+    {
+      "caseId": "N15",
+      "description": "Rejects caller-supplied verifiedByOfficialExport=true flag in validateGoogleTrendsCsvPayload without durable authority record",
+      "observedOriginClassification": "LOCAL_INTEGRITY_ONLY",
+      "observedEligibleForEvergreen": false,
+      "passed": true
+    },
+    {
+      "caseId": "N16",
+      "description": "Rejects caller-supplied verifiedOfficialExport=true in ingestHistoricalDemandCsv without durable authority record",
+      "observedOriginClassification": "LOCAL_INTEGRITY_ONLY",
+      "observedEligibleForEvergreen": false,
+      "passed": true
+    },
+    {
+      "caseId": "N17",
+      "description": "Rejects forged durable authority record with invalid HMAC signature",
+      "observedRejectionCode": "AUTHORITY_SIGNATURE_INVALID",
+      "observedEligibleForEvergreen": false,
+      "passed": true
+    },
+    {
+      "caseId": "N18",
+      "description": "Rejects durable authority record registered with ENGINEERING scope when evaluated under BUSINESS scope",
+      "observedRejectionCode": "ENGINEERING_SCOPE_NOT_ELIGIBLE_FOR_BUSINESS",
+      "observedEligibleForEvergreen": false,
+      "passed": true
+    },
+    {
+      "caseId": "N19",
+      "description": "Rejects durable authority record bound to product A when evaluated for product B",
+      "observedRejectionCode": "AUTHORITY_PRODUCT_MISMATCH",
+      "observedEligibleForEvergreen": false,
+      "passed": true
+    },
+    {
+      "caseId": "N20",
+      "description": "Rejects durable authority record when revoked via revokeDurableCsvImportAuthority",
+      "observedRejectionCode": "AUTHORITY_REVOKED",
+      "observedEligibleForEvergreen": false,
+      "passed": true
+    },
+    {
+      "caseId": "N21",
+      "description": "Rejects pseudo-references (verified-merchant-demand, manual-csv, fixture-seed)",
+      "observedSourceAuthority": "UNVERIFIED_SOURCE",
+      "observedEligibleForEvergreen": false,
+      "passed": true
+    },
+    {
+      "caseId": "N22",
+      "description": "Rejects Google Trending Now RSS observations as G15 historical evidence",
+      "observedSourceAuthority": "DISCOVERY_SIGNAL_ONLY",
+      "observedEligibleForEvergreen": false,
+      "passed": true
+    },
+    {
+      "caseId": "N23",
+      "description": "Demotes legacy snapshot containing LOCAL_INTEGRITY_ONLY CSV rows during requalifyHistoricalEvergreenSnapshot",
+      "observedEvergreenEligibleCount": 0,
+      "observedEligibleForEvergreen": false,
+      "passed": true
+    },
+    {
+      "caseId": "N24",
+      "description": "Rejects CSV series with < 60 covered calendar days even when authority is valid",
+      "observedStatus": "INSUFFICIENT_HISTORY",
+      "observedEligibleForEvergreen": false,
+      "passed": true
+    },
+    {
+      "caseId": "N25",
+      "description": "Rejects CSV series with future observation timestamps exceeding asOfTimestamp",
+      "observedFutureLeakageRejected": true,
+      "observedEligibleForEvergreen": false,
+      "passed": true
+    },
+    {
+      "caseId": "N26",
+      "description": "Rejects CSV series with sparse 2-point gap (>21 days between points) attempting to span 60 days",
+      "observedTemporalCoverageValid": false,
+      "observedEligibleForEvergreen": false,
+      "passed": true
+    },
+    {
+      "caseId": "N27",
+      "description": "Rejects BigQuery provider reference without signed durable provider receipt",
+      "observedOriginKind": "UNVERIFIED_ORIGIN",
+      "observedEligibleForEvergreen": false,
+      "passed": true
+    },
+    {
+      "caseId": "N28",
+      "description": "Rejects CSV authority registration when file does not exist on disk",
+      "observedError": "CSV_FILE_NOT_FOUND",
+      "observedEligibleForEvergreen": false,
+      "passed": true
+    },
+    {
+      "caseId": "N29",
+      "description": "Rejects CSV authority registration when region is not US for US official export",
+      "observedRegionMismatch": true,
+      "observedEligibleForEvergreen": false,
+      "passed": true
+    },
+    {
+      "caseId": "N30",
+      "description": "Prevents verifyEvergreenCandidateIndependently from awarding historical demand confidence when demand status is UNVERIFIED_SOURCE",
+      "observedVerified": false,
+      "observedEligibleForEvergreen": false,
+      "passed": true
+    }
+  ]
+}

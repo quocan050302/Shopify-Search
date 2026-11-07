@@ -1,0 +1,330 @@
+{
+  "evaluatedAt": "2026-11-07T16:31:47.719Z",
+  "costUsd": 0,
+  "transport": "STDIO_FASTMCP",
+  "pinnedUpstreamCommit": "8180b10a338be0d825d59797084df6bb8c06cca6",
+  "protocolHandshakeAndTools": {
+    "transportConnected": true,
+    "capabilityClassification": "ENRICHMENT_ONLY",
+    "toolsDiscovered": [
+      "search_advertiser",
+      "get_advertiser_ads"
+    ],
+    "matchedTools": {
+      "domainLookupTool": "search_advertiser",
+      "advertiserSearchTool": "search_advertiser",
+      "adsRetrievalTool": "get_advertiser_ads"
+    }
+  },
+  "boundedBudget": {
+    "advertiserDomains": [
+      "uahpet.com",
+      "kittyspout.com"
+    ],
+    "maxDomainsToEnrich": 2,
+    "maxAdsPerDomain": 3,
+    "targetMarket": "US"
+  },
+  "elapsedMs": 27353,
+  "executionStatus": "PASSED",
+  "retrievedCount": 6,
+  "acceptedCount": 6,
+  "rejectedCount": 0,
+  "errors": [],
+  "warnings": [],
+  "enrichmentTelemetry": null,
+  "providerInvocations": [],
+  "liveObservationsReturnedCount": 0,
+  "totalObservationsReturnedCount": 6,
+  "sampleObservations": [
+    {
+      "sourceRecordId": "CR10858223549638770689",
+      "persistedAdId": "cmw6mfazi00026ng94x8skasg",
+      "advertiserOrCreator": "uahpet.com",
+      "advertiserDomain": "uahpet.com",
+      "title": null,
+      "landingPageUrl": null,
+      "verifiedDeliveryMarket": null,
+      "evidenceReference": "GoogleAd:CR10858223549638770689",
+      "mcpInvocationRef": "google_mcp_inv_uahpet.com_AR11363703404665765889_1794069083501",
+      "invocationEvidenceRef": "mcp:get_advertiser_ads:AR11363703404665765889:66988393b07faca4",
+      "requestArgumentsHash": "11f28254387614cbb7c506f96c4dfbe3ee7fcc55c94935738dd24d0f21489aa3",
+      "responseEvidenceHash": "66988393b07faca4697645360e8ac39a398932ab1aae7b408ac860f3784d7f54",
+      "lineageMethod": "VERIFIED_LOCAL_INVOCATION_ONLY",
+      "providerRequestIdOrigin": "ABSENT",
+      "metrics": {
+        "lastShown": "2026-11-07",
+        "format": "IMAGE",
+        "productRelevance": "UNKNOWN",
+        "marketProvenance": {
+          "requestedMarket": "US",
+          "providerFilterMarket": "US",
+          "providerReportedMarket": null,
+          "verifiedDeliveryMarket": null,
+          "verificationStatus": "FILTER_ONLY",
+          "evidenceReference": "GoogleQueryFilter:CR10858223549638770689"
+        },
+        "advertiserId": "AR11363703404665765889",
+        "creativeId": "CR10858223549638770689",
+        "persistedAdId": "cmw6mfazi00026ng94x8skasg",
+        "dbRecordReference": "CompetitorAd:cmw6mfazi00026ng94x8skasg",
+        "sourceObservationId": "cmw6mfb3i000m6ng9izukej7q"
+      }
+    },
+    {
+      "sourceRecordId": "CR10179391117963821057",
+      "persistedAdId": "cmw6mfazu00056ng9ke0mmlej",
+      "advertiserOrCreator": "uahpet.com",
+      "advertiserDomain": "uahpet.com",
+      "title": null,
+      "landingPageUrl": null,
+      "verifiedDeliveryMarket": null,
+      "evidenceReference": "GoogleAd:CR10179391117963821057",
+      "mcpInvocationRef": "google_mcp_inv_uahpet.com_AR11363703404665765889_1794069083501",
+      "invocationEvidenceRef": "mcp:get_advertiser_ads:AR11363703404665765889:66988393b07faca4",
+      "requestArgumentsHash": "11f28254387614cbb7c506f96c4dfbe3ee7fcc55c94935738dd24d0f21489aa3",
+      "responseEvidenceHash": "66988393b07faca4697645360e8ac39a398932ab1aae7b408ac860f3784d7f54",
+      "lineageMethod": "VERIFIED_LOCAL_INVOCATION_ONLY",
+      "providerRequestIdOrigin": "ABSENT",
+      "metrics": {
+        "lastShown": "2026-11-07",
+        "format": "IMAGE",
+        "productRelevance": "UNKNOWN",
+        "marketProvenance": {
+          "requestedMarket": "US",
+          "providerFilterMarket": "US",
+          "providerReportedMarket": null,
+          "verifiedDeliveryMarket": null,
+          "verificationStatus": "FILTER_ONLY",
+          "evidenceReference": "GoogleQueryFilter:CR10179391117963821057"
+        },
+        "advertiserId": "AR11363703404665765889",
+        "creativeId": "CR10179391117963821057",
+        "persistedAdId": "cmw6mfazu00056ng9ke0mmlej",
+        "dbRecordReference": "CompetitorAd:cmw6mfazu00056ng9ke0mmlej",
+        "sourceObservationId": "cmw6mfb3m000o6ng9zys4pd5r"
+      }
+    },
+    {
+      "sourceRecordId": "CR02856632681859383297",
+      "persistedAdId": "cmw6mfazx00086ng98d0inx8h",
+      "advertiserOrCreator": "uahpet.com",
+      "advertiserDomain": "uahpet.com",
+      "title": null,
+      "landingPageUrl": null,
+      "verifiedDeliveryMarket": null,
+      "evidenceReference": "GoogleAd:CR02856632681859383297",
+      "mcpInvocationRef": "google_mcp_inv_uahpet.com_AR11363703404665765889_1794069083501",
+      "invocationEvidenceRef": "mcp:get_advertiser_ads:AR11363703404665765889:66988393b07faca4",
+      "requestArgumentsHash": "11f28254387614cbb7c506f96c4dfbe3ee7fcc55c94935738dd24d0f21489aa3",
+      "responseEvidenceHash": "66988393b07faca4697645360e8ac39a398932ab1aae7b408ac860f3784d7f54",
+      "lineageMethod": "VERIFIED_LOCAL_INVOCATION_ONLY",
+      "providerRequestIdOrigin": "ABSENT",
+      "metrics": {
+        "lastShown": "2026-11-07",
+        "format": "IMAGE",
+        "productRelevance": "UNKNOWN",
+        "marketProvenance": {
+          "requestedMarket": "US",
+          "providerFilterMarket": "US",
+          "providerReportedMarket": null,
+          "verifiedDeliveryMarket": null,
+          "verificationStatus": "FILTER_ONLY",
+          "evidenceReference": "GoogleQueryFilter:CR02856632681859383297"
+        },
+        "advertiserId": "AR11363703404665765889",
+        "creativeId": "CR02856632681859383297",
+        "persistedAdId": "cmw6mfazx00086ng98d0inx8h",
+        "dbRecordReference": "CompetitorAd:cmw6mfazx00086ng98d0inx8h",
+        "sourceObservationId": "cmw6mfb3p000q6ng984j208wv"
+      }
+    },
+    {
+      "sourceRecordId": "CR11272956311978901505",
+      "persistedAdId": "cmw6mfb00000c6ng9z2m5ldrg",
+      "advertiserOrCreator": "kittyspout.com",
+      "advertiserDomain": "kittyspout.com",
+      "title": "Whisper Quiet Dog Fountain",
+      "landingPageUrl": null,
+      "verifiedDeliveryMarket": null,
+      "evidenceReference": "GoogleAd:CR11272956311978901505",
+      "mcpInvocationRef": "google_mcp_inv_kittyspout.com_AR10162009454036385793_1794069098551",
+      "invocationEvidenceRef": "mcp:get_advertiser_ads:AR10162009454036385793:9674fd2a135d2a86",
+      "requestArgumentsHash": "5c2c41921ef27d755bdfcc553a6d78e35542f1e1337fbc1ab236af07ce35c1bf",
+      "responseEvidenceHash": "9674fd2a135d2a860c1fd7d9bf59e2e554d11e528ec79152002efe4883810c29",
+      "lineageMethod": "VERIFIED_LOCAL_INVOCATION_ONLY",
+      "providerRequestIdOrigin": "ABSENT",
+      "metrics": {
+        "lastShown": "2026-11-07",
+        "format": "VIDEO",
+        "productRelevance": "PRODUCT_SPECIFIC",
+        "marketProvenance": {
+          "requestedMarket": "US",
+          "providerFilterMarket": "US",
+          "providerReportedMarket": null,
+          "verifiedDeliveryMarket": null,
+          "verificationStatus": "FILTER_ONLY",
+          "evidenceReference": "GoogleQueryFilter:CR11272956311978901505"
+        },
+        "advertiserId": "AR10162009454036385793",
+        "creativeId": "CR11272956311978901505",
+        "persistedAdId": "cmw6mfb00000c6ng9z2m5ldrg",
+        "dbRecordReference": "CompetitorAd:cmw6mfb00000c6ng9z2m5ldrg",
+        "sourceObservationId": "cmw6mfb3t000s6ng9ym0y4jii"
+      }
+    },
+    {
+      "sourceRecordId": "CR16027593058358919169",
+      "persistedAdId": "cmw6mfb03000f6ng9qhlkcvpo",
+      "advertiserOrCreator": "kittyspout.com",
+      "advertiserDomain": "kittyspout.com",
+      "title": null,
+      "landingPageUrl": null,
+      "verifiedDeliveryMarket": null,
+      "evidenceReference": "GoogleAd:CR16027593058358919169",
+      "mcpInvocationRef": "google_mcp_inv_kittyspout.com_AR10162009454036385793_1794069098551",
+      "invocationEvidenceRef": "mcp:get_advertiser_ads:AR10162009454036385793:9674fd2a135d2a86",
+      "requestArgumentsHash": "5c2c41921ef27d755bdfcc553a6d78e35542f1e1337fbc1ab236af07ce35c1bf",
+      "responseEvidenceHash": "9674fd2a135d2a860c1fd7d9bf59e2e554d11e528ec79152002efe4883810c29",
+      "lineageMethod": "VERIFIED_LOCAL_INVOCATION_ONLY",
+      "providerRequestIdOrigin": "ABSENT",
+      "metrics": {
+        "lastShown": "2026-11-07",
+        "format": "IMAGE",
+        "productRelevance": "UNKNOWN",
+        "marketProvenance": {
+          "requestedMarket": "US",
+          "providerFilterMarket": "US",
+          "providerReportedMarket": null,
+          "verifiedDeliveryMarket": null,
+          "verificationStatus": "FILTER_ONLY",
+          "evidenceReference": "GoogleQueryFilter:CR16027593058358919169"
+        },
+        "advertiserId": "AR10162009454036385793",
+        "creativeId": "CR16027593058358919169",
+        "persistedAdId": "cmw6mfb03000f6ng9qhlkcvpo",
+        "dbRecordReference": "CompetitorAd:cmw6mfb03000f6ng9qhlkcvpo",
+        "sourceObservationId": "cmw6mfb3w000u6ng9bx9u7plz"
+      }
+    }
+  ],
+  "persistenceSummary": {
+    "persistedCount": 6,
+    "insertedCount": 0,
+    "updatedCount": 6,
+    "rejectedCount": 0,
+    "failedCount": 0,
+    "errors": []
+  },
+  "persistedDbVerification": {
+    "isolatedDbUsed": true,
+    "adObservationRowsFound": 10,
+    "samplePersistedRows": [
+      {
+        "adObservationId": "cmw6mfb3z000w6ng9m661guay",
+        "competitorAdId": "cmw6mfb06000i6ng93vlzf9ch",
+        "providerId": "google-transparency-mcp",
+        "sourceExternalId": "CR02280641798978142209",
+        "evidenceReferencePreserved": "mcp:get_advertiser_ads:AR10162009454036385793:9674fd2a135d2a86",
+        "mcpInvocationRef": "google_mcp_inv_kittyspout.com_AR10162009454036385793_1794069098551",
+        "invocationEvidenceRef": "mcp:get_advertiser_ads:AR10162009454036385793:9674fd2a135d2a86",
+        "requestArgumentsHash": "5c2c41921ef27d755bdfcc553a6d78e35542f1e1337fbc1ab236af07ce35c1bf",
+        "responseEvidenceHash": "9674fd2a135d2a860c1fd7d9bf59e2e554d11e528ec79152002efe4883810c29",
+        "lineageMethod": "VERIFIED_LOCAL_INVOCATION_ONLY",
+        "productRelevance": "UNKNOWN",
+        "marketProvenance": {
+          "requestedMarket": "US",
+          "providerFilterMarket": "US",
+          "providerReportedMarket": null,
+          "verifiedDeliveryMarket": null,
+          "verificationStatus": "FILTER_ONLY",
+          "evidenceReference": "GoogleQueryFilter:CR02280641798978142209"
+        }
+      },
+      {
+        "adObservationId": "cmw6mfb3w000u6ng9bx9u7plz",
+        "competitorAdId": "cmw6mfb03000f6ng9qhlkcvpo",
+        "providerId": "google-transparency-mcp",
+        "sourceExternalId": "CR16027593058358919169",
+        "evidenceReferencePreserved": "mcp:get_advertiser_ads:AR10162009454036385793:9674fd2a135d2a86",
+        "mcpInvocationRef": "google_mcp_inv_kittyspout.com_AR10162009454036385793_1794069098551",
+        "invocationEvidenceRef": "mcp:get_advertiser_ads:AR10162009454036385793:9674fd2a135d2a86",
+        "requestArgumentsHash": "5c2c41921ef27d755bdfcc553a6d78e35542f1e1337fbc1ab236af07ce35c1bf",
+        "responseEvidenceHash": "9674fd2a135d2a860c1fd7d9bf59e2e554d11e528ec79152002efe4883810c29",
+        "lineageMethod": "VERIFIED_LOCAL_INVOCATION_ONLY",
+        "productRelevance": "UNKNOWN",
+        "marketProvenance": {
+          "requestedMarket": "US",
+          "providerFilterMarket": "US",
+          "providerReportedMarket": null,
+          "verifiedDeliveryMarket": null,
+          "verificationStatus": "FILTER_ONLY",
+          "evidenceReference": "GoogleQueryFilter:CR16027593058358919169"
+        }
+      },
+      {
+        "adObservationId": "cmw6mfb3t000s6ng9ym0y4jii",
+        "competitorAdId": "cmw6mfb00000c6ng9z2m5ldrg",
+        "providerId": "google-transparency-mcp",
+        "sourceExternalId": "CR11272956311978901505",
+        "evidenceReferencePreserved": "mcp:get_advertiser_ads:AR10162009454036385793:9674fd2a135d2a86",
+        "mcpInvocationRef": "google_mcp_inv_kittyspout.com_AR10162009454036385793_1794069098551",
+        "invocationEvidenceRef": "mcp:get_advertiser_ads:AR10162009454036385793:9674fd2a135d2a86",
+        "requestArgumentsHash": "5c2c41921ef27d755bdfcc553a6d78e35542f1e1337fbc1ab236af07ce35c1bf",
+        "responseEvidenceHash": "9674fd2a135d2a860c1fd7d9bf59e2e554d11e528ec79152002efe4883810c29",
+        "lineageMethod": "VERIFIED_LOCAL_INVOCATION_ONLY",
+        "productRelevance": "PRODUCT_SPECIFIC",
+        "marketProvenance": {
+          "requestedMarket": "US",
+          "providerFilterMarket": "US",
+          "providerReportedMarket": null,
+          "verifiedDeliveryMarket": null,
+          "verificationStatus": "FILTER_ONLY",
+          "evidenceReference": "GoogleQueryFilter:CR11272956311978901505"
+        }
+      },
+      {
+        "adObservationId": "cmw6mfb3p000q6ng984j208wv",
+        "competitorAdId": "cmw6mfazx00086ng98d0inx8h",
+        "providerId": "google-transparency-mcp",
+        "sourceExternalId": "CR02856632681859383297",
+        "evidenceReferencePreserved": "mcp:get_advertiser_ads:AR11363703404665765889:66988393b07faca4",
+        "mcpInvocationRef": "google_mcp_inv_uahpet.com_AR11363703404665765889_1794069083501",
+        "invocationEvidenceRef": "mcp:get_advertiser_ads:AR11363703404665765889:66988393b07faca4",
+        "requestArgumentsHash": "11f28254387614cbb7c506f96c4dfbe3ee7fcc55c94935738dd24d0f21489aa3",
+        "responseEvidenceHash": "66988393b07faca4697645360e8ac39a398932ab1aae7b408ac860f3784d7f54",
+        "lineageMethod": "VERIFIED_LOCAL_INVOCATION_ONLY",
+        "productRelevance": "UNKNOWN",
+        "marketProvenance": {
+          "requestedMarket": "US",
+          "providerFilterMarket": "US",
+          "providerReportedMarket": null,
+          "verifiedDeliveryMarket": null,
+          "verificationStatus": "FILTER_ONLY",
+          "evidenceReference": "GoogleQueryFilter:CR02856632681859383297"
+        }
+      },
+      {
+        "adObservationId": "cmw6mfb3m000o6ng9zys4pd5r",
+        "competitorAdId": "cmw6mfazu00056ng9ke0mmlej",
+        "providerId": "google-transparency-mcp",
+        "sourceExternalId": "CR10179391117963821057",
+        "evidenceReferencePreserved": "mcp:get_advertiser_ads:AR11363703404665765889:66988393b07faca4",
+        "mcpInvocationRef": "google_mcp_inv_uahpet.com_AR11363703404665765889_1794069083501",
+        "invocationEvidenceRef": "mcp:get_advertiser_ads:AR11363703404665765889:66988393b07faca4",
+        "requestArgumentsHash": "11f28254387614cbb7c506f96c4dfbe3ee7fcc55c94935738dd24d0f21489aa3",
+        "responseEvidenceHash": "66988393b07faca4697645360e8ac39a398932ab1aae7b408ac860f3784d7f54",
+        "lineageMethod": "VERIFIED_LOCAL_INVOCATION_ONLY",
+        "productRelevance": "UNKNOWN",
+        "marketProvenance": {
+          "requestedMarket": "US",
+          "providerFilterMarket": "US",
+          "providerReportedMarket": null,
+          "verifiedDeliveryMarket": null,
+          "verificationStatus": "FILTER_ONLY",
+          "evidenceReference": "GoogleQueryFilter:CR10179391117963821057"
+        }
+      }
+    ]
+  }
+}

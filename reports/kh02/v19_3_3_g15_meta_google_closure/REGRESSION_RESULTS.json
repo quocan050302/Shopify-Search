@@ -1,0 +1,94 @@
+{
+  "version": "19.3.3",
+  "testedCodeSha": "6e71c24a311bffac200fb888554023f0d2e7c6b2",
+  "testedTreeSha": "2d928a6986844dc610d78cd84745ec9436cbf63b",
+  "evaluatedAt": "2026-11-07T16:42:54.000Z",
+  "mandatoryCommands": [
+    {
+      "command": "npx tsc --noEmit",
+      "exitCode": 0,
+      "errorsCount": 0,
+      "verdict": "PASS"
+    },
+    {
+      "command": "npm run kh02:test:unit -- --maxWorkers=2",
+      "exitCode": 0,
+      "testFilesPassed": 106,
+      "testFilesTotal": 106,
+      "testsPassed": 2492,
+      "testsTotal": 2492,
+      "durationSeconds": 187.41,
+      "verdict": "PASS"
+    },
+    {
+      "command": "npx vitest run tests/integration/kh02 --no-file-parallelism",
+      "exitCode": 0,
+      "testFilesPassed": 16,
+      "testFilesTotal": 16,
+      "testsPassed": 77,
+      "testsTotal": 77,
+      "verdict": "PASS"
+    },
+    {
+      "command": "npm run kh01:verify",
+      "exitCode": 0,
+      "testFilesPassed": 5,
+      "testFilesTotal": 5,
+      "testsPassed": 69,
+      "testsTotal": 69,
+      "durationSeconds": 1.73,
+      "verdict": "PASS"
+    },
+    {
+      "command": "npx tsx scripts/kh02/runBacktestV12_4_3_4_2.ts",
+      "exitCode": 0,
+      "policyScenarioVerdict": "PASS",
+      "pointInTimeIntegrityVerdict": "PASS",
+      "historicalDevVerdict": "INSUFFICIENT_HISTORICAL_EVIDENCE",
+      "historicalHoldoutVerdict": "INSUFFICIENT_HISTORICAL_EVIDENCE",
+      "overallHistoricalBacktestVerdict": "INSUFFICIENT_HISTORICAL_EVIDENCE"
+    },
+    {
+      "command": "npx tsx scripts/kh02/runCandidateDbReadback.ts",
+      "exitCode": 0,
+      "dbConnectionStatus": "SUCCESS",
+      "canonicalProductId": "cmvsy7zqh000jp0orhypwohho",
+      "canonicalTitleFromDB": "Automatic Wet Food Cat Feeder with Cooling & Warming",
+      "rawRecordCount": 6,
+      "verifiedOfficialCsvRows": 0,
+      "coveredCalendarDays": 0,
+      "g15Verdict": "INSUFFICIENT_EVIDENCE",
+      "g16Verdict": "INSUFFICIENT_EVIDENCE",
+      "logArtifactPath": "reports/kh02/v19_3_3_g15_meta_google_closure/logs/CANDIDATE_DB_READBACK.log"
+    },
+    {
+      "command": "npx tsx scripts/kh02/runThreeSourceFreeMcpSmoke.ts",
+      "exitCode": 0,
+      "totalCostUsd": 0.0,
+      "s1MetaCollectorHandshakeOk": true,
+      "s2GoogleStatus": "PROTOCOL_HANDSHAKE_VERIFIED",
+      "s2GoogleProviderVerified": false,
+      "s3TikTokOrganicPolicyStatus": "POLICY_DISABLED",
+      "s4TikTokAdsUsStatus": "DEFERRED_DO_NOT_TEST",
+      "s5BigQueryStatus": "NOT_CONFIGURED_NO_BILLING",
+      "s6OfficialExportsFound": 0,
+      "logArtifactPath": "reports/kh02/v19_3_3_g15_meta_google_closure/logs/THREE_SOURCE_MCP_SMOKE.log"
+    }
+  ],
+  "targetedNewRegressionSuites": [
+    {
+      "testFile": "tests/unit/kh02/g15CsvOriginIntegrity.test.ts",
+      "negativeCasesPassed": 30,
+      "positiveEngineeringCasesPassed": 6,
+      "totalPassed": 36,
+      "totalFailed": 0,
+      "verdict": "PASS"
+    },
+    {
+      "testFile": "tests/unit/kh02/metaGoogleProductionFlowClosure.test.ts",
+      "totalPassed": 14,
+      "totalFailed": 0,
+      "verdict": "PASS"
+    }
+  ]
+}

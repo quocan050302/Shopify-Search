@@ -1,0 +1,45 @@
+{
+  "version": "19.3.3",
+  "testedCodeSha": "6e71c24a311bffac200fb888554023f0d2e7c6b2",
+  "testedTreeSha": "2d928a6986844dc610d78cd84745ec9436cbf63b",
+  "evaluatedAt": "2026-11-07T16:43:00.000Z",
+  "boundedExecutionLimits": {
+    "maxConcurrentExternalProbes": 1,
+    "sharedSqliteWriterCount": 1,
+    "googleHttpConnectTimeoutSeconds": 5.0,
+    "googleHttpReadTimeoutSeconds": 10.0,
+    "googleMaxResponseBytes": 2097152,
+    "googleMaxCreativeCount": 25,
+    "googleRetriesOn429OrCaptcha": 0,
+    "metaMaxLiveQueriesInProbe": 2,
+    "metaMaxRequestsPerQueryInProbe": 1,
+    "metaMaxLiveSecondsInProbe": 15,
+    "vitestMaxWorkers": 2,
+    "integrationFileParallelism": false,
+    "paidApiSpendUsd": 0.0
+  },
+  "measuredTimings": {
+    "liveProbesTotalWallClockMs": 21209,
+    "metaLiveProbeElapsedMs": 15868,
+    "googleLiveEnrichmentProbeElapsedMs": 27353,
+    "merchantLiveMetadataProbeElapsedMs": 3743,
+    "unitTestSuiteWallClockSeconds": 187.41,
+    "kh01VerifyWallClockSeconds": 1.73
+  },
+  "memoryAndDiskMeasurements": {
+    "probeRssBeforeBytes": 92323840,
+    "probeRssAfterBytes": 174309376,
+    "probeHeapUsedBeforeBytes": 10611728,
+    "probeHeapUsedAfterBytes": 72065920,
+    "diskSizeTotal": "460Gi",
+    "diskAvailable": "11Gi"
+  },
+  "cancellationAndProcessCleanup": {
+    "metaCollectorCloseInFinally": true,
+    "metaCollectorListToolsFailureKillsChild": true,
+    "googleTransparencyConnectFailureKillsChild": true,
+    "googleTransparencyCallToolClosesInFinally": true,
+    "orphanMcpOrPythonProcessesAfterRun": 0,
+    "secretsOrKeyPrefixesLogged": false
+  }
+}

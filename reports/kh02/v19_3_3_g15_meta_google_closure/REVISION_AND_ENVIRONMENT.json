@@ -1,0 +1,24 @@
+{
+  "version": "19.3.3",
+  "repository": "quocan050302/Shopify-Search",
+  "branch": "feature/kh02-walmart-us-jina-reader-v12.4.3.5.1",
+  "auditedBaselineSha": "c5f69173aab4a0df0788962b3dd78019c14f6fb8",
+  "auditedBaselineTree": "a0c6c45899704b435493169f3e92402ceede5789",
+  "testedCodeSha": "6e71c24a311bffac200fb888554023f0d2e7c6b2",
+  "testedTreeSha": "2d928a6986844dc610d78cd84745ec9436cbf63b",
+  "dirtyWorktreeDuringFinalCheck": false,
+  "evaluatedAt": "2026-11-07T16:42:30.000Z",
+  "environment": {
+    "os": "Darwin Macbook-Poppa.local 23.4.0 arm64",
+    "nodeVersion": "v22.22.3",
+    "npmVersion": "10.9.8",
+    "metaCollectorPythonBin": "services/meta-ads-collector/.venv/bin/python",
+    "metaCollectorVersion": "1.7.0",
+    "googleTransparencyPythonBin": "services/google-transparency/.venv/bin/python",
+    "googleTransparencyPinnedUpstreamCommit": "8180b10a338be0d825d59797084df6bb8c06cca6",
+    "paidApiSpendUsd": 0.0,
+    "tiktokOrganicPolicy": "POLICY_DISABLED",
+    "tiktokAdsUsPolicy": "DEFERRED",
+    "bigQueryBillingEnabled": false
+  }
+}

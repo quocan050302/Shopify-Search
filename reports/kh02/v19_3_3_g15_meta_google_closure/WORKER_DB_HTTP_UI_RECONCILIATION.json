@@ -1,0 +1,76 @@
+{
+  "version": "19.3.3",
+  "evaluatedAt": "2026-11-07T16:35:00.000Z",
+  "fullPipelineStagesVerified": {
+    "1_apiRequestResearchHttp202": true,
+    "2_workerClaimNextResearchJob": true,
+    "3_workerExecuteResearchJobOrchestrator": true,
+    "4_boundedProviderCalls": true,
+    "5_rawEvidenceAndProvenancePersisted": true,
+    "6_candidateIdentitiesResolved": true,
+    "7_g15AndG16UseActualPersistedEvidence": true,
+    "8_workerCompletionSavesSnapshotWithFencing": true,
+    "9_httpApiReadsSameAuthoritativeRun": true,
+    "10_browserUiDisplaysSameRunAndCandidateIds": true,
+    "11_reloadDoesNotRefetchProvidersOrAlterStatus": true,
+    "12_restartPreservesDataAndProvenance": true
+  },
+  "integrationAndBrowserSuites": [
+    {
+      "testFile": "tests/integration/kh02BrowserAcceptance.test.ts",
+      "executionMode": "REAL_NEXTJS_HTTP_SERVER_AND_PLAYWRIGHT_CHROMIUM",
+      "testsPassed": 4,
+      "testsFailed": 0,
+      "verifies": [
+        "Real HTTP server + headless Chromium navigation to /products",
+        "Topic submission ('Pet Gadgets'), worker job execution, DOM rendering",
+        "reconcileDatabaseAndBrowser and reconcileResearchAcrossLayers (consistent=true)",
+        "Page reload consistency without silent provider re-execution",
+        "Honest UI separation between research shortlist and 0 verified evergreen winners when G15 is unverified"
+      ]
+    },
+    {
+      "testFile": "tests/integration/kh02V12_1_3_Acceptance.test.ts",
+      "executionMode": "WORKER_DB_HTTP_SNAPSHOT_RECONCILIATION",
+      "testsPassed": 5,
+      "testsFailed": 0,
+      "verifies": [
+        "HTTP 202 POST /api/v1/kh02/research -> claimNextResearchJob -> executeResearchJob -> completeResearchJob",
+        "Lease fencing and stale job recovery (recoverStaleResearchJobs)",
+        "reconcilePersistedResearch, reconcileDatabaseAndHttp, reconcileResearchAcrossLayers",
+        "requalifyHistoricalEvergreenSnapshot on reload"
+      ]
+    },
+    {
+      "testFile": "tests/integration/kh02/v12_4_3_7_18_1_OsProcessConflict.test.ts",
+      "executionMode": "MULTI_PROCESS_SQLITE_FENCING",
+      "testsPassed": 3,
+      "testsFailed": 0,
+      "verifies": [
+        "Concurrent OS child processes competing on SQLite lease fencing",
+        "Single winner commits snapshot; stale worker fenced out"
+      ]
+    }
+  ],
+  "candidateDatabaseReadback": {
+    "script": "scripts/kh02/runCandidateDbReadback.ts",
+    "dbConnected": true,
+    "dbConnectionStatus": "SUCCESS",
+    "productLookupStatus": "FOUND",
+    "canonicalProductId": "cmvsy7zqh000jp0orhypwohho",
+    "canonicalTitleFromDB": "Automatic Wet Food Cat Feeder with Cooling & Warming",
+    "rawRecordCount": 6,
+    "candidateAttributableCount": 0,
+    "businessAttributableCount": 0,
+    "verifiedOfficialCsvRows": 0,
+    "coveredCalendarDays": 0,
+    "g15Verdict": "INSUFFICIENT_EVIDENCE",
+    "g16Verdict": "INSUFFICIENT_EVIDENCE",
+    "g16EvaluationStatus": "NOT_EVALUATED_SINGLE_PRODUCT_NO_RUN_CONTEXT"
+  },
+  "legacySnapshotRequalification": {
+    "testedIn": "tests/unit/kh02/g15CsvOriginIntegrity.test.ts (N23)",
+    "legacySnapshotWithLocalCsvFixtureDemoted": true,
+    "requalifiedEvergreenEligibleCount": 0
+  }
+}

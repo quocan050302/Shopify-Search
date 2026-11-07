@@ -1,0 +1,58 @@
+{
+  "reproducedAt": "2026-11-07T11:17:44.070Z",
+  "baselineSha": "c5f69173aab4a0df0788962b3dd78019c14f6fb8",
+  "fixtureCsvSha256": "f300258f9ea08da45034f449ade0c43d643cf280838d0f370a264d6805826d39",
+  "policy": {
+    "strictLiveOrigin": true,
+    "strictSourceProvenance": true,
+    "allowUnitFixtures": false,
+    "evaluationScope": "BUSINESS",
+    "requiredRegion": "US",
+    "targetProductId": "prod_car_phone_mount_test",
+    "candidateCanonicalName": "Car Phone Mount",
+    "searchTermUsed": "car phone mount"
+  },
+  "lineage": {
+    "rawCsvFileExists": true,
+    "hasValidFileChecksum": true,
+    "hasProviderRequestLineage": false,
+    "isMerchantDomainPseudoRef": false,
+    "lineagePresent": true,
+    "lineageVerified": true,
+    "verificationReason": "Lineage verified.",
+    "originKind": "LOCAL_INTEGRITY_ONLY",
+    "contentIntegrityVerified": true,
+    "providerOriginVerified": false,
+    "rawContentIntegrityValid": true,
+    "csvOriginalIntegrityValid": true,
+    "fixtureOnly": false,
+    "businessLineageEligible": false,
+    "sourceAuthority": "HISTORICAL_SOURCE_VERIFIED"
+  },
+  "resolved": {
+    "source": "GOOGLE_TRENDS_CSV",
+    "rawResponseSha256": "f300258f9ea08da45034f449ade0c43d643cf280838d0f370a264d6805826d39",
+    "artifactPath": "/Users/macbook/Documents/Project_Github/Meta-Ads/Shopify-Search/data/google_trends_imports/f300258f9ea08da45034f449ade0c43d643cf280838d0f370a264d6805826d39.csv",
+    "targetProductOrKeyword": "car phone mount",
+    "region": "US",
+    "responseStatus": 200,
+    "verified": true,
+    "eligible": false,
+    "contentIntegrityVerified": true,
+    "providerOriginVerified": false,
+    "originKind": "LOCAL_INTEGRITY_ONLY"
+  },
+  "authority": {
+    "authority": "HISTORICAL_SOURCE_VERIFIED",
+    "reasons": [],
+    "productAttributionValid": true
+  },
+  "history": {
+    "status": "VERIFIED",
+    "eligibleForEvergreen": true,
+    "sourceAuthority": "HISTORICAL_SOURCE_VERIFIED",
+    "coveredDays": 84,
+    "dataPointsCount": 13,
+    "explanation": "Verified search-interest stability (HISTORICAL_SOURCE_VERIFIED): 13 points spanning 84 days with CV=0.06."
+  }
+}

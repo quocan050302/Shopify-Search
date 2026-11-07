@@ -1,0 +1,109 @@
+{
+  "version": "19.3.3",
+  "evaluatedAt": "2026-11-07T16:29:00.140Z",
+  "elapsedMs": 3743,
+  "invariantsVerified": {
+    "http200OrUrlPresenceAloneDoesNotGrantVerified": true,
+    "collectionAndStorefrontUrlsRejectedForSingleProduct": true,
+    "checkoutChampFunnelClassifiedAsProbableWithoutRootJsonLd": true,
+    "tlsAndSocketAttestationRequiredForLivePdp": true
+  },
+  "checks": [
+    {
+      "label": "UAHPET Product PDP",
+      "url": "https://uahpet.com/products/uahpet-zero-wireless-cat-water-fountain",
+      "expectedKind": "PRODUCT_PAGE",
+      "urlSlugMetadata": {
+        "isValidEcommerceUrl": true,
+        "isShopifyProductUrl": true,
+        "isCollectionUrl": false,
+        "isHomepageUrl": false,
+        "cleanCanonicalUrl": "https://uahpet.com/products/uahpet-zero-wireless-cat-water-fountain",
+        "normalizedBaseProductUrl": "https://uahpet.com/products/uahpet-zero-wireless-cat-water-fountain",
+        "storeDomain": "uahpet.com",
+        "productHandle": "uahpet-zero-wireless-cat-water-fountain",
+        "derivedTitleFromSlug": "Uahpet Zero Wireless Cat Water Fountain"
+      },
+      "liveFetchResult": {
+        "merchantProductId": null,
+        "sku": null,
+        "price": null,
+        "currency": null,
+        "canonicalUrl": null,
+        "rejectionReason": null
+      }
+    },
+    {
+      "label": "KittySpout Product PDP",
+      "url": "https://www.kittyspout.com/products/kittyspout-wireless-fountain",
+      "expectedKind": "PRODUCT_PAGE",
+      "urlSlugMetadata": {
+        "isValidEcommerceUrl": true,
+        "isShopifyProductUrl": true,
+        "isCollectionUrl": false,
+        "isHomepageUrl": false,
+        "cleanCanonicalUrl": "https://kittyspout.com/products/kittyspout-wireless-fountain",
+        "normalizedBaseProductUrl": "https://kittyspout.com/products/kittyspout-wireless-fountain",
+        "storeDomain": "kittyspout.com",
+        "productHandle": "kittyspout-wireless-fountain",
+        "derivedTitleFromSlug": "Kittyspout Wireless Fountain"
+      },
+      "liveFetchResult": {
+        "merchantProductId": "8369671045340",
+        "sku": "WF-F6-V1-B1",
+        "price": "2087000",
+        "currency": "VND",
+        "canonicalUrl": "https://www.kittyspout.com/products/kittyspout-wireless-fountain",
+        "rejectionReason": null
+      }
+    },
+    {
+      "label": "Uproot Clean CheckoutChamp Funnel",
+      "url": "https://cc.uprootclean.com/main/phr",
+      "expectedKind": "FUNNEL_PAGE",
+      "urlSlugMetadata": {
+        "isValidEcommerceUrl": true,
+        "isShopifyProductUrl": false,
+        "isCollectionUrl": false,
+        "isHomepageUrl": false,
+        "cleanCanonicalUrl": "https://cc.uprootclean.com/main/phr",
+        "normalizedBaseProductUrl": "https://cc.uprootclean.com/main/phr",
+        "storeDomain": "cc.uprootclean.com",
+        "productHandle": null,
+        "derivedTitleFromSlug": null
+      },
+      "liveFetchResult": {
+        "merchantProductId": null,
+        "sku": null,
+        "price": null,
+        "currency": null,
+        "canonicalUrl": "https://cc.uprootclean.com/main/phr",
+        "rejectionReason": null
+      }
+    },
+    {
+      "label": "UAHPET Collection Page (Negative Check)",
+      "url": "https://uahpet.com/collections/all",
+      "expectedKind": "COLLECTION_OR_STOREFRONT",
+      "urlSlugMetadata": {
+        "isValidEcommerceUrl": true,
+        "isShopifyProductUrl": false,
+        "isCollectionUrl": true,
+        "isHomepageUrl": false,
+        "cleanCanonicalUrl": "https://uahpet.com/collections/all",
+        "normalizedBaseProductUrl": null,
+        "storeDomain": "uahpet.com",
+        "productHandle": null,
+        "rejectionReason": "URL is a collection/category page, not a single SKU product page"
+      },
+      "liveFetchResult": {
+        "merchantProductId": null,
+        "sku": null,
+        "price": null,
+        "currency": null,
+        "canonicalUrl": "https://www.uahpet.com/collections/all",
+        "rejectionReason": null
+      }
+    }
+  ]
+}

@@ -1,0 +1,112 @@
+{
+  "version": "19.3.3",
+  "evaluatedAt": "2026-11-07T16:29:00.140Z",
+  "topic": "Pet Gadgets",
+  "inputObservationsCount": 24,
+  "rawCandidatesCount": 9,
+  "consolidatedCandidatesCount": 9,
+  "shortlistSelectedCount": 3,
+  "distinctFamiliesInShortlistCount": 3,
+  "liveVerifiedProductCount": 0,
+  "liveVerifiedTop3": false,
+  "uprootMultiAdFamilyCollapseVerified": {
+    "uprootAdsEvaluated": 9,
+    "uprootSlotsInTop3": 1,
+    "familyKey": "pet_hair_remover_roller",
+    "homogeneousFamilyDetected": false
+  },
+  "distinctnessAudit": {
+    "isDistinct": true,
+    "isFamilyDiverse": true,
+    "totalCandidatesEvaluated": 3,
+    "distinctCount": 3,
+    "distinctProductCount": 3,
+    "distinctFamilyCount": 3,
+    "distinctListingCount": 3,
+    "independentOpportunityCount": 3,
+    "homogeneousFamilyDetected": false,
+    "dominantFamilyKey": "pet_hair_remover_roller",
+    "dominantFamilyLabel": "Pet Hair & Fur Remover Roller/Scraper",
+    "duplicateGroupsCount": 0,
+    "uncertainties": [],
+    "pairwiseDecisions": [
+      {
+        "candidateIds": [
+          "cand_1613504636",
+          "cand_1422143654"
+        ],
+        "familyKeys": [
+          "pet_hair_remover_roller",
+          "pet_water_fountain"
+        ],
+        "decision": "DIFFERENT_PRODUCTS",
+        "areSameFamily": false,
+        "areDistinctOpportunitiesForBroadNiche": true,
+        "confidence": "EXACT"
+      },
+      {
+        "candidateIds": [
+          "cand_1613504636",
+          "cand_784006181"
+        ],
+        "familyKeys": [
+          "pet_hair_remover_roller",
+          "refrigerated_feeder"
+        ],
+        "decision": "DIFFERENT_PRODUCTS",
+        "areSameFamily": false,
+        "areDistinctOpportunitiesForBroadNiche": true,
+        "confidence": "EXACT"
+      },
+      {
+        "candidateIds": [
+          "cand_1422143654",
+          "cand_784006181"
+        ],
+        "familyKeys": [
+          "pet_water_fountain",
+          "refrigerated_feeder"
+        ],
+        "decision": "DIFFERENT_PRODUCTS",
+        "areSameFamily": false,
+        "areDistinctOpportunitiesForBroadNiche": true,
+        "confidence": "EXACT"
+      }
+    ]
+  },
+  "shortlistCandidates": [
+    {
+      "candidateId": "cand_1613504636",
+      "title": "Uproot Clean Pet Hair Remover",
+      "storeDomain": "cc.uprootclean.com",
+      "canonicalProductUrl": "https://cc.uprootclean.com/main/phr",
+      "familyKey": "pet_hair_remover_roller",
+      "identityStatus": "PROBABLE",
+      "supportingAdIdsCount": 9,
+      "evergreenEligible": false,
+      "g15Status": "INSUFFICIENT_EVIDENCE"
+    },
+    {
+      "candidateId": "cand_1422143654",
+      "title": "Fun 25 Cro 90 C 11",
+      "storeDomain": "selenepets.com",
+      "canonicalProductUrl": "https://selenepets.com/products/fun-25-cro-90-c-11",
+      "familyKey": "pet_water_fountain",
+      "identityStatus": "PROBABLE",
+      "supportingAdIdsCount": 6,
+      "evergreenEligible": false,
+      "g15Status": "INSUFFICIENT_EVIDENCE"
+    },
+    {
+      "candidateId": "cand_784006181",
+      "title": "Petsafe Black Freshfeed Refrigerated Pet Feeder",
+      "storeDomain": "feederspetsupply.com",
+      "canonicalProductUrl": "https://feederspetsupply.com/products/petsafe-black-freshfeed-refrigerated-pet-feeder",
+      "familyKey": "refrigerated_feeder",
+      "identityStatus": "PROBABLE",
+      "supportingAdIdsCount": 1,
+      "evergreenEligible": false,
+      "g15Status": "INSUFFICIENT_EVIDENCE"
+    }
+  ]
+}

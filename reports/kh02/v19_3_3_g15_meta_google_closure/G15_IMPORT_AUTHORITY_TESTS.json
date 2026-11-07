@@ -1,0 +1,63 @@
+{
+  "version": "19.3.3",
+  "testSuite": "tests/unit/kh02/g15CsvOriginIntegrity.test.ts",
+  "scopeLabel": "TEST_ONLY/ENGINEERING",
+  "note": "Positive tests use isolated temporary authority stores and databases to prove implementation correctness of durable CSV import authority registration, HMAC signing, candidate/region/row binding, restart persistence, and monotonic revocation. They do NOT claim live official Google Trends export availability.",
+  "totalPositiveEngineeringCases": 6,
+  "passedPositiveEngineeringCases": 6,
+  "failedPositiveEngineeringCases": 0,
+  "realBusinessOfficialExportAvailable": false,
+  "cases": [
+    {
+      "caseId": "P01",
+      "scope": "TEST_ONLY/ENGINEERING",
+      "description": "Registers a durable signed official CSV authority record and verifies hash, row, keyword, region, and candidate binding",
+      "observedOriginKind": "VERIFIED_OFFICIAL_CSV_IMPORT",
+      "observedLineageVerified": true,
+      "observedBusinessLineageEligible": true,
+      "passed": true
+    },
+    {
+      "caseId": "P02",
+      "scope": "TEST_ONLY/ENGINEERING",
+      "description": "Evaluates a 12-week (>=60 calendar days) US CSV series with valid durable authority as HISTORICAL_SOURCE_VERIFIED and VERIFIED",
+      "observedSourceAuthority": "HISTORICAL_SOURCE_VERIFIED",
+      "observedStatus": "VERIFIED",
+      "observedEligibleForEvergreen": true,
+      "observedCoveredDays": 77,
+      "passed": true
+    },
+    {
+      "caseId": "P03",
+      "scope": "TEST_ONLY/ENGINEERING",
+      "description": "Persists ingested CSV demand rows to isolated SQLite DB and verifies round-trip readback with durable authority",
+      "observedPersistedRows": 12,
+      "observedReadbackStatus": "VERIFIED",
+      "passed": true
+    },
+    {
+      "caseId": "P04",
+      "scope": "TEST_ONLY/ENGINEERING",
+      "description": "Survives simulated process restart by reloading durable authority registry from disk",
+      "observedRestartReloadVerified": true,
+      "passed": true
+    },
+    {
+      "caseId": "P05",
+      "scope": "TEST_ONLY/ENGINEERING",
+      "description": "Monotonically revokes a previously valid durable authority record and immediately demotes all dependent observations to UNVERIFIED_SOURCE",
+      "observedRevoked": true,
+      "observedPostRevocationStatus": "UNVERIFIED_SOURCE",
+      "observedPostRevocationEligible": false,
+      "passed": true
+    },
+    {
+      "caseId": "P06",
+      "scope": "TEST_ONLY/ENGINEERING",
+      "description": "Permits ENGINEERING scope evaluation for parser/cadence unit testing when allowEngineeringFixtureLineage=true while blocking BUSINESS scope",
+      "observedEngineeringEligible": true,
+      "observedBusinessEligible": false,
+      "passed": true
+    }
+  ]
+}

@@ -1,0 +1,44 @@
+=== CANDIDATE DATABASE READBACK DIAGNOSTIC (GATE E9) ===
+{
+  "dbConnected": true,
+  "dbReadbackExecuted": true,
+  "dbConnectionStatus": "SUCCESS",
+  "productLookupStatus": "FOUND",
+  "dbPathOrMaskedDsn": "file:./prisma/dev.db",
+  "testedCodeSha": "6e71c24a311bffac200fb888554023f0d2e7c6b2",
+  "testedTreeSha": "2d928a6986844dc610d78cd84745ec9436cbf63b",
+  "runId": null,
+  "candidateId": "cand_uahpet_feeder",
+  "canonicalProductId": "cmvsy7zqh000jp0orhypwohho",
+  "canonicalTitleFromDB": "Automatic Wet Food Cat Feeder with Cooling & Warming",
+  "rawRecordCount": 6,
+  "distinctKeywords": [
+    "Automatic Wet Food Cat Feeder with Cooling & Warming"
+  ],
+  "sourceClassifications": [
+    "GOOGLE_TRENDS_CSV"
+  ],
+  "distinctEvidenceRefs": [
+    "verified-merchant-demand"
+  ],
+  "candidateAttributableCount": 0,
+  "businessAttributableCount": 0,
+  "verifiedOfficialCsvRows": 0,
+  "coveredCalendarDays": 0,
+  "g15Verdict": "INSUFFICIENT_EVIDENCE",
+  "g16Verdict": "INSUFFICIENT_EVIDENCE",
+  "g16EvaluationStatus": "NOT_EVALUATED_SINGLE_PRODUCT_NO_RUN_CONTEXT",
+  "identityAmbiguity": null,
+  "discrepancyNote": "Database contains 6 raw observation rows (0 verified CSV rows) with 'verified-merchant-demand' pseudo-reference; 0 are official verified Google Trends Explore CSV records with durable origin authority.",
+  "globalDemandPartitionSummary": {
+    "totalRawDemandRows": 6,
+    "bySource": {
+      "GOOGLE_TRENDS_CSV": 6
+    },
+    "fixtureProductRows": 0,
+    "candidateSpecificRows": 6,
+    "verifiedBusinessLineageRows": 0
+  },
+  "executedAt": "2026-11-07T16:42:33.610Z"
+}
+DB_CONNECTION_STATUS: SUCCESS (dbConnected=true, rawRecords=6) | BUSINESS_VERDICT: G15=INSUFFICIENT_EVIDENCE, G16=INSUFFICIENT_EVIDENCE (NOT_EVALUATED_SINGLE_PRODUCT_NO_RUN_CONTEXT)

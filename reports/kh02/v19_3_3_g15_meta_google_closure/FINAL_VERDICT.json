@@ -1,0 +1,53 @@
+{
+  "version": "19.3.3",
+  "evaluatedAt": "2026-11-07T16:43:30.000Z",
+  "auditedBaselineSha": "c5f69173aab4a0df0788962b3dd78019c14f6fb8",
+  "auditedBaselineTree": "a0c6c45899704b435493169f3e92402ceede5789",
+  "testedCodeSha": "6e71c24a311bffac200fb888554023f0d2e7c6b2",
+  "testedTreeSha": "2d928a6986844dc610d78cd84745ec9436cbf63b",
+  "fiveSeparatedStates": {
+    "A_ENGINEERING_CORRECTNESS": "ENGINEERING_FIX_VERIFIED",
+    "B_LIVE_PROVIDER_CONTENT": {
+      "metaAds": "LIVE_META_CONTENT_VERIFIED",
+      "googleAdsTransparency": "LIVE_GOOGLE_CONTENT_VERIFIED",
+      "tiktokOrganic": "POLICY_DISABLED",
+      "tiktokAdsUs": "DEFERRED"
+    },
+    "C_PRODUCTION_PIPELINE_INTEGRITY": "VERIFIED",
+    "D_G15_BUSINESS_EVIDENCE": "G15_INSUFFICIENT_EVIDENCE",
+    "E_G16_TOP3_ELIGIBILITY": "G16_INSUFFICIENT_EVIDENCE"
+  },
+  "acceptanceGates": {
+    "Gate_A_G15_Integrity_Fix": "PASS",
+    "Gate_B_Meta_Pipeline_Engineering": "PASS",
+    "Gate_C_Google_Pipeline_Engineering": "PASS",
+    "Gate_D_G15_Business": "INSUFFICIENT_EVIDENCE",
+    "Gate_E_G16_Business_Top3": "INSUFFICIENT_EVIDENCE",
+    "Overall_Release": "RELEASE_HOLD"
+  },
+  "keyMetrics": {
+    "g15FixtureFalseVerifiedClosed": true,
+    "permanentNegativeTestsPassed": "30/30",
+    "positiveEngineeringAuthorityTestsPassed": "6/6",
+    "metaFlowClosureTestsPassed": "14/14",
+    "unitTestSuitePassed": "106/106 files (2492/2492 tests)",
+    "integrationTestSuitePassed": "16/16 files (77/77 tests)",
+    "kh01VerifySuitePassed": "5/5 files (69/69 tests)",
+    "liveMetaAdsRetrieved": 21,
+    "liveGoogleAdvertisersRetrieved": 2,
+    "liveGoogleCreativesRetrieved": 6,
+    "isolatedProbeRecordsPersisted": 31,
+    "canonicalProductsMerchantVerifiedInLiveCheck": 1,
+    "distinctFamiliesInShortlist": 3,
+    "officialApplicableDemandRowsInDb": 0,
+    "g15ActualVerdict": "INSUFFICIENT_EVIDENCE",
+    "g16EligibleWinners": "0/3",
+    "backtestDevHistoricalRecords": 60,
+    "backtestDevPointInTimeNonSyntheticRecords": 20,
+    "backtestHoldoutHistoricalRecords": 377,
+    "backtestHoldoutPointInTimeNonSyntheticRecords": 376,
+    "fullWorkerHttpBrowserE2eExecuted": true,
+    "paidApiSpendUsd": 0.0
+  },
+  "remainingExternalBlocker": "EXTERNAL_EVIDENCE_MISSING: No genuine Google-issued >=60-day US longitudinal demand exports registered with AUTHENTICATED_OFFICIAL_EXPORT durable authority exist in the database for the shortlisted Pet Gadgets candidates (0 official applicable demand rows -> G15=INSUFFICIENT_EVIDENCE, G16=0/3 eligible winners -> RELEASE_HOLD)."
+}
