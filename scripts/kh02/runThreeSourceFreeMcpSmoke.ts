@@ -88,8 +88,24 @@ export async function runThreeSourceFreeMcpSmoke(): Promise<McpSmokeSummary> {
   // S2: Google Ads Transparency FastMCP Stdio (Real Protocol Handshake & Tool Discovery)
   // --------------------------------------------------------------------------
   const googleConfig = resolveGoogleMcpConfig();
-  const googleCommand = googleConfig.command || "";
-  const googleArgs = googleConfig.args || [];
+  let googleCommand = googleConfig.command || "";
+  let googleArgs = googleConfig.args || [];
+  if (!googleCommand || !fs.existsSync(googleCommand)) {
+    const fallbackPy = path.join(
+      process.cwd(),
+      "services",
+      "google-transparency",
+      ".venv",
+      process.platform === "win32" ? path.join("Scripts", "python.exe") : path.join("bin", "python"),
+    );
+    const fallbackScript = path.join(process.cwd(), "scripts", "googleTransparencyServer.py");
+    if (fs.existsSync(fallbackPy) && fs.existsSync(fallbackScript)) {
+      googleCommand = fallbackPy;
+      googleArgs = [fallbackScript];
+      googleConfig.command = fallbackPy;
+      googleConfig.args = [fallbackScript];
+    }
+  }
 
   let s2Status: SourceSmokeResult["status"] = "NOT_RUN_EXTERNAL_DEPENDENCY";
   const s2Details: Record<string, any> = {

@@ -136,6 +136,7 @@ jobs:
         run: |
           npm ci --ignore-scripts
           npx prisma generate
+          npx tsx scripts/kh02/setupCiEnvironmentV19_3_2_9.ts --with-python
 
       - name: Run KH-02 Unit Test Suite
         run: |
@@ -218,6 +219,7 @@ jobs:
         run: |
           npm ci --ignore-scripts
           npx prisma generate
+          npx tsx scripts/kh02/setupCiEnvironmentV19_3_2_9.ts
 
       - name: Run KH-02 Integration Test Suite (Serialized SQLite)
         run: |
@@ -259,6 +261,7 @@ jobs:
         run: |
           npm ci --ignore-scripts
           npx prisma generate
+          npx tsx scripts/kh02/setupCiEnvironmentV19_3_2_9.ts
 
       - name: Run Point-in-Time Historical Backtest & Candidate DB Readback
         run: |
