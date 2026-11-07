@@ -983,4 +983,3 @@ describe("KH-02 V12.4.3.7.19.3.2.8: Three-Endpoint GitHub API Verification & Wor
     expect(verdict.overallReleaseAllowed).toBe(false);
   });
 });
-
