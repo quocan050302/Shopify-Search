@@ -94,12 +94,15 @@ export async function startSwaiTestServer(
 ): Promise<SwaiTestServerHandle> {
   const hasActiveDevLock = fs.existsSync(path.join(process.cwd(), ".next", "dev", "lock"));
   const hasProductionBuild = fs.existsSync(path.join(process.cwd(), ".next", "BUILD_ID"));
+  const requestedMode = options.mode || (hasProductionBuild ? "production" : "development");
   const mode =
-    options.mode === "development" && hasActiveDevLock && hasProductionBuild
+    requestedMode === "development" && hasActiveDevLock && hasProductionBuild
       ? "production"
-      : options.mode || "production";
+      : requestedMode === "production" && !hasProductionBuild
+        ? "development"
+        : requestedMode;
   const adminApiKey = options.adminApiKey || (options.allowLocalBypass ? "" : "test_admin_e2e_secret_token_12345");
-  const timeoutMs = options.timeoutMs || 30000;
+  const timeoutMs = options.timeoutMs || (mode === "development" ? 60000 : 30000);
 
   // 1. Verify and enforce test database isolation
   const activeAppDb =

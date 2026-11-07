@@ -104,21 +104,21 @@ async function main() {
   await ensureSqliteDatabase(path.join(root, "prisma", "dev.db"), schemaSql);
   console.log("[CI Setup] SQLite baseline schema and seed verified.");
 
-  if (withPython) {
-    const pyCmd = process.env.PYTHON || (process.platform === "win32" ? "python" : "python3");
-    const metaVenv = path.join(root, "services", "meta-ads-collector", ".venv");
-    const metaPy = path.join(
-      metaVenv,
-      process.platform === "win32" ? path.join("Scripts", "python.exe") : path.join("bin", "python"),
-    );
-    if (!fs.existsSync(metaPy)) {
-      fs.mkdirSync(path.dirname(metaVenv), { recursive: true });
-      const res = spawnSync(pyCmd, ["-m", "venv", metaVenv], { cwd: root, stdio: "inherit", shell: false });
-      if (res.error || res.status !== 0) {
-        throw new Error(`Failed to initialize meta-ads-collector venv: ${res.error?.message || res.status}`);
-      }
+  const pyCmd = process.env.PYTHON || (process.platform === "win32" ? "python" : "python3");
+  const metaVenv = path.join(root, "services", "meta-ads-collector", ".venv");
+  const metaPy = path.join(
+    metaVenv,
+    process.platform === "win32" ? path.join("Scripts", "python.exe") : path.join("bin", "python"),
+  );
+  if (!fs.existsSync(metaPy)) {
+    fs.mkdirSync(path.dirname(metaVenv), { recursive: true });
+    const res = spawnSync(pyCmd, ["-m", "venv", metaVenv], { cwd: root, stdio: "inherit", shell: false });
+    if (res.error || res.status !== 0) {
+      throw new Error(`Failed to initialize meta-ads-collector venv: ${res.error?.message || res.status}`);
     }
+  }
 
+  if (withPython) {
     const googleVenv = path.join(root, "services", "google-transparency", ".venv");
     const googlePy = path.join(
       googleVenv,

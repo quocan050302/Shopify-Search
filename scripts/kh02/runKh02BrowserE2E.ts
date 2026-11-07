@@ -183,6 +183,9 @@ export async function runKh02BrowserE2E(
         "--disable-default-apps",
         "--no-default-browser-check",
         "--no-first-run",
+        ...(process.platform === "linux"
+          ? ["--no-sandbox", "--disable-setuid-sandbox", "--disable-dev-shm-usage"]
+          : []),
       ],
     });
 
