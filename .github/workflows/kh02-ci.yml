@@ -1,0 +1,266 @@
+name: KH-02 Continuous Integration
+
+on:
+  push:
+    branches:
+      - feature/kh02-walmart-us-jina-reader-v12.4.3.5.1
+    paths-ignore:
+      - "reports/kh02/**"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: kh02-ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  CI: "true"
+  FORCE_COLOR: "0"
+  NODE_OPTIONS: "--max-old-space-size=2048"
+
+jobs:
+  typecheck:
+    name: typecheck
+    if: github.repository_visibility == 'public'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          fetch-depth: 2
+
+      - name: Setup Node.js 22
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: "22"
+          cache: "npm"
+
+      - name: Resource Safety Preflight
+        run: |
+          node -e '
+            const fs = require("fs");
+            const os = require("os");
+            const stat = fs.statfsSync(process.cwd());
+            const freeDisk = stat.bavail * stat.bsize;
+            const freeRam = os.freemem();
+            if (freeDisk < 1073741824) { console.error("Insufficient disk:", freeDisk); process.exit(1); }
+            if (freeRam < 536870912) { console.error("Insufficient RAM:", freeRam); process.exit(1); }
+            console.log("Resource check passed:", { freeDiskGiB: (freeDisk / 1073741824).toFixed(2), freeRamMiB: (freeRam / 1048576).toFixed(0) });
+          '
+
+      - name: Install dependencies (deterministic lockfile)
+        run: |
+          npm ci --ignore-scripts
+          npx prisma generate
+
+      - name: Run TypeScript Typecheck & Workflow Contract Verification
+        run: |
+          npx tsc --noEmit
+          npx tsx scripts/kh02/verifyWorkflowContractV19_3_2_9.ts
+
+  security-negative:
+    name: security-negative
+    if: github.repository_visibility == 'public'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          fetch-depth: 2
+
+      - name: Setup Node.js 22
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: "22"
+          cache: "npm"
+
+      - name: Resource Safety Preflight
+        run: |
+          node -e '
+            const fs = require("fs");
+            const os = require("os");
+            const stat = fs.statfsSync(process.cwd());
+            const freeDisk = stat.bavail * stat.bsize;
+            const freeRam = os.freemem();
+            if (freeDisk < 1073741824) { console.error("Insufficient disk:", freeDisk); process.exit(1); }
+            if (freeRam < 536870912) { console.error("Insufficient RAM:", freeRam); process.exit(1); }
+          '
+
+      - name: Install dependencies (deterministic lockfile)
+        run: |
+          npm ci --ignore-scripts
+          npx prisma generate
+
+      - name: Run Security Negative & CI Trust Boundary Suites
+        run: |
+          npx vitest run tests/unit/kh02ProductMetadataSecurity.test.ts tests/unit/kh02/v12_4_3_7_17_NetworkSsrfRedirect.test.ts tests/unit/kh02/v12_4_3_7_18_SocketPeerTlsTrust.test.ts tests/unit/kh02/v12_4_3_7_18_1_SocketTrustNoTestBypass.test.ts tests/unit/kh02/v12_4_3_7_19_3_2_8_GithubApiRunWorkflowJobsBinding.test.ts tests/unit/kh02/v12_4_3_7_19_3_2_9_RealGithubCiAndRequiredJobsProof.test.ts
+
+  kh02-unit:
+    name: kh02-unit
+    needs:
+      - typecheck
+      - security-negative
+    if: github.repository_visibility == 'public'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          fetch-depth: 2
+
+      - name: Setup Node.js 22
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: "22"
+          cache: "npm"
+
+      - name: Resource Safety Preflight
+        run: |
+          node -e '
+            const fs = require("fs");
+            const os = require("os");
+            const stat = fs.statfsSync(process.cwd());
+            const freeDisk = stat.bavail * stat.bsize;
+            const freeRam = os.freemem();
+            if (freeDisk < 1073741824) { console.error("Insufficient disk:", freeDisk); process.exit(1); }
+            if (freeRam < 536870912) { console.error("Insufficient RAM:", freeRam); process.exit(1); }
+          '
+
+      - name: Install dependencies (deterministic lockfile)
+        run: |
+          npm ci --ignore-scripts
+          npx prisma generate
+
+      - name: Run KH-02 Unit Test Suite
+        run: |
+          npm run kh02:test:unit -- --maxWorkers=2
+
+  kh01-regression:
+    name: kh01-regression
+    needs:
+      - typecheck
+      - security-negative
+    if: github.repository_visibility == 'public'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          fetch-depth: 2
+
+      - name: Setup Node.js 22
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: "22"
+          cache: "npm"
+
+      - name: Resource Safety Preflight
+        run: |
+          node -e '
+            const fs = require("fs");
+            const os = require("os");
+            const stat = fs.statfsSync(process.cwd());
+            const freeDisk = stat.bavail * stat.bsize;
+            const freeRam = os.freemem();
+            if (freeDisk < 1073741824) { console.error("Insufficient disk:", freeDisk); process.exit(1); }
+            if (freeRam < 536870912) { console.error("Insufficient RAM:", freeRam); process.exit(1); }
+          '
+
+      - name: Install dependencies (deterministic lockfile)
+        run: |
+          npm ci --ignore-scripts
+          npx prisma generate
+
+      - name: Run KH-01 Baseline Verification Suite
+        run: |
+          npm run kh01:verify
+
+  kh02-integration:
+    name: kh02-integration
+    needs:
+      - kh02-unit
+      - kh01-regression
+    if: github.repository_visibility == 'public'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          fetch-depth: 2
+
+      - name: Setup Node.js 22
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: "22"
+          cache: "npm"
+
+      - name: Resource Safety Preflight
+        run: |
+          node -e '
+            const fs = require("fs");
+            const os = require("os");
+            const stat = fs.statfsSync(process.cwd());
+            const freeDisk = stat.bavail * stat.bsize;
+            const freeRam = os.freemem();
+            if (freeDisk < 1073741824) { console.error("Insufficient disk:", freeDisk); process.exit(1); }
+            if (freeRam < 536870912) { console.error("Insufficient RAM:", freeRam); process.exit(1); }
+          '
+
+      - name: Install dependencies (deterministic lockfile)
+        run: |
+          npm ci --ignore-scripts
+          npx prisma generate
+
+      - name: Run KH-02 Integration Test Suite (Serialized SQLite)
+        run: |
+          npx vitest run tests/integration/kh02 --no-file-parallelism
+
+  backtest-policy:
+    name: backtest-policy
+    needs:
+      - kh02-unit
+      - kh01-regression
+    if: github.repository_visibility == 'public'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          fetch-depth: 2
+
+      - name: Setup Node.js 22
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: "22"
+          cache: "npm"
+
+      - name: Resource Safety Preflight
+        run: |
+          node -e '
+            const fs = require("fs");
+            const os = require("os");
+            const stat = fs.statfsSync(process.cwd());
+            const freeDisk = stat.bavail * stat.bsize;
+            const freeRam = os.freemem();
+            if (freeDisk < 1073741824) { console.error("Insufficient disk:", freeDisk); process.exit(1); }
+            if (freeRam < 536870912) { console.error("Insufficient RAM:", freeRam); process.exit(1); }
+          '
+
+      - name: Install dependencies (deterministic lockfile)
+        run: |
+          npm ci --ignore-scripts
+          npx prisma generate
+
+      - name: Run Point-in-Time Historical Backtest & Candidate DB Readback
+        run: |
+          npx tsx scripts/kh02/runBacktestV12_4_3_4_2.ts
+          npx tsx scripts/kh02/runCandidateDbReadback.ts

@@ -16,6 +16,7 @@ import {
   verifyCiAttestationToken,
   lookupVerifiedRemoteCiRun,
   requireCanonicalReleaseWorkflow,
+  hasAllCanonicalRequiredJobsInSummary,
   verifyAuthenticCiProof,
   CANONICAL_WORKFLOW_PATHS,
 } from "./githubActionsCiEvidence";
@@ -316,6 +317,7 @@ export function evaluateReleaseEvidence(
       storeCheck.record !== undefined &&
       storeCheck.record.canonicalWorkflowVerified === true &&
       storeCheck.record.requiredJobsVerified === true &&
+      hasAllCanonicalRequiredJobsInSummary(storeCheck.record.jobsSummary, storeCheck.record.runAttempt).valid === true &&
       wfPathCheck.valid === true &&
       storeCheck.record.workflowPath === att?.workflowPath &&
       String(storeCheck.record.workflowId) === String(att?.workflowId) &&

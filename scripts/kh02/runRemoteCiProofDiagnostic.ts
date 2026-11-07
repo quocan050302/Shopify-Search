@@ -1,5 +1,5 @@
 /**
- * SWAI KH-02 — V12.4.3.7.19.3.2.8
+ * SWAI KH-02 — V12.4.3.7.19.3.2.9
  * Dedicated Remote GitHub Actions CI Proof Diagnostic Script (Gate E10 / E11)
  *
  * Truthfully inspects GitHub Actions configuration, trust anchor state, and remote CI workflow runs
@@ -14,11 +14,24 @@ import { execSync } from "child_process";
 import {
   verifyRemoteGitHubActionsRun,
   getCiVerifierSecret,
+  readBoundedResponseBytes,
   CANONICAL_REPOSITORY,
   LOCKED_BRANCH,
   TRUSTED_GITHUB_HOST,
+  CANONICAL_REQUIRED_JOBS,
+  MAX_GITHUB_API_RESPONSE_BYTES,
   RemoteCiStatus,
 } from "../../src/services/kh02/release/githubActionsCiEvidence";
+
+export type RemoteCiErrorClassification =
+  | "NONE"
+  | "NO_RUN_ID"
+  | "NO_TOKEN"
+  | "HTTP_ERROR"
+  | "RATE_LIMITED"
+  | "WORKFLOW_MISMATCH"
+  | "JOBS_INCOMPLETE"
+  | "SECRET_NOT_CONFIGURED";
 
 export interface PublicGitHubApiProbeSummary {
   attempted: boolean;
@@ -26,14 +39,26 @@ export interface PublicGitHubApiProbeSummary {
   workflowsTotalCount: number | null;
   runsEndpointStatus: number | null;
   runsTotalCount: number | null;
+  latestRunId?: number | null;
+  latestRunStatus?: string | null;
+  latestRunConclusion?: string | null;
+  latestRunHeadSha?: string | null;
+  latestRunWorkflowId?: number | null;
   error?: string;
 }
 
 export interface RemoteCiDiagnosticResult {
   diagnosticExecuted: boolean;
+  workflowFileConfigured: boolean;
   networkAttempted: boolean;
   transportAttempted: boolean;
   remoteRunObserved: boolean;
+  remoteRunCompleted: boolean;
+  requiredJobsVerified: boolean;
+  requiredJobsChecked: string[];
+  requiredJobsMissing: string[];
+  jobsDigest: string | null;
+  errorClassification: RemoteCiErrorClassification;
   remoteVerificationLevel: "CI_PROVIDER_VERIFIED" | "CI_NOT_RUN" | "CI_FAIL" | "PARSED_CLAIM";
   status: RemoteCiStatus;
   ciProviderVerified: boolean;
@@ -63,12 +88,14 @@ export interface RemoteCiDiagnosticResult {
   executedAt: string;
 }
 
-export async function probePublicGitHubActionsState(options: {
-  repo?: string;
-  branch?: string;
-  headSha?: string;
-  timeoutMs?: number;
-} = {}): Promise<PublicGitHubApiProbeSummary> {
+export async function probePublicGitHubActionsState(
+  options: {
+    repo?: string;
+    branch?: string;
+    headSha?: string;
+    timeoutMs?: number;
+  } = {}
+): Promise<PublicGitHubApiProbeSummary> {
   const repo = options.repo || CANONICAL_REPOSITORY;
   const branch = options.branch || LOCKED_BRANCH;
   const timeoutMs = options.timeoutMs || 6000;
@@ -82,6 +109,11 @@ export async function probePublicGitHubActionsState(options: {
   let workflowsTotalCount: number | null = null;
   let runsEndpointStatus: number | null = null;
   let runsTotalCount: number | null = null;
+  let latestRunId: number | null = null;
+  let latestRunStatus: string | null = null;
+  let latestRunConclusion: string | null = null;
+  let latestRunHeadSha: string | null = null;
+  let latestRunWorkflowId: number | null = null;
 
   try {
     const wfController = new AbortController();
@@ -95,8 +127,11 @@ export async function probePublicGitHubActionsState(options: {
       });
       workflowsEndpointStatus = wfRes.status;
       if (wfRes.status === 200) {
-        const wfJson = await wfRes.json();
-        workflowsTotalCount = typeof wfJson?.total_count === "number" ? wfJson.total_count : null;
+        const bodyRes = await readBoundedResponseBytes(wfRes, MAX_GITHUB_API_RESPONSE_BYTES, wfController);
+        if (bodyRes.ok && bodyRes.rawText) {
+          const wfJson = JSON.parse(bodyRes.rawText);
+          workflowsTotalCount = typeof wfJson?.total_count === "number" ? wfJson.total_count : null;
+        }
       }
     } finally {
       clearTimeout(wfTimer);
@@ -116,8 +151,19 @@ export async function probePublicGitHubActionsState(options: {
       });
       runsEndpointStatus = runsRes.status;
       if (runsRes.status === 200) {
-        const runsJson = await runsRes.json();
-        runsTotalCount = typeof runsJson?.total_count === "number" ? runsJson.total_count : null;
+        const bodyRes = await readBoundedResponseBytes(runsRes, MAX_GITHUB_API_RESPONSE_BYTES, runsController);
+        if (bodyRes.ok && bodyRes.rawText) {
+          const runsJson = JSON.parse(bodyRes.rawText);
+          runsTotalCount = typeof runsJson?.total_count === "number" ? runsJson.total_count : null;
+          if (Array.isArray(runsJson?.workflow_runs) && runsJson.workflow_runs.length > 0) {
+            const firstRun = runsJson.workflow_runs[0];
+            latestRunId = typeof firstRun?.id === "number" ? firstRun.id : null;
+            latestRunStatus = typeof firstRun?.status === "string" ? firstRun.status : null;
+            latestRunConclusion = typeof firstRun?.conclusion === "string" ? firstRun.conclusion : null;
+            latestRunHeadSha = typeof firstRun?.head_sha === "string" ? firstRun.head_sha : null;
+            latestRunWorkflowId = typeof firstRun?.workflow_id === "number" ? firstRun.workflow_id : null;
+          }
+        }
       }
     } finally {
       clearTimeout(runsTimer);
@@ -129,6 +175,11 @@ export async function probePublicGitHubActionsState(options: {
       workflowsTotalCount,
       runsEndpointStatus,
       runsTotalCount,
+      latestRunId,
+      latestRunStatus,
+      latestRunConclusion,
+      latestRunHeadSha,
+      latestRunWorkflowId,
     };
   } catch (err: any) {
     return {
@@ -137,9 +188,39 @@ export async function probePublicGitHubActionsState(options: {
       workflowsTotalCount,
       runsEndpointStatus,
       runsTotalCount,
+      latestRunId,
+      latestRunStatus,
+      latestRunConclusion,
+      latestRunHeadSha,
+      latestRunWorkflowId,
       error: String(err?.message || err),
     };
   }
+}
+
+function classifyVerificationError(
+  verified: boolean,
+  status: RemoteCiStatus,
+  rejectionReason?: string,
+  trustAnchorConfigured?: boolean
+): RemoteCiErrorClassification {
+  if (verified && status === "CI_PASS") {
+    return "NONE";
+  }
+  const r = String(rejectionReason || "");
+  if (r.includes("RATE_LIMITED")) {
+    return "RATE_LIMITED";
+  }
+  if (r.includes("WORKFLOW_")) {
+    return "WORKFLOW_MISMATCH";
+  }
+  if (r.includes("JOB_") || r.includes("JOBS_") || r.includes("REQUIRED_JOB")) {
+    return "JOBS_INCOMPLETE";
+  }
+  if (r.includes("SECRET_NOT_CONFIGURED") || (verified && status !== "CI_PASS" && !trustAnchorConfigured)) {
+    return "SECRET_NOT_CONFIGURED";
+  }
+  return "HTTP_ERROR";
 }
 
 export async function executeRemoteCiProofDiagnostic(
@@ -172,15 +253,10 @@ export async function executeRemoteCiProofDiagnostic(
   const token = process.env.GITHUB_TOKEN || process.env.GH_TOKEN;
   const trustAnchorConfigured = Boolean(token) && secretResolution.status === "CONFIGURED";
 
-  // 1. Check for local workflow configuration in repository
-  const workflowDir = path.resolve(process.cwd(), ".github/workflows");
-  let workflowPath: string | null = null;
-  if (fs.existsSync(workflowDir)) {
-    const files = fs.readdirSync(workflowDir).filter((f) => f.endsWith(".yml") || f.endsWith(".yaml"));
-    if (files.length > 0) {
-      workflowPath = `.github/workflows/${files[0]}`;
-    }
-  }
+  // 1. Check for canonical local workflow configuration in repository (.github/workflows/kh02-ci.yml)
+  const canonicalWorkflowFsPath = path.resolve(process.cwd(), ".github/workflows/kh02-ci.yml");
+  const workflowFileConfigured = fs.existsSync(canonicalWorkflowFsPath);
+  const workflowPath: string | null = workflowFileConfigured ? ".github/workflows/kh02-ci.yml" : null;
 
   // 2. Resolve runId from options, CLI arguments, or environment
   let targetRunId = options.runId || process.env.GITHUB_RUN_ID || process.env.CI_RUN_ID || null;
@@ -199,40 +275,53 @@ export async function executeRemoteCiProofDiagnostic(
     });
   }
 
-  // 3. Case A: No workflow directory or no target runId configured
+  // 3. Case A: No target runId configured
   if (!targetRunId) {
+    const remoteRunObservedFromProbe = Boolean(
+      publicApiProbe && typeof publicApiProbe.runsTotalCount === "number" && publicApiProbe.runsTotalCount > 0
+    );
+    const remoteRunCompletedFromProbe = Boolean(
+      remoteRunObservedFromProbe && publicApiProbe?.latestRunStatus === "completed"
+    );
     return {
       diagnosticExecuted: true,
+      workflowFileConfigured,
       networkAttempted: false,
       transportAttempted: Boolean(publicApiProbe?.attempted),
-      remoteRunObserved: false,
+      remoteRunObserved: remoteRunObservedFromProbe,
+      remoteRunCompleted: remoteRunCompletedFromProbe,
+      requiredJobsVerified: false,
+      requiredJobsChecked: [],
+      requiredJobsMissing: [...CANONICAL_REQUIRED_JOBS],
+      jobsDigest: null,
+      errorClassification: "NO_RUN_ID",
       remoteVerificationLevel: "CI_NOT_RUN",
       status: "CI_NOT_CONFIGURED",
       ciProviderVerified: false,
       providerVerified: false,
       trustAnchorConfigured,
       providerHttpStatus: publicApiProbe?.runsEndpointStatus ?? null,
-      workflowId: null,
+      workflowId: publicApiProbe?.latestRunWorkflowId ?? null,
       workflowPath,
       workflowName: null,
-      runId: null,
+      runId: publicApiProbe?.latestRunId ? String(publicApiProbe.latestRunId) : null,
       runAttempt: null,
-      headSha: null,
+      headSha: publicApiProbe?.latestRunHeadSha ?? null,
       testedCodeSha,
       testedTreeSha,
       repository: repo,
       branch,
       event: null,
-      conclusion: null,
+      conclusion: publicApiProbe?.latestRunConclusion ?? null,
       jobsChecked: [],
-      jobsMissing: [],
+      jobsMissing: [...CANONICAL_REQUIRED_JOBS],
       source: "NONE",
       isUnitTestMock: false,
       publicApiProbe,
       elapsedMs: Date.now() - startMs,
       evidenceSha256: null,
       reason:
-        "No remote GitHub Actions workflow runId specified, and repository has no active public workflow runs for this branch. Truthfully classified as CI_NOT_CONFIGURED.",
+        "No remote GitHub Actions workflow runId specified, and authenticated 3-endpoint verification was not invoked. Truthfully classified as CI_NOT_CONFIGURED.",
       executedAt,
     };
   }
@@ -241,9 +330,16 @@ export async function executeRemoteCiProofDiagnostic(
   if (!token) {
     return {
       diagnosticExecuted: true,
+      workflowFileConfigured,
       networkAttempted: false,
       transportAttempted: Boolean(publicApiProbe?.attempted),
       remoteRunObserved: false,
+      remoteRunCompleted: false,
+      requiredJobsVerified: false,
+      requiredJobsChecked: [],
+      requiredJobsMissing: [...CANONICAL_REQUIRED_JOBS],
+      jobsDigest: null,
+      errorClassification: "NO_TOKEN",
       remoteVerificationLevel: "CI_NOT_RUN",
       status: "CI_NOT_CONFIGURED",
       ciProviderVerified: false,
@@ -263,7 +359,7 @@ export async function executeRemoteCiProofDiagnostic(
       event: null,
       conclusion: null,
       jobsChecked: [],
-      jobsMissing: [],
+      jobsMissing: [...CANONICAL_REQUIRED_JOBS],
       source: "NONE",
       isUnitTestMock: false,
       publicApiProbe,
@@ -290,11 +386,27 @@ export async function executeRemoteCiProofDiagnostic(
     ? crypto.createHash("sha256").update(JSON.stringify(ev), "utf-8").digest("hex")
     : null;
 
+  const checkedJobs = ev?.successfulJobs ? [...ev.successfulJobs] : [];
+  const missingJobs = CANONICAL_REQUIRED_JOBS.filter((reqJob) => !checkedJobs.includes(reqJob));
+  const errorClassification = classifyVerificationError(
+    verification.verified,
+    verification.status,
+    verification.rejectionReason,
+    trustAnchorConfigured
+  );
+
   return {
     diagnosticExecuted: true,
+    workflowFileConfigured,
     networkAttempted: true,
     transportAttempted: true,
     remoteRunObserved: Boolean(ev),
+    remoteRunCompleted: Boolean(ev && ev.status === "completed"),
+    requiredJobsVerified: Boolean(ev?.requiredJobsVerified && missingJobs.length === 0),
+    requiredJobsChecked: checkedJobs,
+    requiredJobsMissing: missingJobs,
+    jobsDigest: ev?.jobsDigest ?? null,
+    errorClassification,
     remoteVerificationLevel: verification.level,
     status: verification.status,
     ciProviderVerified: providerVerified,
@@ -313,8 +425,8 @@ export async function executeRemoteCiProofDiagnostic(
     branch,
     event: ev?.event || null,
     conclusion: ev?.conclusion || null,
-    jobsChecked: ev?.successfulJobs || [],
-    jobsMissing: [],
+    jobsChecked: checkedJobs,
+    jobsMissing: missingJobs,
     source: ev?.source || "NONE",
     isUnitTestMock: verification.isUnitTestMock || false,
     publicApiProbe,

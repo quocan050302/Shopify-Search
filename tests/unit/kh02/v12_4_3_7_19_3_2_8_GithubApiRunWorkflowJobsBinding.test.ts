@@ -83,29 +83,24 @@ describe("KH-02 V12.4.3.7.19.3.2.8: Three-Endpoint GitHub API Verification & Wor
     };
 
     const defaultJobsPage1 = {
-      total_count: 2,
+      total_count: 6,
       jobs: [
-        {
-          id: 9001,
-          run_id: defaultRun.id,
-          run_attempt: defaultRun.run_attempt,
-          head_sha: defaultRun.head_sha,
-          name: "kh02-unit-and-integration",
-          status: "completed",
-          conclusion: "success",
-          steps: [{ name: "Run tests", status: "completed", conclusion: "success", number: 1 }],
-        },
-        {
-          id: 9002,
-          run_id: defaultRun.id,
-          run_attempt: defaultRun.run_attempt,
-          head_sha: defaultRun.head_sha,
-          name: "kh02-security-and-backtest",
-          status: "completed",
-          conclusion: "success",
-          steps: [{ name: "Run backtest", status: "completed", conclusion: "success", number: 1 }],
-        },
-      ],
+        "typecheck",
+        "kh02-unit",
+        "kh02-integration",
+        "kh01-regression",
+        "security-negative",
+        "backtest-policy",
+      ].map((jobName, idx) => ({
+        id: 9001 + idx,
+        run_id: defaultRun.id,
+        run_attempt: defaultRun.run_attempt,
+        head_sha: defaultRun.head_sha,
+        name: jobName,
+        status: "completed",
+        conclusion: "success",
+        steps: [{ name: `Execute ${jobName}`, status: "completed", conclusion: "success", number: 1 }],
+      })),
     };
 
     return async (url: string | URL | Request) => {
@@ -755,8 +750,25 @@ describe("KH-02 V12.4.3.7.19.3.2.8: Three-Endpoint GitHub API Verification & Wor
       steps: [{ name: "Execute", status: "completed", conclusion: "success", number: 1 }],
     }));
     const page2Jobs = [
+      ...[
+        "typecheck",
+        "kh02-unit",
+        "kh02-integration",
+        "kh01-regression",
+        "security-negative",
+        "backtest-policy",
+      ].map((jobName, idx) => ({
+        id: 10100 + idx,
+        run_id: 777015,
+        run_attempt: 1,
+        head_sha: currentTestedSha,
+        name: jobName,
+        status: "completed",
+        conclusion: "success",
+        steps: [{ name: `Execute ${jobName}`, status: "completed", conclusion: "success", number: 1 }],
+      })),
       {
-        id: 10100,
+        id: 10106,
         run_id: 777015,
         run_attempt: 1,
         head_sha: currentTestedSha,
@@ -771,8 +783,8 @@ describe("KH-02 V12.4.3.7.19.3.2.8: Three-Endpoint GitHub API Verification & Wor
       runBody: { id: 777015, run_attempt: 1, workflow_id: 101, path: ".github/workflows/kh02-ci.yml" },
       workflowBody: { id: 101, path: ".github/workflows/kh02-ci.yml", state: "active" },
       jobsByPage: {
-        1: { total_count: 101, jobs: page1Jobs },
-        2: { total_count: 101, jobs: page2Jobs },
+        1: { total_count: 107, jobs: page1Jobs },
+        2: { total_count: 107, jobs: page2Jobs },
       },
     });
 
@@ -792,7 +804,7 @@ describe("KH-02 V12.4.3.7.19.3.2.8: Three-Endpoint GitHub API Verification & Wor
     expect(res.evidence?.canonicalWorkflowVerified).toBe(true);
     expect(res.evidence?.requiredJobsVerified).toBe(true);
     expect(res.evidence?.workflowPath).toBe(".github/workflows/kh02-ci.yml");
-    expect(res.evidence?.jobsCount).toBe(101);
+    expect(res.evidence?.jobsCount).toBe(107);
     expect(res.evidence?.jobsDigest).toMatch(/^[0-9a-f]{64}$/);
     expect(res.evidence?.workflowResponseDigest).toMatch(/^[0-9a-f]{64}$/);
     expect(res.evidence?.jobsResponseDigest).toMatch(/^[0-9a-f]{64}$/);

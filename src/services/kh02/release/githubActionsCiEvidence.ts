@@ -1,16 +1,16 @@
 /**
- * SWAI KH-02 — V12.4.3.7.19.3.2.8
- * Authentic GitHub Actions Remote CI Verification Service (Three-Endpoint Verifier & V2 Workflow Identity Binding)
+ * SWAI KH-02 — V12.4.3.7.19.3.2.9
+ * Authentic GitHub Actions Remote CI Verification Service (Three-Endpoint Verifier, Streaming Body Guard & Mandatory Required-Jobs Policy)
  *
  * Implements a strict, fail-closed three-endpoint verification client for remote GitHub Actions:
  * - Endpoint 1 (Run): GET https://api.github.com/repos/{owner}/{repo}/actions/runs/{run_id}
  * - Endpoint 2 (Workflow): GET https://api.github.com/repos/{owner}/{repo}/actions/workflows/{workflow_id}
  * - Endpoint 3 (Jobs): GET https://api.github.com/repos/{owner}/{repo}/actions/runs/{run_id}/jobs?filter=latest&per_page=100&page={page}
  * - Strict SSRF protection: forbids custom schemes, foreign hosts, IP literals, redirects, or userinfo
- * - Bounded network calls: timeout, abort signals, response payload size capping (<= 2 MiB), bounded pagination (<= 5 pages)
- * - Strict workflow & job identity verification: canonical workflow path allowlist by default, workflow_id cross-endpoint match,
- *   run_attempt consistency, required jobs completion & success verification
- * - Versioned V2 cryptographic attestation digest binding all run, workflow, and job identities
+ * - Bounded streaming network calls: timeout, abort signals, streaming byte-count-before-append payload cap (<= 2 MiB per response, <= 6 MiB total), bounded pagination (<= 5 pages)
+ * - Strict workflow & job identity verification: single canonical workflow path (.github/workflows/kh02-ci.yml), workflow_id cross-endpoint match,
+ *   run_attempt consistency, and immutable baseline required-jobs policy (typecheck, kh02-unit, kh02-integration, kh01-regression, security-negative, backtest-policy)
+ * - Versioned V2 cryptographic attestation digest binding all run, workflow, and job identities without exposing raw signing keys to callers
  * - Recursive deep-freeze on all stored and returned records
  * - Safe fail-closed defaults: returns CI_NOT_CONFIGURED / CI_NOT_RUN if credentials or runs are absent
  */
@@ -24,16 +24,25 @@ export const LOCKED_BRANCH = "feature/kh02-walmart-us-jina-reader-v12.4.3.5.1" a
 
 export const CANONICAL_WORKFLOW_PATHS = [
   ".github/workflows/kh02-ci.yml",
-  ".github/workflows/ci.yml",
 ] as const;
 
 export const CANONICAL_RELEASE_WORKFLOWS = [
   ".github/workflows/kh02-ci.yml",
-  ".github/workflows/ci.yml",
-  "KH-02 Continuous Integration",
+] as const;
+
+export const CANONICAL_WORKFLOW_NAME = "KH-02 Continuous Integration" as const;
+
+export const CANONICAL_REQUIRED_JOBS = [
+  "typecheck",
+  "kh02-unit",
+  "kh02-integration",
+  "kh01-regression",
+  "security-negative",
+  "backtest-policy",
 ] as const;
 
 export const MAX_GITHUB_API_RESPONSE_BYTES = 2 * 1024 * 1024; // 2 MiB cap per response
+export const MAX_TOTAL_GITHUB_VERIFICATION_BYTES = 6 * 1024 * 1024; // 6 MiB total budget across Run + Workflow + Jobs
 export const MAX_GITHUB_JOBS_PAGES = 5;
 
 export const KNOWN_INSECURE_DEFAULT_KEYS = [
@@ -46,12 +55,20 @@ export const KNOWN_INSECURE_DEFAULT_KEYS = [
   "changeme",
 ] as const;
 
+export interface VerifiedJobStepSummaryItem {
+  number?: number;
+  name: string;
+  status: string;
+  conclusion: string;
+}
+
 export interface VerifiedJobSummaryItem {
   id: number | string;
   name: string;
   status: string;
   conclusion: string;
   runAttempt: number;
+  steps?: ReadonlyArray<Readonly<VerifiedJobStepSummaryItem>>;
 }
 
 export interface VerifiedRemoteCiRecord {
@@ -104,8 +121,9 @@ export function deepCloneAndFreeze<T extends object>(obj: T): Readonly<T> {
 }
 
 /**
- * Enforces that a workflow path is a canonical release workflow file path.
+ * Enforces that a workflow path is an exact canonical release workflow file path (.github/workflows/kh02-ci.yml).
  * Display name alone is never sufficient to establish workflow file identity.
+ * Callers may pass a subset of CANONICAL_WORKFLOW_PATHS, but can NEVER widen the canonical policy.
  */
 export function requireCanonicalReleaseWorkflow(
   workflowPath: unknown,
@@ -114,7 +132,7 @@ export function requireCanonicalReleaseWorkflow(
   if (typeof workflowPath !== "string" || workflowPath.trim() === "") {
     return {
       valid: false,
-      reason: "MISSING_WORKFLOW_PATH: Canonical workflow path (.github/workflows/*.yml) is required.",
+      reason: "MISSING_WORKFLOW_PATH: Canonical workflow path (.github/workflows/kh02-ci.yml) is required.",
     };
   }
   if (workflowPath !== workflowPath.trim()) {
@@ -123,26 +141,88 @@ export function requireCanonicalReleaseWorkflow(
       reason: `INVALID_WORKFLOW_PATH_WHITESPACE: Workflow path '${workflowPath}' contains leading or trailing whitespace.`,
     };
   }
+  if (/[^\x20-\x7E]/.test(workflowPath)) {
+    return {
+      valid: false,
+      reason: `INVALID_WORKFLOW_PATH_CHARS: Workflow path '${workflowPath}' contains non-ASCII or control characters.`,
+    };
+  }
   if (
     !workflowPath.startsWith(".github/workflows/") ||
     (!workflowPath.endsWith(".yml") && !workflowPath.endsWith(".yaml")) ||
     workflowPath.includes("..") ||
     workflowPath.includes("\\") ||
-    workflowPath.includes("//")
+    workflowPath.includes("//") ||
+    workflowPath.includes("?") ||
+    workflowPath.includes("#")
   ) {
     return {
       valid: false,
       reason: `MALFORMED_WORKFLOW_PATH: Workflow path '${workflowPath}' is not a valid canonical .github/workflows/*.yml path.`,
     };
   }
-  const matched = allowedWorkflowPaths.some((allowed) => allowed === workflowPath);
-  if (!matched) {
+  if (!Array.isArray(allowedWorkflowPaths) || allowedWorkflowPaths.length === 0) {
     return {
       valid: false,
-      reason: `NON_CANONICAL_WORKFLOW_PATH: Workflow path '${workflowPath}' is not in the canonical release workflow allowlist (${allowedWorkflowPaths.join(", ")}).`,
+      reason: "EMPTY_ALLOWED_WORKFLOW_PATHS: Caller supplied an empty workflow allowlist.",
+    };
+  }
+  const hasNonCanonicalCallerAllowance = allowedWorkflowPaths.some(
+    (p) => !(CANONICAL_WORKFLOW_PATHS as readonly string[]).includes(p)
+  );
+  if (hasNonCanonicalCallerAllowance) {
+    return {
+      valid: false,
+      reason: `CALLER_WORKFLOW_ALLOWLIST_WIDENING_FORBIDDEN: Caller allowlist (${allowedWorkflowPaths.join(", ")}) contains paths outside canonical policy (${CANONICAL_WORKFLOW_PATHS.join(", ")}).`,
+    };
+  }
+  const matchedCanonical = (CANONICAL_WORKFLOW_PATHS as readonly string[]).includes(workflowPath);
+  const matchedCaller = allowedWorkflowPaths.includes(workflowPath);
+  if (!matchedCanonical || !matchedCaller) {
+    return {
+      valid: false,
+      reason: `NON_CANONICAL_WORKFLOW_PATH: Workflow path '${workflowPath}' is not in the canonical release workflow allowlist (${CANONICAL_WORKFLOW_PATHS.join(", ")}).`,
     };
   }
   return { valid: true, normalizedPath: workflowPath };
+}
+
+/**
+ * Verifies that a jobsSummary array satisfies all baseline CANONICAL_REQUIRED_JOBS for the given runAttempt.
+ */
+export function hasAllCanonicalRequiredJobsInSummary(
+  jobsSummary: ReadonlyArray<Readonly<VerifiedJobSummaryItem>> | undefined,
+  expectedRunAttempt?: number
+): { valid: boolean; missingJobs: string[]; reason?: string } {
+  if (!Array.isArray(jobsSummary) || jobsSummary.length === 0) {
+    return {
+      valid: false,
+      missingJobs: [...CANONICAL_REQUIRED_JOBS],
+      reason: "MISSING_JOBS_SUMMARY: Verified record has no job summary items.",
+    };
+  }
+  const missingJobs: string[] = [];
+  for (const reqJob of CANONICAL_REQUIRED_JOBS) {
+    const found = jobsSummary.find(
+      (j) =>
+        j &&
+        j.name === reqJob &&
+        j.status === "completed" &&
+        j.conclusion === "success" &&
+        (expectedRunAttempt === undefined || Number(j.runAttempt) === Number(expectedRunAttempt))
+    );
+    if (!found) {
+      missingJobs.push(reqJob);
+    }
+  }
+  if (missingJobs.length > 0) {
+    return {
+      valid: false,
+      missingJobs,
+      reason: `MISSING_CANONICAL_REQUIRED_JOBS: Mandatory release job(s) [${missingJobs.join(", ")}] are missing or did not succeed.`,
+    };
+  }
+  return { valid: true, missingJobs: [] };
 }
 
 /**
@@ -248,6 +328,16 @@ export function lookupVerifiedRemoteCiRun(
     };
   }
 
+  const jobsSummaryCheck = hasAllCanonicalRequiredJobsInSummary(record.jobsSummary, record.runAttempt);
+  if (!jobsSummaryCheck.valid) {
+    return {
+      verified: false,
+      proofHandle: record.proofHandle,
+      record: isolatedSnapshot,
+      reason: `REQUIRED_JOBS_UNVERIFIED: ${jobsSummaryCheck.reason}`,
+    };
+  }
+
   return {
     verified: true,
     proofHandle: record.proofHandle,
@@ -274,6 +364,35 @@ function _registerVerifiedRemoteCiRun(
   const jobsRespDigest = (evidence as any).jobsResponseDigest ? String((evidence as any).jobsResponseDigest) : undefined;
   const canonicalWfVerified = Boolean((evidence as any).canonicalWorkflowVerified);
   const reqJobsVerified = Boolean((evidence as any).requiredJobsVerified);
+  const jobsSummary: VerifiedJobSummaryItem[] = Array.isArray((evidence as any).jobsSummary)
+    ? (evidence as any).jobsSummary
+    : [];
+
+  if (!isMock || jobsSummary.length > 0 || reqJobsVerified) {
+    if (!isMock) {
+      if (!canonicalWfVerified || !wfPath || !requireCanonicalReleaseWorkflow(wfPath).valid) {
+        return {
+          registered: false,
+          error: "UNVERIFIED_WORKFLOW_REGISTRATION_BLOCKED: Real provider run cannot be registered without canonical workflow verification.",
+        };
+      }
+      if (!reqJobsVerified || !jobsDigest || !/^[0-9a-f]{64}$/i.test(jobsDigest)) {
+        return {
+          registered: false,
+          error: "UNVERIFIED_JOBS_REGISTRATION_BLOCKED: Real provider run cannot be registered without required jobs digest.",
+        };
+      }
+    }
+    if (!isMock || jobsSummary.length > 0) {
+      const reqCheck = hasAllCanonicalRequiredJobsInSummary(jobsSummary, runAttempt);
+      if (!reqCheck.valid) {
+        return {
+          registered: false,
+          error: `MISSING_CANONICAL_REQUIRED_JOB_IN_SUMMARY: ${reqCheck.reason}`,
+        };
+      }
+    }
+  }
 
   const existing = VERIFIED_PROVIDER_RUNS.get(recordKey);
   if (existing) {
@@ -331,7 +450,7 @@ function _registerVerifiedRemoteCiRun(
     workflowResponseDigest: wfRespDigest,
     jobsResponseDigest: jobsRespDigest,
     jobsDigest,
-    jobsSummary: Array.isArray((evidence as any).jobsSummary) ? (evidence as any).jobsSummary : [],
+    jobsSummary,
     canonicalWorkflowVerified: canonicalWfVerified,
     requiredJobsVerified: reqJobsVerified,
     verifiedAt: verifiedTimestamp,
@@ -371,7 +490,7 @@ export function _testOnlyRegisterVerifiedRemoteCiRun(record: {
   verifiedAt?: string;
   source?: "GITHUB_API" | "UNIT_TEST_MOCK";
   isUnitTestMock?: boolean;
-}): { registered: boolean; proofHandle?: string; error?: string } {
+}): { registered: boolean; proofHandle?: string; error?: string; reason?: string } {
   const res = _registerVerifiedRemoteCiRun({
     runId: String(record.runId),
     runAttempt: record.runAttempt ?? 1,
@@ -396,7 +515,10 @@ export function _testOnlyRegisterVerifiedRemoteCiRun(record: {
   } as any);
 
   if (!res.registered) {
-    throw new Error(res.error || "CONFLICTING_RUN_METADATA");
+    if (res.error && res.error.includes("CONFLICTING_RUN_IDENTITY")) {
+      throw new Error(res.error);
+    }
+    return { registered: false, error: res.error, reason: res.error };
   }
 
   return res;
@@ -410,17 +532,23 @@ export function clearVerifiedRemoteCiRunsForTesting(): void {
 }
 
 export interface CiVerifierSecretResolution {
+  key?: undefined;
+  configured: boolean;
+  status: "CONFIGURED" | "NOT_CONFIGURED" | "INSECURE_OR_DEFAULT";
+  reason?: string;
+}
+
+interface InternalCiVerifierSecretResolution {
   key?: string;
   status: "CONFIGURED" | "NOT_CONFIGURED" | "INSECURE_OR_DEFAULT";
   reason?: string;
 }
 
 /**
- * Privileged server-only configuration accessor for CI HMAC verifier secret.
- * Enforces strict fail-closed policy: returns explicit NOT_CONFIGURED or INSECURE_OR_DEFAULT
- * if absent, weak, or matching known insecure default keys. Never quietly selects a fallback key.
+ * Module-private secret resolver. NEVER exported outside this module.
+ * Ensures the raw KH02_CI_VERIFIER_SECRET key cannot be extracted by external imports.
  */
-export function getCiVerifierSecret(): CiVerifierSecretResolution {
+function _resolveCiVerifierSecretInternal(): InternalCiVerifierSecretResolution {
   const secret = process.env.KH02_CI_VERIFIER_SECRET;
   if (!secret || !secret.trim()) {
     return {
@@ -445,6 +573,21 @@ export function getCiVerifierSecret(): CiVerifierSecretResolution {
     key: trimmed,
     status: "CONFIGURED",
   };
+}
+
+/**
+ * Public non-secret diagnostic accessor for CI HMAC verifier secret status.
+ * Enforces strict fail-closed policy: returns explicit NOT_CONFIGURED or INSECURE_OR_DEFAULT
+ * if absent, weak, or matching known insecure default keys.
+ * NEVER exposes the raw secret key string (`key` is always `undefined`).
+ */
+export function getCiVerifierSecret(): CiVerifierSecretResolution {
+  const internal = _resolveCiVerifierSecretInternal();
+  return Object.freeze({
+    configured: internal.status === "CONFIGURED",
+    status: internal.status,
+    reason: internal.reason,
+  });
 }
 
 /**
@@ -587,7 +730,7 @@ export function mintCiAttestationToken(evidence: {
   workflowName?: string;
   isUnitTestMock?: boolean;
 }): string {
-  const resolution = getCiVerifierSecret();
+  const resolution = _resolveCiVerifierSecretInternal();
 
   const runIdStr = String(evidence.runId || "").trim();
   const repo = (evidence.repository || CANONICAL_REPOSITORY).toLowerCase();
@@ -600,6 +743,7 @@ export function mintCiAttestationToken(evidence: {
     !serverRecord.isUnitTestMock &&
     serverRecord.canonicalWorkflowVerified &&
     serverRecord.requiredJobsVerified &&
+    hasAllCanonicalRequiredJobsInSummary(serverRecord.jobsSummary, serverRecord.runAttempt).valid &&
     serverRecord.headSha === (evidence.headSha || "") &&
     serverRecord.responseDigest === (evidence.responseDigest || "") &&
     serverRecord.workflowPath === evidence.workflowPath &&
@@ -612,13 +756,13 @@ export function mintCiAttestationToken(evidence: {
     return `swai_ci_untrusted_${untrustedDigest}`;
   }
 
-  if (resolution.status !== "CONFIGURED") {
+  if (resolution.status !== "CONFIGURED" || !resolution.key) {
     const payload = computeCiAttestationDigest(evidence);
     const untrustedDigest = crypto.createHash("sha256").update(`MISSING_SECRET:${payload}`).digest("hex");
     return `swai_ci_untrusted_${untrustedDigest}`;
   }
 
-  return _privateMintCiAttestationToken(evidence, resolution.key!);
+  return _privateMintCiAttestationToken(evidence, resolution.key);
 }
 
 export function verifyCiAttestationToken(
@@ -655,8 +799,8 @@ export function verifyCiAttestationToken(
     };
   }
 
-  const resolution = getCiVerifierSecret();
-  if (resolution.status !== "CONFIGURED") {
+  const resolution = _resolveCiVerifierSecretInternal();
+  if (resolution.status !== "CONFIGURED" || !resolution.key) {
     return {
       valid: false,
       reason: `MISSING_TRUST_ANCHOR: ${resolution.reason}`,
@@ -895,12 +1039,186 @@ export function validateGitHubRunJobsApiUrl(
   return { valid: true };
 }
 
-async function executeBoundedGitHubGet(params: {
+export interface GitHubVerificationBudgetTracker {
+  totalBytes: number;
+  maxTotalBytes: number;
+}
+
+export async function readBoundedResponseBytes(
+  res: any,
+  maxBytes: number,
+  controller: AbortController,
+  endpointLabel: string = "response",
+  budgetTracker?: GitHubVerificationBudgetTracker
+): Promise<{ ok: boolean; buffer?: Buffer; rawText?: string; errorCode?: string; error?: string }> {
+  const maxTotalBytes = budgetTracker?.maxTotalBytes ?? MAX_TOTAL_GITHUB_VERIFICATION_BYTES;
+
+  // 1. Fast fail on Content-Length header before reading body bytes
+  const contentLengthHeader =
+    typeof res?.headers?.get === "function" ? res.headers.get("content-length") : undefined;
+  if (contentLengthHeader !== undefined && contentLengthHeader !== null) {
+    const declaredLength = Number(contentLengthHeader);
+    if (Number.isFinite(declaredLength) && declaredLength > maxBytes) {
+      try {
+        controller.abort();
+      } catch {}
+      return {
+        ok: false,
+        errorCode: "OVERSIZE_RESPONSE",
+        error: `GitHub API ${endpointLabel} response exceeded maximum allowed size of ${maxBytes} bytes (Content-Length=${declaredLength}).`,
+      };
+    }
+    if (
+      budgetTracker &&
+      Number.isFinite(declaredLength) &&
+      budgetTracker.totalBytes + declaredLength > maxTotalBytes
+    ) {
+      try {
+        controller.abort();
+      } catch {}
+      return {
+        ok: false,
+        errorCode: "OVERSIZE_RESPONSE",
+        error: `GitHub API ${endpointLabel} response exceeded total verification budget of ${maxTotalBytes} bytes.`,
+      };
+    }
+  }
+
+  // 2. Web ReadableStream reader path: byte-count-before-append
+  if (res?.body && typeof res.body.getReader === "function") {
+    const reader = res.body.getReader();
+    const chunks: Buffer[] = [];
+    let totalBytes = 0;
+
+    try {
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        if (!value) continue;
+
+        const chunkBuf = Buffer.isBuffer(value)
+          ? value
+          : value instanceof Uint8Array
+          ? Buffer.from(value.buffer, value.byteOffset, value.byteLength)
+          : Buffer.from(String(value), "utf-8");
+
+        const nextTotal = totalBytes + chunkBuf.byteLength;
+        const nextBudget = (budgetTracker?.totalBytes ?? 0) + chunkBuf.byteLength;
+
+        if (nextTotal > maxBytes || nextBudget > maxTotalBytes) {
+          chunks.length = 0;
+          try {
+            await reader.cancel();
+          } catch {}
+          try {
+            controller.abort();
+          } catch {}
+          return {
+            ok: false,
+            errorCode: "OVERSIZE_RESPONSE",
+            error:
+              nextTotal > maxBytes
+                ? `GitHub API ${endpointLabel} response exceeded maximum allowed size of ${maxBytes} bytes.`
+                : `GitHub API ${endpointLabel} response exceeded total verification budget of ${maxTotalBytes} bytes.`,
+          };
+        }
+
+        totalBytes = nextTotal;
+        if (budgetTracker) {
+          budgetTracker.totalBytes = nextBudget;
+        }
+        chunks.push(chunkBuf);
+      }
+
+      const fullBuf = Buffer.concat(chunks, totalBytes);
+      return { ok: true, buffer: fullBuf, rawText: fullBuf.toString("utf-8") };
+    } catch (err: any) {
+      chunks.length = 0;
+      throw err;
+    }
+  }
+
+  // 3. Async iterable stream path (e.g. Node Readable stream): byte-count-before-append
+  if (res?.body && typeof res.body[Symbol.asyncIterator] === "function") {
+    const chunks: Buffer[] = [];
+    let totalBytes = 0;
+    try {
+      for await (const chunk of res.body) {
+        if (!chunk) continue;
+        const chunkBuf = Buffer.isBuffer(chunk)
+          ? chunk
+          : chunk instanceof Uint8Array
+          ? Buffer.from(chunk.buffer, chunk.byteOffset, chunk.byteLength)
+          : Buffer.from(String(chunk), "utf-8");
+
+        const nextTotal = totalBytes + chunkBuf.byteLength;
+        const nextBudget = (budgetTracker?.totalBytes ?? 0) + chunkBuf.byteLength;
+
+        if (nextTotal > maxBytes || nextBudget > maxTotalBytes) {
+          chunks.length = 0;
+          try {
+            if (typeof res.body.destroy === "function") res.body.destroy();
+          } catch {}
+          try {
+            controller.abort();
+          } catch {}
+          return {
+            ok: false,
+            errorCode: "OVERSIZE_RESPONSE",
+            error:
+              nextTotal > maxBytes
+                ? `GitHub API ${endpointLabel} response exceeded maximum allowed size of ${maxBytes} bytes.`
+                : `GitHub API ${endpointLabel} response exceeded total verification budget of ${maxTotalBytes} bytes.`,
+          };
+        }
+
+        totalBytes = nextTotal;
+        if (budgetTracker) {
+          budgetTracker.totalBytes = nextBudget;
+        }
+        chunks.push(chunkBuf);
+      }
+      const fullBuf = Buffer.concat(chunks, totalBytes);
+      return { ok: true, buffer: fullBuf, rawText: fullBuf.toString("utf-8") };
+    } catch (err: any) {
+      chunks.length = 0;
+      throw err;
+    }
+  }
+
+  // 4. Fallback for unit-test mocks providing only res.text()
+  const rawText = typeof res?.text === "function" ? await res.text() : "";
+  const byteLen = Buffer.byteLength(rawText || "", "utf-8");
+  const nextBudget = (budgetTracker?.totalBytes ?? 0) + byteLen;
+  if (byteLen > maxBytes || nextBudget > maxTotalBytes) {
+    try {
+      controller.abort();
+    } catch {}
+    return {
+      ok: false,
+      errorCode: "OVERSIZE_RESPONSE",
+      error:
+        byteLen > maxBytes
+          ? `GitHub API ${endpointLabel} response exceeded maximum allowed size of ${maxBytes} bytes.`
+          : `GitHub API ${endpointLabel} response exceeded total verification budget of ${maxTotalBytes} bytes.`,
+    };
+  }
+  if (budgetTracker) {
+    budgetTracker.totalBytes = nextBudget;
+  }
+  const fullBuf = Buffer.from(rawText || "", "utf-8");
+  return { ok: true, buffer: fullBuf, rawText: rawText || "" };
+}
+
+export async function executeBoundedGitHubGet(params: {
   url: string;
   token?: string;
   timeoutMs: number;
   fetchFn: typeof fetch;
   endpointLabel: string;
+  maxBytes?: number;
+  maxRetries?: number;
+  budgetTracker?: GitHubVerificationBudgetTracker;
 }): Promise<{
   ok: boolean;
   status: number;
@@ -910,124 +1228,160 @@ async function executeBoundedGitHubGet(params: {
   rejectionStatus?: RemoteCiStatus;
   error?: string;
 }> {
-  const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), params.timeoutMs);
+  const maxBytes = params.maxBytes ?? MAX_GITHUB_API_RESPONSE_BYTES;
+  const maxRetries = Math.max(0, Math.min(2, params.maxRetries ?? 0));
 
-  let rawText: string;
-  let responseStatus: number;
+  for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), params.timeoutMs);
 
-  try {
-    const headers: Record<string, string> = {
-      Accept: "application/vnd.github+json",
-      "User-Agent": "SWAI-KH02-CiVerifier/2.0",
-      "X-GitHub-Api-Version": "2022-11-28",
-    };
-    if (params.token) {
-      headers.Authorization = `Bearer ${params.token}`;
-    }
+    try {
+      const headers: Record<string, string> = {
+        Accept: "application/vnd.github+json",
+        "User-Agent": "SWAI-KH02-CiVerifier/2.0",
+        "X-GitHub-Api-Version": "2022-11-28",
+      };
+      if (params.token) {
+        headers.Authorization = `Bearer ${params.token}`;
+      }
 
-    const res = await params.fetchFn(params.url, {
-      method: "GET",
-      headers,
-      signal: controller.signal,
-      redirect: "error", // Strictly forbid redirects to prevent open-redirect / SSRF
-    });
+      const res = await params.fetchFn(params.url, {
+        method: "GET",
+        headers,
+        signal: controller.signal,
+        redirect: "error", // Strictly forbid redirects to prevent open-redirect / SSRF
+      });
 
-    responseStatus = res.status;
-    rawText = await res.text();
-  } catch (err: any) {
-    clearTimeout(timer);
-    if (err?.name === "AbortError") {
+      const responseStatus = res.status;
+
+      // Check HTTP status codes BEFORE reading body bytes
+      if (responseStatus === 401 || responseStatus === 403) {
+        const rateLimitRemaining =
+          typeof res?.headers?.get === "function" ? res.headers.get("x-ratelimit-remaining") : null;
+        if (responseStatus === 403 && rateLimitRemaining === "0") {
+          return {
+            ok: false,
+            status: responseStatus,
+            rejectionStatus: "CI_NOT_RUN",
+            error: `RATE_LIMITED: GitHub API ${params.endpointLabel} rate-limited (HTTP 403, x-ratelimit-remaining=0).`,
+          };
+        }
+        return {
+          ok: false,
+          status: responseStatus,
+          rejectionStatus: "CI_NOT_RUN",
+          error: `GitHub API ${params.endpointLabel} authentication/permission denied (HTTP ${responseStatus}). Verify GITHUB_TOKEN scope.`,
+        };
+      }
+
+      if (responseStatus === 404) {
+        return {
+          ok: false,
+          status: responseStatus,
+          rejectionStatus: "CI_NOT_RUN",
+          error: `GitHub Actions ${params.endpointLabel} resource not found (HTTP 404).`,
+        };
+      }
+
+      if (responseStatus === 429 || responseStatus >= 500) {
+        if (attempt < maxRetries && [429, 502, 503, 504].includes(responseStatus)) {
+          await new Promise((r) => setTimeout(r, 150 * Math.pow(2, attempt)));
+          continue;
+        }
+        return {
+          ok: false,
+          status: responseStatus,
+          rejectionStatus: "CI_NOT_RUN",
+          error:
+            responseStatus === 429
+              ? `RATE_LIMITED: GitHub API ${params.endpointLabel} rate-limited (HTTP 429).`
+              : `GitHub API ${params.endpointLabel} rate-limited or unavailable (HTTP ${responseStatus}).`,
+        };
+      }
+
+      if (responseStatus !== 200) {
+        return {
+          ok: false,
+          status: responseStatus,
+          rejectionStatus: "CI_NOT_RUN",
+          error: `GitHub API ${params.endpointLabel} returned unexpected HTTP status ${responseStatus}.`,
+        };
+      }
+
+      // Bounded streaming body consumption under the active AbortController timer
+      const bodyRead = await readBoundedResponseBytes(
+        res,
+        maxBytes,
+        controller,
+        params.endpointLabel,
+        params.budgetTracker
+      );
+      if (!bodyRead.ok || !bodyRead.buffer) {
+        return {
+          ok: false,
+          status: responseStatus,
+          rejectionStatus: "CI_FAIL",
+          error: bodyRead.error || `GitHub API ${params.endpointLabel} response exceeded size limit.`,
+        };
+      }
+
+      const rawBuffer = bodyRead.buffer;
+      const rawText = rawBuffer.toString("utf-8");
+
+      let data: any;
+      try {
+        data = JSON.parse(rawText);
+      } catch {
+        return {
+          ok: false,
+          status: responseStatus,
+          rejectionStatus: "CI_FAIL",
+          error: `GitHub API ${params.endpointLabel} response body is not valid JSON.`,
+        };
+      }
+
+      if (!data || typeof data !== "object" || Array.isArray(data)) {
+        return {
+          ok: false,
+          status: responseStatus,
+          rejectionStatus: "CI_FAIL",
+          error: `GitHub API ${params.endpointLabel} response object is empty or malformed.`,
+        };
+      }
+
+      const responseDigest = crypto.createHash("sha256").update(rawBuffer).digest("hex");
+      return {
+        ok: true,
+        status: responseStatus,
+        rawText,
+        data,
+        responseDigest,
+      };
+    } catch (err: any) {
+      if (err?.name === "AbortError") {
+        return {
+          ok: false,
+          status: 0,
+          rejectionStatus: "CI_NOT_RUN",
+          error: `GitHub API ${params.endpointLabel} request timed out after ${params.timeoutMs}ms.`,
+        };
+      }
       return {
         ok: false,
         status: 0,
         rejectionStatus: "CI_NOT_RUN",
-        error: `GitHub API ${params.endpointLabel} request timed out after ${params.timeoutMs}ms.`,
+        error: `GitHub API ${params.endpointLabel} network error: ${sanitizeCiLog(String(err?.message || err))}`,
       };
+    } finally {
+      clearTimeout(timer);
     }
-    return {
-      ok: false,
-      status: 0,
-      rejectionStatus: "CI_NOT_RUN",
-      error: `GitHub API ${params.endpointLabel} network error: ${sanitizeCiLog(String(err?.message || err))}`,
-    };
-  } finally {
-    clearTimeout(timer);
   }
 
-  if (Buffer.byteLength(rawText || "", "utf-8") > MAX_GITHUB_API_RESPONSE_BYTES) {
-    return {
-      ok: false,
-      status: responseStatus,
-      rejectionStatus: "CI_FAIL",
-      error: `GitHub API ${params.endpointLabel} response exceeded maximum allowed size of ${MAX_GITHUB_API_RESPONSE_BYTES} bytes.`,
-    };
-  }
-
-  if (responseStatus === 401 || responseStatus === 403) {
-    return {
-      ok: false,
-      status: responseStatus,
-      rejectionStatus: "CI_NOT_RUN",
-      error: `GitHub API ${params.endpointLabel} authentication/permission denied (HTTP ${responseStatus}). Verify GITHUB_TOKEN scope.`,
-    };
-  }
-
-  if (responseStatus === 404) {
-    return {
-      ok: false,
-      status: responseStatus,
-      rejectionStatus: "CI_NOT_RUN",
-      error: `GitHub Actions ${params.endpointLabel} resource not found (HTTP 404).`,
-    };
-  }
-
-  if (responseStatus === 429 || responseStatus >= 500) {
-    return {
-      ok: false,
-      status: responseStatus,
-      rejectionStatus: "CI_NOT_RUN",
-      error: `GitHub API ${params.endpointLabel} rate-limited or unavailable (HTTP ${responseStatus}).`,
-    };
-  }
-
-  if (responseStatus !== 200) {
-    return {
-      ok: false,
-      status: responseStatus,
-      rejectionStatus: "CI_NOT_RUN",
-      error: `GitHub API ${params.endpointLabel} returned unexpected HTTP status ${responseStatus}.`,
-    };
-  }
-
-  let data: any;
-  try {
-    data = JSON.parse(rawText);
-  } catch {
-    return {
-      ok: false,
-      status: responseStatus,
-      rejectionStatus: "CI_FAIL",
-      error: `GitHub API ${params.endpointLabel} response body is not valid JSON.`,
-    };
-  }
-
-  if (!data || typeof data !== "object") {
-    return {
-      ok: false,
-      status: responseStatus,
-      rejectionStatus: "CI_FAIL",
-      error: `GitHub API ${params.endpointLabel} response object is empty or malformed.`,
-    };
-  }
-
-  const responseDigest = crypto.createHash("sha256").update(rawText, "utf-8").digest("hex");
   return {
-    ok: true,
-    status: responseStatus,
-    rawText,
-    data,
-    responseDigest,
+    ok: false,
+    status: 0,
+    rejectionStatus: "CI_NOT_RUN",
+    error: `GitHub API ${params.endpointLabel} failed after retries.`,
   };
 }
 
@@ -1040,6 +1394,7 @@ export async function fetchGitHubRun(options: {
   token?: string;
   timeoutMs?: number;
   fetchFn?: typeof fetch;
+  budgetTracker?: GitHubVerificationBudgetTracker;
 }) {
   const cleanRunId = String(options.runId).trim();
   const targetUrl = `https://${TRUSTED_GITHUB_HOST}/repos/${options.repository}/actions/runs/${cleanRunId}`;
@@ -1058,6 +1413,7 @@ export async function fetchGitHubRun(options: {
     timeoutMs: options.timeoutMs || 8000,
     fetchFn: options.fetchFn || fetch,
     endpointLabel: `run '${cleanRunId}' on repository '${options.repository}'`,
+    budgetTracker: options.budgetTracker,
   });
 }
 
@@ -1070,6 +1426,7 @@ export async function fetchGitHubWorkflow(options: {
   token?: string;
   timeoutMs?: number;
   fetchFn?: typeof fetch;
+  budgetTracker?: GitHubVerificationBudgetTracker;
 }) {
   const cleanWfId = String(options.workflowId).trim();
   const targetUrl = `https://${TRUSTED_GITHUB_HOST}/repos/${options.repository}/actions/workflows/${cleanWfId}`;
@@ -1088,12 +1445,13 @@ export async function fetchGitHubWorkflow(options: {
     timeoutMs: options.timeoutMs || 8000,
     fetchFn: options.fetchFn || fetch,
     endpointLabel: `workflow '${cleanWfId}' on repository '${options.repository}'`,
+    budgetTracker: options.budgetTracker,
   });
 }
 
 /**
  * Fetches Endpoint 3: GET /repos/{owner}/{repo}/actions/runs/{run_id}/jobs?filter=latest&per_page=100&page={page}
- * with bounded pagination up to MAX_GITHUB_JOBS_PAGES.
+ * with bounded pagination up to MAX_GITHUB_JOBS_PAGES and strict pagination integrity checks.
  */
 export async function fetchGitHubRunJobs(options: {
   repository: string;
@@ -1101,6 +1459,7 @@ export async function fetchGitHubRunJobs(options: {
   token?: string;
   timeoutMs?: number;
   fetchFn?: typeof fetch;
+  budgetTracker?: GitHubVerificationBudgetTracker;
 }): Promise<{
   ok: boolean;
   status: number;
@@ -1114,8 +1473,10 @@ export async function fetchGitHubRunJobs(options: {
 }> {
   const cleanRunId = String(options.runId).trim();
   const allJobs: any[] = [];
+  const seenJobIds = new Set<string>();
   const rawPageTexts: string[] = [];
   let totalCount = 0;
+  let totalCountInitialized = false;
   let pagesFetched = 0;
 
   for (let page = 1; page <= MAX_GITHUB_JOBS_PAGES; page++) {
@@ -1136,6 +1497,7 @@ export async function fetchGitHubRunJobs(options: {
       timeoutMs: options.timeoutMs || 8000,
       fetchFn: options.fetchFn || fetch,
       endpointLabel: `jobs for run '${cleanRunId}' (page ${page})`,
+      budgetTracker: options.budgetTracker,
     });
 
     if (!pageRes.ok) {
@@ -1146,20 +1508,101 @@ export async function fetchGitHubRunJobs(options: {
     rawPageTexts.push(pageRes.rawText || "");
 
     const pageData = pageRes.data;
-    if (page === 1 && typeof pageData.total_count === "number") {
-      totalCount = pageData.total_count;
+    if (typeof pageData.total_count !== "number" || !Number.isInteger(pageData.total_count) || pageData.total_count < 0) {
+      return {
+        ok: false,
+        status: 200,
+        rejectionStatus: "CI_FAIL",
+        error: `JOBS_TOTAL_COUNT_INVALID: Page ${page} returned invalid total_count '${pageData.total_count}'.`,
+      };
     }
 
-    const pageJobs = Array.isArray(pageData.jobs) ? pageData.jobs : [];
-    allJobs.push(...pageJobs);
+    if (page === 1) {
+      totalCount = pageData.total_count;
+      totalCountInitialized = true;
+      if (totalCount > MAX_GITHUB_JOBS_PAGES * 100) {
+        return {
+          ok: false,
+          status: 200,
+          rejectionStatus: "CI_FAIL",
+          error: `JOBS_PAGINATION_OVERFLOW: Run '${cleanRunId}' declares total_count=${totalCount}, exceeding bounded maximum of ${MAX_GITHUB_JOBS_PAGES * 100} jobs.`,
+        };
+      }
+    } else if (pageData.total_count !== totalCount) {
+      return {
+        ok: false,
+        status: 200,
+        rejectionStatus: "CI_FAIL",
+        error: `JOBS_INCONSISTENT_TOTAL_COUNT: Page ${page} reported total_count=${pageData.total_count}, expected ${totalCount} from page 1.`,
+      };
+    }
 
-    if (pageJobs.length === 0 || allJobs.length >= totalCount || pageJobs.length < 100) {
+    if (!Array.isArray(pageData.jobs)) {
+      return {
+        ok: false,
+        status: 200,
+        rejectionStatus: "CI_FAIL",
+        error: `JOBS_ARRAY_MISSING: Page ${page} response lacks a valid jobs array.`,
+      };
+    }
+
+    const pageJobs = pageData.jobs;
+    if (totalCount > 0 && pageJobs.length === 0 && allJobs.length < totalCount) {
+      return {
+        ok: false,
+        status: 200,
+        rejectionStatus: "CI_FAIL",
+        error: `JOBS_TRUNCATED_PAGINATION: Page ${page} returned 0 jobs while only ${allJobs.length}/${totalCount} jobs were fetched.`,
+      };
+    }
+
+    for (const j of pageJobs) {
+      const jId = String(j?.id ?? "").trim();
+      if (!jId) {
+        return {
+          ok: false,
+          status: 200,
+          rejectionStatus: "CI_FAIL",
+          error: `JOB_MISSING_ID: Job entry on page ${page} is missing a valid id.`,
+        };
+      }
+      if (seenJobIds.has(jId)) {
+        return {
+          ok: false,
+          status: 200,
+          rejectionStatus: "CI_FAIL",
+          error: `JOBS_DUPLICATE_ID: Duplicate job id '${jId}' detected across jobs response (repeated page or duplicate job entry).`,
+        };
+      }
+      seenJobIds.add(jId);
+      allJobs.push(j);
+    }
+
+    if (allJobs.length > totalCount) {
+      return {
+        ok: false,
+        status: 200,
+        rejectionStatus: "CI_FAIL",
+        error: `JOBS_COUNT_EXCEEDS_TOTAL_COUNT: Fetched ${allJobs.length} jobs, exceeding declared total_count=${totalCount}.`,
+      };
+    }
+
+    if (allJobs.length === totalCount || pageJobs.length < 100) {
       break;
     }
   }
 
+  if (totalCountInitialized && allJobs.length !== totalCount) {
+    return {
+      ok: false,
+      status: 200,
+      rejectionStatus: "CI_FAIL",
+      error: `JOBS_TRUNCATED_PAGINATION: Expected total_count=${totalCount} jobs, but fetched ${allJobs.length} jobs across ${pagesFetched} page(s).`,
+    };
+  }
+
   const combinedRaw = rawPageTexts.length === 1 ? rawPageTexts[0] : rawPageTexts.join("\n---PAGE---\n");
-  const responseDigest = crypto.createHash("sha256").update(combinedRaw, "utf-8").digest("hex");
+  const responseDigest = crypto.createHash("sha256").update(Buffer.from(combinedRaw, "utf-8")).digest("hex");
 
   return {
     ok: true,
@@ -1186,6 +1629,7 @@ export function verifyRunIdentity(
     allowedWorkflows?: string[];
     allowedWorkflowPaths?: readonly string[];
     enforceCanonicalPath?: boolean;
+    requireStrictProvenance?: boolean;
   }
 ): { valid: boolean; status?: RemoteCiStatus; reason?: string } {
   const actualRepo = String(data?.repository?.full_name || "");
@@ -1197,8 +1641,41 @@ export function verifyRunIdentity(
     };
   }
 
+  if (data?.repository?.fork === true) {
+    return {
+      valid: false,
+      status: "CI_FAIL",
+      reason: `FORK_REPOSITORY_REJECTED: Run repository '${actualRepo}' is marked as a fork.`,
+    };
+  }
+
+  if (data?.head_repository !== undefined && data?.head_repository !== null) {
+    const headRepoName = String(data.head_repository?.full_name || "");
+    if (
+      !headRepoName ||
+      headRepoName.toLowerCase() !== options.expectedRepo.toLowerCase() ||
+      data.head_repository?.fork === true
+    ) {
+      return {
+        valid: false,
+        status: "CI_FAIL",
+        reason: `FORK_OR_FOREIGN_HEAD_REPOSITORY_REJECTED: head_repository '${headRepoName}' (fork=${Boolean(
+          data.head_repository?.fork
+        )}) does not match canonical repository '${options.expectedRepo}'.`,
+      };
+    }
+  }
+
+  if (Array.isArray(data?.pull_requests) && data.pull_requests.length > 0) {
+    return {
+      valid: false,
+      status: "CI_FAIL",
+      reason: "PULL_REQUEST_RUN_REJECTED: Workflow run is associated with pull_requests and cannot be used for branch release promotion.",
+    };
+  }
+
   const actualSha = String(data?.head_sha || "").trim();
-  if (!actualSha || actualSha.toLowerCase() !== options.expectedSha.toLowerCase()) {
+  if (!/^[0-9a-f]{40}$/i.test(actualSha) || actualSha.toLowerCase() !== options.expectedSha.toLowerCase()) {
     return {
       valid: false,
       status: "CI_FAIL",
@@ -1248,13 +1725,30 @@ export function verifyRunIdentity(
     };
   }
 
-  if (options.expectedRunAttempt !== undefined) {
-    const actualAttempt = Number(data?.run_attempt ?? 1);
-    if (actualAttempt !== options.expectedRunAttempt) {
+  const attemptNum = Number(data?.run_attempt ?? 1);
+  if (!Number.isInteger(attemptNum) || attemptNum <= 0) {
+    return {
+      valid: false,
+      status: "CI_FAIL",
+      reason: `INVALID_RUN_ATTEMPT: run_attempt '${data?.run_attempt}' must be a positive integer.`,
+    };
+  }
+
+  if (options.expectedRunAttempt !== undefined && attemptNum !== options.expectedRunAttempt) {
+    return {
+      valid: false,
+      status: "CI_FAIL",
+      reason: `CI run_attempt mismatch: run returned attempt '${attemptNum}', expected '${options.expectedRunAttempt}'.`,
+    };
+  }
+
+  if (data?.check_suite_id !== undefined && data?.check_suite_id !== null) {
+    const csId = Number(data.check_suite_id);
+    if (!Number.isInteger(csId) || csId <= 0) {
       return {
         valid: false,
         status: "CI_FAIL",
-        reason: `CI run_attempt mismatch: run returned attempt '${actualAttempt}', expected '${options.expectedRunAttempt}'.`,
+        reason: `INVALID_CHECK_SUITE_ID: check_suite_id '${data.check_suite_id}' must be a positive integer.`,
       };
     }
   }
@@ -1304,6 +1798,7 @@ export function verifyWorkflowIdentity(
   runData: any,
   workflowData: any,
   options: {
+    expectedRepo?: string;
     allowedWorkflowPaths?: readonly string[];
   } = {}
 ): { valid: boolean; status?: RemoteCiStatus; reason?: string } {
@@ -1325,6 +1820,16 @@ export function verifyWorkflowIdentity(
     };
   }
 
+  const runPath = String(runData?.path ?? "").trim();
+  const wfEndpointPath = String(workflowData?.path ?? "").trim();
+  if (runPath !== wfEndpointPath) {
+    return {
+      valid: false,
+      status: "CI_FAIL",
+      reason: `WORKFLOW_PATH_MISMATCH: Run path '${runPath}' does not match workflow endpoint path '${wfEndpointPath}'.`,
+    };
+  }
+
   const wfPathCheck = requireCanonicalReleaseWorkflow(
     workflowData?.path,
     options.allowedWorkflowPaths || CANONICAL_WORKFLOW_PATHS
@@ -1337,21 +1842,25 @@ export function verifyWorkflowIdentity(
     };
   }
 
-  const runPath = String(runData?.path ?? "").trim();
-  if (runPath !== workflowData.path) {
-    return {
-      valid: false,
-      status: "CI_FAIL",
-      reason: `WORKFLOW_PATH_MISMATCH: Run path '${runPath}' does not match workflow endpoint path '${workflowData.path}'.`,
-    };
-  }
-
   if (workflowData.state !== "active") {
     return {
       valid: false,
       status: "CI_FAIL",
       reason: `WORKFLOW_NOT_ACTIVE: Workflow '${workflowData.path}' state is '${workflowData.state}' (expected 'active').`,
     };
+  }
+
+  const expectedRepo = (options.expectedRepo || CANONICAL_REPOSITORY).toLowerCase();
+  for (const urlField of [workflowData.url, workflowData.html_url]) {
+    if (typeof urlField === "string" && urlField.trim() !== "") {
+      if (!urlField.toLowerCase().includes(expectedRepo)) {
+        return {
+          valid: false,
+          status: "CI_FAIL",
+          reason: `WORKFLOW_REPO_MISMATCH: Workflow URL '${urlField}' does not belong to canonical repository '${expectedRepo}'.`,
+        };
+      }
+    }
   }
 
   const runName = String(runData?.name ?? "").trim();
@@ -1368,7 +1877,8 @@ export function verifyWorkflowIdentity(
 }
 
 /**
- * Verifies Jobs JSON from Endpoint 3 against Run JSON from Endpoint 1 and required jobs policy.
+ * Verifies Jobs JSON from Endpoint 3 against Run JSON from Endpoint 1 and the immutable baseline CANONICAL_REQUIRED_JOBS policy.
+ * Callers may pass additional requiredJobs, but can NEVER omit or weaken CANONICAL_REQUIRED_JOBS.
  */
 export function verifyRequiredJobs(
   runData: any,
@@ -1386,6 +1896,7 @@ export function verifyRequiredJobs(
   jobsDigest?: string;
   jobsSummary?: VerifiedJobSummaryItem[];
   successfulJobs?: string[];
+  missingJobs?: string[];
 } {
   const jobs = Array.isArray(jobsData?.jobs) ? jobsData.jobs : [];
   const totalCount = typeof jobsData?.totalCount === "number" ? jobsData.totalCount : jobs.length;
@@ -1406,9 +1917,19 @@ export function verifyRequiredJobs(
     };
   }
 
+  if (jobs.length > totalCount) {
+    return {
+      valid: false,
+      status: "CI_FAIL",
+      reason: `JOBS_COUNT_MISMATCH: Expected total_count=${totalCount} jobs, but received ${jobs.length} jobs.`,
+    };
+  }
+
   const runAttempt = Number(options.expectedRunAttempt ?? runData?.run_attempt ?? 1);
   const summaryItems: VerifiedJobSummaryItem[] = [];
   const successfulJobs: string[] = [];
+  const seenJobIds = new Set<string>();
+  const seenJobNames = new Set<string>();
 
   for (const job of jobs) {
     if (!job || typeof job !== "object") {
@@ -1418,6 +1939,23 @@ export function verifyRequiredJobs(
         reason: "JOB_ENTRY_MALFORMED: Jobs list contains a non-object entry.",
       };
     }
+
+    const jobIdStr = String(job.id ?? "").trim();
+    if (!jobIdStr) {
+      return {
+        valid: false,
+        status: "CI_FAIL",
+        reason: "JOB_MISSING_ID: Job entry is missing a valid id.",
+      };
+    }
+    if (seenJobIds.has(jobIdStr)) {
+      return {
+        valid: false,
+        status: "CI_FAIL",
+        reason: `DUPLICATE_JOB_ID: Job id '${jobIdStr}' appears multiple times in the same workflow run.`,
+      };
+    }
+    seenJobIds.add(jobIdStr);
 
     const jobRunId = String(job.run_id ?? "").trim();
     if (!jobRunId || jobRunId !== String(options.expectedRunId) || Number(job.run_id) !== Number(options.expectedRunId)) {
@@ -1453,6 +1991,15 @@ export function verifyRequiredJobs(
       };
     }
 
+    if (seenJobNames.has(jobName)) {
+      return {
+        valid: false,
+        status: "CI_FAIL",
+        reason: `DUPLICATE_JOB_NAME: Job name '${jobName}' appears multiple times in the same workflow run.`,
+      };
+    }
+    seenJobNames.add(jobName);
+
     if (job.status !== "completed" || job.conclusion !== "success") {
       return {
         valid: false,
@@ -1461,20 +2008,36 @@ export function verifyRequiredJobs(
       };
     }
 
-    if (Array.isArray(job.steps)) {
+    const stepSummaries: VerifiedJobStepSummaryItem[] = [];
+    if (job.steps !== undefined) {
+      if (!Array.isArray(job.steps) || job.steps.length === 0) {
+        return {
+          valid: false,
+          status: "CI_FAIL",
+          reason: `JOB_STEPS_EMPTY: Job '${jobName}' has an empty or invalid steps array.`,
+        };
+      }
       for (const step of job.steps) {
-        if (
-          step &&
-          (step.status !== "completed" ||
-            (step.conclusion !== "success" &&
-              ["failure", "cancelled", "timed_out", "action_required", "skipped"].includes(String(step.conclusion))))
-        ) {
+        if (!step || typeof step !== "object") {
+          return {
+            valid: false,
+            status: "CI_FAIL",
+            reason: `JOB_STEP_MALFORMED: Job '${jobName}' contains a malformed step entry.`,
+          };
+        }
+        if (step.status !== "completed" || step.conclusion !== "success") {
           return {
             valid: false,
             status: "CI_FAIL",
             reason: `JOB_STEP_FAILED: Step '${step.name || step.number}' in job '${jobName}' has status='${step.status}', conclusion='${step.conclusion}'.`,
           };
         }
+        stepSummaries.push({
+          number: typeof step.number === "number" ? step.number : undefined,
+          name: String(step.name || step.number || "step"),
+          status: String(step.status),
+          conclusion: String(step.conclusion),
+        });
       }
     }
 
@@ -1484,20 +2047,34 @@ export function verifyRequiredJobs(
       status: String(job.status),
       conclusion: String(job.conclusion),
       runAttempt: Number(job.run_attempt ?? runAttempt),
+      ...(stepSummaries.length > 0 ? { steps: stepSummaries } : {}),
     });
     successfulJobs.push(jobName);
   }
 
-  if (Array.isArray(options.requiredJobs) && options.requiredJobs.length > 0) {
-    for (const reqJob of options.requiredJobs) {
-      if (!successfulJobs.includes(reqJob)) {
-        return {
-          valid: false,
-          status: "CI_FAIL",
-          reason: `MISSING_REQUIRED_JOB: Required release job '${reqJob}' was not found among completed successful jobs (${successfulJobs.join(", ")}).`,
-        };
-      }
+  // IMMUTABLE BASELINE REQUIRED JOBS POLICY:
+  // Callers may add extra required jobs, but can NEVER omit or weaken CANONICAL_REQUIRED_JOBS.
+  const effectiveRequiredJobs = Array.from(
+    new Set<string>([
+      ...CANONICAL_REQUIRED_JOBS,
+      ...(Array.isArray(options.requiredJobs) ? options.requiredJobs : []),
+    ])
+  );
+
+  const missingJobs: string[] = [];
+  for (const reqJob of effectiveRequiredJobs) {
+    if (!successfulJobs.includes(reqJob)) {
+      missingJobs.push(reqJob);
     }
+  }
+
+  if (missingJobs.length > 0) {
+    return {
+      valid: false,
+      status: "CI_FAIL",
+      missingJobs,
+      reason: `MISSING_REQUIRED_JOB: Required release job '${missingJobs[0]}' (missing: [${missingJobs.join(", ")}]) was not found among completed successful jobs (${successfulJobs.join(", ")}).`,
+    };
   }
 
   const sortedSummary = [...summaryItems].sort((a, b) => {
@@ -1513,6 +2090,7 @@ export function verifyRequiredJobs(
     jobsDigest,
     jobsSummary: sortedSummary,
     successfulJobs,
+    missingJobs: [],
   };
 }
 
@@ -1610,7 +2188,7 @@ export async function verifyRemoteGitHubActionsRun(
   }
 
   if (!isMock) {
-    const verifierSecret = getCiVerifierSecret();
+    const verifierSecret = _resolveCiVerifierSecretInternal();
     if (verifierSecret.status !== "CONFIGURED") {
       return {
         verified: false,
@@ -1623,6 +2201,10 @@ export async function verifyRemoteGitHubActionsRun(
   }
 
   const fetchFn = options.customFetch || fetch;
+  const budgetTracker: GitHubVerificationBudgetTracker = {
+    totalBytes: 0,
+    maxTotalBytes: MAX_TOTAL_GITHUB_VERIFICATION_BYTES,
+  };
 
   // Endpoint 1: Fetch Workflow Run
   const runRes = await fetchGitHubRun({
@@ -1631,6 +2213,7 @@ export async function verifyRemoteGitHubActionsRun(
     token,
     timeoutMs,
     fetchFn,
+    budgetTracker,
   });
 
   if (!runRes.ok) {
@@ -1649,7 +2232,7 @@ export async function verifyRemoteGitHubActionsRun(
 
   // Determine whether this is a legacy single-endpoint V19.3.2.2..V19.3.2.7 unit-test mock
   // (which only mocked /actions/runs/{id} without workflow/jobs endpoints).
-  // Real network calls (!isMock) and V19.3.2.8 multi-endpoint checks ALWAYS enforce all 3 endpoints & canonical path.
+  // Real network calls (!isMock) and V19.3.2.8+ multi-endpoint checks ALWAYS enforce all 3 endpoints & canonical path.
   const isLegacySingleEndpointMockCandidate =
     isMock &&
     options.requireMultiEndpointVerification !== true &&
@@ -1657,7 +2240,7 @@ export async function verifyRemoteGitHubActionsRun(
     options.requiredJobs === undefined &&
     (!runData.path ||
       runData.path === ".github/workflows/verify.yml" ||
-      (runData.workflow_id === undefined && CANONICAL_WORKFLOW_PATHS.includes(runData.path))) &&
+      (runData.workflow_id === undefined && (CANONICAL_WORKFLOW_PATHS as readonly string[]).includes(runData.path))) &&
     ["99887766", "55443322", "778899", "9990004", "888004", "888006"].includes(runIdStr);
 
   const runIdentityCheck = verifyRunIdentity(runData, {
@@ -1669,6 +2252,7 @@ export async function verifyRemoteGitHubActionsRun(
     allowedWorkflows: options.allowedWorkflows,
     allowedWorkflowPaths: options.allowedWorkflowPaths,
     enforceCanonicalPath: !isLegacySingleEndpointMockCandidate,
+    requireStrictProvenance: !isMock,
   });
 
   if (!runIdentityCheck.valid) {
@@ -1707,6 +2291,7 @@ export async function verifyRemoteGitHubActionsRun(
         token,
         timeoutMs,
         fetchFn,
+        budgetTracker,
       });
 
       if (!wfRes.ok) {
@@ -1727,6 +2312,7 @@ export async function verifyRemoteGitHubActionsRun(
         token,
         timeoutMs,
         fetchFn,
+        budgetTracker,
       });
 
       if (!jobsRes.ok) {
@@ -1741,6 +2327,7 @@ export async function verifyRemoteGitHubActionsRun(
       }
 
       const wfCheck = verifyWorkflowIdentity(runData, wfRes.data, {
+        expectedRepo: repo,
         allowedWorkflowPaths: options.allowedWorkflowPaths,
       });
       if (!wfCheck.valid) {
@@ -1826,9 +2413,9 @@ export async function verifyRemoteGitHubActionsRun(
   }
 
   let attestationSignature: string | undefined;
-  const resolution = getCiVerifierSecret();
-  if (resolution.status === "CONFIGURED") {
-    attestationSignature = _privateMintCiAttestationToken(rawEvidence, resolution.key!);
+  const resolution = _resolveCiVerifierSecretInternal();
+  if (resolution.status === "CONFIGURED" && resolution.key) {
+    attestationSignature = _privateMintCiAttestationToken(rawEvidence, resolution.key);
   }
 
   const evidence: GitHubWorkflowRunEvidence = deepCloneAndFreeze({
