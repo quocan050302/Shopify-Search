@@ -15,7 +15,9 @@
 import {
   verifyCiAttestationToken,
   lookupVerifiedRemoteCiRun,
-  CANONICAL_RELEASE_WORKFLOWS,
+  requireCanonicalReleaseWorkflow,
+  verifyAuthenticCiProof,
+  CANONICAL_WORKFLOW_PATHS,
 } from "./githubActionsCiEvidence";
 
 export interface ReleaseEvidenceInput {
@@ -288,15 +290,43 @@ export function evaluateReleaseEvidence(
   } else if (input.ciStatus.runStatus === "SUCCESS") {
     const proof = input.ciStatus.verifiedProof;
     const att = proof?.attestation || (proof as any)?.evidence || proof;
-    const runId = att?.runId || (proof as any)?.runId;
+    const runId = att?.runId || (proof as any)?.runId || input.ciStatus.runId;
     const storeCheck = runId ? lookupVerifiedRemoteCiRun(runId, input.testedCodeSha) : { verified: false };
-    const tokenCheck = att ? verifyCiAttestationToken(att) : { valid: false };
+    const tokenCheck = att
+      ? verifyCiAttestationToken(att, {
+          expectedSha: input.testedCodeSha,
+          requireReleaseV2: true,
+          allowedWorkflowPaths: CANONICAL_WORKFLOW_PATHS,
+        })
+      : { valid: false };
+    const wfPathCheck = requireCanonicalReleaseWorkflow(att?.workflowPath, CANONICAL_WORKFLOW_PATHS);
+    const authenticCheck =
+      runId && att
+        ? verifyAuthenticCiProof(
+            { runId, authenticatedProof: att },
+            {
+              expectedSha: input.testedCodeSha,
+              allowedWorkflowPaths: CANONICAL_WORKFLOW_PATHS,
+            }
+          )
+        : { verified: false, status: "CI_NOT_RUN" as const };
+
     const isAuthenticVerifier =
       storeCheck.verified === true &&
+      storeCheck.record !== undefined &&
+      storeCheck.record.canonicalWorkflowVerified === true &&
+      storeCheck.record.requiredJobsVerified === true &&
+      wfPathCheck.valid === true &&
+      storeCheck.record.workflowPath === att?.workflowPath &&
+      String(storeCheck.record.workflowId) === String(att?.workflowId) &&
+      Number(storeCheck.record.runAttempt) === Number(att?.runAttempt ?? 1) &&
+      storeCheck.record.jobsDigest === att?.jobsDigest &&
       proof?.verified === true &&
       att &&
       tokenCheck.valid === true &&
       tokenCheck.isUnitTestMock !== true &&
+      authenticCheck.verified === true &&
+      authenticCheck.status === "CI_PASS" &&
       att.provider === "github-actions" &&
       att.source === "GITHUB_API" &&
       att.isUnitTestMock !== true &&
@@ -304,10 +334,11 @@ export function evaluateReleaseEvidence(
       att.status === "completed" &&
       att.conclusion === "success" &&
       (att.event === "push" || att.event === "workflow_dispatch") &&
-      CANONICAL_RELEASE_WORKFLOWS.some((w) => w === att.workflowName || w === att.workflowPath) &&
       typeof att.responseDigest === "string" &&
       att.responseDigest.length === 64 &&
-      (!input.testedCodeSha || (att.headSha && att.headSha === input.testedCodeSha) || (att.commitSha && att.commitSha === input.testedCodeSha));
+      (!input.testedCodeSha ||
+        (att.headSha && att.headSha.toLowerCase() === input.testedCodeSha.toLowerCase()) ||
+        (att.commitSha && att.commitSha.toLowerCase() === input.testedCodeSha.toLowerCase()));
 
     if (isAuthenticVerifier) {
       ciStatus = "CI_PASS";

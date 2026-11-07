@@ -10,7 +10,12 @@
 
 import fs from "fs";
 import crypto from "crypto";
-import { verifyCiAttestationToken, lookupVerifiedRemoteCiRun } from "../release/githubActionsCiEvidence";
+import {
+  verifyCiAttestationToken,
+  lookupVerifiedRemoteCiRun,
+  requireCanonicalReleaseWorkflow,
+  CANONICAL_WORKFLOW_PATHS,
+} from "../release/githubActionsCiEvidence";
 
 export type TestSuiteExecutionStatus = "PASS" | "FAIL" | "INCOMPLETE" | "STALE" | "NOT_RUN";
 
@@ -104,42 +109,114 @@ export function validateVerifiedCiAttestation(
     expectedRepo?: string;
     expectedSha?: string;
     expectedBranch?: string;
+    allowedWorkflowPaths?: readonly string[];
   } = {}
-): { valid: boolean; reason?: string; structurallyValid?: boolean; providerVerified?: boolean } {
+): {
+  valid: boolean;
+  reason?: string;
+  structurallyValid?: boolean;
+  providerVerified?: boolean;
+  releaseEligible?: boolean;
+} {
   if (!proof) {
-    return { valid: false, reason: "CI proof object is null or missing.", structurallyValid: false, providerVerified: false };
+    return {
+      valid: false,
+      reason: "CI proof object is null or missing.",
+      structurallyValid: false,
+      providerVerified: false,
+      releaseEligible: false,
+    };
   }
   if (proof.provider !== "github-actions") {
-    return { valid: false, reason: `Unsupported CI provider '${(proof as any).provider}'.`, structurallyValid: false, providerVerified: false };
+    return {
+      valid: false,
+      reason: `Unsupported CI provider '${(proof as any).provider}'.`,
+      structurallyValid: false,
+      providerVerified: false,
+      releaseEligible: false,
+    };
   }
   const expectedRepo = options.expectedRepo || "quocan050302/Shopify-Search";
   if (proof.repository !== expectedRepo) {
-    return { valid: false, reason: `CI repository mismatch: got '${proof.repository}', expected '${expectedRepo}'.`, structurallyValid: false, providerVerified: false };
+    return {
+      valid: false,
+      reason: `CI repository mismatch: got '${proof.repository}', expected '${expectedRepo}'.`,
+      structurallyValid: false,
+      providerVerified: false,
+      releaseEligible: false,
+    };
   }
   const sha = proof.commitSha || (proof as any).headSha;
   if (options.expectedSha && sha !== options.expectedSha) {
-    return { valid: false, reason: `CI commit SHA mismatch: proof commit '${sha}' != expected '${options.expectedSha}'.`, structurallyValid: false, providerVerified: false };
+    return {
+      valid: false,
+      reason: `CI commit SHA mismatch: proof commit '${sha}' != expected '${options.expectedSha}'.`,
+      structurallyValid: false,
+      providerVerified: false,
+      releaseEligible: false,
+    };
   }
   const branch = proof.branch || (proof as any).headBranch;
   if (options.expectedBranch && branch !== options.expectedBranch) {
-    return { valid: false, reason: `CI branch mismatch: proof branch '${branch}' != expected '${options.expectedBranch}'.`, structurallyValid: false, providerVerified: false };
+    return {
+      valid: false,
+      reason: `CI branch mismatch: proof branch '${branch}' != expected '${options.expectedBranch}'.`,
+      structurallyValid: false,
+      providerVerified: false,
+      releaseEligible: false,
+    };
   }
   if (proof.status !== "completed") {
-    return { valid: false, reason: `CI run status is '${proof.status}', expected 'completed'.`, structurallyValid: false, providerVerified: false };
+    return {
+      valid: false,
+      reason: `CI run status is '${proof.status}', expected 'completed'.`,
+      structurallyValid: false,
+      providerVerified: false,
+      releaseEligible: false,
+    };
   }
   if (proof.conclusion !== "success") {
-    return { valid: false, reason: `CI run conclusion is '${proof.conclusion}', expected 'success'.`, structurallyValid: false, providerVerified: false };
+    return {
+      valid: false,
+      reason: `CI run conclusion is '${proof.conclusion}', expected 'success'.`,
+      structurallyValid: false,
+      providerVerified: false,
+      releaseEligible: false,
+    };
   }
   if (proof.event !== "push" && proof.event !== "workflow_dispatch") {
-    return { valid: false, reason: `CI trigger event '${proof.event}' is not in allowed events (push, workflow_dispatch).`, structurallyValid: false, providerVerified: false };
+    return {
+      valid: false,
+      reason: `CI trigger event '${proof.event}' is not in allowed events (push, workflow_dispatch).`,
+      structurallyValid: false,
+      providerVerified: false,
+      releaseEligible: false,
+    };
   }
 
-  const tokenCheck = verifyCiAttestationToken(proof, options);
+  const wfPath = (proof as any).workflowPath;
+  const wfCheck = requireCanonicalReleaseWorkflow(wfPath, options.allowedWorkflowPaths || CANONICAL_WORKFLOW_PATHS);
+
+  const tokenCheck = verifyCiAttestationToken(proof, {
+    ...options,
+    requireReleaseV2: true,
+    allowedWorkflowPaths: options.allowedWorkflowPaths || CANONICAL_WORKFLOW_PATHS,
+  });
   const runId = proof.runId || (proof as any).id;
-  const storeCheck = runId ? lookupVerifiedRemoteCiRun(runId, options.expectedSha || proof.commitSha || (proof as any).headSha) : { verified: false };
+  const storeCheck = runId
+    ? lookupVerifiedRemoteCiRun(runId, options.expectedSha || proof.commitSha || (proof as any).headSha)
+    : { verified: false };
 
   const providerVerified =
     storeCheck.verified === true &&
+    storeCheck.record !== undefined &&
+    storeCheck.record.canonicalWorkflowVerified === true &&
+    storeCheck.record.requiredJobsVerified === true &&
+    wfCheck.valid === true &&
+    storeCheck.record.workflowPath === wfPath &&
+    String(storeCheck.record.workflowId) === String((proof as any).workflowId) &&
+    Number(storeCheck.record.runAttempt) === Number((proof as any).runAttempt ?? 1) &&
+    storeCheck.record.jobsDigest === (proof as any).jobsDigest &&
     tokenCheck.valid &&
     !tokenCheck.isUnitTestMock &&
     proof.source === "GITHUB_API" &&
@@ -147,7 +224,12 @@ export function validateVerifiedCiAttestation(
     typeof proof.responseDigest === "string" &&
     proof.responseDigest.length === 64;
 
-  return { valid: true, structurallyValid: true, providerVerified };
+  return {
+    valid: true,
+    structurallyValid: true,
+    providerVerified,
+    releaseEligible: providerVerified,
+  };
 }
 
 /**

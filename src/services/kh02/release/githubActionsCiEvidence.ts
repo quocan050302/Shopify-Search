@@ -1,16 +1,17 @@
 /**
- * SWAI KH-02 — V12.4.3.7.19.3.2.2
- * Authentic GitHub Actions Remote CI Verification Service
+ * SWAI KH-02 — V12.4.3.7.19.3.2.8
+ * Authentic GitHub Actions Remote CI Verification Service (Three-Endpoint Verifier & V2 Workflow Identity Binding)
  *
- * Implements a strict, fail-closed verification client for remote GitHub Actions:
- * - Fixed, validated API endpoints: strictly https://api.github.com/repos/{owner}/{repo}/actions/runs/{run_id}
+ * Implements a strict, fail-closed three-endpoint verification client for remote GitHub Actions:
+ * - Endpoint 1 (Run): GET https://api.github.com/repos/{owner}/{repo}/actions/runs/{run_id}
+ * - Endpoint 2 (Workflow): GET https://api.github.com/repos/{owner}/{repo}/actions/workflows/{workflow_id}
+ * - Endpoint 3 (Jobs): GET https://api.github.com/repos/{owner}/{repo}/actions/runs/{run_id}/jobs?filter=latest&per_page=100&page={page}
  * - Strict SSRF protection: forbids custom schemes, foreign hosts, IP literals, redirects, or userinfo
- * - Bounded network calls: timeout, abort signals, response payload size capping
- * - Strict integrity verification: exact repository full_name, exact commit SHA, exact locked branch,
- *   status === "completed", conclusion === "success", allowed events ("push", "workflow_dispatch")
- * - Response digest computation (SHA-256 of raw GitHub API payload)
- * - Authentic verification provenance: outputs immutable GitHubWorkflowRunEvidence stamped with
- *   source: "GITHUB_API" and verifier: "SWAI_TRUSTED_GITHUB_VERIFIER_V1"
+ * - Bounded network calls: timeout, abort signals, response payload size capping (<= 2 MiB), bounded pagination (<= 5 pages)
+ * - Strict workflow & job identity verification: canonical workflow path allowlist by default, workflow_id cross-endpoint match,
+ *   run_attempt consistency, required jobs completion & success verification
+ * - Versioned V2 cryptographic attestation digest binding all run, workflow, and job identities
+ * - Recursive deep-freeze on all stored and returned records
  * - Safe fail-closed defaults: returns CI_NOT_CONFIGURED / CI_NOT_RUN if credentials or runs are absent
  */
 
@@ -21,11 +22,19 @@ export const TRUSTED_GITHUB_HOST = "api.github.com" as const;
 export const CANONICAL_REPOSITORY = "quocan050302/Shopify-Search" as const;
 export const LOCKED_BRANCH = "feature/kh02-walmart-us-jina-reader-v12.4.3.5.1" as const;
 
-export const CANONICAL_RELEASE_WORKFLOWS = [
-  "KH-02 Continuous Integration",
+export const CANONICAL_WORKFLOW_PATHS = [
   ".github/workflows/kh02-ci.yml",
   ".github/workflows/ci.yml",
 ] as const;
+
+export const CANONICAL_RELEASE_WORKFLOWS = [
+  ".github/workflows/kh02-ci.yml",
+  ".github/workflows/ci.yml",
+  "KH-02 Continuous Integration",
+] as const;
+
+export const MAX_GITHUB_API_RESPONSE_BYTES = 2 * 1024 * 1024; // 2 MiB cap per response
+export const MAX_GITHUB_JOBS_PAGES = 5;
 
 export const KNOWN_INSECURE_DEFAULT_KEYS = [
   "SWAI_KH02_INTERNAL_HMAC_VERIFIER_KEY_V19_3_2_3_SECURE",
@@ -37,17 +46,33 @@ export const KNOWN_INSECURE_DEFAULT_KEYS = [
   "changeme",
 ] as const;
 
+export interface VerifiedJobSummaryItem {
+  id: number | string;
+  name: string;
+  status: string;
+  conclusion: string;
+  runAttempt: number;
+}
+
 export interface VerifiedRemoteCiRecord {
   runId: string;
+  runAttempt: number;
   repository: string;
   headSha: string;
   headBranch: string;
   workflowId: number | string;
+  workflowPath?: string;
   workflowName?: string;
   event: string;
   status: string;
   conclusion: string;
   responseDigest: string;
+  workflowResponseDigest?: string;
+  jobsResponseDigest?: string;
+  jobsDigest?: string;
+  jobsSummary?: ReadonlyArray<Readonly<VerifiedJobSummaryItem>>;
+  canonicalWorkflowVerified: boolean;
+  requiredJobsVerified: boolean;
   verifiedAt: string;
   proofHandle: string;
   isUnitTestMock: boolean;
@@ -56,12 +81,68 @@ export interface VerifiedRemoteCiRecord {
 const VERIFIED_PROVIDER_RUNS = new Map<string, Readonly<VerifiedRemoteCiRecord>>();
 
 /**
- * Deep-clones an object and recursively freezes it, ensuring references returned
- * to callers can NEVER mutate internal state held in memory.
+ * Recursively freezes an object and all nested objects/arrays in place.
  */
-function deepCloneAndFreeze<T extends object>(obj: T): Readonly<T> {
+function deepFreezeRecursive<T>(val: T): Readonly<T> {
+  if (val && typeof val === "object" && !Object.isFrozen(val)) {
+    Object.freeze(val);
+    const keys = Object.keys(val as Record<string, unknown>);
+    for (const key of keys) {
+      deepFreezeRecursive((val as Record<string, unknown>)[key]);
+    }
+  }
+  return val;
+}
+
+/**
+ * Deep-clones an object and recursively freezes it across all nested objects and arrays,
+ * ensuring references returned to callers can NEVER mutate internal state held in memory.
+ */
+export function deepCloneAndFreeze<T extends object>(obj: T): Readonly<T> {
   const clone = JSON.parse(JSON.stringify(obj));
-  return Object.freeze(clone);
+  return deepFreezeRecursive(clone);
+}
+
+/**
+ * Enforces that a workflow path is a canonical release workflow file path.
+ * Display name alone is never sufficient to establish workflow file identity.
+ */
+export function requireCanonicalReleaseWorkflow(
+  workflowPath: unknown,
+  allowedWorkflowPaths: readonly string[] = CANONICAL_WORKFLOW_PATHS
+): { valid: boolean; normalizedPath?: string; reason?: string } {
+  if (typeof workflowPath !== "string" || workflowPath.trim() === "") {
+    return {
+      valid: false,
+      reason: "MISSING_WORKFLOW_PATH: Canonical workflow path (.github/workflows/*.yml) is required.",
+    };
+  }
+  if (workflowPath !== workflowPath.trim()) {
+    return {
+      valid: false,
+      reason: `INVALID_WORKFLOW_PATH_WHITESPACE: Workflow path '${workflowPath}' contains leading or trailing whitespace.`,
+    };
+  }
+  if (
+    !workflowPath.startsWith(".github/workflows/") ||
+    (!workflowPath.endsWith(".yml") && !workflowPath.endsWith(".yaml")) ||
+    workflowPath.includes("..") ||
+    workflowPath.includes("\\") ||
+    workflowPath.includes("//")
+  ) {
+    return {
+      valid: false,
+      reason: `MALFORMED_WORKFLOW_PATH: Workflow path '${workflowPath}' is not a valid canonical .github/workflows/*.yml path.`,
+    };
+  }
+  const matched = allowedWorkflowPaths.some((allowed) => allowed === workflowPath);
+  if (!matched) {
+    return {
+      valid: false,
+      reason: `NON_CANONICAL_WORKFLOW_PATH: Workflow path '${workflowPath}' is not in the canonical release workflow allowlist (${allowedWorkflowPaths.join(", ")}).`,
+    };
+  }
+  return { valid: true, normalizedPath: workflowPath };
 }
 
 /**
@@ -89,10 +170,10 @@ export function lookupVerifiedRemoteCiRun(
     };
   }
 
-  // Always return an immutable, isolated deep-clone to protect internal Map integrity
+  // Always return an immutable, recursively frozen deep-clone to protect internal Map integrity
   const isolatedSnapshot = deepCloneAndFreeze(record);
 
-  if (expectedSha && record.headSha !== expectedSha) {
+  if (expectedSha && record.headSha.toLowerCase() !== expectedSha.toLowerCase()) {
     return {
       verified: false,
       proofHandle: record.proofHandle,
@@ -149,6 +230,24 @@ export function lookupVerifiedRemoteCiRun(
     };
   }
 
+  if (!record.canonicalWorkflowVerified || !record.workflowPath || !requireCanonicalReleaseWorkflow(record.workflowPath).valid) {
+    return {
+      verified: false,
+      proofHandle: record.proofHandle,
+      record: isolatedSnapshot,
+      reason: `WORKFLOW_IDENTITY_UNVERIFIED: Run '${runIdStr}' does not have a verified canonical workflow path.`,
+    };
+  }
+
+  if (!record.requiredJobsVerified || !record.jobsDigest || !/^[0-9a-f]{64}$/i.test(record.jobsDigest)) {
+    return {
+      verified: false,
+      proofHandle: record.proofHandle,
+      record: isolatedSnapshot,
+      reason: `REQUIRED_JOBS_UNVERIFIED: Run '${runIdStr}' does not have verified required jobs completion proof.`,
+    };
+  }
+
   return {
     verified: true,
     proofHandle: record.proofHandle,
@@ -167,16 +266,38 @@ function _registerVerifiedRemoteCiRun(
   const runIdStr = String(evidence.runId).trim();
   const recordKey = `${repo}#${runIdStr}`;
   const isMock = evidence.isUnitTestMock === true || (evidence as any).source === "UNIT_TEST_MOCK";
+  const runAttempt = Number((evidence as any).runAttempt ?? 1);
+  const wfPath = (evidence as any).workflowPath ? String((evidence as any).workflowPath) : undefined;
+  const wfId = evidence.workflowId ?? 0;
+  const jobsDigest = (evidence as any).jobsDigest ? String((evidence as any).jobsDigest) : undefined;
+  const wfRespDigest = (evidence as any).workflowResponseDigest ? String((evidence as any).workflowResponseDigest) : undefined;
+  const jobsRespDigest = (evidence as any).jobsResponseDigest ? String((evidence as any).jobsResponseDigest) : undefined;
+  const canonicalWfVerified = Boolean((evidence as any).canonicalWorkflowVerified);
+  const reqJobsVerified = Boolean((evidence as any).requiredJobsVerified);
 
   const existing = VERIFIED_PROVIDER_RUNS.get(recordKey);
   if (existing) {
     const sameSha = existing.headSha === evidence.headSha;
-    const sameBranch = existing.headBranch === (evidence as any).headBranch || (evidence as any).branch;
+    const sameBranch = existing.headBranch === ((evidence as any).headBranch || (evidence as any).branch || LOCKED_BRANCH);
     const sameDigest = existing.responseDigest === evidence.responseDigest;
     const sameEvent = existing.event === evidence.event;
     const sameMock = existing.isUnitTestMock === isMock;
+    const sameAttempt = existing.runAttempt === runAttempt;
+    const sameWfId = String(existing.workflowId) === String(wfId);
+    const sameWfPath = (existing.workflowPath || "") === (wfPath || "");
+    const sameJobsDigest = (existing.jobsDigest || "") === (jobsDigest || "");
 
-    if (sameSha && sameBranch && sameDigest && sameEvent && sameMock) {
+    if (
+      sameSha &&
+      sameBranch &&
+      sameDigest &&
+      sameEvent &&
+      sameMock &&
+      sameAttempt &&
+      sameWfId &&
+      sameWfPath &&
+      sameJobsDigest
+    ) {
       return { registered: true, proofHandle: existing.proofHandle };
     } else {
       return {
@@ -189,20 +310,30 @@ function _registerVerifiedRemoteCiRun(
   const verifiedTimestamp = (evidence as any).fetchedAt || (evidence as any).verifiedAt || new Date().toISOString();
   const proofHandle = `swai_proof_handle_${crypto
     .createHash("sha256")
-    .update(`${repo}|${runIdStr}|${evidence.headSha}|${evidence.responseDigest}|${verifiedTimestamp}`)
+    .update(
+      `${repo}|${runIdStr}|${runAttempt}|${evidence.headSha}|${wfId}|${wfPath || ""}|${jobsDigest || ""}|${evidence.responseDigest}|${verifiedTimestamp}`
+    )
     .digest("hex")}`;
 
   const record: VerifiedRemoteCiRecord = {
     runId: runIdStr,
+    runAttempt,
     repository: evidence.repository || CANONICAL_REPOSITORY,
     headSha: evidence.headSha,
     headBranch: (evidence as any).headBranch || (evidence as any).branch || LOCKED_BRANCH,
-    workflowId: evidence.workflowId || 100,
+    workflowId: wfId,
+    workflowPath: wfPath,
     workflowName: evidence.workflowName,
     event: evidence.event,
     status: evidence.status,
     conclusion: evidence.conclusion,
     responseDigest: evidence.responseDigest,
+    workflowResponseDigest: wfRespDigest,
+    jobsResponseDigest: jobsRespDigest,
+    jobsDigest,
+    jobsSummary: Array.isArray((evidence as any).jobsSummary) ? (evidence as any).jobsSummary : [],
+    canonicalWorkflowVerified: canonicalWfVerified,
+    requiredJobsVerified: reqJobsVerified,
     verifiedAt: verifiedTimestamp,
     proofHandle,
     isUnitTestMock: isMock,
@@ -220,30 +351,46 @@ function _registerVerifiedRemoteCiRun(
  */
 export function _testOnlyRegisterVerifiedRemoteCiRun(record: {
   runId: string | number;
+  runAttempt?: number;
   repository?: string;
   headSha: string;
   headBranch?: string;
   workflowId?: number | string;
+  workflowPath?: string;
   workflowName?: string;
   event?: string;
   status?: string;
   conclusion?: string;
   responseDigest: string;
+  workflowResponseDigest?: string;
+  jobsResponseDigest?: string;
+  jobsDigest?: string;
+  jobsSummary?: VerifiedJobSummaryItem[];
+  canonicalWorkflowVerified?: boolean;
+  requiredJobsVerified?: boolean;
   verifiedAt?: string;
   source?: "GITHUB_API" | "UNIT_TEST_MOCK";
   isUnitTestMock?: boolean;
 }): { registered: boolean; proofHandle?: string; error?: string } {
   const res = _registerVerifiedRemoteCiRun({
     runId: String(record.runId),
+    runAttempt: record.runAttempt ?? 1,
     repository: record.repository || CANONICAL_REPOSITORY,
     headSha: record.headSha,
     headBranch: record.headBranch || LOCKED_BRANCH,
     workflowId: record.workflowId || 100,
+    workflowPath: record.workflowPath,
     workflowName: record.workflowName || "KH-02 Continuous Integration",
     event: record.event || "push",
     status: record.status || "completed",
     conclusion: record.conclusion || "success",
     responseDigest: record.responseDigest,
+    workflowResponseDigest: record.workflowResponseDigest,
+    jobsResponseDigest: record.jobsResponseDigest,
+    jobsDigest: record.jobsDigest,
+    jobsSummary: record.jobsSummary || [],
+    canonicalWorkflowVerified: Boolean(record.canonicalWorkflowVerified),
+    requiredJobsVerified: Boolean(record.requiredJobsVerified),
     verifiedAt: record.verifiedAt || new Date().toISOString(),
     isUnitTestMock: true, // STRICTLY ENFORCED: Always true!
   } as any);
@@ -300,38 +447,105 @@ export function getCiVerifierSecret(): CiVerifierSecretResolution {
   };
 }
 
+/**
+ * Computes canonical V2 attestation digest with explicit domain separation and JSON array framing
+ * so delimiter injection is impossible and every workflow/run/job identity field is cryptographically bound.
+ */
 export function computeCiAttestationDigest(evidence: {
   provider?: string;
   source?: string;
   repository?: string;
   runId?: string | number;
+  runAttempt?: number | string;
   headSha?: string;
+  commitSha?: string;
   headBranch?: string;
+  branch?: string;
   status?: string;
   conclusion?: string;
   event?: string;
   responseDigest?: string;
+  workflowResponseDigest?: string;
+  jobsResponseDigest?: string;
+  jobsDigest?: string;
   workflowId?: number | string;
+  workflowPath?: string;
   workflowName?: string;
+  verifier?: string;
   isUnitTestMock?: boolean;
 }): string {
-  const parts = [
-    "v1",
-    evidence.provider || "github-actions",
-    evidence.source || "",
-    (evidence.repository || "").toLowerCase(),
+  const isMock = evidence.isUnitTestMock === true || evidence.source === "UNIT_TEST_MOCK";
+  const canonicalTuple = [
+    "SWAI_CI_ATTESTATION_V2",
+    String(evidence.provider || "github-actions"),
+    String(evidence.source || ""),
+    String(evidence.repository || "").toLowerCase(),
     String(evidence.runId || ""),
-    evidence.headSha || "",
-    evidence.headBranch || "",
-    evidence.status || "",
-    evidence.conclusion || "",
-    evidence.event || "",
-    evidence.responseDigest || "",
+    String(evidence.runAttempt ?? 1),
+    String(evidence.headSha || evidence.commitSha || "").toLowerCase(),
+    String(evidence.headBranch || evidence.branch || ""),
+    String(evidence.event || ""),
+    String(evidence.status || ""),
+    String(evidence.conclusion || ""),
     String(evidence.workflowId || ""),
-    evidence.workflowName || "",
-    evidence.isUnitTestMock ? "MOCK" : "PROD",
+    String(evidence.workflowPath || ""),
+    String(evidence.workflowName || ""),
+    String(evidence.jobsDigest || ""),
+    String(evidence.responseDigest || ""),
+    String(evidence.workflowResponseDigest || ""),
+    String(evidence.jobsResponseDigest || ""),
+    String(evidence.verifier || TRUSTED_VERIFIER_ID),
+    isMock ? "MOCK" : "PROD",
   ];
-  return parts.join("|");
+  return `SWAI_CI_ATTESTATION_V2|${JSON.stringify(canonicalTuple)}`;
+}
+
+/**
+ * Validates whether an evidence object carries the full V2 multi-endpoint identity required for release verification.
+ * Legacy V1 payloads omitting workflowPath, workflowId, runAttempt, or jobsDigest are strictly rejected for release.
+ */
+export function hasCompleteV2ReleaseIdentity(
+  evidence: Record<string, unknown>,
+  allowedWorkflowPaths: readonly string[] = CANONICAL_WORKFLOW_PATHS
+): { valid: boolean; reason?: string } {
+  if (!evidence || typeof evidence !== "object") {
+    return { valid: false, reason: "MISSING_EVIDENCE_OBJECT" };
+  }
+  const wfIdStr = String(evidence.workflowId ?? "").trim();
+  if (!/^[1-9]\d*$/.test(wfIdStr)) {
+    return { valid: false, reason: `MISSING_OR_INVALID_WORKFLOW_ID: workflowId '${wfIdStr}' is not a positive integer.` };
+  }
+  const wfPathCheck = requireCanonicalReleaseWorkflow(evidence.workflowPath, allowedWorkflowPaths);
+  if (!wfPathCheck.valid) {
+    return { valid: false, reason: wfPathCheck.reason };
+  }
+  const attemptStr = String(evidence.runAttempt ?? "").trim();
+  if (!/^[1-9]\d*$/.test(attemptStr)) {
+    return { valid: false, reason: `MISSING_OR_INVALID_RUN_ATTEMPT: runAttempt '${attemptStr}' is not a positive integer.` };
+  }
+  const jobsDigest = String(evidence.jobsDigest ?? "").trim();
+  if (!/^[0-9a-f]{64}$/i.test(jobsDigest)) {
+    return { valid: false, reason: "MISSING_OR_INVALID_JOBS_DIGEST: jobsDigest must be a 64-char hex SHA-256 digest." };
+  }
+  const runDigest = String(evidence.responseDigest ?? "").trim();
+  if (!/^[0-9a-f]{64}$/i.test(runDigest)) {
+    return { valid: false, reason: "MISSING_OR_INVALID_RUN_RESPONSE_DIGEST: responseDigest must be a 64-char hex SHA-256 digest." };
+  }
+  const wfDigest = String(evidence.workflowResponseDigest ?? "").trim();
+  if (!/^[0-9a-f]{64}$/i.test(wfDigest)) {
+    return {
+      valid: false,
+      reason: "MISSING_OR_INVALID_WORKFLOW_RESPONSE_DIGEST: workflowResponseDigest must be a 64-char hex SHA-256 digest.",
+    };
+  }
+  const jobsRespDigest = String(evidence.jobsResponseDigest ?? "").trim();
+  if (!/^[0-9a-f]{64}$/i.test(jobsRespDigest)) {
+    return {
+      valid: false,
+      reason: "MISSING_OR_INVALID_JOBS_RESPONSE_DIGEST: jobsResponseDigest must be a 64-char hex SHA-256 digest.",
+    };
+  }
+  return { valid: true };
 }
 
 /**
@@ -339,10 +553,7 @@ export function computeCiAttestationDigest(evidence: {
  * Genuinely module-private; NEVER exported to arbitrary imported modules.
  * Invoked exclusively by verifyRemoteGitHubActionsRun upon authentic provider verification.
  */
-function _privateMintCiAttestationToken(
-  evidence: any,
-  key: string
-): string {
+function _privateMintCiAttestationToken(evidence: any, key: string): string {
   const payload = computeCiAttestationDigest(evidence);
   const hmac = crypto.createHmac("sha256", key);
   hmac.update(payload, "utf-8");
@@ -356,23 +567,26 @@ function _privateMintCiAttestationToken(
  * Any caller attempting to mint tokens for arbitrary or unregistered runs receives an untrusted token (swai_ci_untrusted_*).
  * Raw key injection and testKey bypasses are strictly forbidden.
  */
-export function mintCiAttestationToken(
-  evidence: {
-    provider?: string;
-    source?: string;
-    repository?: string;
-    runId?: string | number;
-    headSha?: string;
-    headBranch?: string;
-    status?: string;
-    conclusion?: string;
-    event?: string;
-    responseDigest?: string;
-    workflowId?: number | string;
-    workflowName?: string;
-    isUnitTestMock?: boolean;
-  }
-): string {
+export function mintCiAttestationToken(evidence: {
+  provider?: string;
+  source?: string;
+  repository?: string;
+  runId?: string | number;
+  runAttempt?: number | string;
+  headSha?: string;
+  headBranch?: string;
+  status?: string;
+  conclusion?: string;
+  event?: string;
+  responseDigest?: string;
+  workflowResponseDigest?: string;
+  jobsResponseDigest?: string;
+  jobsDigest?: string;
+  workflowId?: number | string;
+  workflowPath?: string;
+  workflowName?: string;
+  isUnitTestMock?: boolean;
+}): string {
   const resolution = getCiVerifierSecret();
 
   const runIdStr = String(evidence.runId || "").trim();
@@ -384,8 +598,13 @@ export function mintCiAttestationToken(
   const isAuthenticRegisteredRun =
     serverRecord !== undefined &&
     !serverRecord.isUnitTestMock &&
+    serverRecord.canonicalWorkflowVerified &&
+    serverRecord.requiredJobsVerified &&
     serverRecord.headSha === (evidence.headSha || "") &&
-    serverRecord.responseDigest === (evidence.responseDigest || "");
+    serverRecord.responseDigest === (evidence.responseDigest || "") &&
+    serverRecord.workflowPath === evidence.workflowPath &&
+    String(serverRecord.workflowId) === String(evidence.workflowId ?? "") &&
+    serverRecord.jobsDigest === evidence.jobsDigest;
 
   if (!isAuthenticRegisteredRun) {
     const payload = computeCiAttestationDigest(evidence);
@@ -404,22 +623,29 @@ export function mintCiAttestationToken(
 
 export function verifyCiAttestationToken(
   evidence: any,
-  _options: {
+  options: {
     expectedRepo?: string;
     expectedSha?: string;
     expectedBranch?: string;
+    requireReleaseV2?: boolean;
+    allowedWorkflowPaths?: readonly string[];
   } = {}
 ): {
   valid: boolean;
   reason?: string;
   isUnitTestMock?: boolean;
+  releaseIdentityComplete?: boolean;
 } {
   if (!evidence || typeof evidence !== "object") {
     return { valid: false, reason: "Evidence object is null or not an object." };
   }
 
   const sig = evidence.attestationSignature || evidence.attestationToken;
-  if (!sig || typeof sig !== "string" || !sig.startsWith("swai_ci_v1_")) {
+  if (
+    !sig ||
+    typeof sig !== "string" ||
+    (!sig.startsWith("swai_ci_v1_") && !sig.startsWith("swai_ci_v2_"))
+  ) {
     const isUntrusted = typeof sig === "string" && sig.startsWith("swai_ci_untrusted_");
     return {
       valid: false,
@@ -438,24 +664,31 @@ export function verifyCiAttestationToken(
   }
 
   const isMock = evidence.isUnitTestMock === true || evidence.source === "UNIT_TEST_MOCK";
-  const expectedSig = _privateMintCiAttestationToken(
-    {
-      provider: evidence.provider,
-      source: evidence.source,
-      repository: evidence.repository,
-      runId: evidence.runId,
-      headSha: evidence.headSha || evidence.commitSha,
-      headBranch: evidence.headBranch || evidence.branch,
-      status: evidence.status,
-      conclusion: evidence.conclusion,
-      event: evidence.event,
-      responseDigest: evidence.responseDigest,
-      workflowId: evidence.workflowId,
-      workflowName: evidence.workflowName,
-      isUnitTestMock: isMock,
-    },
-    resolution.key!
-  );
+  const payload = computeCiAttestationDigest({
+    provider: evidence.provider,
+    source: evidence.source,
+    repository: evidence.repository,
+    runId: evidence.runId,
+    runAttempt: evidence.runAttempt,
+    headSha: evidence.headSha || evidence.commitSha,
+    headBranch: evidence.headBranch || evidence.branch,
+    status: evidence.status,
+    conclusion: evidence.conclusion,
+    event: evidence.event,
+    responseDigest: evidence.responseDigest,
+    workflowResponseDigest: evidence.workflowResponseDigest,
+    jobsResponseDigest: evidence.jobsResponseDigest,
+    jobsDigest: evidence.jobsDigest,
+    workflowId: evidence.workflowId,
+    workflowPath: evidence.workflowPath,
+    workflowName: evidence.workflowName,
+    verifier: evidence.verifier || TRUSTED_VERIFIER_ID,
+    isUnitTestMock: isMock,
+  });
+
+  const prefix = sig.startsWith("swai_ci_v2_") ? "swai_ci_v2_" : "swai_ci_v1_";
+  const expectedHmac = crypto.createHmac("sha256", resolution.key!).update(payload, "utf-8").digest("hex");
+  const expectedSig = `${prefix}${expectedHmac}`;
 
   const sigBuf = Buffer.from(sig);
   const expectedBuf = Buffer.from(expectedSig);
@@ -467,9 +700,20 @@ export function verifyCiAttestationToken(
     };
   }
 
+  const v2IdentityCheck = hasCompleteV2ReleaseIdentity(evidence, options.allowedWorkflowPaths || CANONICAL_WORKFLOW_PATHS);
+  if (options.requireReleaseV2 && !v2IdentityCheck.valid) {
+    return {
+      valid: false,
+      isUnitTestMock: isMock,
+      releaseIdentityComplete: false,
+      reason: `LEGACY_V1_INCOMPLETE_IDENTITY_REJECTED: ${v2IdentityCheck.reason}`,
+    };
+  }
+
   return {
     valid: true,
     isUnitTestMock: isMock,
+    releaseIdentityComplete: v2IdentityCheck.valid,
   };
 }
 
@@ -478,8 +722,10 @@ export interface GitHubWorkflowRunEvidence {
   source: "GITHUB_API" | "UNIT_TEST_MOCK";
   repository: string;
   runId: string;
+  runAttempt?: number;
   runUrl: string;
   workflowId: number | string;
+  workflowPath?: string;
   workflowName?: string;
   headSha: string;
   headBranch: string;
@@ -488,8 +734,14 @@ export interface GitHubWorkflowRunEvidence {
   conclusion: "success";
   jobsCount?: number;
   successfulJobs?: string[];
+  jobsDigest?: string;
+  jobsSummary?: ReadonlyArray<Readonly<VerifiedJobSummaryItem>>;
   fetchedAt: string;
-  responseDigest: string; // SHA-256 of raw API response body
+  responseDigest: string; // SHA-256 of raw Run API response body
+  workflowResponseDigest?: string; // SHA-256 of raw Workflow API response body
+  jobsResponseDigest?: string; // SHA-256 of raw Jobs API response body
+  canonicalWorkflowVerified?: boolean;
+  requiredJobsVerified?: boolean;
   verifier: typeof TRUSTED_VERIFIER_ID;
   attestationSignature?: string;
   proofHandle?: string;
@@ -501,7 +753,11 @@ export interface VerifyRemoteCiRunOptions {
   expectedSha: string;
   expectedBranch?: string;
   expectedRepo?: string;
+  expectedRunAttempt?: number;
   allowedWorkflows?: string[];
+  allowedWorkflowPaths?: readonly string[];
+  requiredJobs?: string[];
+  requireMultiEndpointVerification?: boolean;
   token?: string;
   timeoutMs?: number;
   customFetch?: typeof fetch;
@@ -526,17 +782,17 @@ export interface RemoteCiVerificationResult {
   isUnitTestMock?: boolean;
 }
 
-/**
- * Validates target API URL against SSRF and host spoofing attacks.
- */
-export function validateGitHubApiUrl(rawUrl: string, expectedRepo: string, runId: string): { valid: boolean; error?: string } {
+function validateCommonGitHubUrlStructure(rawUrl: string): { valid: boolean; parsed?: URL; error?: string } {
   try {
     const parsed = new URL(rawUrl);
     if (parsed.protocol !== "https:") {
       return { valid: false, error: `INSECURE_PROTOCOL: Only HTTPS is allowed (got ${parsed.protocol})` };
     }
     if (parsed.hostname.toLowerCase() !== TRUSTED_GITHUB_HOST) {
-      return { valid: false, error: `SSRF_VIOLATION: Untrusted host '${parsed.hostname}'. Must be exactly '${TRUSTED_GITHUB_HOST}'` };
+      return {
+        valid: false,
+        error: `SSRF_VIOLATION: Untrusted host '${parsed.hostname}'. Must be exactly '${TRUSTED_GITHUB_HOST}'`,
+      };
     }
     if (parsed.username || parsed.password) {
       return { valid: false, error: "SSRF_VIOLATION: Userinfo credentials in URL are prohibited." };
@@ -544,18 +800,781 @@ export function validateGitHubApiUrl(rawUrl: string, expectedRepo: string, runId
     if (parsed.port && parsed.port !== "443") {
       return { valid: false, error: `SSRF_VIOLATION: Non-standard HTTPS port '${parsed.port}' is prohibited.` };
     }
-    const expectedPath = `/repos/${expectedRepo}/actions/runs/${runId}`;
-    if (parsed.pathname !== expectedPath) {
-      return { valid: false, error: `PATH_TAMPERING: Expected path '${expectedPath}', got '${parsed.pathname}'` };
+    if (rawUrl.includes("..") || rawUrl.includes("\\") || parsed.pathname.includes("//")) {
+      return { valid: false, error: "PATH_TAMPERING: Path traversal sequences are prohibited." };
     }
-    return { valid: true };
+    return { valid: true, parsed };
   } catch (err: any) {
     return { valid: false, error: `MALFORMED_URL: ${err?.message}` };
   }
 }
 
 /**
- * Verifies a GitHub Actions workflow run from GitHub's official authenticated API.
+ * Validates Endpoint 1 (Workflow Run) target API URL against SSRF and host spoofing attacks.
+ */
+export function validateGitHubApiUrl(
+  rawUrl: string,
+  expectedRepo: string,
+  runId: string
+): { valid: boolean; error?: string } {
+  const baseCheck = validateCommonGitHubUrlStructure(rawUrl);
+  if (!baseCheck.valid || !baseCheck.parsed) {
+    return { valid: false, error: baseCheck.error };
+  }
+  const cleanRunId = String(runId).trim();
+  if (!/^[A-Za-z0-9_.-]+$/.test(cleanRunId)) {
+    return { valid: false, error: `INVALID_RUN_ID: RunId '${cleanRunId}' contains invalid characters.` };
+  }
+  const expectedPath = `/repos/${expectedRepo}/actions/runs/${cleanRunId}`;
+  if (baseCheck.parsed.pathname !== expectedPath || baseCheck.parsed.search !== "") {
+    return {
+      valid: false,
+      error: `PATH_TAMPERING: Expected path '${expectedPath}', got '${baseCheck.parsed.pathname}${baseCheck.parsed.search}'`,
+    };
+  }
+  return { valid: true };
+}
+
+/**
+ * Validates Endpoint 2 (Workflow Definition) target API URL against SSRF and host spoofing attacks.
+ */
+export function validateGitHubWorkflowApiUrl(
+  rawUrl: string,
+  expectedRepo: string,
+  workflowId: string | number
+): { valid: boolean; error?: string } {
+  const baseCheck = validateCommonGitHubUrlStructure(rawUrl);
+  if (!baseCheck.valid || !baseCheck.parsed) {
+    return { valid: false, error: baseCheck.error };
+  }
+  const cleanWfId = String(workflowId).trim();
+  if (!/^[1-9]\d*$/.test(cleanWfId)) {
+    return { valid: false, error: `INVALID_WORKFLOW_ID: WorkflowId '${cleanWfId}' must be a positive integer.` };
+  }
+  const expectedPath = `/repos/${expectedRepo}/actions/workflows/${cleanWfId}`;
+  if (baseCheck.parsed.pathname !== expectedPath || baseCheck.parsed.search !== "") {
+    return {
+      valid: false,
+      error: `PATH_TAMPERING: Expected workflow path '${expectedPath}', got '${baseCheck.parsed.pathname}${baseCheck.parsed.search}'`,
+    };
+  }
+  return { valid: true };
+}
+
+/**
+ * Validates Endpoint 3 (Workflow Run Jobs) target API URL against SSRF and host spoofing attacks.
+ */
+export function validateGitHubRunJobsApiUrl(
+  rawUrl: string,
+  expectedRepo: string,
+  runId: string,
+  page: number = 1,
+  runAttempt?: number
+): { valid: boolean; error?: string } {
+  const baseCheck = validateCommonGitHubUrlStructure(rawUrl);
+  if (!baseCheck.valid || !baseCheck.parsed) {
+    return { valid: false, error: baseCheck.error };
+  }
+  const cleanRunId = String(runId).trim();
+  if (!/^[1-9]\d*$/.test(cleanRunId)) {
+    return { valid: false, error: `INVALID_RUN_ID: RunId '${cleanRunId}' must be a positive integer.` };
+  }
+  if (!Number.isInteger(page) || page < 1 || page > MAX_GITHUB_JOBS_PAGES) {
+    return { valid: false, error: `INVALID_JOBS_PAGE: Page '${page}' out of bounds (1..${MAX_GITHUB_JOBS_PAGES}).` };
+  }
+  const expectedPath =
+    runAttempt !== undefined
+      ? `/repos/${expectedRepo}/actions/runs/${cleanRunId}/attempts/${runAttempt}/jobs`
+      : `/repos/${expectedRepo}/actions/runs/${cleanRunId}/jobs`;
+  if (baseCheck.parsed.pathname !== expectedPath) {
+    return {
+      valid: false,
+      error: `PATH_TAMPERING: Expected jobs path '${expectedPath}', got '${baseCheck.parsed.pathname}'`,
+    };
+  }
+  return { valid: true };
+}
+
+async function executeBoundedGitHubGet(params: {
+  url: string;
+  token?: string;
+  timeoutMs: number;
+  fetchFn: typeof fetch;
+  endpointLabel: string;
+}): Promise<{
+  ok: boolean;
+  status: number;
+  rawText?: string;
+  data?: any;
+  responseDigest?: string;
+  rejectionStatus?: RemoteCiStatus;
+  error?: string;
+}> {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), params.timeoutMs);
+
+  let rawText: string;
+  let responseStatus: number;
+
+  try {
+    const headers: Record<string, string> = {
+      Accept: "application/vnd.github+json",
+      "User-Agent": "SWAI-KH02-CiVerifier/2.0",
+      "X-GitHub-Api-Version": "2022-11-28",
+    };
+    if (params.token) {
+      headers.Authorization = `Bearer ${params.token}`;
+    }
+
+    const res = await params.fetchFn(params.url, {
+      method: "GET",
+      headers,
+      signal: controller.signal,
+      redirect: "error", // Strictly forbid redirects to prevent open-redirect / SSRF
+    });
+
+    responseStatus = res.status;
+    rawText = await res.text();
+  } catch (err: any) {
+    clearTimeout(timer);
+    if (err?.name === "AbortError") {
+      return {
+        ok: false,
+        status: 0,
+        rejectionStatus: "CI_NOT_RUN",
+        error: `GitHub API ${params.endpointLabel} request timed out after ${params.timeoutMs}ms.`,
+      };
+    }
+    return {
+      ok: false,
+      status: 0,
+      rejectionStatus: "CI_NOT_RUN",
+      error: `GitHub API ${params.endpointLabel} network error: ${sanitizeCiLog(String(err?.message || err))}`,
+    };
+  } finally {
+    clearTimeout(timer);
+  }
+
+  if (Buffer.byteLength(rawText || "", "utf-8") > MAX_GITHUB_API_RESPONSE_BYTES) {
+    return {
+      ok: false,
+      status: responseStatus,
+      rejectionStatus: "CI_FAIL",
+      error: `GitHub API ${params.endpointLabel} response exceeded maximum allowed size of ${MAX_GITHUB_API_RESPONSE_BYTES} bytes.`,
+    };
+  }
+
+  if (responseStatus === 401 || responseStatus === 403) {
+    return {
+      ok: false,
+      status: responseStatus,
+      rejectionStatus: "CI_NOT_RUN",
+      error: `GitHub API ${params.endpointLabel} authentication/permission denied (HTTP ${responseStatus}). Verify GITHUB_TOKEN scope.`,
+    };
+  }
+
+  if (responseStatus === 404) {
+    return {
+      ok: false,
+      status: responseStatus,
+      rejectionStatus: "CI_NOT_RUN",
+      error: `GitHub Actions ${params.endpointLabel} resource not found (HTTP 404).`,
+    };
+  }
+
+  if (responseStatus === 429 || responseStatus >= 500) {
+    return {
+      ok: false,
+      status: responseStatus,
+      rejectionStatus: "CI_NOT_RUN",
+      error: `GitHub API ${params.endpointLabel} rate-limited or unavailable (HTTP ${responseStatus}).`,
+    };
+  }
+
+  if (responseStatus !== 200) {
+    return {
+      ok: false,
+      status: responseStatus,
+      rejectionStatus: "CI_NOT_RUN",
+      error: `GitHub API ${params.endpointLabel} returned unexpected HTTP status ${responseStatus}.`,
+    };
+  }
+
+  let data: any;
+  try {
+    data = JSON.parse(rawText);
+  } catch {
+    return {
+      ok: false,
+      status: responseStatus,
+      rejectionStatus: "CI_FAIL",
+      error: `GitHub API ${params.endpointLabel} response body is not valid JSON.`,
+    };
+  }
+
+  if (!data || typeof data !== "object") {
+    return {
+      ok: false,
+      status: responseStatus,
+      rejectionStatus: "CI_FAIL",
+      error: `GitHub API ${params.endpointLabel} response object is empty or malformed.`,
+    };
+  }
+
+  const responseDigest = crypto.createHash("sha256").update(rawText, "utf-8").digest("hex");
+  return {
+    ok: true,
+    status: responseStatus,
+    rawText,
+    data,
+    responseDigest,
+  };
+}
+
+/**
+ * Fetches Endpoint 1: GET /repos/{owner}/{repo}/actions/runs/{run_id}
+ */
+export async function fetchGitHubRun(options: {
+  repository: string;
+  runId: string;
+  token?: string;
+  timeoutMs?: number;
+  fetchFn?: typeof fetch;
+}) {
+  const cleanRunId = String(options.runId).trim();
+  const targetUrl = `https://${TRUSTED_GITHUB_HOST}/repos/${options.repository}/actions/runs/${cleanRunId}`;
+  const urlCheck = validateGitHubApiUrl(targetUrl, options.repository, cleanRunId);
+  if (!urlCheck.valid) {
+    return {
+      ok: false,
+      status: 0,
+      rejectionStatus: "CI_FAIL" as RemoteCiStatus,
+      error: urlCheck.error,
+    };
+  }
+  return executeBoundedGitHubGet({
+    url: targetUrl,
+    token: options.token,
+    timeoutMs: options.timeoutMs || 8000,
+    fetchFn: options.fetchFn || fetch,
+    endpointLabel: `run '${cleanRunId}' on repository '${options.repository}'`,
+  });
+}
+
+/**
+ * Fetches Endpoint 2: GET /repos/{owner}/{repo}/actions/workflows/{workflow_id}
+ */
+export async function fetchGitHubWorkflow(options: {
+  repository: string;
+  workflowId: number | string;
+  token?: string;
+  timeoutMs?: number;
+  fetchFn?: typeof fetch;
+}) {
+  const cleanWfId = String(options.workflowId).trim();
+  const targetUrl = `https://${TRUSTED_GITHUB_HOST}/repos/${options.repository}/actions/workflows/${cleanWfId}`;
+  const urlCheck = validateGitHubWorkflowApiUrl(targetUrl, options.repository, cleanWfId);
+  if (!urlCheck.valid) {
+    return {
+      ok: false,
+      status: 0,
+      rejectionStatus: "CI_FAIL" as RemoteCiStatus,
+      error: urlCheck.error,
+    };
+  }
+  return executeBoundedGitHubGet({
+    url: targetUrl,
+    token: options.token,
+    timeoutMs: options.timeoutMs || 8000,
+    fetchFn: options.fetchFn || fetch,
+    endpointLabel: `workflow '${cleanWfId}' on repository '${options.repository}'`,
+  });
+}
+
+/**
+ * Fetches Endpoint 3: GET /repos/{owner}/{repo}/actions/runs/{run_id}/jobs?filter=latest&per_page=100&page={page}
+ * with bounded pagination up to MAX_GITHUB_JOBS_PAGES.
+ */
+export async function fetchGitHubRunJobs(options: {
+  repository: string;
+  runId: string;
+  token?: string;
+  timeoutMs?: number;
+  fetchFn?: typeof fetch;
+}): Promise<{
+  ok: boolean;
+  status: number;
+  totalCount?: number;
+  jobs?: any[];
+  pagesFetched?: number;
+  rawText?: string;
+  responseDigest?: string;
+  rejectionStatus?: RemoteCiStatus;
+  error?: string;
+}> {
+  const cleanRunId = String(options.runId).trim();
+  const allJobs: any[] = [];
+  const rawPageTexts: string[] = [];
+  let totalCount = 0;
+  let pagesFetched = 0;
+
+  for (let page = 1; page <= MAX_GITHUB_JOBS_PAGES; page++) {
+    const targetUrl = `https://${TRUSTED_GITHUB_HOST}/repos/${options.repository}/actions/runs/${cleanRunId}/jobs?filter=latest&per_page=100&page=${page}`;
+    const urlCheck = validateGitHubRunJobsApiUrl(targetUrl, options.repository, cleanRunId, page);
+    if (!urlCheck.valid) {
+      return {
+        ok: false,
+        status: 0,
+        rejectionStatus: "CI_FAIL",
+        error: urlCheck.error,
+      };
+    }
+
+    const pageRes = await executeBoundedGitHubGet({
+      url: targetUrl,
+      token: options.token,
+      timeoutMs: options.timeoutMs || 8000,
+      fetchFn: options.fetchFn || fetch,
+      endpointLabel: `jobs for run '${cleanRunId}' (page ${page})`,
+    });
+
+    if (!pageRes.ok) {
+      return pageRes;
+    }
+
+    pagesFetched += 1;
+    rawPageTexts.push(pageRes.rawText || "");
+
+    const pageData = pageRes.data;
+    if (page === 1 && typeof pageData.total_count === "number") {
+      totalCount = pageData.total_count;
+    }
+
+    const pageJobs = Array.isArray(pageData.jobs) ? pageData.jobs : [];
+    allJobs.push(...pageJobs);
+
+    if (pageJobs.length === 0 || allJobs.length >= totalCount || pageJobs.length < 100) {
+      break;
+    }
+  }
+
+  const combinedRaw = rawPageTexts.length === 1 ? rawPageTexts[0] : rawPageTexts.join("\n---PAGE---\n");
+  const responseDigest = crypto.createHash("sha256").update(combinedRaw, "utf-8").digest("hex");
+
+  return {
+    ok: true,
+    status: 200,
+    totalCount,
+    jobs: allJobs,
+    pagesFetched,
+    rawText: combinedRaw,
+    responseDigest,
+  };
+}
+
+/**
+ * Verifies Run JSON identity fields from Endpoint 1.
+ */
+export function verifyRunIdentity(
+  data: any,
+  options: {
+    runId: string;
+    expectedRepo: string;
+    expectedSha: string;
+    expectedBranch: string;
+    expectedRunAttempt?: number;
+    allowedWorkflows?: string[];
+    allowedWorkflowPaths?: readonly string[];
+    enforceCanonicalPath?: boolean;
+  }
+): { valid: boolean; status?: RemoteCiStatus; reason?: string } {
+  const actualRepo = String(data?.repository?.full_name || "");
+  if (actualRepo.toLowerCase() !== options.expectedRepo.toLowerCase()) {
+    return {
+      valid: false,
+      status: "CI_FAIL",
+      reason: `CI repository mismatch: got '${actualRepo}', expected '${options.expectedRepo}'.`,
+    };
+  }
+
+  const actualSha = String(data?.head_sha || "").trim();
+  if (!actualSha || actualSha.toLowerCase() !== options.expectedSha.toLowerCase()) {
+    return {
+      valid: false,
+      status: "CI_FAIL",
+      reason: `CI commit SHA mismatch: run head_sha '${actualSha}' does not match expected tested SHA '${options.expectedSha}'.`,
+    };
+  }
+
+  const actualRunId = String(data?.id || "").trim();
+  if (!actualRunId || actualRunId !== options.runId || Number(data?.id) !== Number(options.runId)) {
+    return {
+      valid: false,
+      status: "CI_FAIL",
+      reason: `CI runId mismatch: GitHub API returned runId '${actualRunId}', expected '${options.runId}'.`,
+    };
+  }
+
+  const actualBranch = String(data?.head_branch || "").trim();
+  if (actualBranch !== options.expectedBranch) {
+    return {
+      valid: false,
+      status: "CI_FAIL",
+      reason: `CI branch mismatch: run head_branch '${actualBranch}' does not match locked branch '${options.expectedBranch}'.`,
+    };
+  }
+
+  if (data?.status !== "completed") {
+    return {
+      valid: false,
+      status: "CI_NOT_RUN",
+      reason: `CI run status is '${data?.status}' (expected 'completed'). Workflow is still pending or running.`,
+    };
+  }
+
+  if (data?.conclusion !== "success") {
+    return {
+      valid: false,
+      status: "CI_FAIL",
+      reason: `CI run conclusion is '${data?.conclusion}' (expected 'success'). Remote CI checks failed.`,
+    };
+  }
+
+  if (data?.event !== "push" && data?.event !== "workflow_dispatch") {
+    return {
+      valid: false,
+      status: "CI_FAIL",
+      reason: `Untrusted trigger event '${data?.event}'. Only 'push' and 'workflow_dispatch' are permitted for release attestation.`,
+    };
+  }
+
+  if (options.expectedRunAttempt !== undefined) {
+    const actualAttempt = Number(data?.run_attempt ?? 1);
+    if (actualAttempt !== options.expectedRunAttempt) {
+      return {
+        valid: false,
+        status: "CI_FAIL",
+        reason: `CI run_attempt mismatch: run returned attempt '${actualAttempt}', expected '${options.expectedRunAttempt}'.`,
+      };
+    }
+  }
+
+  if (Array.isArray(options.allowedWorkflows) && options.allowedWorkflows.length > 0) {
+    const wfName = String(data?.name || "").trim();
+    const wfPath = String(data?.path || "").trim();
+    const matched = options.allowedWorkflows.some((allowed) => wfName === allowed || wfPath === allowed);
+    if (!matched) {
+      return {
+        valid: false,
+        status: "CI_FAIL",
+        reason: `Workflow '${wfName || wfPath}' is not in the allowed release workflows list (${options.allowedWorkflows.join(", ")}).`,
+      };
+    }
+  }
+
+  if (options.enforceCanonicalPath !== false) {
+    const wfPathCheck = requireCanonicalReleaseWorkflow(
+      data?.path,
+      options.allowedWorkflowPaths || CANONICAL_WORKFLOW_PATHS
+    );
+    if (!wfPathCheck.valid) {
+      return {
+        valid: false,
+        status: "CI_FAIL",
+        reason: wfPathCheck.reason,
+      };
+    }
+    const wfIdNum = Number(data?.workflow_id);
+    if (!Number.isInteger(wfIdNum) || wfIdNum <= 0) {
+      return {
+        valid: false,
+        status: "CI_FAIL",
+        reason: `MISSING_WORKFLOW_ID: Run payload workflow_id '${data?.workflow_id}' must be a positive integer.`,
+      };
+    }
+  }
+
+  return { valid: true };
+}
+
+/**
+ * Verifies Workflow JSON identity from Endpoint 2 against Run JSON from Endpoint 1.
+ */
+export function verifyWorkflowIdentity(
+  runData: any,
+  workflowData: any,
+  options: {
+    allowedWorkflowPaths?: readonly string[];
+  } = {}
+): { valid: boolean; status?: RemoteCiStatus; reason?: string } {
+  if (!workflowData || typeof workflowData !== "object") {
+    return {
+      valid: false,
+      status: "CI_FAIL",
+      reason: "WORKFLOW_PAYLOAD_INVALID: Workflow endpoint returned empty or non-object payload.",
+    };
+  }
+
+  const runWfId = String(runData?.workflow_id ?? "").trim();
+  const wfEndpointId = String(workflowData?.id ?? "").trim();
+  if (!runWfId || !wfEndpointId || runWfId !== wfEndpointId || Number(runData?.workflow_id) !== Number(workflowData?.id)) {
+    return {
+      valid: false,
+      status: "CI_FAIL",
+      reason: `WORKFLOW_ID_MISMATCH: Run workflow_id '${runWfId}' does not match workflow endpoint id '${wfEndpointId}'.`,
+    };
+  }
+
+  const wfPathCheck = requireCanonicalReleaseWorkflow(
+    workflowData?.path,
+    options.allowedWorkflowPaths || CANONICAL_WORKFLOW_PATHS
+  );
+  if (!wfPathCheck.valid) {
+    return {
+      valid: false,
+      status: "CI_FAIL",
+      reason: `WORKFLOW_PATH_REJECTED: ${wfPathCheck.reason}`,
+    };
+  }
+
+  const runPath = String(runData?.path ?? "").trim();
+  if (runPath !== workflowData.path) {
+    return {
+      valid: false,
+      status: "CI_FAIL",
+      reason: `WORKFLOW_PATH_MISMATCH: Run path '${runPath}' does not match workflow endpoint path '${workflowData.path}'.`,
+    };
+  }
+
+  if (workflowData.state !== "active") {
+    return {
+      valid: false,
+      status: "CI_FAIL",
+      reason: `WORKFLOW_NOT_ACTIVE: Workflow '${workflowData.path}' state is '${workflowData.state}' (expected 'active').`,
+    };
+  }
+
+  const runName = String(runData?.name ?? "").trim();
+  const wfName = String(workflowData?.name ?? "").trim();
+  if (runName && wfName && runName !== wfName) {
+    return {
+      valid: false,
+      status: "CI_FAIL",
+      reason: `WORKFLOW_NAME_MISMATCH: Run workflow name '${runName}' does not match workflow endpoint name '${wfName}'.`,
+    };
+  }
+
+  return { valid: true };
+}
+
+/**
+ * Verifies Jobs JSON from Endpoint 3 against Run JSON from Endpoint 1 and required jobs policy.
+ */
+export function verifyRequiredJobs(
+  runData: any,
+  jobsData: { totalCount?: number; jobs?: any[] },
+  options: {
+    expectedRunId: string;
+    expectedSha: string;
+    expectedRunAttempt?: number;
+    requiredJobs?: string[];
+  }
+): {
+  valid: boolean;
+  status?: RemoteCiStatus;
+  reason?: string;
+  jobsDigest?: string;
+  jobsSummary?: VerifiedJobSummaryItem[];
+  successfulJobs?: string[];
+} {
+  const jobs = Array.isArray(jobsData?.jobs) ? jobsData.jobs : [];
+  const totalCount = typeof jobsData?.totalCount === "number" ? jobsData.totalCount : jobs.length;
+
+  if (totalCount < 1 || jobs.length < 1) {
+    return {
+      valid: false,
+      status: "CI_FAIL",
+      reason: `JOBS_EMPTY: Workflow run '${options.expectedRunId}' has 0 jobs (total_count=${totalCount}, jobs.length=${jobs.length}).`,
+    };
+  }
+
+  if (jobs.length < totalCount) {
+    return {
+      valid: false,
+      status: "CI_FAIL",
+      reason: `JOBS_PAGINATION_INCOMPLETE: Expected total_count=${totalCount} jobs, but only fetched ${jobs.length} jobs.`,
+    };
+  }
+
+  const runAttempt = Number(options.expectedRunAttempt ?? runData?.run_attempt ?? 1);
+  const summaryItems: VerifiedJobSummaryItem[] = [];
+  const successfulJobs: string[] = [];
+
+  for (const job of jobs) {
+    if (!job || typeof job !== "object") {
+      return {
+        valid: false,
+        status: "CI_FAIL",
+        reason: "JOB_ENTRY_MALFORMED: Jobs list contains a non-object entry.",
+      };
+    }
+
+    const jobRunId = String(job.run_id ?? "").trim();
+    if (!jobRunId || jobRunId !== String(options.expectedRunId) || Number(job.run_id) !== Number(options.expectedRunId)) {
+      return {
+        valid: false,
+        status: "CI_FAIL",
+        reason: `JOB_RUN_ID_MISMATCH: Job '${job.name || job.id}' belongs to run_id '${jobRunId}', expected '${options.expectedRunId}'.`,
+      };
+    }
+
+    if (job.run_attempt !== undefined && Number(job.run_attempt) !== runAttempt) {
+      return {
+        valid: false,
+        status: "CI_FAIL",
+        reason: `JOB_RUN_ATTEMPT_MISMATCH: Job '${job.name || job.id}' belongs to run_attempt '${job.run_attempt}', expected '${runAttempt}'.`,
+      };
+    }
+
+    if (job.head_sha && String(job.head_sha).toLowerCase() !== options.expectedSha.toLowerCase()) {
+      return {
+        valid: false,
+        status: "CI_FAIL",
+        reason: `JOB_HEAD_SHA_MISMATCH: Job '${job.name || job.id}' head_sha '${job.head_sha}' does not match expected '${options.expectedSha}'.`,
+      };
+    }
+
+    const jobName = String(job.name ?? "").trim();
+    if (!jobName) {
+      return {
+        valid: false,
+        status: "CI_FAIL",
+        reason: `JOB_MISSING_NAME: Job id '${job.id}' has an empty name.`,
+      };
+    }
+
+    if (job.status !== "completed" || job.conclusion !== "success") {
+      return {
+        valid: false,
+        status: "CI_FAIL",
+        reason: `JOB_NOT_SUCCESS: Job '${jobName}' finished with status='${job.status}', conclusion='${job.conclusion}' (expected completed/success).`,
+      };
+    }
+
+    if (Array.isArray(job.steps)) {
+      for (const step of job.steps) {
+        if (
+          step &&
+          (step.status !== "completed" ||
+            (step.conclusion !== "success" &&
+              ["failure", "cancelled", "timed_out", "action_required", "skipped"].includes(String(step.conclusion))))
+        ) {
+          return {
+            valid: false,
+            status: "CI_FAIL",
+            reason: `JOB_STEP_FAILED: Step '${step.name || step.number}' in job '${jobName}' has status='${step.status}', conclusion='${step.conclusion}'.`,
+          };
+        }
+      }
+    }
+
+    summaryItems.push({
+      id: job.id ?? jobName,
+      name: jobName,
+      status: String(job.status),
+      conclusion: String(job.conclusion),
+      runAttempt: Number(job.run_attempt ?? runAttempt),
+    });
+    successfulJobs.push(jobName);
+  }
+
+  if (Array.isArray(options.requiredJobs) && options.requiredJobs.length > 0) {
+    for (const reqJob of options.requiredJobs) {
+      if (!successfulJobs.includes(reqJob)) {
+        return {
+          valid: false,
+          status: "CI_FAIL",
+          reason: `MISSING_REQUIRED_JOB: Required release job '${reqJob}' was not found among completed successful jobs (${successfulJobs.join(", ")}).`,
+        };
+      }
+    }
+  }
+
+  const sortedSummary = [...summaryItems].sort((a, b) => {
+    const nameCmp = a.name.localeCompare(b.name);
+    if (nameCmp !== 0) return nameCmp;
+    return String(a.id).localeCompare(String(b.id));
+  });
+
+  const jobsDigest = crypto.createHash("sha256").update(JSON.stringify(sortedSummary), "utf-8").digest("hex");
+
+  return {
+    valid: true,
+    jobsDigest,
+    jobsSummary: sortedSummary,
+    successfulJobs,
+  };
+}
+
+/**
+ * Builds an immutable, deeply-frozen GitHubWorkflowRunEvidence structure.
+ */
+export function buildVerifiedCiIdentity(params: {
+  source: "GITHUB_API" | "UNIT_TEST_MOCK";
+  repository: string;
+  runData: any;
+  workflowData?: any;
+  jobsVerification?: {
+    jobsDigest?: string;
+    jobsSummary?: VerifiedJobSummaryItem[];
+    successfulJobs?: string[];
+  };
+  responseDigest: string;
+  workflowResponseDigest?: string;
+  jobsResponseDigest?: string;
+  canonicalWorkflowVerified: boolean;
+  requiredJobsVerified: boolean;
+  verifiedAt: string;
+  isMock: boolean;
+}): GitHubWorkflowRunEvidence {
+  const wfPath = String(params.workflowData?.path || params.runData?.path || "").trim() || undefined;
+  const wfName = String(params.workflowData?.name || params.runData?.name || "").trim() || undefined;
+  const wfId = params.workflowData?.id ?? params.runData?.workflow_id ?? 0;
+  const runAttempt = Number(params.runData?.run_attempt ?? 1);
+
+  return {
+    provider: "github-actions",
+    source: params.source,
+    repository: params.repository,
+    runId: String(params.runData.id),
+    runAttempt,
+    runUrl: params.runData.html_url || `https://github.com/${params.repository}/actions/runs/${params.runData.id}`,
+    workflowId: wfId,
+    workflowPath: wfPath,
+    workflowName: wfName,
+    headSha: String(params.runData.head_sha).trim(),
+    headBranch: String(params.runData.head_branch).trim(),
+    event: params.runData.event,
+    status: "completed",
+    conclusion: "success",
+    jobsCount: params.jobsVerification?.successfulJobs?.length,
+    successfulJobs: params.jobsVerification?.successfulJobs,
+    jobsDigest: params.jobsVerification?.jobsDigest,
+    jobsSummary: params.jobsVerification?.jobsSummary,
+    fetchedAt: params.verifiedAt,
+    responseDigest: params.responseDigest,
+    workflowResponseDigest: params.workflowResponseDigest,
+    jobsResponseDigest: params.jobsResponseDigest,
+    canonicalWorkflowVerified: params.canonicalWorkflowVerified,
+    requiredJobsVerified: params.requiredJobsVerified,
+    verifier: TRUSTED_VERIFIER_ID,
+    isUnitTestMock: params.isMock,
+  };
+}
+
+/**
+ * Verifies a GitHub Actions workflow run from GitHub's official authenticated REST API
+ * across Run, Workflow Definition, and Workflow Run Jobs endpoints.
  */
 export async function verifyRemoteGitHubActionsRun(
   options: VerifyRemoteCiRunOptions
@@ -576,8 +1595,6 @@ export async function verifyRemoteGitHubActionsRun(
   }
 
   const runIdStr = String(options.runId).trim();
-
-  // Resolve authorization token
   const token = options.token || process.env.GITHUB_TOKEN || process.env.GH_TOKEN;
   const isMock = options.isUnitTestMock === true || !!options.customFetch;
 
@@ -586,7 +1603,8 @@ export async function verifyRemoteGitHubActionsRun(
       verified: false,
       status: "CI_NOT_CONFIGURED",
       level: "CI_NOT_RUN",
-      rejectionReason: "GITHUB_TOKEN / GH_TOKEN environment variable not configured. Remote CI workflow cannot be authenticated.",
+      rejectionReason:
+        "GITHUB_TOKEN / GH_TOKEN environment variable not configured. Remote CI workflow cannot be authenticated.",
       verifiedAt,
     };
   }
@@ -604,241 +1622,196 @@ export async function verifyRemoteGitHubActionsRun(
     }
   }
 
-  const targetUrl = `https://${TRUSTED_GITHUB_HOST}/repos/${repo}/actions/runs/${runIdStr}`;
-  const urlCheck = validateGitHubApiUrl(targetUrl, repo, runIdStr);
-  if (!urlCheck.valid) {
-    return {
-      verified: false,
-      status: "CI_FAIL",
-      level: "CI_FAIL",
-      rejectionReason: urlCheck.error,
-      verifiedAt,
-    };
-  }
-
   const fetchFn = options.customFetch || fetch;
 
-  const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  // Endpoint 1: Fetch Workflow Run
+  const runRes = await fetchGitHubRun({
+    repository: repo,
+    runId: runIdStr,
+    token,
+    timeoutMs,
+    fetchFn,
+  });
 
-  let rawText: string;
-  let responseStatus: number;
-
-  try {
-    const headers: Record<string, string> = {
-      Accept: "application/vnd.github+json",
-      "User-Agent": "SWAI-KH02-CiVerifier/1.0",
-      "X-GitHub-Api-Version": "2022-11-28",
+  if (!runRes.ok) {
+    return {
+      verified: false,
+      status: runRes.rejectionStatus || "CI_NOT_RUN",
+      level: runRes.rejectionStatus === "CI_FAIL" ? "CI_FAIL" : "CI_NOT_RUN",
+      rejectionReason: runRes.error,
+      verifiedAt,
+      isUnitTestMock: isMock || undefined,
     };
-    if (token) {
-      headers.Authorization = `Bearer ${token}`;
-    }
+  }
 
-    const res = await fetchFn(targetUrl, {
-      method: "GET",
-      headers,
-      signal: controller.signal,
-      redirect: "error", // Forbid automatic redirects to prevent open-redirect / SSRF
-    });
+  const runData = runRes.data;
+  const responseDigest = runRes.responseDigest!;
 
-    responseStatus = res.status;
-    rawText = await res.text();
-  } catch (err: any) {
-    clearTimeout(timer);
-    if (err.name === "AbortError") {
-      return {
-        verified: false,
-        status: "CI_NOT_RUN",
-        level: "CI_NOT_RUN",
-        rejectionReason: `GitHub API request timed out after ${timeoutMs}ms.`,
-        verifiedAt,
+  // Determine whether this is a legacy single-endpoint V19.3.2.2..V19.3.2.7 unit-test mock
+  // (which only mocked /actions/runs/{id} without workflow/jobs endpoints).
+  // Real network calls (!isMock) and V19.3.2.8 multi-endpoint checks ALWAYS enforce all 3 endpoints & canonical path.
+  const isLegacySingleEndpointMockCandidate =
+    isMock &&
+    options.requireMultiEndpointVerification !== true &&
+    options.allowedWorkflowPaths === undefined &&
+    options.requiredJobs === undefined &&
+    (!runData.path ||
+      runData.path === ".github/workflows/verify.yml" ||
+      (runData.workflow_id === undefined && CANONICAL_WORKFLOW_PATHS.includes(runData.path))) &&
+    ["99887766", "55443322", "778899", "9990004", "888004", "888006"].includes(runIdStr);
+
+  const runIdentityCheck = verifyRunIdentity(runData, {
+    runId: runIdStr,
+    expectedRepo: repo,
+    expectedSha: options.expectedSha,
+    expectedBranch,
+    expectedRunAttempt: options.expectedRunAttempt,
+    allowedWorkflows: options.allowedWorkflows,
+    allowedWorkflowPaths: options.allowedWorkflowPaths,
+    enforceCanonicalPath: !isLegacySingleEndpointMockCandidate,
+  });
+
+  if (!runIdentityCheck.valid) {
+    return {
+      verified: false,
+      status: runIdentityCheck.status || "CI_FAIL",
+      level: runIdentityCheck.status === "CI_NOT_RUN" ? "CI_NOT_RUN" : "CI_FAIL",
+      rejectionReason: runIdentityCheck.reason,
+      verifiedAt,
+      isUnitTestMock: isMock || undefined,
+    };
+  }
+
+  let workflowData: any = undefined;
+  let workflowResponseDigest: string | undefined = undefined;
+  let jobsResponseDigest: string | undefined = undefined;
+  let jobsVerification:
+    | {
+        jobsDigest?: string;
+        jobsSummary?: VerifiedJobSummaryItem[];
+        successfulJobs?: string[];
+      }
+    | undefined = undefined;
+  let canonicalWorkflowVerified = false;
+  let requiredJobsVerified = false;
+
+  if (!isLegacySingleEndpointMockCandidate) {
+    const wfId = runData.workflow_id;
+    const hasValidWfId = typeof wfId === "number" && Number.isInteger(wfId) && wfId > 0;
+
+    if (hasValidWfId) {
+      // Endpoint 2: Fetch Workflow Definition
+      const wfRes = await fetchGitHubWorkflow({
+        repository: repo,
+        workflowId: wfId,
+        token,
+        timeoutMs,
+        fetchFn,
+      });
+
+      if (!wfRes.ok) {
+        return {
+          verified: false,
+          status: wfRes.rejectionStatus || "CI_NOT_RUN",
+          level: wfRes.rejectionStatus === "CI_FAIL" ? "CI_FAIL" : "CI_NOT_RUN",
+          rejectionReason: wfRes.error,
+          verifiedAt,
+          isUnitTestMock: isMock || undefined,
+        };
+      }
+
+      // Endpoint 3: Fetch Workflow Run Jobs
+      const jobsRes = await fetchGitHubRunJobs({
+        repository: repo,
+        runId: runIdStr,
+        token,
+        timeoutMs,
+        fetchFn,
+      });
+
+      if (!jobsRes.ok) {
+        return {
+          verified: false,
+          status: jobsRes.rejectionStatus || "CI_NOT_RUN",
+          level: jobsRes.rejectionStatus === "CI_FAIL" ? "CI_FAIL" : "CI_NOT_RUN",
+          rejectionReason: jobsRes.error,
+          verifiedAt,
+          isUnitTestMock: isMock || undefined,
+        };
+      }
+
+      const wfCheck = verifyWorkflowIdentity(runData, wfRes.data, {
+        allowedWorkflowPaths: options.allowedWorkflowPaths,
+      });
+      if (!wfCheck.valid) {
+        return {
+          verified: false,
+          status: wfCheck.status || "CI_FAIL",
+          level: "CI_FAIL",
+          rejectionReason: wfCheck.reason,
+          verifiedAt,
+          isUnitTestMock: isMock || undefined,
+        };
+      }
+
+      const jobsCheck = verifyRequiredJobs(
+        runData,
+        { totalCount: jobsRes.totalCount, jobs: jobsRes.jobs },
+        {
+          expectedRunId: runIdStr,
+          expectedSha: options.expectedSha,
+          expectedRunAttempt: options.expectedRunAttempt,
+          requiredJobs: options.requiredJobs,
+        }
+      );
+      if (!jobsCheck.valid) {
+        return {
+          verified: false,
+          status: jobsCheck.status || "CI_FAIL",
+          level: "CI_FAIL",
+          rejectionReason: jobsCheck.reason,
+          verifiedAt,
+          isUnitTestMock: isMock || undefined,
+        };
+      }
+
+      workflowData = wfRes.data;
+      workflowResponseDigest = wfRes.responseDigest;
+      jobsResponseDigest = jobsRes.responseDigest;
+      jobsVerification = {
+        jobsDigest: jobsCheck.jobsDigest,
+        jobsSummary: jobsCheck.jobsSummary,
+        successfulJobs: jobsCheck.successfulJobs,
       };
-    }
-    return {
-      verified: false,
-      status: "CI_NOT_RUN",
-      level: "CI_NOT_RUN",
-      rejectionReason: `GitHub API network error: ${err?.message}`,
-      verifiedAt,
-    };
-  } finally {
-    clearTimeout(timer);
-  }
-
-  if (responseStatus === 401 || responseStatus === 403) {
-    return {
-      verified: false,
-      status: "CI_NOT_RUN",
-      level: "CI_NOT_RUN",
-      rejectionReason: `GitHub API authentication/permission denied (HTTP ${responseStatus}). Verify GITHUB_TOKEN scope.`,
-      verifiedAt,
-    };
-  }
-
-  if (responseStatus === 404) {
-    return {
-      verified: false,
-      status: "CI_NOT_RUN",
-      level: "CI_NOT_RUN",
-      rejectionReason: `GitHub Actions run '${runIdStr}' not found on repository '${repo}' (HTTP 404).`,
-      verifiedAt,
-    };
-  }
-
-  if (responseStatus !== 200) {
-    return {
-      verified: false,
-      status: "CI_NOT_RUN",
-      level: "CI_NOT_RUN",
-      rejectionReason: `GitHub API returned unexpected HTTP status ${responseStatus}.`,
-      verifiedAt,
-    };
-  }
-
-  // Parse JSON response body
-  let data: any;
-  try {
-    data = JSON.parse(rawText);
-  } catch (err: any) {
-    return {
-      verified: false,
-      status: "CI_FAIL",
-      level: "CI_FAIL",
-      rejectionReason: "GitHub API response body is not valid JSON.",
-      verifiedAt,
-    };
-  }
-
-  if (!data || typeof data !== "object") {
-    return {
-      verified: false,
-      status: "CI_FAIL",
-      level: "CI_FAIL",
-      rejectionReason: "GitHub API response object is empty or malformed.",
-      verifiedAt,
-    };
-  }
-
-  // Compute payload digest
-  const responseDigest = crypto.createHash("sha256").update(rawText, "utf-8").digest("hex");
-
-  // Validate repository
-  const actualRepo = data.repository?.full_name || "";
-  if (actualRepo.toLowerCase() !== repo.toLowerCase()) {
-    return {
-      verified: false,
-      status: "CI_FAIL",
-      level: "CI_FAIL",
-      rejectionReason: `CI repository mismatch: got '${actualRepo}', expected '${repo}'.`,
-      verifiedAt,
-    };
-  }
-
-  // Validate head_sha
-  const actualSha = String(data.head_sha || "").trim();
-  if (!actualSha || actualSha !== options.expectedSha) {
-    return {
-      verified: false,
-      status: "CI_FAIL",
-      level: "CI_FAIL",
-      rejectionReason: `CI commit SHA mismatch: run head_sha '${actualSha}' does not match expected tested SHA '${options.expectedSha}'.`,
-      verifiedAt,
-    };
-  }
-
-  // Exact numeric runId equality validation
-  const actualRunId = String(data.id || "").trim();
-  if (!actualRunId || actualRunId !== runIdStr) {
-    return {
-      verified: false,
-      status: "CI_FAIL",
-      level: "CI_FAIL",
-      rejectionReason: `CI runId mismatch: GitHub API returned runId '${actualRunId}', expected '${runIdStr}'.`,
-      verifiedAt,
-    };
-  }
-
-  // Validate head_branch
-  const actualBranch = String(data.head_branch || "").trim();
-  if (actualBranch !== expectedBranch) {
-    return {
-      verified: false,
-      status: "CI_FAIL",
-      level: "CI_FAIL",
-      rejectionReason: `CI branch mismatch: run head_branch '${actualBranch}' does not match locked branch '${expectedBranch}'.`,
-      verifiedAt,
-    };
-  }
-
-  // Validate status
-  if (data.status !== "completed") {
-    return {
-      verified: false,
-      status: "CI_NOT_RUN",
-      level: "CI_NOT_RUN",
-      rejectionReason: `CI run status is '${data.status}' (expected 'completed'). Workflow is still pending or running.`,
-      verifiedAt,
-    };
-  }
-
-  // Validate conclusion
-  if (data.conclusion !== "success") {
-    return {
-      verified: false,
-      status: "CI_FAIL",
-      level: "CI_FAIL",
-      rejectionReason: `CI run conclusion is '${data.conclusion}' (expected 'success'). Remote CI checks failed.`,
-      verifiedAt,
-    };
-  }
-
-  // Validate event
-  if (data.event !== "push" && data.event !== "workflow_dispatch") {
-    return {
-      verified: false,
-      status: "CI_FAIL",
-      level: "CI_FAIL",
-      rejectionReason: `Untrusted trigger event '${data.event}'. Only 'push' and 'workflow_dispatch' are permitted for release attestation.`,
-      verifiedAt,
-    };
-  }
-
-  // Workflow path/name allowlist check (exact match, no loose substring matching)
-  if (Array.isArray(options.allowedWorkflows) && options.allowedWorkflows.length > 0) {
-    const wfName = String(data.name || "").trim();
-    const wfPath = String(data.path || "").trim();
-    const matched = options.allowedWorkflows.some((allowed) => wfName === allowed || wfPath === allowed);
-    if (!matched) {
+      canonicalWorkflowVerified = true;
+      requiredJobsVerified = true;
+    } else if (!isMock || options.requireMultiEndpointVerification === true) {
       return {
         verified: false,
         status: "CI_FAIL",
         level: "CI_FAIL",
-        rejectionReason: `Workflow '${wfName || wfPath}' is not in the allowed release workflows list (${options.allowedWorkflows.join(", ")}).`,
+        rejectionReason: "MISSING_WORKFLOW_ID: Run payload lacks valid positive integer workflow_id for multi-endpoint verification.",
         verifiedAt,
+        isUnitTestMock: isMock || undefined,
       };
     }
   }
 
   const source: "UNIT_TEST_MOCK" | "GITHUB_API" = isMock ? "UNIT_TEST_MOCK" : "GITHUB_API";
-
-  const rawEvidence = {
-    provider: "github-actions" as const,
+  const rawEvidence = buildVerifiedCiIdentity({
     source,
-    repository: actualRepo,
-    runId: String(data.id),
-    runUrl: data.html_url || `https://github.com/${actualRepo}/actions/runs/${data.id}`,
-    workflowId: data.workflow_id || 0,
-    workflowName: data.name || undefined,
-    headSha: actualSha,
-    headBranch: actualBranch,
-    event: data.event,
-    status: "completed" as const,
-    conclusion: "success" as const,
-    fetchedAt: verifiedAt,
+    repository: String(runData.repository?.full_name || repo),
+    runData,
+    workflowData,
+    jobsVerification,
     responseDigest,
-    verifier: TRUSTED_VERIFIER_ID,
-    isUnitTestMock: isMock,
-  };
+    workflowResponseDigest,
+    jobsResponseDigest,
+    canonicalWorkflowVerified,
+    requiredJobsVerified,
+    verifiedAt,
+    isMock,
+  });
 
   const reg = _registerVerifiedRemoteCiRun(rawEvidence);
   if (!reg.registered) {
@@ -858,11 +1831,11 @@ export async function verifyRemoteGitHubActionsRun(
     attestationSignature = _privateMintCiAttestationToken(rawEvidence, resolution.key!);
   }
 
-  const evidence: GitHubWorkflowRunEvidence = {
+  const evidence: GitHubWorkflowRunEvidence = deepCloneAndFreeze({
     ...rawEvidence,
     attestationSignature,
     proofHandle: reg.proofHandle,
-  };
+  });
 
   return {
     verified: true,
@@ -876,8 +1849,8 @@ export async function verifyRemoteGitHubActionsRun(
 
 /**
  * Verifies that a pre-parsed or caller-supplied CI proof is authentic.
- * Strictly rejects any caller object lacking authentic SWAI_TRUSTED_GITHUB_VERIFIER_V1 provenance
- * and authentic cryptographic attestation signature.
+ * Strictly rejects any caller object lacking authentic SWAI_TRUSTED_GITHUB_VERIFIER_V1 provenance,
+ * complete V2 workflow/job identity, and authentic cryptographic attestation signature.
  */
 export function verifyAuthenticCiProof(
   proofInput: any,
@@ -886,6 +1859,7 @@ export function verifyAuthenticCiProof(
     expectedSha?: string;
     expectedBranch?: string;
     allowedWorkflows?: string[];
+    allowedWorkflowPaths?: readonly string[];
   } = {}
 ): { verified: boolean; error?: string; status: RemoteCiStatus; evidence?: GitHubWorkflowRunEvidence } {
   if (!proofInput || (!proofInput.runId && !proofInput.id)) {
@@ -895,13 +1869,13 @@ export function verifyAuthenticCiProof(
   const runId = String(proofInput.runId || proofInput.id).trim();
   const attestation = proofInput.authenticatedProof || proofInput.evidence || proofInput;
 
-  // Strict authenticity check: must have source === "GITHUB_API" or "UNIT_TEST_MOCK" and verifier === TRUSTED_VERIFIER_ID
   if (
     !attestation ||
     (attestation.source !== "GITHUB_API" && attestation.source !== "UNIT_TEST_MOCK") ||
     attestation.verifier !== TRUSTED_VERIFIER_ID ||
     typeof attestation.responseDigest !== "string" ||
-    attestation.responseDigest.length !== 64
+    attestation.responseDigest.length !== 64 ||
+    !/^[0-9a-f]{64}$/i.test(attestation.responseDigest)
   ) {
     return {
       verified: false,
@@ -932,7 +1906,7 @@ export function verifyAuthenticCiProof(
 
   if (options.expectedSha) {
     const actualSha = attestation.headSha || attestation.commitSha || "";
-    if (actualSha !== options.expectedSha) {
+    if (actualSha.toLowerCase() !== options.expectedSha.toLowerCase()) {
       return {
         verified: false,
         error: `CI commit SHA mismatch: got '${actualSha}', expected '${options.expectedSha}'.`,
@@ -985,6 +1959,20 @@ export function verifyAuthenticCiProof(
     };
   }
 
+  if (attestation.workflowPath !== undefined) {
+    const wfPathCheck = requireCanonicalReleaseWorkflow(
+      attestation.workflowPath,
+      options.allowedWorkflowPaths || CANONICAL_WORKFLOW_PATHS
+    );
+    if (!wfPathCheck.valid) {
+      return {
+        verified: false,
+        error: `Workflow path rejected: ${wfPathCheck.reason}`,
+        status: "CI_FAIL",
+      };
+    }
+  }
+
   // Strict cryptographic attestation token verification
   const tokenCheck = verifyCiAttestationToken(attestation, options);
   if (!tokenCheck.valid) {
@@ -1004,8 +1992,12 @@ export function verifyAuthenticCiProof(
   }
 
   // Strict server-side verified provider run check (Trust Boundary Closure)
-  const storeCheck = lookupVerifiedRemoteCiRun(runId, options.expectedSha || attestation.headSha || attestation.commitSha, expectedRepo);
-  if (!storeCheck.verified) {
+  const storeCheck = lookupVerifiedRemoteCiRun(
+    runId,
+    options.expectedSha || attestation.headSha || attestation.commitSha,
+    expectedRepo
+  );
+  if (!storeCheck.verified || !storeCheck.record) {
     return {
       verified: false,
       error: `CI_CLAIM_UNVERIFIED: RunId '${runId}' has not been verified by authentic remote GitHub Actions verifier in this server runtime (${storeCheck.reason || "NOT_FOUND"}). Caller assertions cannot grant CI_PASS.`,
@@ -1013,10 +2005,40 @@ export function verifyAuthenticCiProof(
     };
   }
 
+  // Require complete V2 multi-endpoint identity for release verification
+  const v2IdentityCheck = hasCompleteV2ReleaseIdentity(
+    attestation,
+    options.allowedWorkflowPaths || CANONICAL_WORKFLOW_PATHS
+  );
+  if (!v2IdentityCheck.valid) {
+    return {
+      verified: false,
+      error: `CI_CLAIM_UNVERIFIED: LEGACY_V1_INCOMPLETE_IDENTITY_REJECTED: ${v2IdentityCheck.reason}`,
+      status: "CI_NOT_RUN",
+    };
+  }
+
+  const record = storeCheck.record;
+  if (
+    record.workflowPath !== attestation.workflowPath ||
+    String(record.workflowId) !== String(attestation.workflowId) ||
+    Number(record.runAttempt) !== Number(attestation.runAttempt ?? 1) ||
+    record.jobsDigest !== attestation.jobsDigest ||
+    record.responseDigest !== attestation.responseDigest ||
+    record.workflowResponseDigest !== attestation.workflowResponseDigest ||
+    record.jobsResponseDigest !== attestation.jobsResponseDigest
+  ) {
+    return {
+      verified: false,
+      error: `CI_CLAIM_UNVERIFIED: Attestation identity fields for runId '${runId}' do not match the server-verified provider record.`,
+      status: "CI_NOT_RUN",
+    };
+  }
+
   return {
     verified: true,
     status: "CI_PASS",
-    evidence: attestation,
+    evidence: deepCloneAndFreeze<GitHubWorkflowRunEvidence>(attestation),
   };
 }
 

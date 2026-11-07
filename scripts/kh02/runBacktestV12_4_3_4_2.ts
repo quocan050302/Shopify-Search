@@ -3003,6 +3003,24 @@ if (require.main === module) {
       console.log(
         `[Backtest V12.4.3.4.2] Policy=${r.policyScenarioVerdict} | Dev=${r.historicalDevVerdict} (shortlist=${r.historicalDevReplay.nicheMatchedCount}/${r.historicalDevReplay.shortlistCount}) | Holdout=${r.historicalHoldoutVerdict} (shortlist=${r.historicalHoldoutReplay.nicheMatchedCount}/${r.historicalHoldoutReplay.shortlistCount}) | Overall=${r.overallHistoricalBacktestVerdict}`
       );
+      console.log(
+        JSON.stringify(
+          {
+            gateId: "E8",
+            testedCodeSha: r.evaluatedCodeSha,
+            evaluatedCodeSha: r.evaluatedCodeSha,
+            evaluatedTreeSha: r.evaluatedTreeSha,
+            policyScenarioVerdict: r.policyScenarioVerdict,
+            pointInTimeIntegrityVerdict: r.pointInTimeIntegrityVerdict,
+            historicalDevVerdict: r.historicalDevVerdict,
+            historicalHoldoutVerdict: r.historicalHoldoutVerdict,
+            overallHistoricalBacktestVerdict: r.overallHistoricalBacktestVerdict,
+            zeroFutureLeakageVerified: r.pointInTimeIntegrityVerdict === "PASS",
+          },
+          null,
+          2
+        )
+      );
       process.exit(0);
     })
     .catch((err) => {

@@ -7,6 +7,7 @@
  * attribution under strict BUSINESS scope, and outputs structured observable JSON.
  */
 
+import { execSync } from "child_process";
 import { prisma, getDatabaseUrl } from "../../src/lib/db";
 import { filterAttributableObservations } from "../../src/services/kh02/demand/candidateDemandAttribution";
 
@@ -14,6 +15,8 @@ export interface CandidateDbReadbackResult {
   dbConnected: boolean;
   dbReadbackExecuted: boolean;
   dbPathOrMaskedDsn: string;
+  testedCodeSha: string;
+  testedTreeSha: string;
   candidateId: string;
   canonicalProductId: string;
   canonicalTitleFromDB: string | null;
@@ -36,11 +39,19 @@ export async function executeCandidateDbReadback(
   targetProductId: string = "cmvsy7zqh000jp0orhypwohho"
 ): Promise<CandidateDbReadbackResult> {
   const executedAt = new Date().toISOString();
+  let testedCodeSha = "0000000000000000000000000000000000000000";
+  let testedTreeSha = "0000000000000000000000000000000000000000";
+  try {
+    testedCodeSha = execSync("git rev-parse HEAD", { encoding: "utf-8" }).trim();
+    testedTreeSha = execSync("git log -1 --format=%T HEAD", { encoding: "utf-8" }).trim();
+  } catch (_) {}
   let rawDbUrl = "file:./prisma/dev.db";
   try {
     rawDbUrl = getDatabaseUrl();
   } catch (_) {}
-  const maskedDsn = rawDbUrl.replace(/:\/\/([^:]+):([^@]+)@/, "://$1:***@");
+  const maskedDsn = rawDbUrl
+    .replace(/:\/\/([^:]+):([^@]+)@/, "://$1:***@")
+    .replace(/^file:.*[\/\\]([^\/\\]+)$/, "file:./prisma/$1");
 
   try {
     // 1. Verify DB connection and query research product
@@ -129,6 +140,8 @@ export async function executeCandidateDbReadback(
       dbConnected: true,
       dbReadbackExecuted: true,
       dbPathOrMaskedDsn: maskedDsn,
+      testedCodeSha,
+      testedTreeSha,
       candidateId: "cand_uahpet_feeder",
       canonicalProductId: targetProductId,
       canonicalTitleFromDB,

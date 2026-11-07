@@ -422,7 +422,7 @@ export function verifyWorktreeIntegrity(
 ): { valid: boolean; reason?: string; currentHead: string; currentTree: string } {
   try {
     const currentHead = execSync("git rev-parse HEAD", { encoding: "utf-8" }).trim();
-    const currentTree = execSync("git rev-parse HEAD^{tree}", { encoding: "utf-8" }).trim();
+    const currentTree = execSync("git log -1 --format=%T HEAD", { encoding: "utf-8" }).trim();
 
     if (currentHead !== expectedHeadSha) {
       return {
@@ -730,7 +730,7 @@ export async function runAllGates(): Promise<{
   console.log("=== KH-02 V19.3.2.6 FAIL-CLOSED DETERMINISTIC BOUNDED ASYNC GATES ===");
 
   const commitSha = execSync("git rev-parse HEAD", { encoding: "utf-8" }).trim();
-  const treeSha = execSync("git rev-parse HEAD^{tree}", { encoding: "utf-8" }).trim();
+  const treeSha = execSync("git log -1 --format=%T HEAD", { encoding: "utf-8" }).trim();
   const branch = execSync("git branch --show-current", { encoding: "utf-8" }).trim();
 
   console.log(`Repository HEAD: ${commitSha}`);

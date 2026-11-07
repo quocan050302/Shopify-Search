@@ -509,7 +509,7 @@ export function verifyWorktreeIntegrity(
 ): { clean: boolean; headSha: string; treeSha: string; error?: string } {
   try {
     const headSha = execSync("git rev-parse HEAD", { encoding: "utf-8" }).trim();
-    const treeSha = execSync("git rev-parse HEAD^{tree}", { encoding: "utf-8" }).trim();
+    const treeSha = execSync("git log -1 --format=%T HEAD", { encoding: "utf-8" }).trim();
 
     if (headSha !== expectedHeadSha) {
       return {
@@ -723,7 +723,7 @@ export async function runAllGates(): Promise<{
   console.log("=== KH-02 V12.4.3.7.19.3.2.7 ASYNC DAG GATE RUNNER START ===");
 
   const headSha = execSync("git rev-parse HEAD", { encoding: "utf-8" }).trim();
-  const treeSha = execSync("git rev-parse HEAD^{tree}", { encoding: "utf-8" }).trim();
+  const treeSha = execSync("git log -1 --format=%T HEAD", { encoding: "utf-8" }).trim();
   const branch = execSync("git branch --show-current", { encoding: "utf-8" }).trim();
 
   // Resource safety check
