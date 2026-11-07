@@ -38,7 +38,15 @@ import { POST as demandImportPost } from "@/app/api/v1/demand/import/route";
 import { NextRequest } from "next/server";
 import * as fs from "fs";
 import * as path from "path";
+import * as os from "os";
 import * as crypto from "crypto";
+import {
+  CSV_AUTHORITY_OPERATION_SCOPE,
+  createSignedCsvImportAuthority,
+  persistCsvImportAuthorityAtomically,
+  registerCsvAuthoritySigningKey,
+  clearTestCsvAuthoritySigningKeys,
+} from "@/services/kh02/demand/durableCsvImportAuthority";
 
 describe("KH-02 Final Evidence-Flow Closure — Flow 02 Test Matrix (A01–A16, B01–B12, C01–C05)", () => {
   const originalEnv = process.env;
@@ -180,7 +188,7 @@ describe("KH-02 Final Evidence-Flow Closure — Flow 02 Test Matrix (A01–A16, 
       expect((res as any).receiptId).toBeUndefined(); // No live SerpApi receipt claimed
     });
 
-    it("A04: resolveProductDemandHistory database readback remains authoritative for verified CSV", async () => {
+    it("A04: resolveProductDemandHistory rejects unattested local CSV and remains authoritative when Official CSV Import Authority is present", async () => {
       const { csvContent } = generate13WeekGoogleTrendsCsv("uahpet feeder", "United States");
       const validation = validateAndParseGoogleTrendsCsv(csvContent);
       const testProductId = "prod_uahpet_flow02_test";
@@ -202,22 +210,73 @@ describe("KH-02 Final Evidence-Flow Closure — Flow 02 Test Matrix (A01–A16, 
 
       (vi.spyOn(prisma.productDemandObservation as any, "findMany") as any).mockResolvedValue(mockDbRows);
 
-      const resolution = await resolveProductDemandHistory(
+      // 1. Without Official CSV Import Authority, local CSV is CACHE_UNVERIFIED
+      const unattestedRes = await resolveProductDemandHistory(
         {
           productId: testProductId,
           canonicalName: "UAHPET Fresh Food Automatic Pet Feeder",
         },
         { lookbackDays: 60, region: "US", workspaceId: "acceptance_v12_2_3_ws" }
       );
+      expect(unattestedRes.cacheClassification).toBe("CACHE_UNVERIFIED");
 
-      expect(resolution.sourceStatus).toBe("PRODUCT_HISTORY_VERIFIED");
-      expect(resolution.cacheClassification).toBe("CACHE_AUTHORITATIVE_FRESH");
-      expect(resolution.actualCoveredDays).toBeGreaterThanOrEqual(84);
-      expect(resolution.observationPointsCount).toBe(13);
-      expect(resolution.dataPoints[0].source).toBe("GOOGLE_TRENDS_CSV");
+      // 2. With Official CSV Import Authority, resolves to PRODUCT_HISTORY_VERIFIED / CACHE_AUTHORITATIVE_FRESH
+      const tmpAuthDir = fs.mkdtempSync(path.join(os.tmpdir(), "kh02_flow02_a04_"));
+      process.env.TEST_CSV_AUTHORITY_STORAGE_DIR = tmpAuthDir;
+      try {
+        registerCsvAuthoritySigningKey({
+          keyId: "key_flow02_a04",
+          secret: "11223344556677889900aabbccddeeff11223344556677889900aabbccddeeff",
+          status: "ACTIVE",
+          purpose: CSV_AUTHORITY_OPERATION_SCOPE,
+          isBusinessTrusted: true,
+          description: "Simulated active key for Flow02 A04",
+        });
+        const rec = createSignedCsvImportAuthority({
+          rawCsvSha256: validation.sha256Checksum,
+          artifactPath: verifyStoredCsvFile(validation.sha256Checksum).filePath!,
+          importingPrincipalId: "importer_01",
+          approverPrincipalId: "approver_01",
+          approvedAt: "2026-10-31T00:00:00.000Z",
+          importedAt: "2026-10-31T00:00:00.000Z",
+          workspaceId: "acceptance_v12_2_3_ws",
+          targetProductId: testProductId,
+          query: "uahpet feeder",
+          geography: "US",
+          periodStart: validation.dataPoints[0].periodStart,
+          periodEnd: validation.dataPoints[validation.dataPoints.length - 1].periodEnd,
+          cadence: "WEEKLY",
+          dataPointsCount: validation.dataPoints.length,
+          originClassification: "AUTHENTICATED_OFFICIAL_EXPORT",
+          reviewStatus: "APPROVED",
+          verificationMethod: "TEST_AUTHORIZED_WORKFLOW_SIMULATION",
+          evidenceChainReference: "urn:swai:test:flow02:a04",
+          issuerKeyId: "key_flow02_a04",
+          isTestOnly: false,
+        });
+        persistCsvImportAuthorityAtomically(rec);
+
+        const resolution = await resolveProductDemandHistory(
+          {
+            productId: testProductId,
+            canonicalName: "UAHPET Fresh Food Automatic Pet Feeder",
+          },
+          { lookbackDays: 60, region: "US", workspaceId: "acceptance_v12_2_3_ws" }
+        );
+
+        expect(resolution.sourceStatus).toBe("PRODUCT_HISTORY_VERIFIED");
+        expect(resolution.cacheClassification).toBe("CACHE_AUTHORITATIVE_FRESH");
+        expect(resolution.actualCoveredDays).toBeGreaterThanOrEqual(84);
+        expect(resolution.observationPointsCount).toBe(13);
+        expect(resolution.dataPoints[0].source).toBe("GOOGLE_TRENDS_CSV");
+      } finally {
+        clearTestCsvAuthoritySigningKeys();
+        delete process.env.TEST_CSV_AUTHORITY_STORAGE_DIR;
+        fs.rmSync(tmpAuthDir, { recursive: true, force: true });
+      }
     });
 
-    it("A05: >=3 points and >=60 days with credible cadence supports G15 in isolated fixture", () => {
+    it("A05: >=3 points and >=60 days with credible cadence requires Official CSV Import Authority for G15", () => {
       const { csvContent } = generate13WeekGoogleTrendsCsv("uahpet feeder", "United States");
       const validation = validateAndParseGoogleTrendsCsv(csvContent);
 
@@ -233,19 +292,75 @@ describe("KH-02 Final Evidence-Flow Closure — Flow 02 Test Matrix (A01–A16, 
         evidenceReference: validation.evidenceReference,
       }));
 
-      const assessment = evaluateDemandHistoryEvidence(points, {
+      // Unattested local CSV is UNVERIFIED / CACHED_UNVERIFIED
+      const unattested = evaluateDemandHistoryEvidence(points, {
         minimumDataPoints: 3,
         minimumCoveredDays: 60,
         requiredRegion: "US",
+        targetProductId: "prod_uahpet_test",
         candidateCanonicalName: "UAHPET Fresh Food Automatic Pet Feeder",
         searchTermUsed: "uahpet feeder",
       });
+      expect(unattested.status).toBe("UNVERIFIED");
+      expect(unattested.eligibleForEvergreen).toBe(false);
+      expect(unattested.sourceAuthority).toBe("CACHED_UNVERIFIED");
 
-      expect(assessment.status).toBe("VERIFIED");
-      expect(assessment.eligibleForEvergreen).toBe(true);
-      expect(assessment.coveredDays).toBeGreaterThanOrEqual(60);
-      expect(assessment.dataPointsCount).toBe(13);
-      expect(assessment.sourceAuthority).toBe("HISTORICAL_SOURCE_VERIFIED");
+      // With Official CSV Import Authority -> VERIFIED / HISTORICAL_SOURCE_VERIFIED
+      const tmpAuthDir = fs.mkdtempSync(path.join(os.tmpdir(), "kh02_flow02_a05_"));
+      process.env.TEST_CSV_AUTHORITY_STORAGE_DIR = tmpAuthDir;
+      try {
+        registerCsvAuthoritySigningKey({
+          keyId: "key_flow02_a05",
+          secret: "11223344556677889900aabbccddeeff11223344556677889900aabbccddeeff",
+          status: "ACTIVE",
+          purpose: CSV_AUTHORITY_OPERATION_SCOPE,
+          isBusinessTrusted: true,
+          description: "Simulated active key for Flow02 A05",
+        });
+        const rec = createSignedCsvImportAuthority({
+          rawCsvSha256: validation.sha256Checksum,
+          artifactPath: verifyStoredCsvFile(validation.sha256Checksum).filePath!,
+          importingPrincipalId: "importer_01",
+          approverPrincipalId: "approver_01",
+          approvedAt: "2026-10-31T00:00:00.000Z",
+          importedAt: "2026-10-31T00:00:00.000Z",
+          workspaceId: "ws_flow02",
+          targetProductId: "prod_uahpet_test",
+          query: "uahpet feeder",
+          geography: "US",
+          periodStart: validation.dataPoints[0].periodStart,
+          periodEnd: validation.dataPoints[validation.dataPoints.length - 1].periodEnd,
+          cadence: "WEEKLY",
+          dataPointsCount: validation.dataPoints.length,
+          originClassification: "AUTHENTICATED_OFFICIAL_EXPORT",
+          reviewStatus: "APPROVED",
+          verificationMethod: "TEST_AUTHORIZED_WORKFLOW_SIMULATION",
+          evidenceChainReference: "urn:swai:test:flow02:a05",
+          issuerKeyId: "key_flow02_a05",
+          isTestOnly: false,
+        });
+        persistCsvImportAuthorityAtomically(rec);
+
+        const assessment = evaluateDemandHistoryEvidence(points, {
+          minimumDataPoints: 3,
+          minimumCoveredDays: 60,
+          requiredRegion: "US",
+          workspaceId: "ws_flow02",
+          targetProductId: "prod_uahpet_test",
+          candidateCanonicalName: "UAHPET Fresh Food Automatic Pet Feeder",
+          searchTermUsed: "uahpet feeder",
+        });
+
+        expect(assessment.status).toBe("VERIFIED");
+        expect(assessment.eligibleForEvergreen).toBe(true);
+        expect(assessment.coveredDays).toBeGreaterThanOrEqual(60);
+        expect(assessment.dataPointsCount).toBe(13);
+        expect(assessment.sourceAuthority).toBe("HISTORICAL_SOURCE_VERIFIED");
+      } finally {
+        clearTestCsvAuthoritySigningKeys();
+        delete process.env.TEST_CSV_AUTHORITY_STORAGE_DIR;
+        fs.rmSync(tmpAuthDir, { recursive: true, force: true });
+      }
     });
 
     it("A06: G15 fixture success does not automatically make verified G16/Top3", () => {
@@ -831,14 +946,66 @@ describe("KH-02 Final Evidence-Flow Closure — Flow 02 Test Matrix (A01–A16, 
         evidenceReference: validation.evidenceReference,
       }));
 
-      const assessment = evaluateDemandHistoryEvidence(points, {
+      // Unattested CSV fails closed
+      const unattestedAssessment = evaluateDemandHistoryEvidence(points, {
         minimumDataPoints: 3,
         minimumCoveredDays: 60,
         requiredRegion: "US",
       });
+      expect(unattestedAssessment.status).toBe("UNVERIFIED");
+      expect(unattestedAssessment.sourceAuthority).toBe("CACHED_UNVERIFIED");
 
-      expect(assessment.status).toBe("VERIFIED");
-      expect(assessment.sourceAuthority).toBe("HISTORICAL_SOURCE_VERIFIED");
+      // With Official CSV Import Authority -> VERIFIED
+      const tmpAuthDir = fs.mkdtempSync(path.join(os.tmpdir(), "kh02_flow02_c01_"));
+      process.env.TEST_CSV_AUTHORITY_STORAGE_DIR = tmpAuthDir;
+      try {
+        registerCsvAuthoritySigningKey({
+          keyId: "key_flow02_c01",
+          secret: "11223344556677889900aabbccddeeff11223344556677889900aabbccddeeff",
+          status: "ACTIVE",
+          purpose: CSV_AUTHORITY_OPERATION_SCOPE,
+          isBusinessTrusted: true,
+          description: "Simulated active key for Flow02 C01",
+        });
+        const rec = createSignedCsvImportAuthority({
+          rawCsvSha256: validation.sha256Checksum,
+          artifactPath: verifyStoredCsvFile(validation.sha256Checksum).filePath!,
+          importingPrincipalId: "importer_01",
+          approverPrincipalId: "approver_01",
+          approvedAt: "2026-10-31T00:00:00.000Z",
+          importedAt: "2026-10-31T00:00:00.000Z",
+          workspaceId: "ws_flow02_c01",
+          targetProductId: "prod_flow02_uahpet",
+          query: "uahpet feeder",
+          geography: "US",
+          periodStart: validation.dataPoints[0].periodStart,
+          periodEnd: validation.dataPoints[validation.dataPoints.length - 1].periodEnd,
+          cadence: "WEEKLY",
+          dataPointsCount: validation.dataPoints.length,
+          originClassification: "AUTHENTICATED_OFFICIAL_EXPORT",
+          reviewStatus: "APPROVED",
+          verificationMethod: "TEST_AUTHORIZED_WORKFLOW_SIMULATION",
+          evidenceChainReference: "urn:swai:test:flow02:c01",
+          issuerKeyId: "key_flow02_c01",
+          isTestOnly: false,
+        });
+        persistCsvImportAuthorityAtomically(rec);
+
+        const assessment = evaluateDemandHistoryEvidence(points, {
+          minimumDataPoints: 3,
+          minimumCoveredDays: 60,
+          requiredRegion: "US",
+          workspaceId: "ws_flow02_c01",
+          targetProductId: "prod_flow02_uahpet",
+        });
+
+        expect(assessment.status).toBe("VERIFIED");
+        expect(assessment.sourceAuthority).toBe("HISTORICAL_SOURCE_VERIFIED");
+      } finally {
+        clearTestCsvAuthoritySigningKeys();
+        delete process.env.TEST_CSV_AUTHORITY_STORAGE_DIR;
+        fs.rmSync(tmpAuthDir, { recursive: true, force: true });
+      }
     });
 
     it("C02: Historical 2026-10-31 run GET replays 59 observations, 0 Verified Evergreen (never mutate baseline)", () => {

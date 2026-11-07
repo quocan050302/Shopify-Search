@@ -649,7 +649,10 @@ describe("KH-02 V12.4.3.7.9 — TRUSTED COLLECTOR BOUNDARY & SAFE TEST ISOLATION
       const csvSha = crypto.createHash("sha256").update(Buffer.from(csvContent, "utf8")).digest("hex").toLowerCase();
       saveOriginalGoogleTrendsCsvFile(csvContent, csvSha);
       const csvLineage = hasVerifiableCsvOrProviderLineage(`csv-import:google-trends:sha256:${csvSha}`);
-      expect(csvLineage.sourceAuthority).toBe("HISTORICAL_SOURCE_VERIFIED");
+      expect(csvLineage.contentIntegrityVerified).toBe(true);
+      expect(csvLineage.sourceOriginVerified).toBe(false);
+      expect(csvLineage.businessLineageEligible).toBe(false);
+      expect(csvLineage.sourceAuthority).toBe("CACHED_UNVERIFIED");
       expect(csvLineage.originKind).toBe("LOCAL_INTEGRITY_ONLY");
 
       const fixtureLineage = hasVerifiableCsvOrProviderLineage("fixture-request", {

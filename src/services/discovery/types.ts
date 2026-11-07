@@ -130,6 +130,14 @@ export interface SourceEvidence {
   creativeVariants?: unknown[];
   parentAdExternalId?: string | null;
   selectedCreativeIndex?: number | null;
+  queryId?: string | null;
+  matchedQueryIds?: string[];
+  queryKeyword?: string | null;
+  roundNumber?: number | null;
+  origin?: string | null;
+  archetypeId?: string | null;
+  providerRequestId?: string | null;
+  researchRunId?: string | null;
 }
 
 export const SourceEvidenceSchema = z.object({
@@ -145,6 +153,14 @@ export const SourceEvidenceSchema = z.object({
   creativeVariants: z.array(z.any()).optional(),
   parentAdExternalId: z.string().nullable().optional(),
   selectedCreativeIndex: z.number().nullable().optional(),
+  queryId: z.string().nullable().optional(),
+  matchedQueryIds: z.array(z.string()).optional(),
+  queryKeyword: z.string().nullable().optional(),
+  roundNumber: z.number().nullable().optional(),
+  origin: z.string().nullable().optional(),
+  archetypeId: z.string().nullable().optional(),
+  providerRequestId: z.string().nullable().optional(),
+  researchRunId: z.string().nullable().optional(),
 });
 
 // ─── Discovery Query ────────────────────────────────────────────────────────

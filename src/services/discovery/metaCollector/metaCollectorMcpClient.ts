@@ -338,13 +338,25 @@ export async function createMetaCollectorClient(): Promise<MetaCollectorClient> 
   }
 
   // Validate tools availability
-  const tools = await client.listTools();
+  let tools: Awaited<ReturnType<typeof client.listTools>>;
+  try {
+    tools = await client.listTools();
+  } catch (err: unknown) {
+    await client.close().catch(() => {});
+    await transport.close().catch(() => {});
+    throw new DiscoveryError({
+      code: "PROVIDER_UNAVAILABLE",
+      message: `Failed to list tools from MetaAdsCollector MCP subprocess: ${(err as Error).message}`,
+      providerId: "meta-ads-collector",
+    });
+  }
   const toolNames = new Set(tools.tools.map((t) => t.name));
   const requiredTools = ["discover", "search", "continue_search", "results", "inspect_ads"];
 
   for (const req of requiredTools) {
     if (!toolNames.has(req)) {
       await client.close().catch(() => {});
+      await transport.close().catch(() => {});
       throw new DiscoveryError({
         code: "PROVIDER_RESPONSE_INVALID",
         message: `MetaAdsCollector MCP server is missing required tool: '${req}'. Available: ${Array.from(toolNames).join(", ")}`,
@@ -538,17 +550,23 @@ export async function createMetaCollectorClient(): Promise<MetaCollectorClient> 
     async close(): Promise<void> {
       if (connected) {
         connected = false;
+        process.removeListener("exit", handleExit);
+        process.removeListener("SIGINT", handleExit);
+        process.removeListener("SIGTERM", handleExit);
         try {
           await client.close();
+        } catch {}
+        try {
+          await transport.close();
         } catch {}
       }
     },
   };
 
   // Safe process shutdown hooks to prevent orphaned python processes
-  const handleExit = () => {
+  function handleExit() {
     metaCollectorClient.close().catch(() => {});
-  };
+  }
   process.once("exit", handleExit);
   process.once("SIGINT", handleExit);
   process.once("SIGTERM", handleExit);

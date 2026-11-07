@@ -2616,6 +2616,10 @@ export async function runRealHistoricalProductReplay(
           minimumCoveredDays: 60,
           asOfTimestamp: asOf.toISOString(),
           strictChronological: true,
+          strictLiveOrigin: true,
+          evaluationScope: "BUSINESS",
+          targetProductId: researchProductId ? String(researchProductId) : candidateId,
+          candidateCanonicalName: c.canonicalProductName || c.title,
         });
         const eligible = Boolean(assessment.status === "VERIFIED" && assessment.eligibleForEvergreen);
         if (eligible) {

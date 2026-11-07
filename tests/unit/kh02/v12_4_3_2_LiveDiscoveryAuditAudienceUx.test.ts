@@ -1,5 +1,15 @@
 import { describe, it, expect, beforeAll } from "vitest";
-import { saveOriginalGoogleTrendsCsvFile } from "@/services/kh02/demand/googleTrendsCsvValidator";
+import fs from "node:fs";
+import path from "node:path";
+import os from "node:os";
+import { saveOriginalGoogleTrendsCsvFile, GOOGLE_TRENDS_CSV_STORAGE_DIR } from "@/services/kh02/demand/googleTrendsCsvValidator";
+import {
+  CSV_AUTHORITY_OPERATION_SCOPE,
+  createSignedCsvImportAuthority,
+  persistCsvImportAuthorityAtomically,
+  registerCsvAuthoritySigningKey,
+  clearTestCsvAuthoritySigningKeys,
+} from "@/services/kh02/demand/durableCsvImportAuthority";
 import {
   evaluateDemandSourceAuthority,
   auditDemandObservationsProvenance,
@@ -188,13 +198,14 @@ describe("SWAI KH-02 V12.4.3.2 — Live Discovery, Forensic Demand Audit, Audien
       expect(authority.authority).toBe("CACHED_UNVERIFIED");
     });
 
-    it("accepts GOOGLE_TRENDS_CSV only when backed by verifiable csv-import + sha256 lineage and non-templated values", () => {
+    it("accepts GOOGLE_TRENDS_CSV only when backed by verifiable csv-import + sha256 lineage, Official CSV Import Authority, and non-templated values", () => {
+      const targetSha = "3aa60e05c7c6d4ce96e64f93cbacef0aacd6d0f75846b5d1ecd2fb26fafc4039";
       const validCsvRows = [
         {
           productId: "prod_fountain_1",
           keyword: "dog water fountain",
           source: "GOOGLE_TRENDS_CSV",
-          evidenceReference: "csv-import:job_2026_04:sha256:3aa60e05c7c6d4ce96e64f93cbacef0aacd6d0f75846b5d1ecd2fb26fafc4039",
+          evidenceReference: `csv-import:job_2026_04:sha256:${targetSha}`,
           demandValue: 61,
           date: "2025-10-01T00:00:00Z",
         },
@@ -202,17 +213,67 @@ describe("SWAI KH-02 V12.4.3.2 — Live Discovery, Forensic Demand Audit, Audien
           productId: "prod_fountain_1",
           keyword: "dog water fountain",
           source: "GOOGLE_TRENDS_CSV",
-          evidenceReference: "csv-import:job_2026_04:sha256:3aa60e05c7c6d4ce96e64f93cbacef0aacd6d0f75846b5d1ecd2fb26fafc4039",
+          evidenceReference: `csv-import:job_2026_04:sha256:${targetSha}`,
           demandValue: 68,
           date: "2025-11-01T00:00:00Z",
         },
       ];
 
-      const authority = evaluateDemandSourceAuthority(validCsvRows, {
+      // 1. Unattested local CSV (LOCAL_INTEGRITY_ONLY) fails closed to CACHED_UNVERIFIED
+      const unattestedAuth = evaluateDemandSourceAuthority(validCsvRows, {
         targetProductId: "prod_fountain_1",
         candidateCanonicalName: "Dog Water Fountain Stainless Steel",
       });
-      expect(authority.authority).toBe("HISTORICAL_SOURCE_VERIFIED");
+      expect(unattestedAuth.authority).toBe("CACHED_UNVERIFIED");
+
+      // 2. With signed Official CSV Import Authority in ENGINEERING scope, resolves to HISTORICAL_SOURCE_VERIFIED
+      const tmpAuthDir = fs.mkdtempSync(path.join(os.tmpdir(), "kh02_v12_4_3_2_csv_auth_"));
+      process.env.TEST_CSV_AUTHORITY_STORAGE_DIR = tmpAuthDir;
+      try {
+        registerCsvAuthoritySigningKey({
+          keyId: "key_test_v12_4_3_2",
+          secret: "11223344556677889900aabbccddeeff11223344556677889900aabbccddeeff",
+          status: "TEST_ONLY",
+          purpose: CSV_AUTHORITY_OPERATION_SCOPE,
+          isBusinessTrusted: false,
+          description: "Test key",
+        });
+        const rec = createSignedCsvImportAuthority({
+          rawCsvSha256: targetSha,
+          artifactPath: path.join(GOOGLE_TRENDS_CSV_STORAGE_DIR, `${targetSha}.csv`),
+          importingPrincipalId: "test_importer",
+          approverPrincipalId: "test_approver",
+          approvedAt: "2025-12-01T00:00:00.000Z",
+          importedAt: "2025-12-01T00:00:00.000Z",
+          workspaceId: "ws_test",
+          targetProductId: "prod_fountain_1",
+          query: "dog water fountain",
+          geography: "US",
+          periodStart: "2025-10-01T00:00:00.000Z",
+          periodEnd: "2025-12-01T00:00:00.000Z",
+          cadence: "MONTHLY",
+          dataPointsCount: 2,
+          originClassification: "AUTHENTICATED_OFFICIAL_EXPORT",
+          reviewStatus: "APPROVED",
+          verificationMethod: "TEST_FIXTURE_SEED",
+          evidenceChainReference: "urn:swai:test:v12_4_3_2",
+          issuerKeyId: "key_test_v12_4_3_2",
+          isTestOnly: true,
+        });
+        persistCsvImportAuthorityAtomically(rec);
+
+        const engAuth = evaluateDemandSourceAuthority(validCsvRows, {
+          targetProductId: "prod_fountain_1",
+          workspaceId: "ws_test",
+          candidateCanonicalName: "Dog Water Fountain Stainless Steel",
+          evaluationScope: "ENGINEERING",
+        });
+        expect(engAuth.authority).toBe("HISTORICAL_SOURCE_VERIFIED");
+      } finally {
+        clearTestCsvAuthoritySigningKeys();
+        delete process.env.TEST_CSV_AUTHORITY_STORAGE_DIR;
+        fs.rmSync(tmpAuthDir, { recursive: true, force: true });
+      }
     });
 
     it("demotes candidates with synthetic merchant-seeded demand in evaluateTemporalDemandStability", () => {

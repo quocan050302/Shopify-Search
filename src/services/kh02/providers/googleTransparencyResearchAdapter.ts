@@ -1828,6 +1828,10 @@ export async function invokeGoogleMcpTool(
       error: err.message || "MCP invocation error",
       durationMs: Date.now() - start,
     };
+  } finally {
+    if (!clientArg) {
+      await client.close().catch(() => {});
+    }
   }
 }
 
@@ -1873,19 +1877,28 @@ export function normalizeGoogleAdsResponse(
           ? "IMAGE"
           : "TEXT";
 
-    // Evaluate product relevance against topic and concrete product indicators (Section 7.3)
+    // Evaluate product relevance against topic and concrete product indicators (Section 7.3 & Section 10.4)
     const headline = ad.headline || ad.content?.headline || "";
     const body = ad.body || ad.content?.description || "";
     const destUrl =
       ad.destination_url ||
       ad.content?.destination_url ||
       ad.landing_page_url ||
+      ad.target_url ||
       null;
     let urlPathText = "";
+    let isExplicitNonProductUrl = false;
     if (destUrl) {
       try {
         const parsedDest = new URL(destUrl);
         urlPathText = parsedDest.pathname.replace(/[\/_-]+/g, " ");
+        const cleanPath = parsedDest.pathname.replace(/\/+$/, "");
+        if (
+          cleanPath === "" ||
+          /^\/(collections|category|categories|pages|blogs|search|cart|account|about|contact)(\/|$)/i.test(cleanPath)
+        ) {
+          isExplicitNonProductUrl = true;
+        }
       } catch {
         urlPathText = destUrl;
       }
@@ -1904,17 +1917,25 @@ export function normalizeGoogleAdsResponse(
       : [];
     const hasTopicMatch =
       topicWords.length > 0 && topicWords.some((w) => textContent.includes(w));
+    const hasSpecificProductUrl = Boolean(
+      destUrl && !isExplicitNonProductUrl && /\/products\/|\/dp\/|\/p\/|\/item\//i.test(destUrl)
+    );
     const hasSpecificProductSignal =
-      Boolean(destUrl && /\/products\/|\/dp\/|\/p\/|\/item\//i.test(destUrl)) ||
-      (hasTopicMatch && headline.trim().split(/\s+/).length >= 2);
+      !isExplicitNonProductUrl &&
+      (hasSpecificProductUrl ||
+        (hasTopicMatch && headline.trim().split(/\s+/).length >= 2));
+    const hasAnyContent = Boolean(headline.trim() || body.trim() || destUrl);
     const relevance:
       | "PRODUCT_SPECIFIC"
       | "BRAND_RELATED"
       | "UNRELATED"
-      | "UNKNOWN" =
-      hasSpecificProductSignal || hasTopicMatch
-        ? "PRODUCT_SPECIFIC"
-        : "BRAND_RELATED";
+      | "UNKNOWN" = !hasAnyContent
+      ? "UNKNOWN"
+      : isExplicitNonProductUrl
+      ? "BRAND_RELATED"
+      : hasSpecificProductSignal || hasTopicMatch
+      ? "PRODUCT_SPECIFIC"
+      : "BRAND_RELATED";
 
     // Strict market verification:
     // A request filter or query parameter ("US") is FILTER_ONLY.
@@ -1978,7 +1999,9 @@ export function normalizeGoogleAdsResponse(
         `https://adstransparency.google.com/advertiser/${ad.advertiser_id || ""}`,
       observedAt: metadata.observedAt,
       productRelevance: relevance,
-      productRelevanceReason: hasTopicMatch
+      productRelevanceReason: isExplicitNonProductUrl
+        ? `Destination URL points to root domain or collection/category page rather than a specific product page`
+        : hasTopicMatch
         ? `Matched topic keywords in Google ad copy`
         : `Domain verified but creative has brand-level focus`,
       sourceProvenance: "REAL_UPSTREAM",
@@ -2009,6 +2032,8 @@ export function normalizeGoogleAdsResponse(
         format,
         productRelevance: relevance,
         marketProvenance,
+        advertiserId: normAd.advertiserId || null,
+        creativeId,
       },
       media: {
         thumbnailUrl: ad.thumbnail_url || ad.content?.image_url || null,
@@ -2296,8 +2321,21 @@ export function createGoogleTransparencyMcpClient(config?: {
           { name: "swai-google-transparency-client", version: "12.4.3" },
           { capabilities: {} },
         );
-        await mcpClient.connect(transport);
-        connected = true;
+        try {
+          await mcpClient.connect(transport);
+          connected = true;
+        } catch (connErr) {
+          await mcpClient.close().catch(() => {});
+          await transport.close().catch(() => {});
+          const proc = (transport as any)?._process;
+          if (proc && typeof proc.kill === "function" && !proc.killed) {
+            try { proc.kill("SIGTERM"); } catch {}
+          }
+          mcpClient = null;
+          transport = null;
+          connected = false;
+          throw connErr;
+        }
       } else if (mcpUrl) {
         // Standard MCP initialize negotiation lifecycle
         await sendMcpJsonRpc("initialize", {
@@ -2411,12 +2449,23 @@ export function createGoogleTransparencyMcpClient(config?: {
     },
 
     async close(): Promise<void> {
-      if (transport) {
-        await transport.close().catch(() => {});
-        transport = null;
-      }
+      const currentClient = mcpClient;
+      const currentTransport = transport;
       mcpClient = null;
+      transport = null;
       connected = false;
+      if (currentClient) {
+        await currentClient.close().catch(() => {});
+      }
+      if (currentTransport) {
+        await currentTransport.close().catch(() => {});
+        const proc = (currentTransport as any)?._process;
+        if (proc && typeof proc.kill === "function" && !proc.killed) {
+          try {
+            proc.kill("SIGTERM");
+          } catch {}
+        }
+      }
     },
 
     isAlive(): boolean {
@@ -2437,19 +2486,48 @@ export interface GoogleEnrichmentOptions {
   perDomainTimeoutMs?: number;
 }
 
+export interface GooglePersistenceOutcomeSummary {
+  persistedIds: string[];
+  persistedCount: number;
+  insertedCount: number;
+  updatedCount: number;
+  rejectedCount: number;
+  failedCount: number;
+  errors: string[];
+}
+
+export type PersistedGoogleAdIdsResult = string[] & GooglePersistenceOutcomeSummary;
+
 /**
- * Persists normalized Google Transparency observations into SQLite (`CompetitorAd` & `AdObservation`)
- * so that product-level and brand-level Google evidence survives database reload.
+ * Persists normalized Google Transparency observations into SQLite (`CompetitorAd`, `AdSourceIdentity` & `AdObservation`)
+ * so that product-level and brand-level Google evidence and its MCP invocation provenance survive database reload.
  */
 export async function persistGoogleObservationsToDatabase(
   observations: SourceObservation[],
   workspaceId?: string
-): Promise<string[]> {
+): Promise<PersistedGoogleAdIdsResult> {
+  const persistedIds: string[] = [];
+  let insertedCount = 0;
+  let updatedCount = 0;
+  let rejectedCount = 0;
+  let failedCount = 0;
+  const errors: string[] = [];
+
+  const attachSummary = (): PersistedGoogleAdIdsResult =>
+    Object.assign(persistedIds, {
+      persistedIds: [...persistedIds],
+      persistedCount: persistedIds.length,
+      insertedCount,
+      updatedCount,
+      rejectedCount,
+      failedCount,
+      errors,
+    });
+
   if (!workspaceId || workspaceId === "test" || observations.length === 0) {
-    return [];
+    return attachSummary();
   }
 
-  const persistedIds: string[] = [];
   try {
     let dataSource = await prisma.dataSource.findFirst({
       where: { name: "GOOGLE_ADS_TRANSPARENCY" },
@@ -2472,81 +2550,181 @@ export async function persistGoogleObservationsToDatabase(
     }
 
     for (const obs of observations) {
-      const extId = `GOOGLE:${obs.sourceRecordId}`;
-      const domain =
-        extractRegistrableDomain(obs.advertiserDomain || obs.storeDomainEvidence || "") ||
-        obs.advertiserDomain ||
-        "google-transparency-advertiser.com";
-      const advName = obs.advertiserOrCreator || obs.advertiserName || domain;
-
-      let advertiser = await prisma.advertiser.findFirst({
-        where: { platform: "GOOGLE", domain },
-      });
-      if (!advertiser) {
-        advertiser = await prisma.advertiser.create({
-          data: {
-            platform: "GOOGLE",
-            name: advName,
-            domain,
-            country: obs.verifiedDeliveryMarket || "US",
-          },
-        });
+      const creativeId = String(obs.sourceRecordId || "").trim();
+      if (!creativeId || isSyntheticGoogleCreativeId(creativeId)) {
+        rejectedCount++;
+        errors.push(`Rejected synthetic or empty Google creative ID '${creativeId}' before DB persistence.`);
+        continue;
       }
 
-      const now = new Date();
-      let adRow = await prisma.competitorAd.findUnique({
-        where: { externalAdId: extId },
-      });
+      try {
+        const extId = `GOOGLE:${creativeId}`;
+        const domain =
+          extractRegistrableDomain(obs.advertiserDomain || obs.storeDomainEvidence || "") ||
+          obs.advertiserDomain ||
+          "google-transparency-advertiser.com";
+        const advName = obs.advertiserOrCreator || obs.advertiserName || domain;
+        const verifiedCountry = obs.verifiedDeliveryMarket || "UNKNOWN";
 
-      if (!adRow) {
-        adRow = await prisma.competitorAd.create({
-          data: {
-            advertiserId: advertiser.id,
-            dataSourceId: dataSource.id,
-            externalAdId: extId,
+        let advertiser = await prisma.advertiser.findFirst({
+          where: { platform: "GOOGLE", domain },
+        });
+        if (!advertiser) {
+          advertiser = await prisma.advertiser.create({
+            data: {
+              platform: "GOOGLE",
+              name: advName,
+              domain,
+              country: verifiedCountry,
+            },
+          });
+        }
+
+        const now = new Date();
+        let adRow = await prisma.competitorAd.findUnique({
+          where: { externalAdId: extId },
+        });
+
+        const isNewAd = !adRow;
+        if (!adRow) {
+          adRow = await prisma.competitorAd.create({
+            data: {
+              advertiserId: advertiser.id,
+              dataSourceId: dataSource.id,
+              externalAdId: extId,
+              platform: "GOOGLE",
+              targetMarket: verifiedCountry,
+              headline: obs.title || `Google Ad: ${creativeId}`,
+              bodyText: obs.description || obs.observedContent || "",
+              callToAction: "Shop Now",
+              landingPageUrl: obs.landingPageUrl || `https://${domain}`,
+              originalAdUrl:
+                obs.sourceUrl ||
+                `https://adstransparency.google.com/?domain=${encodeURIComponent(domain)}`,
+              category: "Retail",
+              firstSeenAt: now,
+              lastSeenAt: now,
+              firstObservedAt: now,
+              lastObservedAt: now,
+              observationCount: 1,
+              status: "ACTIVE",
+              lifecycleStatus: "ACTIVE",
+              dataConfidence: "OBSERVED",
+              isSyntheticQuarantine: false,
+            },
+          });
+          insertedCount++;
+        } else {
+          adRow = await prisma.competitorAd.update({
+            where: { id: adRow.id },
+            data: {
+              lastSeenAt: now,
+              lastObservedAt: now,
+              observationCount: { increment: 1 },
+            },
+          });
+          updatedCount++;
+        }
+
+        const stableIdentityHash = crypto
+          .createHash("sha256")
+          .update(`GOOGLE|google-transparency-mcp|${extId}|${domain}`)
+          .digest("hex");
+
+        await prisma.adSourceIdentity.upsert({
+          where: { stableIdentityHash },
+          create: {
+            adId: adRow.id,
             platform: "GOOGLE",
-            targetMarket: obs.verifiedDeliveryMarket || "UNKNOWN",
-            headline: obs.title || `Google Ad: ${obs.sourceRecordId}`,
-            bodyText: obs.description || obs.observedContent || "",
-            callToAction: "Shop Now",
-            landingPageUrl: obs.landingPageUrl || `https://${domain}`,
-            originalAdUrl:
+            providerId: "google-transparency-mcp",
+            sourceExternalId: creativeId,
+            stableIdentityHash,
+            canonicalSourceUrl:
               obs.sourceUrl ||
               `https://adstransparency.google.com/?domain=${encodeURIComponent(domain)}`,
-            category: "Retail",
+            confidence: 0.9,
             firstSeenAt: now,
             lastSeenAt: now,
-            firstObservedAt: now,
-            lastObservedAt: now,
-            observationCount: 1,
-            status: "ACTIVE",
-            lifecycleStatus: "ACTIVE",
-            dataConfidence: "OBSERVED",
-            isSyntheticQuarantine: false,
           },
-        });
-      } else {
-        adRow = await prisma.competitorAd.update({
-          where: { id: adRow.id },
-          data: {
+          update: {
             lastSeenAt: now,
-            lastObservedAt: now,
-            observationCount: { increment: 1 },
+            canonicalSourceUrl:
+              obs.sourceUrl ||
+              `https://adstransparency.google.com/?domain=${encodeURIComponent(domain)}`,
           },
         });
-      }
 
-      obs.evidenceReference = `CompetitorAd:${adRow.id}`;
-      if (obs.metrics && typeof obs.metrics === "object") {
-        (obs.metrics as Record<string, unknown>).persistedAdId = adRow.id;
+        const obsMetrics =
+          obs.metrics && typeof obs.metrics === "object"
+            ? (obs.metrics as Record<string, unknown>)
+            : {};
+        const upstreamReceiptReference =
+          obs.invocationEvidenceRef ||
+          obs.mcpInvocationRef ||
+          obs.evidenceReference ||
+          `GoogleAd:${creativeId}`;
+
+        const createdObs = await prisma.adObservation.create({
+          data: {
+            adId: adRow.id,
+            observedAt: now,
+            sourceTimestamp: obs.reportedLastShownAt ? new Date(obs.reportedLastShownAt) : null,
+            observationStatus: "UNKNOWN",
+            evidenceType: "GOOGLE_ADS_TRANSPARENCY_OBSERVATION",
+            verificationMethod: "GOOGLE_TRANSPARENCY_MCP",
+            evidenceReference: upstreamReceiptReference,
+            confidence: 0.9,
+            rawPayload: JSON.stringify({
+              providerId: "google-transparency-mcp",
+              platform: "GOOGLE",
+              creativeId,
+              advertiserId: obsMetrics.advertiserId || null,
+              domain,
+              workspaceId,
+              researchRunId: obs.researchRunId || null,
+              mcpInvocationRef: obs.mcpInvocationRef || null,
+              invocationEvidenceRef: obs.invocationEvidenceRef || null,
+              requestArgumentsHash: obs.requestArgumentsHash || null,
+              responseEvidenceHash: obs.responseEvidenceHash || null,
+              lineageMethod: obs.lineageMethod || "UNVERIFIED",
+              providerRequestId: obs.providerRequestId || null,
+              upstreamProviderRequestId: obs.upstreamProviderRequestId || null,
+              providerRequestIdOrigin: obs.providerRequestIdOrigin || "ABSENT",
+              productRelevance: obsMetrics.productRelevance || "BRAND_RELATED",
+              marketProvenance: obsMetrics.marketProvenance || null,
+              landingPageUrl: obs.landingPageUrl || null,
+              sourceUrl: obs.sourceUrl || null,
+            }),
+          },
+        });
+
+        // Preserve upstream/MCP evidenceReference on obs instead of overwriting with CompetitorAd:<id>
+        if (!obs.evidenceReference || obs.evidenceReference.startsWith("CompetitorAd:")) {
+          obs.evidenceReference = upstreamReceiptReference;
+        }
+        obs.persistedAdId = adRow.id;
+        obs.sourceObservationId = createdObs.id;
+        if (obs.metrics && typeof obs.metrics === "object") {
+          (obs.metrics as Record<string, unknown>).persistedAdId = adRow.id;
+          (obs.metrics as Record<string, unknown>).dbRecordReference = `CompetitorAd:${adRow.id}`;
+          (obs.metrics as Record<string, unknown>).sourceObservationId = createdObs.id;
+        }
+        persistedIds.push(adRow.id);
+      } catch (rowErr: any) {
+        failedCount++;
+        errors.push(
+          `Failed persisting Google observation '${creativeId}': ${rowErr?.message || String(rowErr)}`
+        );
       }
-      persistedIds.push(adRow.id);
     }
-  } catch {
-    // Non-fatal if test DB or read-only context rejects persistence
+  } catch (err: any) {
+    failedCount += Math.max(1, observations.length - persistedIds.length - rejectedCount);
+    errors.push(
+      `Google observation database persistence error: ${err?.message || String(err)}`
+    );
   }
 
-  return persistedIds;
+  return attachSummary();
 }
 
 /**
@@ -3346,15 +3524,23 @@ export async function collectGoogleAdvertiserSignals(
 
     // Persist Google observations to SQLite when workspaceId is provided (Section 4.7)
     let persistedRecordIds: string[] = [];
+    let persistedInsertedCount = 0;
+    let persistedUpdatedCount = 0;
     const shouldPersist =
       options?.persistToDatabase !== undefined
         ? options.persistToDatabase
         : Boolean(query.workspaceId && query.workspaceId !== "test");
     if (shouldPersist && observations.length > 0) {
-      persistedRecordIds = await persistGoogleObservationsToDatabase(
+      const persistRes = await persistGoogleObservationsToDatabase(
         observations,
         query.workspaceId
       );
+      persistedRecordIds = Array.from(persistRes);
+      persistedInsertedCount = persistRes.insertedCount ?? persistedRecordIds.length;
+      persistedUpdatedCount = persistRes.updatedCount ?? 0;
+      if (Array.isArray(persistRes.errors) && persistRes.errors.length > 0) {
+        warnings.push(...persistRes.errors);
+      }
     }
 
     let status: SourceRunStatus = "NOT_CONFIGURED";
@@ -3492,8 +3678,8 @@ export async function collectGoogleAdvertiserSignals(
         upstreamReturnedCount: creativesReturnedCount,
         freshLiveObservedCount: observations.length,
         currentRunLiveAdsCount: observations.length,
-        persistedInsertedCount: persistedRecordIds.length,
-        persistedUpdatedCount: 0,
+        persistedInsertedCount,
+        persistedUpdatedCount,
         cachedRecordsUsedCount: 0,
         fallbackToCache: false,
         domainsAttempted: domainsAttemptedCount,

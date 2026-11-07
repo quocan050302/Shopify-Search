@@ -196,18 +196,21 @@ describe("KH-02 V12.4.3.7.18.1: Workstream D — Mandatory Provenance (D01 - D14
     expect(res.sourceAuthority).toBe("CACHED_UNVERIFIED");
   });
 
-  it("D05: hand-made valid CSV -> file integrity verified, but origin is LOCAL_FILE_INTEGRITY_VERIFIED, not external API", () => {
+  it("D05: hand-made valid CSV -> file integrity verified, but origin is LOCAL_INTEGRITY_ONLY (CACHED_UNVERIFIED without Official CSV Import Authority), not external API", () => {
     const lineage = hasVerifiableCsvOrProviderLineage(evidenceRef, null, {
       targetKeyword: "automatic cat feeder",
       region: "US",
       periodStart: new Date(dates[0]),
       observationValue: 50,
     });
-    expect(lineage.lineageVerified).toBe(true);
+    expect(lineage.contentIntegrityVerified).toBe(true);
     expect(lineage.rawCsvFileExists).toBe(true);
     expect(lineage.hasValidFileChecksum).toBe(true);
     expect(lineage.originKind).toBe("LOCAL_INTEGRITY_ONLY");
     expect(lineage.providerOriginVerified).toBe(false);
+    expect(lineage.sourceOriginVerified).toBe(false);
+    expect(lineage.businessLineageEligible).toBe(false);
+    expect(lineage.lineageVerified).toBe(false);
 
     const auth = evaluateDemandSourceAuthority([
       {
@@ -220,8 +223,8 @@ describe("KH-02 V12.4.3.7.18.1: Workstream D — Mandatory Provenance (D01 - D14
       },
     ]);
 
-    // Byte integrity verified, but does NOT grant external provider issuance
-    expect(auth.authority).toBe("HISTORICAL_SOURCE_VERIFIED");
+    // Byte integrity verified, but hand-made local CSV without Official CSV Import Authority is CACHED_UNVERIFIED
+    expect(auth.authority).toBe("CACHED_UNVERIFIED");
   });
 
   it("D06: provider row only matching receipt-looking string -> denied (no real receipt on disk)", async () => {

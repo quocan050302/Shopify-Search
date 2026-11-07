@@ -485,6 +485,7 @@ export async function ingestDiscoveredAds(
           data: {
             adId: targetAd.id,
             observedAt: now,
+            sourceTimestamp: record.sourceReportedStartAt || null,
             observationStatus: "UNKNOWN", // Rule 80: unverified discovery is UNKNOWN
             evidenceType,
             verificationMethod,
@@ -494,7 +495,16 @@ export async function ingestDiscoveredAds(
               providerId,
               platform,
               sourceExternalId: record.sourceExternalId,
+              stableIdentityHash,
+              rawEvidenceReference: record.rawEvidenceReference || null,
+              landingPageUrl: record.landingPageUrl || null,
+              creativeUrl: record.creativeUrl || null,
+              targetMarket: record.targetMarket || "UNKNOWN",
+              marketEvidenceType: record.marketEvidenceType || "UNKNOWN",
               reportedMetrics: record.reportedMetrics,
+              sourceEvidence: record.sourceEvidence || null,
+              workspaceId: context.workspaceId || null,
+              runId: context.runId || context.discoveryRunId || null,
             }),
           },
         });

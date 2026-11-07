@@ -21,6 +21,10 @@ import {
   createGoogleTransparencyMcpClient,
   resolveGoogleMcpConfig,
 } from "../../src/services/kh02/providers/googleTransparencyResearchAdapter";
+import crypto from "crypto";
+import { getMetaCollectorConfig } from "../../src/services/discovery/metaCollector/metaCollectorConfig";
+import { createMetaCollectorClient } from "../../src/services/discovery/metaCollector/metaCollectorMcpClient";
+import { verifyDurableCsvImportAuthority } from "../../src/services/kh02/demand/durableCsvImportAuthority";
 
 // Safely load local environment files if present
 dotenv.config({ path: path.resolve(process.cwd(), ".env") });
@@ -45,9 +49,10 @@ export interface SourceSmokeResult {
 }
 
 export interface McpSmokeSummary {
-  version: "12.4.3.7.19.3.2.7";
+  version: "12.4.3.7.19.3.2.7" | "12.4.3.7.19.3.3";
   executedAt: string;
   commitSha: string;
+  treeSha?: string;
   totalCostUsd: number;
   sources: Record<string, SourceSmokeResult>;
   summaryVerdict: string;
@@ -56,32 +61,64 @@ export interface McpSmokeSummary {
 export async function runThreeSourceFreeMcpSmoke(): Promise<McpSmokeSummary> {
   const executedAt = new Date().toISOString();
   let commitSha = "UNKNOWN";
+  let treeSha = "UNKNOWN";
   try {
     commitSha = execSync("git rev-parse HEAD", { encoding: "utf-8" }).trim();
+    treeSha = execSync("git log -1 --format=%T HEAD", { encoding: "utf-8" }).trim();
   } catch (_) {}
 
   // --------------------------------------------------------------------------
-  // S1: Meta Ads
+  // S1: Meta Ads (Local stdio MCP Collector — public Ad Library GraphQL, no paid token required)
   // --------------------------------------------------------------------------
-  const metaToken = process.env.META_AD_LIBRARY_ACCESS_TOKEN || "";
+  const metaConfig = getMetaCollectorConfig();
+  const metaPythonExists = Boolean(metaConfig.pythonBin && fs.existsSync(metaConfig.pythonBin));
+  let metaHandshakeOk = false;
+  let metaCollectorVersion: string | null = null;
+  let metaHandshakeError: string | null = null;
+
+  if (
+    metaPythonExists &&
+    metaConfig.enabled !== false &&
+    process.env.VITEST !== "true" &&
+    process.env.NODE_ENV !== "test"
+  ) {
+    try {
+      const metaClient = await createMetaCollectorClient();
+      try {
+        const caps = await metaClient.getCapabilities();
+        metaCollectorVersion = caps.collector_version || "1.7.0";
+        metaHandshakeOk = true;
+      } finally {
+        await metaClient.close();
+      }
+    } catch (err: any) {
+      metaHandshakeError = err?.message || String(err);
+    }
+  }
+
   const s1: SourceSmokeResult = {
     sourceId: "S1",
-    name: "Meta Ads (Ad Library / Collector)",
+    name: "Meta Ads (Public Ad Library stdio MCP Collector)",
     status: "NOT_RUN_EXTERNAL_DEPENDENCY",
     costUsd: 0.0,
-    transport: "HTTP_REST_OR_MCP",
-    sourceIdentity: "META_ADS_API",
+    transport: "STDIO_MCP_PUBLIC_AD_LIBRARY",
+    sourceIdentity: "META_ADS_COLLECTOR_MCP",
     providerVerified: false,
     details: {
-      hasAccessToken: metaToken.length > 0,
-      tokenMasked: metaToken.length > 0 ? `${metaToken.slice(0, 6)}...` : null,
-      collectorEnabled: process.env.META_COLLECTOR_ENABLED === "true",
+      requiresGraphApiAccessToken: false,
+      collectorEnabled: metaConfig.enabled !== false,
+      pythonBin: metaConfig.pythonBin ? path.relative(process.cwd(), metaConfig.pythonBin) : null,
+      pythonExists: metaPythonExists,
+      dataDir: metaConfig.dataDir ? path.relative(process.cwd(), metaConfig.dataDir) : null,
+      handshakeChecked: process.env.VITEST !== "true" && process.env.NODE_ENV !== "test",
+      handshakeOk: metaHandshakeOk,
+      collectorVersion: metaCollectorVersion,
+      handshakeError: metaHandshakeError,
       providerContentObserved: false,
     },
-    reason:
-      metaToken.length > 0
-        ? "Meta credentials present but live calls skipped to preserve zero-cost test discipline."
-        : "META_AD_LIBRARY_ACCESS_TOKEN is not configured. Zero spend incurred; truthfully marked NOT_RUN_EXTERNAL_DEPENDENCY.",
+    reason: metaPythonExists
+      ? "MetaAdsCollector public Ad Library stdio MCP environment present (no paid Graph API token required); live upstream query skipped in protocol smoke to preserve deterministic zero-spend bounds (providerContentObserved=false, providerVerified=false)."
+      : "MetaAdsCollector Python virtualenv not found at configured path; marked NOT_RUN_EXTERNAL_DEPENDENCY.",
   };
 
   // --------------------------------------------------------------------------
@@ -141,8 +178,8 @@ export async function runThreeSourceFreeMcpSmoke(): Promise<McpSmokeSummary> {
       }
 
       // 2. Real Stdio JSON-RPC MCP initialization handshake & tool discovery
+      const client = createGoogleTransparencyMcpClient(googleConfig);
       try {
-        const client = createGoogleTransparencyMcpClient(googleConfig);
         s2Details.processStarted = true;
         await client.connect();
         s2Details.handshakeOk = true;
@@ -150,13 +187,14 @@ export async function runThreeSourceFreeMcpSmoke(): Promise<McpSmokeSummary> {
         const tools = await client.listTools();
         s2Details.toolsListed = true;
         s2Details.toolsFound = tools;
-        await client.close();
 
         if (tools.length > 0) {
           s2Status = "PROTOCOL_HANDSHAKE_VERIFIED";
         }
       } catch (err: any) {
         s2Details.handshakeError = err?.message || String(err);
+      } finally {
+        await client.close().catch(() => {});
       }
     }
   }
@@ -178,26 +216,27 @@ export async function runThreeSourceFreeMcpSmoke(): Promise<McpSmokeSummary> {
   };
 
   // --------------------------------------------------------------------------
-  // S3: TikTok Organic (HasData)
+  // S3: TikTok Organic (Server-side POLICY_DISABLED)
   // --------------------------------------------------------------------------
   const hasdataKey = process.env.HASDATA_API_KEY || "";
-  const s3: SourceSmokeResult = {
+  const s3: SourceSmokeResult & { policyStatus: "POLICY_DISABLED" } = {
     sourceId: "S3",
     name: "TikTok Organic Video Intelligence",
     status: "NOT_RUN_EXTERNAL_DEPENDENCY",
+    policyStatus: "POLICY_DISABLED",
     costUsd: 0.0,
     transport: "HTTP_REST_HASDATA",
     sourceIdentity: "HASDATA_TIKTOK_ORGANIC",
     providerVerified: false,
     details: {
+      policyStatus: "POLICY_DISABLED",
+      serverSideHardDisabled: true,
       hasApiKey: hasdataKey.length > 0,
-      keyMasked: hasdataKey.length > 0 ? `${hasdataKey.slice(0, 4)}...` : null,
+      keyMasked: hasdataKey.length > 0 ? "[REDACTED_PRESENT]" : null,
       providerContentObserved: false,
     },
     reason:
-      hasdataKey.length > 0
-        ? "HasData API key present but external call skipped to conserve monthly quota."
-        : "HASDATA_API_KEY is not configured in environment. Truthfully marked NOT_RUN_EXTERNAL_DEPENDENCY.",
+      "TikTok Organic is hard-disabled server-side by KH-02 policy (POLICY_DISABLED); zero external calls or spend permitted.",
   };
 
   // --------------------------------------------------------------------------
@@ -243,8 +282,23 @@ export async function runThreeSourceFreeMcpSmoke(): Promise<McpSmokeSummary> {
   // --------------------------------------------------------------------------
   const importsDir = path.resolve(process.cwd(), "data/google_trends_imports");
   let csvFiles: string[] = [];
+  let officialExportCount = 0;
+  let localIntegrityOnlyCount = 0;
   if (fs.existsSync(importsDir)) {
     csvFiles = fs.readdirSync(importsDir).filter((f) => f.endsWith(".csv"));
+    for (const f of csvFiles) {
+      const fullPath = path.join(importsDir, f);
+      const rawSha = crypto.createHash("sha256").update(fs.readFileSync(fullPath)).digest("hex");
+      const auth = verifyDurableCsvImportAuthority({
+        rawCsvSha256: rawSha,
+        evaluationScope: "BUSINESS",
+      });
+      if (auth.verified && auth.businessEligible && auth.originClassification === "AUTHENTICATED_OFFICIAL_EXPORT") {
+        officialExportCount++;
+      } else {
+        localIntegrityOnlyCount++;
+      }
+    }
   }
 
   const s6: SourceSmokeResult = {
@@ -258,35 +312,44 @@ export async function runThreeSourceFreeMcpSmoke(): Promise<McpSmokeSummary> {
     details: {
       importsDirExists: fs.existsSync(importsDir),
       rawFilesFound: csvFiles.length,
-      officialLongitudinalExportsFound: 0,
+      localIntegrityOnlyFilesFound: localIntegrityOnlyCount,
+      officialLongitudinalExportsFound: officialExportCount,
       providerContentObserved: false,
     },
     reason:
-      "No official Google-issued >=60-day longitudinal CSV export found in ingestion store. Scraping is prohibited.",
+      "No official Google-issued >=60-day longitudinal CSV export with durable origin authority registration found in ingestion store (raw local CSV files are LOCAL_INTEGRITY_ONLY, providerVerified=false).",
   };
+
+  const s2SummaryText =
+    s2Status === "PROTOCOL_HANDSHAKE_VERIFIED"
+      ? "S2 FastMCP protocol handshake and tool discovery verified operational ($0.00, protocol-only, providerVerified=false)"
+      : `S2 FastMCP protocol check status=${s2Status} (providerVerified=false)`;
 
   const summary: McpSmokeSummary = {
     version: "12.4.3.7.19.3.2.7",
     executedAt,
     commitSha,
+    treeSha,
     totalCostUsd: 0.0,
     sources: { S1: s1, S2: s2, S3: s3, S4: s4, S5: s5, S6: s6 },
-    summaryVerdict:
-      "All 6 source checks evaluated strictly within zero-cost bounds. S2 FastMCP protocol handshake and tool discovery verified operational ($0.00); unconfigured external sources truthfully marked NOT_RUN; TikTok Ads US DEFERRED.",
+    summaryVerdict: `All 6 source checks evaluated strictly within zero-cost bounds. ${s2SummaryText}; S1 Meta collector inspected without paid token; S3 TikTok Organic POLICY_DISABLED; S4 TikTok Ads US DEFERRED; S6 raw CSV files classified as LOCAL_INTEGRITY_ONLY.`,
   };
 
-  // Emit to reports/kh02/v19_3_2_7/
-  const outDir = path.resolve(process.cwd(), "reports/kh02/v19_3_2_7");
-  fs.mkdirSync(outDir, { recursive: true });
-  fs.writeFileSync(
-    path.join(outDir, "10_THREE_SOURCE_MCP_PROTOCOL_AND_PROVIDER_SMOKE.json"),
-    JSON.stringify(summary, null, 2) + "\n"
-  );
-  // Also keep 10_THREE_SOURCE_FREE_MCP_SMOKE.json alias for seamless tooling compatibility
-  fs.writeFileSync(
-    path.join(outDir, "10_THREE_SOURCE_FREE_MCP_SMOKE.json"),
-    JSON.stringify(summary, null, 2) + "\n"
-  );
+  // Emit to reports/kh02/v19_3_3_g15_meta_google_closure/logs/
+  const outDirs = [
+    path.resolve(process.cwd(), "reports/kh02/v19_3_3_g15_meta_google_closure/logs"),
+  ];
+  for (const outDir of outDirs) {
+    fs.mkdirSync(outDir, { recursive: true });
+    fs.writeFileSync(
+      path.join(outDir, "10_THREE_SOURCE_MCP_PROTOCOL_AND_PROVIDER_SMOKE.json"),
+      JSON.stringify(summary, null, 2) + "\n"
+    );
+    fs.writeFileSync(
+      path.join(outDir, "10_THREE_SOURCE_FREE_MCP_SMOKE.json"),
+      JSON.stringify(summary, null, 2) + "\n"
+    );
+  }
 
   return summary;
 }

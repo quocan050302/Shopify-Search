@@ -13,8 +13,17 @@
 
 import fs from "fs";
 import path from "path";
+import os from "os";
+import crypto from "crypto";
 import { describe, it, expect, beforeAll } from "vitest";
-import { saveOriginalGoogleTrendsCsvFile } from "@/services/kh02/demand/googleTrendsCsvValidator";
+import { saveOriginalGoogleTrendsCsvFile, GOOGLE_TRENDS_CSV_STORAGE_DIR } from "@/services/kh02/demand/googleTrendsCsvValidator";
+import {
+  CSV_AUTHORITY_OPERATION_SCOPE,
+  createSignedCsvImportAuthority,
+  persistCsvImportAuthorityAtomically,
+  registerCsvAuthoritySigningKey,
+  clearTestCsvAuthoritySigningKeys,
+} from "@/services/kh02/demand/durableCsvImportAuthority";
 import {
   resolveMetaExecutionPolicy,
   collectMetaProductSignals,
@@ -262,12 +271,65 @@ describe("SWAI KH-02 V12.4.3.1 — Evidence Provenance, Runtime Parity & Async T
   // GROUP 2: Demand Source Authority & Independent Evergreen Verification (F03, F04, F06)
   // ============================================================================
   describe("Group 2 — Demand Source Authority & Independent Evergreen Verification (F03, F04, F06)", () => {
-    it("2.1 Classifies AUTHORITATIVE_VERIFIED and HISTORICAL_SOURCE_VERIFIED accurately", () => {
-      const liveSeries = buildAuthoritativeDemandSeries({ source: "GOOGLE_TRENDS_LIVE" });
-      expect(evaluateDemandSourceAuthority(liveSeries).authority).toBe("AUTHORITATIVE_VERIFIED");
+    it("2.1 Classifies unattested local CSV as CACHED_UNVERIFIED and Official CSV Import Authority as HISTORICAL_SOURCE_VERIFIED", () => {
+      const unbackedLiveSeries = buildAuthoritativeDemandSeries({ source: "GOOGLE_TRENDS_LIVE" });
+      expect(evaluateDemandSourceAuthority(unbackedLiveSeries).authority).toBe("CACHED_UNVERIFIED");
 
-      const csvSeries = buildAuthoritativeDemandSeries({ source: "GOOGLE_TRENDS_CSV" });
-      expect(evaluateDemandSourceAuthority(csvSeries).authority).toBe("HISTORICAL_SOURCE_VERIFIED");
+      const unattestedCsvSeries = buildAuthoritativeDemandSeries({ source: "GOOGLE_TRENDS_CSV" });
+      expect(evaluateDemandSourceAuthority(unattestedCsvSeries).authority).toBe("CACHED_UNVERIFIED");
+
+      // Positive ENGINEERING test with signed Official CSV Import Authority
+      const tmpAuthDir = fs.mkdtempSync(path.join(os.tmpdir(), "kh02_v12_4_3_1_auth_"));
+      const authCsvContent = "Category: All categories\nWeek,Automatic Wet Food Cat Feeder: (United States)\n2026-06-01,69\n2026-07-01,71\n2026-08-01,70\n2026-09-01,72\n";
+      const authSha = crypto.createHash("sha256").update(authCsvContent, "utf8").digest("hex");
+      const authFile = saveOriginalGoogleTrendsCsvFile(authCsvContent, authSha);
+      process.env.TEST_CSV_AUTHORITY_STORAGE_DIR = tmpAuthDir;
+      try {
+        registerCsvAuthoritySigningKey({
+          keyId: "key_v12_4_3_1_active",
+          secret: "aabbccddeeff00112233445566778899aabbccddeeff00112233445566778899",
+          status: "ACTIVE",
+          purpose: CSV_AUTHORITY_OPERATION_SCOPE,
+          isBusinessTrusted: true,
+          description: "Simulated active key for V12.4.3.1 test",
+        });
+        const rec = createSignedCsvImportAuthority({
+          rawCsvSha256: authSha,
+          artifactPath: authFile,
+          importingPrincipalId: "importer_01",
+          approverPrincipalId: "approver_01",
+          approvedAt: "2026-10-01T00:00:00.000Z",
+          importedAt: "2026-10-01T00:00:00.000Z",
+          workspaceId: "ws_v12_4_3_1",
+          targetProductId: "cmvsy7zqh000jp0orhypwohho",
+          query: "Automatic Wet Food Cat Feeder",
+          geography: "US",
+          periodStart: "2026-06-01T00:00:00.000Z",
+          periodEnd: "2026-10-01T00:00:00.000Z",
+          cadence: "MONTHLY",
+          dataPointsCount: 4,
+          originClassification: "AUTHENTICATED_OFFICIAL_EXPORT",
+          reviewStatus: "APPROVED",
+          verificationMethod: "TEST_AUTHORIZED_WORKFLOW_SIMULATION",
+          evidenceChainReference: "urn:swai:test:v12_4_3_1:2_1",
+          issuerKeyId: "key_v12_4_3_1_active",
+          isTestOnly: false,
+        });
+        persistCsvImportAuthorityAtomically(rec);
+
+        const authorizedCsvSeries = buildAuthoritativeDemandSeries({
+          source: "GOOGLE_TRENDS_CSV",
+          evidenceReference: `csv-import:job_uahpet_2026:sha256:${authSha}`,
+        });
+        authorizedCsvSeries[0].demandValue = 69;
+
+        expect(evaluateDemandSourceAuthority(authorizedCsvSeries).authority).toBe("HISTORICAL_SOURCE_VERIFIED");
+      } finally {
+        clearTestCsvAuthoritySigningKeys();
+        delete process.env.TEST_CSV_AUTHORITY_STORAGE_DIR;
+        if (fs.existsSync(authFile)) fs.unlinkSync(authFile);
+        fs.rmSync(tmpAuthDir, { recursive: true, force: true });
+      }
     });
 
     it("2.2 Rejects FIXTURE_ONLY, CACHED_UNVERIFIED, UNKNOWN_SOURCE, and ESTIMATED_OR_PROXY from Evergreen eligibility", () => {
@@ -338,20 +400,69 @@ describe("SWAI KH-02 V12.4.3.1 — Evidence Provenance, Runtime Parity & Async T
     });
 
     it("2.4 Separates verification dimensions when AI is unavailable vs reviewed", () => {
-      const cand = buildValidMerchantCandidate({
-        aiIntelligence: undefined,
-      });
-      const score = calculateKH02EvergreenScore({
-        candidate: cand as any,
-        demandSeries: buildAuthoritativeDemandSeries(),
-      });
+      const tmpAuthDir = fs.mkdtempSync(path.join(os.tmpdir(), "kh02_v12_4_3_1_24_"));
+      const authCsvContent = "Category: All categories\nWeek,Automatic Wet Food Cat Feeder: (United States)\n2026-06-01,69\n2026-07-01,71\n2026-08-01,70\n2026-09-01,72\n";
+      const authSha = crypto.createHash("sha256").update(authCsvContent, "utf8").digest("hex");
+      const authFile = saveOriginalGoogleTrendsCsvFile(authCsvContent, authSha);
+      process.env.TEST_CSV_AUTHORITY_STORAGE_DIR = tmpAuthDir;
+      try {
+        registerCsvAuthoritySigningKey({
+          keyId: "key_v12_4_3_1_24",
+          secret: "aabbccddeeff00112233445566778899aabbccddeeff00112233445566778899",
+          status: "ACTIVE",
+          purpose: CSV_AUTHORITY_OPERATION_SCOPE,
+          isBusinessTrusted: true,
+          description: "Simulated active key for V12.4.3.1 2.4 test",
+        });
+        const rec = createSignedCsvImportAuthority({
+          rawCsvSha256: authSha,
+          artifactPath: authFile,
+          importingPrincipalId: "importer_01",
+          approverPrincipalId: "approver_01",
+          approvedAt: "2026-10-01T00:00:00.000Z",
+          importedAt: "2026-10-01T00:00:00.000Z",
+          workspaceId: "ws_v12_4_3_1",
+          targetProductId: "cmvsy7zqh000jp0orhypwohho",
+          query: "Automatic Wet Food Cat Feeder",
+          geography: "US",
+          periodStart: "2026-06-01T00:00:00.000Z",
+          periodEnd: "2026-10-01T00:00:00.000Z",
+          cadence: "MONTHLY",
+          dataPointsCount: 4,
+          originClassification: "AUTHENTICATED_OFFICIAL_EXPORT",
+          reviewStatus: "APPROVED",
+          verificationMethod: "TEST_AUTHORIZED_WORKFLOW_SIMULATION",
+          evidenceChainReference: "urn:swai:test:v12_4_3_1:2_4",
+          issuerKeyId: "key_v12_4_3_1_24",
+          isTestOnly: false,
+        });
+        persistCsvImportAuthorityAtomically(rec);
 
-      expect(score.tier).toBe("VERIFIED_EVERGREEN");
-      expect(score.verificationDimensions?.identityVerifiedByMerchant).toBe(true);
-      expect(score.verificationDimensions?.demandVerifiedByHistoricalSource).toBe(true);
-      expect(score.verificationDimensions?.aiReviewed).toBe(false);
-      expect(score.verificationDimensions?.evergreenIndependentlyVerified).toBe(true);
-      expect(score.evergreenVerification?.verifiedByGate).toBe(true);
+        const authorizedSeries = buildAuthoritativeDemandSeries({
+          evidenceReference: `csv-import:job_uahpet_2026:sha256:${authSha}`,
+        });
+        authorizedSeries[0].demandValue = 69;
+
+        const cand = buildValidMerchantCandidate({
+          aiIntelligence: undefined,
+        });
+        const score = calculateKH02EvergreenScore({
+          candidate: cand as any,
+          demandSeries: authorizedSeries,
+        });
+
+        expect(score.tier).toBe("VERIFIED_EVERGREEN");
+        expect(score.verificationDimensions?.identityVerifiedByMerchant).toBe(true);
+        expect(score.verificationDimensions?.demandVerifiedByHistoricalSource).toBe(true);
+        expect(score.verificationDimensions?.aiReviewed).toBe(false);
+        expect(score.verificationDimensions?.evergreenIndependentlyVerified).toBe(true);
+        expect(score.evergreenVerification?.verifiedByGate).toBe(true);
+      } finally {
+        clearTestCsvAuthoritySigningKeys();
+        delete process.env.TEST_CSV_AUTHORITY_STORAGE_DIR;
+        if (fs.existsSync(authFile)) fs.unlinkSync(authFile);
+        fs.rmSync(tmpAuthDir, { recursive: true, force: true });
+      }
     });
   });
 

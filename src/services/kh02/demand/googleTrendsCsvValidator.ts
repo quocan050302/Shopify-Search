@@ -645,32 +645,58 @@ export function verifyDemandObservationAgainstRawCsv(
 
 /**
  * Idempotently imports a verified Google Trends CSV export into SQLite ProductDemandObservation.
+ * Supports both (productId, csvContent, options) and (csvContent, { productId, ... }) call signatures.
  */
 export async function importGoogleTrendsCsvToDatabase(
-  productId: string,
-  csvContent: string,
-  options: {
+  arg1: string,
+  arg2:
+    | string
+    | {
+        productId: string;
+        workspaceId?: string;
+        expectedKeyword?: string;
+        canonicalProductName?: string;
+        region?: string;
+        methodologyVersion?: string;
+        importedAt?: string;
+        authorityId?: string;
+      },
+  arg3: {
+    workspaceId?: string;
     expectedKeyword?: string;
+    canonicalProductName?: string;
     region?: string;
     methodologyVersion?: string;
+    importedAt?: string;
+    authorityId?: string;
   } = {}
 ): Promise<{
   success: boolean;
+  valid: boolean;
   insertedCount: number;
+  persistedCount: number;
   skippedCount: number;
   evidenceReference: string | null;
   sha256Checksum: string;
   errors: string[];
 }> {
+  const isOptionsSecond = typeof arg2 === "object" && arg2 !== null;
+  const productId = isOptionsSecond ? arg2.productId : arg1;
+  const csvContent = isOptionsSecond ? arg1 : (arg2 as string);
+  const options = isOptionsSecond ? arg2 : arg3;
+
   const validation = validateAndParseGoogleTrendsCsv(csvContent, {
     expectedKeyword: options.expectedKeyword,
     expectedRegion: options.region,
+    canonicalProductName: options.canonicalProductName,
   });
 
   if (!validation.valid || !validation.evidenceReference) {
     return {
       success: false,
+      valid: false,
       insertedCount: 0,
+      persistedCount: 0,
       skippedCount: 0,
       evidenceReference: null,
       sha256Checksum: validation.sha256Checksum,
@@ -678,12 +704,17 @@ export async function importGoogleTrendsCsvToDatabase(
     };
   }
 
+  const effectiveRef = options.authorityId
+    ? `${validation.evidenceReference}:authorityId=${options.authorityId}`
+    : validation.evidenceReference;
+
   try {
     const importRes = await executeDemandObservationBatchImport({
+      workspaceId: options.workspaceId,
       productId,
       source: "GOOGLE_TRENDS_CSV",
       region: validation.region || options.region || "US",
-      evidenceReference: validation.evidenceReference,
+      evidenceReference: effectiveRef,
       methodologyVersion: options.methodologyVersion || "google_trends_csv_v1",
       points: validation.dataPoints.map((pt) => ({
         keyword: pt.keyword,
@@ -691,25 +722,29 @@ export async function importGoogleTrendsCsvToDatabase(
         periodStart: pt.periodStart,
         periodEnd: pt.periodEnd,
         demandValue: pt.demandValue,
-        evidenceReference: validation.evidenceReference,
+        evidenceReference: effectiveRef,
         methodologyVersion: options.methodologyVersion || "google_trends_csv_v1",
       })),
     });
 
     return {
       success: true,
+      valid: true,
       insertedCount: importRes.insertedCount,
+      persistedCount: importRes.insertedCount + importRes.skippedCount,
       skippedCount: importRes.skippedCount,
-      evidenceReference: validation.evidenceReference,
+      evidenceReference: effectiveRef,
       sha256Checksum: validation.sha256Checksum,
       errors: [],
     };
   } catch (err: any) {
     return {
       success: false,
+      valid: false,
       insertedCount: 0,
+      persistedCount: 0,
       skippedCount: 0,
-      evidenceReference: validation.evidenceReference,
+      evidenceReference: effectiveRef,
       sha256Checksum: validation.sha256Checksum,
       errors: [err?.message || String(err)],
     };

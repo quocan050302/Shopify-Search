@@ -302,7 +302,7 @@ describe("KH-02 V12.4.3.7.18: Strict CSV Row Authority (R01 - R28)", () => {
     expect(result.sourceAuthority).toBe("CACHED_UNVERIFIED");
   });
 
-  it("R18: hasVerifiableCsvOrProviderLineage with intact CSV & row matches HISTORICAL_SOURCE_VERIFIED", () => {
+  it("R18: hasVerifiableCsvOrProviderLineage with intact CSV & row verifies contentIntegrityVerified=true but requires Official CSV Import Authority for HISTORICAL_SOURCE_VERIFIED", () => {
     const result = hasVerifiableCsvOrProviderLineage(evidenceRef, null, {
       targetKeyword: "automatic cat feeder",
       region: "US",
@@ -311,12 +311,13 @@ describe("KH-02 V12.4.3.7.18: Strict CSV Row Authority (R01 - R28)", () => {
     } as any);
 
     expect(result.contentIntegrityVerified).toBe(true);
-    expect(result.lineageVerified).toBe(true);
-    expect(result.sourceAuthority).toBe("HISTORICAL_SOURCE_VERIFIED");
-    expect(result.businessLineageEligible).toBe(false); // CSV byte integrity alone does not grant G15 provider issuance
+    expect(result.sourceOriginVerified).toBe(false);
+    expect(result.lineageVerified).toBe(false);
+    expect(result.sourceAuthority).toBe("CACHED_UNVERIFIED");
+    expect(result.businessLineageEligible).toBe(false); // CSV byte integrity alone does not grant G15 authority
   });
 
-  it("R19: HISTORICAL_SOURCE_VERIFIED proves file integrity, does NOT equate to external Google API issuance authority", () => {
+  it("R19: Local CSV byte integrity proves file integrity only, does NOT equate to external Google API issuance or unattested HISTORICAL_SOURCE_VERIFIED", () => {
     const result = hasVerifiableCsvOrProviderLineage(evidenceRef, null, {
       targetKeyword: "automatic cat feeder",
       region: "US",
@@ -324,9 +325,10 @@ describe("KH-02 V12.4.3.7.18: Strict CSV Row Authority (R01 - R28)", () => {
       observationValue: 50,
     } as any);
 
-    // It proves file integrity on disk, not external direct API attestation
+    // It proves file integrity on disk, not external direct API attestation or unauthenticated historical authority
+    expect(result.contentIntegrityVerified).toBe(true);
     expect(result.sourceAuthority).not.toBe("AUTHORITATIVE_VERIFIED");
-    expect(result.sourceAuthority).toBe("HISTORICAL_SOURCE_VERIFIED");
+    expect(result.sourceAuthority).toBe("CACHED_UNVERIFIED");
     expect(result.providerOriginVerified).toBe(false);
   });
 

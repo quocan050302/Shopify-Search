@@ -38,6 +38,10 @@ import {
 import {
   classifyCandidateObservationAttribution,
 } from "./candidateDemandAttribution";
+import {
+  verifyDurableCsvImportAuthority,
+  isKnownRepositoryFixtureCsvSha,
+} from "./durableCsvImportAuthority";
 export const PROVIDER_RECEIPT_STORAGE_DIR = path.resolve(
   process.cwd(),
   process.env.PROVIDER_RECEIPT_STORAGE_DIR || "data/provider_receipts"
@@ -91,7 +95,8 @@ export type DemandEvidenceRejectionCode =
   | "RAW_ROW_AMBIGUOUS"
   | "INVALID_NUMERIC_VALUE"
   | "INTERVAL_MISMATCH"
-  | "NO_TIMESERIES_SUPPORT";
+  | "NO_TIMESERIES_SUPPORT"
+  | "LOCAL_CSV_NOT_LIVE_PROVIDER";
 
 export type KH02DemandClass =
   | "EVERGREEN_STABLE"
@@ -147,6 +152,10 @@ export interface DemandHistoryPolicy {
   candidateCanonicalTitle?: string | null;
   candidateProductId?: string | null;
   targetProductId?: string | null;
+  workspaceId?: string | null;
+  researchRunId?: string | null;
+  csvAuthorityId?: string | null;
+  csvImportAuthorityId?: string | null;
   searchTermUsed?: string;
   strictSourceProvenance?: boolean;
   strictLiveOrigin?: boolean;
@@ -319,6 +328,9 @@ export function isPromotionalAdCopyDemandKeyword(keyword: string | null | undefi
 
 export type EvidenceOriginKind =
   | "ACTUAL_PROVIDER_INVOCATION"
+  | "AUTHENTICATED_OFFICIAL_EXPORT"
+  | "VERIFIED_OFFICIAL_CSV_IMPORT"
+  | "USER_UPLOADED_UNATTESTED"
   | "UNIT_FIXTURE"
   | "LOCAL_INTEGRITY_ONLY"
   | "SIMULATED_TRANSPORT"
@@ -3543,9 +3555,14 @@ export interface VerifiedDemandEvidenceDescriptor {
   verified: boolean;
   verifiedOrigin?: boolean;
   providerOriginVerified?: boolean;
+  sourceOriginVerified?: boolean;
   contentIntegrityVerified?: boolean;
   durablePersistenceVerified?: boolean;
   eligibleForBusiness?: boolean;
+  businessEligible?: boolean;
+  businessLineageEligible?: boolean;
+  csvAuthorityId?: string | null;
+  csvImportAuthorityId?: string | null;
   sourceAuthority?: string;
   evidenceVersion?: string;
   decisionAt?: string;
@@ -4111,11 +4128,14 @@ export interface VerifiableLineageResult {
   originKind?: EvidenceOriginKind;
   contentIntegrityVerified?: boolean;
   providerOriginVerified?: boolean;
+  sourceOriginVerified?: boolean;
   rawContentIntegrityValid?: boolean;
   csvOriginalIntegrityValid?: boolean;
   fixtureOnly?: boolean;
   businessLineageEligible?: boolean;
   sourceAuthority?: DemandSourceAuthority;
+  csvImportAuthorityId?: string | null;
+  csvImportRejectionCode?: string | null;
 }
 
 export function hasVerifiableCsvOrProviderLineage(
@@ -4124,12 +4144,20 @@ export function hasVerifiableCsvOrProviderLineage(
   context: {
     targetKeyword?: string | null;
     targetProduct?: string | null;
+    targetProductId?: string | null;
+    candidateProductId?: string | null;
+    candidateId?: string | null;
+    workspaceId?: string | null;
     region?: string | null;
     periodStart?: string | Date | null;
     observationDate?: string | Date | null;
     observationValue?: number | null;
+    asOfTimestamp?: string | Date | null;
     allowUnitFixtures?: boolean;
     strictLiveOrigin?: boolean;
+    strictSourceProvenance?: boolean;
+    evaluationScope?: "BUSINESS" | "ENGINEERING";
+    authorityId?: string | null;
   } = {}
 ): VerifiableLineageResult {
   if (!evidenceReference) {
@@ -4144,11 +4172,14 @@ export function hasVerifiableCsvOrProviderLineage(
       originKind: "UNVERIFIED",
       contentIntegrityVerified: false,
       providerOriginVerified: false,
+      sourceOriginVerified: false,
       rawContentIntegrityValid: false,
       csvOriginalIntegrityValid: false,
       fixtureOnly: false,
       businessLineageEligible: false,
       sourceAuthority: "UNKNOWN_SOURCE",
+      csvImportAuthorityId: null,
+      csvImportRejectionCode: "MISSING_EVIDENCE_REFERENCE",
     };
   }
   const ref = String(evidenceReference).trim();
@@ -4202,18 +4233,77 @@ export function hasVerifiableCsvOrProviderLineage(
   let hasProviderRequestLineage = false;
   let originKind: EvidenceOriginKind = rawCsvFileExists ? "LOCAL_INTEGRITY_ONLY" : "UNVERIFIED";
   let providerOriginVerified = false;
+  let sourceOriginVerified = false;
   let fixtureOnly = false;
   let businessLineageEligible = false;
-  let sourceAuthority: DemandSourceAuthority =
-    rawCsvFileExists && hasValidFileChecksum && contentIntegrityVerified
-      ? "HISTORICAL_SOURCE_VERIFIED"
-      : "CACHED_UNVERIFIED";
+  let csvImportAuthorityId: string | null = null;
+  let csvImportRejectionCode: string | null = null;
+  let sourceAuthority: DemandSourceAuthority = "CACHED_UNVERIFIED";
 
-  if (descriptor && descriptor.source !== "GOOGLE_TRENDS_CSV") {
+  // Verify CSV origin authority when a CSV hash reference is present and not a provider API receipt
+  const isCsvRef = Boolean(hashMatch && !hasProviderClaimString);
+  if (isCsvRef && hashMatch) {
+    const cleanCsvSha = hashMatch[1].toLowerCase();
+    const isKnownFix = isKnownRepositoryFixtureCsvSha(cleanCsvSha) || /fixture|mock|synthetic|demo/i.test(ref);
+    if (contentIntegrityVerified) {
+      const refAuthMatch = ref.match(/:(?:authId|authorityId)=([a-zA-Z0-9_\-\.]+)/i);
+      const extractedAuthId =
+        context.authorityId ||
+        descriptor?.csvImportAuthorityId ||
+        (refAuthMatch ? refAuthMatch[1] : null);
+      const effectiveScope: "BUSINESS" | "ENGINEERING" =
+        context.evaluationScope === "ENGINEERING" && context.strictLiveOrigin !== true
+          ? "ENGINEERING"
+          : "BUSINESS";
+
+      const csvAuth = verifyDurableCsvImportAuthority({
+        authorityId: extractedAuthId,
+        rawCsvSha256: cleanCsvSha,
+        workspaceId: context.workspaceId || null,
+        targetProductId: context.targetProductId || context.candidateProductId || null,
+        candidateId: context.candidateId || null,
+        targetKeyword: context.targetKeyword || null,
+        region: context.region || null,
+        periodStart: context.periodStart || context.observationDate || null,
+        asOfTimestamp: context.asOfTimestamp || null,
+        evaluationScope: effectiveScope,
+      });
+
+      providerOriginVerified = false; // CSV is never a live provider API invocation
+      if (csvAuth.verified && csvAuth.sourceOriginVerified) {
+        sourceOriginVerified = true;
+        businessLineageEligible = csvAuth.businessEligible === true && effectiveScope === "BUSINESS";
+        originKind = "VERIFIED_OFFICIAL_CSV_IMPORT";
+        fixtureOnly = Boolean(csvAuth.record?.isTestOnly);
+        sourceAuthority = "HISTORICAL_SOURCE_VERIFIED";
+        csvImportAuthorityId = csvAuth.record?.authorityId || extractedAuthId || null;
+        csvImportRejectionCode = null;
+      } else {
+        sourceOriginVerified = false;
+        businessLineageEligible = false;
+        fixtureOnly = isKnownFix || csvAuth.originClassification === "UNIT_FIXTURE";
+        originKind = fixtureOnly ? "UNIT_FIXTURE" : "LOCAL_INTEGRITY_ONLY";
+        sourceAuthority = "CACHED_UNVERIFIED";
+        csvImportRejectionCode = csvAuth.code || "AUTHORITY_NOT_FOUND";
+        verificationReason =
+          verificationReason ||
+          csvAuth.reason ||
+          "Local CSV byte/row integrity is valid, but Official CSV Import Authority is missing or unverified.";
+      }
+    } else {
+      sourceOriginVerified = false;
+      businessLineageEligible = false;
+      fixtureOnly = isKnownFix;
+      originKind = rawCsvFileExists ? "LOCAL_INTEGRITY_ONLY" : "UNVERIFIED";
+      sourceAuthority = "CACHED_UNVERIFIED";
+      csvImportRejectionCode = "CONTENT_INTEGRITY_FAILED";
+    }
+  } else if (descriptor && descriptor.source !== "GOOGLE_TRENDS_CSV") {
     const authCheck = isAuthenticProviderReceiptDescriptor(descriptor, context);
     fixtureOnly = Boolean(authCheck.isFixture);
     contentIntegrityVerified = Boolean(authCheck.contentIntegrityVerified);
     providerOriginVerified = Boolean(authCheck.providerOriginVerified);
+    sourceOriginVerified = Boolean(authCheck.providerOriginVerified);
     originKind = authCheck.originKind || "UNVERIFIED";
 
     if (authCheck.authentic) {
@@ -4223,17 +4313,20 @@ export function hasVerifiableCsvOrProviderLineage(
         ? "FIXTURE_ONLY"
         : authCheck.providerOriginVerified
         ? "AUTHORITATIVE_VERIFIED"
-        : (rawCsvFileExists && hasValidFileChecksum ? "HISTORICAL_SOURCE_VERIFIED" : "CACHED_UNVERIFIED");
+        : "CACHED_UNVERIFIED";
     } else {
       verificationReason = authCheck.reason || "Provider receipt descriptor failed authenticity check.";
       sourceAuthority = authCheck.isFixture ? "FIXTURE_ONLY" : "CACHED_UNVERIFIED";
     }
-  } else if (hasProviderClaimString && !hashMatch) {
+  } else if (hasProviderClaimString) {
     verificationReason = `Provider reference '${ref}' is an unverified string claim without an immutable provider receipt or storage artifact.`;
+    sourceAuthority = "CACHED_UNVERIFIED";
   }
 
   const lineagePresent = Boolean(hashMatch || hasProviderClaimString);
-  const lineageVerified = (rawCsvFileExists && hasValidFileChecksum && contentIntegrityVerified) || (hasProviderRequestLineage && providerOriginVerified);
+  const lineageVerified =
+    (rawCsvFileExists && hasValidFileChecksum && contentIntegrityVerified && sourceOriginVerified) ||
+    (hasProviderRequestLineage && providerOriginVerified);
 
   return {
     rawCsvFileExists,
@@ -4246,11 +4339,14 @@ export function hasVerifiableCsvOrProviderLineage(
     originKind,
     contentIntegrityVerified,
     providerOriginVerified,
+    sourceOriginVerified,
     rawContentIntegrityValid: contentIntegrityVerified,
     csvOriginalIntegrityValid: rawCsvFileExists && hasValidFileChecksum,
     fixtureOnly,
     businessLineageEligible,
     sourceAuthority,
+    csvImportAuthorityId,
+    csvImportRejectionCode,
   };
 }
 
@@ -4285,6 +4381,32 @@ export function evaluateDemandSourceAuthority(
     return { authority: "CACHED_UNVERIFIED", reasons, productAttributionValid: false };
   }
 
+  // 2b. Check explicit productId and workspaceId binding against policy target
+  const expectedProductId = policy.targetProductId || policy.candidateProductId || null;
+  if (expectedProductId) {
+    const mismatchedObsProduct = observations.find(
+      (o) => o.productId && String(o.productId).trim() !== String(expectedProductId).trim()
+    );
+    if (mismatchedObsProduct) {
+      reasons.push(
+        `Observation productId '${mismatchedObsProduct.productId}' does not match target candidate productId '${expectedProductId}'.`
+      );
+      return { authority: "CACHED_UNVERIFIED", reasons, productAttributionValid: false };
+    }
+  }
+
+  if (policy.workspaceId) {
+    const mismatchedObsWorkspace = observations.find(
+      (o) => (o as any).workspaceId && String((o as any).workspaceId).trim() !== String(policy.workspaceId).trim()
+    );
+    if (mismatchedObsWorkspace) {
+      reasons.push(
+        `Observation workspaceId '${(mismatchedObsWorkspace as any).workspaceId}' does not match target workspaceId '${policy.workspaceId}'.`
+      );
+      return { authority: "CACHED_UNVERIFIED", reasons, productAttributionValid: false };
+    }
+  }
+
   // 3. Check for broad category term used as SKU demand proxy
   const keywords = observations
     .map((o) => o.keyword)
@@ -4310,36 +4432,59 @@ export function evaluateDemandSourceAuthority(
   }
 
   // 4. Check for candidate-scoped keyword attribution & cross-product family mismatch
-  if (policy.candidateCanonicalName || policy.searchTermUsed) {
+  if (policy.candidateCanonicalName || policy.searchTermUsed || expectedProductId) {
     const candidateQuery = policy.candidateCanonicalName || policy.searchTermUsed || "";
-    const candidateFamily = detectSpecificProductFamily(candidateQuery);
-    for (const kw of keywords) {
-      const kwFamily = detectSpecificProductFamily(kw);
-      if (candidateFamily && kwFamily && kwFamily !== candidateFamily) {
-        reasons.push(
-          `Cross-product demand mismatch: candidate family '${candidateFamily}' cannot be verified by demand keyword '${kw}' (family '${kwFamily}').`
-        );
-        return { authority: "CACHED_UNVERIFIED", reasons, productAttributionValid: false };
+    const candidateFamily = candidateQuery ? detectSpecificProductFamily(candidateQuery) : null;
+    for (const obs of observations) {
+      const kw = obs.keyword ? String(obs.keyword).trim() : "";
+      const isBareMathPoint = !kw && !obs.source && !obs.productId && !obs.evidenceReference;
+      if (isBareMathPoint && policy.strictLiveOrigin !== true && policy.strictSourceProvenance !== true) {
+        continue;
+      }
+      if (!kw && !candidateQuery) continue;
+      if (kw && candidateFamily) {
+        const kwFamily = detectSpecificProductFamily(kw);
+        if (candidateFamily && kwFamily && kwFamily !== candidateFamily) {
+          reasons.push(
+            `Cross-product demand mismatch: candidate family '${candidateFamily}' cannot be verified by demand keyword '${kw}' (family '${kwFamily}').`
+          );
+          return { authority: "CACHED_UNVERIFIED", reasons, productAttributionValid: false };
+        }
       }
 
-      // Check candidate attribution via classifyCandidateObservationAttribution
-      const attr = classifyCandidateObservationAttribution(
-        { keyword: kw, productId: policy.targetProductId || policy.candidateProductId },
-        {
-          candidateCanonicalName: policy.candidateCanonicalName,
-          searchTermUsed: policy.searchTermUsed,
-          authorizedKeywords: [policy.candidateCanonicalName, policy.candidateCanonicalTitle].filter((k): k is string => Boolean(k)),
-          canonicalProductId: policy.targetProductId || policy.candidateProductId,
-          verifiedAliases: policy.verifiedAliases,
-          evaluationScope: policy.evaluationScope || "BUSINESS",
-        }
-      );
-
-      if (!attr.isAttributable || !attr.businessAttributable) {
-        reasons.push(
-          `Candidate demand attribution failure (${attr.classification}): ${attr.reason}`
+      if (policy.candidateCanonicalName || policy.searchTermUsed) {
+        const inferredSingleProductId =
+          distinctProductIds.size === 1 ? Array.from(distinctProductIds)[0] : null;
+        // Check candidate attribution via classifyCandidateObservationAttribution using ACTUAL obs.productId & obs.workspaceId
+        const attr = classifyCandidateObservationAttribution(
+          {
+            keyword: kw,
+            productId: obs.productId ?? expectedProductId,
+            workspaceId: (obs as any).workspaceId ?? policy.workspaceId,
+            region: obs.region ?? policy.requiredRegion,
+          },
+          {
+            candidateCanonicalName: policy.candidateCanonicalName,
+            searchTermUsed: policy.searchTermUsed,
+            authorizedKeywords: [policy.candidateCanonicalName, policy.candidateCanonicalTitle].filter((k): k is string => Boolean(k)),
+            canonicalProductId: expectedProductId || inferredSingleProductId,
+            workspaceId: policy.workspaceId,
+            verifiedAliases: policy.verifiedAliases,
+            evaluationScope: policy.evaluationScope || "BUSINESS",
+          }
         );
-        return { authority: "CACHED_UNVERIFIED", reasons, productAttributionValid: false };
+
+        const attrRequired =
+          policy.evaluationScope === "ENGINEERING" && policy.strictLiveOrigin !== true
+            ? attr.isAttributable
+            : attr.isAttributable && attr.businessAttributable;
+
+        if (!attrRequired) {
+          reasons.push(
+            `Candidate demand attribution failure (${attr.classification}): ${attr.reason}`
+          );
+          return { authority: "CACHED_UNVERIFIED", reasons, productAttributionValid: false };
+        }
       }
     }
   }
@@ -4398,6 +4543,10 @@ export function evaluateDemandSourceAuthority(
   let hasUnbackedLive = false;
   let hasMixedSources = false;
   const normalizedSourceTypes = new Set<string>();
+  const effectiveEvalScope: "BUSINESS" | "ENGINEERING" =
+    policy.evaluationScope === "ENGINEERING" && policy.strictLiveOrigin !== true
+      ? "ENGINEERING"
+      : "BUSINESS";
 
   for (let idx = 0; idx < observations.length; idx++) {
     const obs = observations[idx];
@@ -4426,18 +4575,43 @@ export function evaluateDemandSourceAuthority(
     const lineage = hasVerifiableCsvOrProviderLineage(obs.evidenceReference, desc, {
       targetKeyword: obs.keyword,
       targetProduct: policy.candidateCanonicalName,
+      targetProductId: expectedProductId || obs.productId || null,
+      candidateProductId: policy.candidateProductId || null,
+      workspaceId: policy.workspaceId || (obs as any).workspaceId || null,
       region: policy.requiredRegion || obs.region,
       periodStart: obs.periodStart || (obs as any).date,
       observationValue: obs.demandValue !== undefined ? obs.demandValue : (obs as any).value,
-      allowUnitFixtures: policy.allowUnitFixtures ?? (policy.strictLiveOrigin !== true && process.env.NODE_ENV === "test"),
+      asOfTimestamp: policy.asOfTimestamp || null,
+      allowUnitFixtures:
+        effectiveEvalScope === "BUSINESS"
+          ? false
+          : (policy.allowUnitFixtures ?? (policy.strictLiveOrigin !== true && process.env.NODE_ENV === "test")),
       strictLiveOrigin: policy.strictLiveOrigin === true,
+      strictSourceProvenance: policy.strictSourceProvenance === true,
+      evaluationScope: effectiveEvalScope,
+      authorityId: (obs as any).csvImportAuthorityId || policy.csvImportAuthorityId || null,
     });
 
     if (/google_trends_csv|historical_ingestion/i.test(src)) {
       normalizedSourceTypes.add("CSV");
-      if (!lineage.rawCsvFileExists || !lineage.hasValidFileChecksum || !lineage.lineageVerified || lineage.sourceAuthority === "CACHED_UNVERIFIED") {
+      const csvOriginAcceptable =
+        effectiveEvalScope === "BUSINESS"
+          ? Boolean(lineage.sourceOriginVerified && lineage.businessLineageEligible && !lineage.fixtureOnly)
+          : Boolean(lineage.sourceOriginVerified);
+
+      if (
+        !lineage.rawCsvFileExists ||
+        !lineage.hasValidFileChecksum ||
+        !lineage.contentIntegrityVerified ||
+        !lineage.lineageVerified ||
+        !csvOriginAcceptable ||
+        lineage.sourceAuthority === "CACHED_UNVERIFIED"
+      ) {
         hasUnbackedCsv = true;
-        reasons.push(`Observation ${idx + 1} (${src}) lacks a verified raw CSV file on disk matching sha256 checksum or row data.`);
+        reasons.push(
+          lineage.verificationReason ||
+            `Observation ${idx + 1} (${src}) lacks a verified Official CSV Import Authority or raw CSV file matching sha256 checksum and row data.`
+        );
       }
     } else if (/google_trends_live|authoritative_api|provider_api|google_trends_api|Google Trends \(SerpApi\)/i.test(src)) {
       normalizedSourceTypes.add("LIVE");
@@ -4449,7 +4623,15 @@ export function evaluateDemandSourceAuthority(
         };
       }
       const hasStrictLiveOrigin = lineage.hasProviderRequestLineage && lineage.providerOriginVerified && lineage.originKind === "ACTUAL_PROVIDER_INVOCATION";
-      const hasBackingEvidence = hasStrictLiveOrigin || (process.env.NODE_ENV === "test" && policy.strictLiveOrigin !== true && !policy.strictSourceProvenance && lineage.rawCsvFileExists && lineage.hasValidFileChecksum);
+      const hasBackingEvidence =
+        hasStrictLiveOrigin ||
+        (effectiveEvalScope === "ENGINEERING" &&
+          process.env.NODE_ENV === "test" &&
+          policy.strictLiveOrigin !== true &&
+          !policy.strictSourceProvenance &&
+          lineage.rawCsvFileExists &&
+          lineage.hasValidFileChecksum &&
+          lineage.sourceOriginVerified);
       if (!hasBackingEvidence) {
         hasUnbackedLive = true;
         reasons.push(`Observation ${idx + 1} (${src}) lacks verifiable provider API request receipt or verified actual provider invocation origin.`);
@@ -4467,7 +4649,15 @@ export function evaluateDemandSourceAuthority(
         };
       }
       const hasStrictLiveOrigin = lineage.hasProviderRequestLineage && lineage.providerOriginVerified && lineage.originKind === "ACTUAL_PROVIDER_INVOCATION";
-      const hasBackingEvidence = hasStrictLiveOrigin || (process.env.NODE_ENV === "test" && policy.strictLiveOrigin !== true && !policy.strictSourceProvenance && lineage.rawCsvFileExists && lineage.hasValidFileChecksum);
+      const hasBackingEvidence =
+        hasStrictLiveOrigin ||
+        (effectiveEvalScope === "ENGINEERING" &&
+          process.env.NODE_ENV === "test" &&
+          policy.strictLiveOrigin !== true &&
+          !policy.strictSourceProvenance &&
+          lineage.rawCsvFileExists &&
+          lineage.hasValidFileChecksum &&
+          lineage.sourceOriginVerified);
       if (!hasBackingEvidence) {
         hasUnbackedLive = true;
         reasons.push(`Observation ${idx + 1} marked authoritative lacks verifiable provider API request receipt or verified actual provider invocation origin.`);
@@ -4504,8 +4694,10 @@ export function auditDemandObservationsProvenance(
   observations: HistoricalObservation[]
 ): DemandSourceAuditRecord {
   const auth = evaluateDemandSourceAuthority(observations, {
+    targetProductId: productId || undefined,
     candidateCanonicalName: canonicalProductName || undefined,
     strictSourceProvenance: true,
+    evaluationScope: "BUSINESS",
   });
   const refs = Array.from(
     new Set(observations.map((o) => o.evidenceReference).filter((r): r is string => Boolean(r)))
@@ -4594,6 +4786,8 @@ export async function resolveVerifiedDemandEvidence(
     workspaceId?: string | null;
     researchRunId?: string | null;
     strictLiveOrigin?: boolean;
+    evaluationScope?: "BUSINESS" | "ENGINEERING";
+    authorityId?: string | null;
     observationDate?: string | Date | null;
     observationValue?: number | null;
     asOfTimestamp?: string | Date | null;
@@ -4605,33 +4799,111 @@ export async function resolveVerifiedDemandEvidence(
 
   const ref = String(evidenceReference).trim();
 
-  // 1. If it's a CSV reference with full 64-character SHA-256, verify via verifyStoredCsvFile
+  // 1. If it's a CSV reference with full 64-character SHA-256 (and not a provider-request URI), verify via verifyStoredCsvFile + verifyDurableCsvImportAuthority
   const hashMatch = ref.match(/\bsha256:([a-f0-9]{64})\b/i);
-  if (hashMatch) {
-    const verified = verifyStoredCsvFile(hashMatch[1]);
+  const isProviderClaimUri = /^(?:provider-request|serpapi-request):/i.test(ref);
+  if (hashMatch && !isProviderClaimUri) {
+    const cleanSha = hashMatch[1].toLowerCase();
+    const verified = verifyStoredCsvFile(cleanSha);
     if (verified.exists && verified.validHash) {
+      let rowIntegrityValid = true;
+      let rowFailureReason = "";
+      if (
+        context.observationValue !== undefined &&
+        context.observationValue !== null &&
+        context.observationDate
+      ) {
+        const rowCheck = verifyDemandObservationAgainstRawCsv(
+          ref,
+          {
+            keyword: context.keyword,
+            region: context.region,
+            periodStart: context.observationDate as any,
+            demandValue: context.observationValue,
+          },
+          { expectedKeyword: context.keyword }
+        );
+        if (!rowCheck.verified) {
+          rowIntegrityValid = false;
+          rowFailureReason = `Observation does not match stored CSV: ${rowCheck.reason} (${rowCheck.code})`;
+        }
+      }
+
+      if (!rowIntegrityValid) {
+        return {
+          source: "GOOGLE_TRENDS_CSV",
+          rawResponseSha256: cleanSha,
+          artifactPath: verified.filePath,
+          targetProductOrKeyword: context.keyword,
+          region: context.region || "US",
+          responseStatus: 200,
+          verified: false,
+          eligible: false,
+          contentIntegrityVerified: false,
+          providerOriginVerified: false,
+          sourceOriginVerified: false,
+          businessLineageEligible: false,
+          originKind: "UNVERIFIED",
+          rejectionReason: rowFailureReason,
+          errorCode: "RAW_VALUE_MISMATCH",
+        };
+      }
+
+      const refAuthMatch = ref.match(/:(?:authId|authorityId)=([a-zA-Z0-9_\-\.]+)/i);
+      const effectiveScope: "BUSINESS" | "ENGINEERING" =
+        context.evaluationScope === "ENGINEERING" && context.strictLiveOrigin !== true
+          ? "ENGINEERING"
+          : "BUSINESS";
+
+      const csvAuth = verifyDurableCsvImportAuthority({
+        authorityId: context.authorityId || (refAuthMatch ? refAuthMatch[1] : null),
+        rawCsvSha256: cleanSha,
+        workspaceId: context.workspaceId || null,
+        targetProductId: context.productId || null,
+        targetKeyword: context.keyword || null,
+        region: context.region || null,
+        periodStart: context.observationDate || null,
+        asOfTimestamp: context.asOfTimestamp || null,
+        evaluationScope: effectiveScope,
+      });
+
+      const isKnownFixture = isKnownRepositoryFixtureCsvSha(cleanSha) || csvAuth.originClassification === "UNIT_FIXTURE";
+      const sourceOriginVerified = Boolean(csvAuth.verified && csvAuth.sourceOriginVerified);
+      const businessLineageEligible = Boolean(csvAuth.verified && csvAuth.businessEligible && effectiveScope === "BUSINESS");
+
       return {
         source: "GOOGLE_TRENDS_CSV",
-        rawResponseSha256: hashMatch[1].toLowerCase(),
+        rawResponseSha256: cleanSha,
         artifactPath: verified.filePath,
         targetProductOrKeyword: context.keyword,
         region: context.region || "US",
         responseStatus: 200,
-        verified: true,
-        eligible: false,
+        verified: sourceOriginVerified,
+        eligible: businessLineageEligible,
         contentIntegrityVerified: true,
         providerOriginVerified: false,
-        originKind: "LOCAL_INTEGRITY_ONLY",
+        sourceOriginVerified,
+        businessLineageEligible,
+        csvImportAuthorityId: csvAuth.record?.authorityId || null,
+        originKind: sourceOriginVerified
+          ? "VERIFIED_OFFICIAL_CSV_IMPORT"
+          : isKnownFixture
+          ? "UNIT_FIXTURE"
+          : "LOCAL_INTEGRITY_ONLY",
+        rejectionReason: sourceOriginVerified ? undefined : csvAuth.reason,
+        errorCode: sourceOriginVerified ? undefined : "LOCAL_CSV_NOT_LIVE_PROVIDER",
       };
     }
     return {
       source: "GOOGLE_TRENDS_CSV",
-      rawResponseSha256: hashMatch[1].toLowerCase(),
+      rawResponseSha256: cleanSha,
       verified: false,
       eligible: false,
       contentIntegrityVerified: false,
       providerOriginVerified: false,
-      rejectionReason: `Referenced CSV file with checksum '${hashMatch[1].slice(0, 12)}...' does not exist or failed hash integrity.`,
+      sourceOriginVerified: false,
+      businessLineageEligible: false,
+      rejectionReason: `Referenced CSV file with checksum '${cleanSha.slice(0, 12)}...' does not exist or failed hash integrity.`,
       errorCode: verified.exists ? "HASH_MISMATCH" : "MISSING_ARTIFACT",
     };
   }
@@ -5253,7 +5525,13 @@ export function evaluateDemandHistoryEvidence(
           }
         }
 
-        if (policy.strictChronological === true && !hasAnyAvailabilityTimestamp) {
+        const requireAvailabilityMetadata =
+          policy.strictChronological === true ||
+          policy.strictLiveOrigin === true ||
+          policy.strictSourceProvenance === true ||
+          policy.evaluationScope === "BUSINESS";
+
+        if (requireAvailabilityMetadata && !hasAnyAvailabilityTimestamp) {
           postCutoffRejected = true;
           return false;
         }
@@ -5286,6 +5564,16 @@ export function evaluateDemandHistoryEvidence(
       return aTime - bTime;
     });
 
+  let overlappingIntervalsDetected = false;
+  for (let i = 1; i < valid.length; i++) {
+    const prevEnd = valid[i - 1].periodEnd ? new Date(valid[i - 1].periodEnd!).getTime() : NaN;
+    const currStart = new Date(valid[i].periodStart || valid[i].date!).getTime();
+    if (!isNaN(prevEnd) && !isNaN(currStart) && prevEnd > currStart) {
+      overlappingIntervalsDetected = true;
+      break;
+    }
+  }
+
   if (futureDateRejected) {
     missingEvidence.push("Future-dated demand observations were detected and rejected.");
   }
@@ -5295,6 +5583,9 @@ export function evaluateDemandHistoryEvidence(
   if (regionMismatchCount > 0) {
     missingEvidence.push(`Observations from non-target region were rejected (${regionMismatchCount} non-${policy.requiredRegion} records).`);
   }
+  if (overlappingIntervalsDetected) {
+    missingEvidence.push("Demand series contains overlapping or conflicting staggered observation intervals; unverified interval overlap is prohibited.");
+  }
 
   const authorityEval = evaluateDemandSourceAuthority(valid, policy);
   for (const r of authorityEval.reasons) {
@@ -5303,6 +5594,34 @@ export function evaluateDemandHistoryEvidence(
 
   const demandObservationIds = valid
     .map((v, idx) => v.id || `obs_${idx + 1}_${new Date(v.periodStart || v.date!).toISOString().slice(0, 10)}`);
+
+  if (overlappingIntervalsDetected) {
+    const overlapExpl = "Demand series contains overlapping or conflicting staggered observation intervals; unverified interval overlap is prohibited.";
+    return {
+      status: "INSUFFICIENT_HISTORY",
+      eligibleForEvergreen: false,
+      dataPointsCount: valid.length,
+      distinctObservationDatesCount: seenDates.size,
+      coveredDays: 0,
+      meanInterest: null,
+      stdDev: null,
+      coefficientOfVariation: null,
+      demandClass: "INSUFFICIENT_HISTORY",
+      sourceAuthority: authorityEval.authority,
+      temporalCoverageValid: false,
+      productAttributionValid: authorityEval.productAttributionValid && regionMismatchCount === 0,
+      demandObservationIds,
+      calculationVersion: "12.4.3.3",
+      explanation: overlapExpl,
+      missingEvidence,
+      evaluatedAt,
+      expectedCadence: "SPARSE",
+      maxGapDays: 0,
+      coverageRatio: 0,
+      qualifiedPeriods: valid.length,
+      sourceProvenanceStatus: authorityEval.authority,
+    };
+  }
 
   if (valid.length < minPoints) {
     const expl = `Insufficient historical data (${valid.length} points observed, minimum ${minPoints} required). Evergreen sustainability cannot be verified.`;

@@ -232,8 +232,40 @@ export async function diagnoseMetaLiveCollector(
     };
   }
 
+  const isEnabled = config.enabled !== false;
+  if (!isEnabled) {
+    return {
+      source: "META_ADS",
+      adapterInstalled: true,
+      configured: false,
+      transportConnected: false,
+      authenticated: false,
+      discoverySupported: false,
+      queryExecuted: actualQueryAttempted,
+      recordsReturned: rawAdsReturned,
+      provenanceVerified: workspaceRecordCount > 0,
+      lastCheckedAt,
+      status: "NOT_CONFIGURED",
+      reason: "MetaAdsCollector live collector is disabled via META_COLLECTOR_ENABLED=false.",
+      missingRequirements: ["META_COLLECTOR_ENABLED"],
+      pythonBin: config.pythonBin,
+      collectorVersion: null,
+      databaseRecordsIndexed: workspaceRecordCount,
+      collectorInstalled: pythonExists,
+      collectorConfigured: false,
+      transportReachable: false,
+      queryCapabilityAvailable: false,
+      actualQueryAttempted,
+      upstreamQueryCompleted: false,
+      rawAdsReturned: 0,
+      validObservationsNormalized: 0,
+      recordsPersisted: 0,
+      recordsAssociatedWithCandidates: 0,
+    };
+  }
+
   let collectorVersion: string | null = null;
-  let transportConnected: boolean = Boolean(pythonExists);
+  let transportConnected: boolean = Boolean(pythonExists && isEnabled);
 
   if (context?.checkLiveTransport) {
     try {
@@ -259,7 +291,7 @@ export async function diagnoseMetaLiveCollector(
   return {
     source: "META_ADS",
     adapterInstalled: true,
-    configured: true,
+    configured: Boolean(isEnabled && pythonExists),
     transportConnected,
     authenticated: true,
     discoverySupported: transportConnected,
@@ -274,7 +306,7 @@ export async function diagnoseMetaLiveCollector(
     collectorVersion,
     databaseRecordsIndexed: workspaceRecordCount,
     collectorInstalled: true,
-    collectorConfigured: Boolean(config.enabled !== false && pythonExists),
+    collectorConfigured: Boolean(isEnabled && pythonExists),
     transportReachable: transportConnected,
     queryCapabilityAvailable: transportConnected,
     actualQueryAttempted,
@@ -1206,11 +1238,24 @@ export async function collectLiveMetaAds(
         if (normExtId) {
           seenNormalizedExternalIds.add(normExtId);
         }
-        if (binding && norm.sourceExternalId && !subqueryBindingMap.has(norm.sourceExternalId)) {
-          subqueryBindingMap.set(norm.sourceExternalId, {
-            ...binding,
-            upstreamAdId: norm.sourceExternalId,
-          });
+        if (binding) {
+          norm.sourceEvidence = {
+            ...(norm.sourceEvidence || {}),
+            queryId: binding.queryId,
+            matchedQueryIds: binding.matchedQueryIds,
+            queryKeyword: binding.queryKeyword,
+            roundNumber: binding.roundNumber,
+            origin: binding.origin,
+            archetypeId: binding.archetypeId,
+            providerRequestId: binding.providerRequestId,
+            researchRunId: binding.researchRunId || query.researchRunId || null,
+          } as any;
+          if (norm.sourceExternalId && !subqueryBindingMap.has(norm.sourceExternalId)) {
+            subqueryBindingMap.set(norm.sourceExternalId, {
+              ...binding,
+              upstreamAdId: norm.sourceExternalId,
+            });
+          }
         }
         normalizedAds.push(norm);
       } catch (normErr: any) {
@@ -1842,12 +1887,30 @@ export async function collectMetaProductSignals(
         ? Array.from(new Set(binding.matchedQueryIds || [binding.queryId].filter(Boolean)))
         : [];
       const latestObsRecord = Array.isArray(ad.observations) && ad.observations.length > 0 ? ad.observations[0] : null;
+      let parsedRawPayload: Record<string, any> | null = null;
+      if (latestObsRecord?.rawPayload && typeof latestObsRecord.rawPayload === "string") {
+        try {
+          parsedRawPayload = JSON.parse(latestObsRecord.rawPayload);
+        } catch {
+          parsedRawPayload = null;
+        }
+      }
       const sourceObservationId = latestObsRecord?.id || `sobs_meta_${ad.id}`;
       const upstreamAdId = String(ad.externalAdId || binding?.upstreamAdId || ad.id);
+      const persistedSourceEvidence =
+        parsedRawPayload?.sourceEvidence && typeof parsedRawPayload.sourceEvidence === "object"
+          ? parsedRawPayload.sourceEvidence
+          : null;
       const providerRequestId = isFreshLive && binding
         ? (binding.providerRequestId || `req_${query.researchRunId || "run"}_${binding.queryId}`)
-        : null;
-      const researchRunId = isFreshLive ? (query.researchRunId || binding?.researchRunId || null) : null;
+        : (persistedSourceEvidence?.providerRequestId || null);
+      const researchRunId = isFreshLive
+        ? (query.researchRunId || binding?.researchRunId || null)
+        : (persistedSourceEvidence?.researchRunId || parsedRawPayload?.runId || null);
+      const rawEvidenceReference =
+        parsedRawPayload?.rawEvidenceReference ||
+        latestObsRecord?.evidenceReference ||
+        `CompetitorAd:${ad.id}`;
 
       return {
         source: "META_ADS",
@@ -1867,10 +1930,15 @@ export async function collectMetaProductSignals(
         verifiedDeliveryMarket: marketProv.verifiedDeliveryMarket,
         title: ad.headline,
         description: ad.bodyText,
-        matchedQueryIds,
+        matchedQueryIds:
+          matchedQueryIds.length > 0
+            ? matchedQueryIds
+            : Array.isArray(persistedSourceEvidence?.matchedQueryIds)
+            ? persistedSourceEvidence.matchedQueryIds
+            : [],
         workspaceId: query.workspaceId || "default-workspace",
         researchRunId,
-        queryId: isFreshLive && binding ? binding.queryId : null,
+        queryId: isFreshLive && binding ? binding.queryId : (persistedSourceEvidence?.queryId || null),
         providerRequestId,
         upstreamAdId,
         persistedAdId: ad.id,
@@ -1889,6 +1957,8 @@ export async function collectMetaProductSignals(
           sourceObservationId,
           persistedAdId: ad.id,
           upstreamAdId,
+          rawEvidenceReference,
+          ...(persistedSourceEvidence ? { sourceEvidence: persistedSourceEvidence } : {}),
           ...(isFreshLive && binding
             ? {
                 researchRunId,

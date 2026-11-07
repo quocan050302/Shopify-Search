@@ -188,13 +188,18 @@ export function verifyEvergreenCandidateIndependently(
     candidate?.demandSeries ||
     [];
 
+  const candidateProductId =
+    candidate?.researchProductId || (candidate as any)?.productId || undefined;
+
   const demandAssessment = evaluateDemandHistoryEvidence(points, {
     minimumDataPoints: 3,
     minimumCoveredDays: 60,
+    targetProductId: candidateProductId,
     candidateCanonicalName: canonicalProductName,
   });
 
   const demandEval = evaluateTemporalDemandStability(points, 90, {
+    targetProductId: candidateProductId,
     candidateCanonicalName: canonicalProductName,
   });
 
@@ -475,6 +480,7 @@ export function calculateKH02EvergreenScore(
 
   // ── Pillar A: Demand Stability (25 pts) ───────────────────────────────────
   const demandEval = evaluateTemporalDemandStability(ctx.demandSeries, 90, {
+    targetProductId: c.researchProductId || (c as any).productId || undefined,
     candidateCanonicalName: c.canonicalProductName || c.title,
   });
   let pillarA_Score: number | null = demandEval.stabilityScore;
@@ -522,7 +528,43 @@ export function calculateKH02EvergreenScore(
   // ── Pillar C: Multi-Platform Validation (20 pts) ───────────────────────────
   // Grounded: 0 base points
   let pillarC_Score = 0;
-  const sourceSet = new Set(c.supportingSourceTypes);
+  const normalizedSources: string[] = [];
+  for (const rawSrc of c.supportingSourceTypes || []) {
+    const s = String(rawSrc || "").trim().toUpperCase();
+    if (s === "FACEBOOK" || s === "INSTAGRAM" || s === "META" || s === "META_ADS") {
+      normalizedSources.push("META_ADS");
+    } else if (s === "GOOGLE" || s === "GOOGLE_ADS" || s === "GOOGLE_ADS_TRANSPARENCY") {
+      normalizedSources.push("GOOGLE_ADS");
+    } else if (s === "TIKTOK" || s === "TIKTOK_ORGANIC") {
+      normalizedSources.push("TIKTOK_ORGANIC");
+    } else if (s) {
+      normalizedSources.push(s);
+    }
+  }
+  const sourceSet = new Set(normalizedSources);
+
+  // If candidate has Google observations and every Google observation is explicitly brand-only / unrelated,
+  // do not award product-level multi-platform validation points for GOOGLE_ADS (Section 10.4 & 11.2).
+  const googleObs = (c.sourceObservations || []).filter((o) => o && o.source === "GOOGLE_ADS");
+  if (googleObs.length > 0) {
+    const hasProductSpecificGoogleObs = googleObs.some((o) => {
+      const rel = (o.metrics as any)?.productRelevance;
+      const verdict = (o as any)?.associationVerdict || (o.metrics as any)?.associationVerdict;
+      if (
+        rel === "BRAND_RELATED" ||
+        rel === "UNRELATED" ||
+        verdict === "BRAND_ONLY_MATCH" ||
+        verdict === "REJECTED_UNRELATED_CREATIVE"
+      ) {
+        return false;
+      }
+      return true;
+    });
+    if (!hasProductSpecificGoogleObs) {
+      sourceSet.delete("GOOGLE_ADS");
+    }
+  }
+
   const platformCount = sourceSet.size;
 
   if (sourceSet.has("META_ADS")) {

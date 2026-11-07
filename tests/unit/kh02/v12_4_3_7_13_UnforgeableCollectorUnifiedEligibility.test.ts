@@ -765,7 +765,7 @@ describe("KH-02 V12.4.3.7.13 — Unforgeable Collector Provenance & Unified Elig
       expect(authPromo.authority).toBe("CACHED_UNVERIFIED");
     });
 
-    it("A28: Official CSV with valid SHA-256 is classified as HISTORICAL_SOURCE_VERIFIED, never network LIVE", async () => {
+    it("A28: Unattested local CSV with valid SHA-256 is LOCAL_INTEGRITY_ONLY (verified=false, providerOriginVerified=false), never network LIVE", async () => {
       const csvContent = "Week,cat fountain\n2026-07-01,75\n";
       const csvSha = crypto.createHash("sha256").update(Buffer.from(csvContent, "utf8")).digest("hex").toLowerCase();
       const csvFile = saveOriginalGoogleTrendsCsvFile(csvContent, csvSha);
@@ -775,7 +775,9 @@ describe("KH-02 V12.4.3.7.13 — Unforgeable Collector Provenance & Unified Elig
           keyword: "cat fountain",
           region: "US",
         });
-        expect(resolved.verified).toBe(true);
+        expect(resolved.contentIntegrityVerified).toBe(true);
+        expect(resolved.verified).toBe(false);
+        expect(resolved.eligible).toBe(false);
         expect(resolved.originKind).toBe("LOCAL_INTEGRITY_ONLY");
         expect(resolved.providerOriginVerified).toBe(false);
       } finally {

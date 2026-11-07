@@ -14,6 +14,7 @@
 
 import { prisma } from "@/lib/db";
 import { EvergreenLeaderboardResult } from "../evergreenResearchOrchestrator";
+import { hasVerifiableCsvOrProviderLineage } from "../demand/temporalDemandEngine";
 import { IntelligenceSource, ProviderSourceTelemetry, SourceRunStatus, ObservationProvenance } from "../types";
 import {
   computeAmazonEvidenceCompositeId,
@@ -910,12 +911,47 @@ export function requalifyHistoricalEvergreenSnapshot(
     const isUnverifiedAuthority =
       authority === "CACHED_UNVERIFIED" || authority === "FIXTURE_ONLY";
 
-    if (hasSyntheticMerchantRef || isUnverifiedAuthority) {
-      const reason =
-        "Retroactively demoted in V12.4.3.2: historical demand was backed by unverified merchant-seeded series (verified-merchant-demand:<domain>) rather than authoritative 6-12m external demand.";
+    const originKind =
+      c.demandResolution?.originKind ||
+      c.evergreenVerification?.originKind ||
+      c.temporalStability?.originKind ||
+      null;
+    const isLocalIntegrityOrFixtureOrigin =
+      originKind === "LOCAL_INTEGRITY_ONLY" ||
+      originKind === "UNIT_FIXTURE" ||
+      originKind === "UNVERIFIED" ||
+      c.demandResolution?.businessLineageEligible === false;
+
+    const hasUnattestedCsvRef = refs.some((r) => {
+      if (!/\bsha256:([a-f0-9]{64})\b/i.test(r) || /^(?:provider-request|serpapi-request):/i.test(r)) {
+        return false;
+      }
+      const lineage = hasVerifiableCsvOrProviderLineage(r, null, {
+        targetKeyword: c.canonicalProductName || c.title || null,
+        targetProductId: c.researchProductId || null,
+        workspaceId: (snapshot as any).workspaceId || null,
+        region: (snapshot as any).market || "US",
+        strictLiveOrigin: true,
+        strictSourceProvenance: true,
+        allowUnitFixtures: false,
+        evaluationScope: "BUSINESS",
+      });
+      return !lineage.sourceOriginVerified || !lineage.businessLineageEligible;
+    });
+
+    if (
+      hasSyntheticMerchantRef ||
+      isUnverifiedAuthority ||
+      isLocalIntegrityOrFixtureOrigin ||
+      hasUnattestedCsvRef
+    ) {
+      const reason = hasUnattestedCsvRef || isLocalIntegrityOrFixtureOrigin
+        ? "Retroactively demoted in G15 Origin Integrity Closure: historical demand was backed by a LOCAL_INTEGRITY_ONLY or unauthenticated CSV fixture without verified Official CSV Import Authority or live provider lineage."
+        : "Retroactively demoted in V12.4.3.2: historical demand was backed by unverified merchant-seeded series (verified-merchant-demand:<domain>) rather than authoritative 6-12m external demand.";
       if (c.demandResolution) {
         c.demandResolution.demandSourceAuthority = "CACHED_UNVERIFIED";
         c.demandResolution.eligibleForEvergreen = false;
+        c.demandResolution.businessLineageEligible = false;
       }
       if (c.temporalStability) {
         c.temporalStability.sourceAuthority = "CACHED_UNVERIFIED";
@@ -926,6 +962,13 @@ export function requalifyHistoricalEvergreenSnapshot(
         c.evergreenVerification.demandSourceAuthority = "CACHED_UNVERIFIED";
         c.evergreenVerification.demandAuthoritativeEligible = false;
         c.evergreenVerification.isVerifiedEvergreenWinner = false;
+      }
+      if (item?.score) {
+        (item.score as any).tier = "PROVISIONAL_CANDIDATE";
+        (item.score as any).confidenceStatus = "PROVISIONAL";
+        if ((item.score as any).eligibilityGates) {
+          (item.score as any).eligibilityGates.isEligibleForTopThree = false;
+        }
       }
       (item as any).evergreenStatus = "INSUFFICIENT_HISTORY";
       demotedItems.push(item);
