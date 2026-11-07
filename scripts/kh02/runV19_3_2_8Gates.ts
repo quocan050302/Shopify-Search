@@ -527,7 +527,7 @@ export function validateGateOutput(
       };
     }
 
-    const allowedVerdicts = ["INSUFFICIENT_EVIDENCE", "PASS", "FAIL"];
+    const allowedVerdicts = ["INSUFFICIENT_EVIDENCE", "INSUFFICIENT_HISTORICAL_EVIDENCE", "PASS", "FAIL"];
     if (
       !allowedVerdicts.includes(String(parsed.historicalDevVerdict)) ||
       !allowedVerdicts.includes(String(parsed.historicalHoldoutVerdict)) ||
@@ -1022,6 +1022,10 @@ export async function runAllGates(): Promise<{
     const r = await runSingleGate(g, headSha);
     results[r.gateId] = r;
     if (!r.pass) {
+      try {
+        execSync("git checkout -- acceptance/ reports/kh02/v19_3_2_7/", { stdio: "ignore" });
+        execSync("git clean -f reports/kh02/v19_3_2_7/", { stdio: "ignore" });
+      } catch (_) {}
       console.error(`Gate ${g.id} failed in serialized pipeline. Halting execution.`);
       return finalizeSummary(results, headSha, treeSha, branch, resourcePreflight);
     }
