@@ -4393,6 +4393,25 @@ export function evaluateDemandSourceAuthority(
       );
       return { authority: "CACHED_UNVERIFIED", reasons, productAttributionValid: false };
     }
+    const isStrictProductBinding =
+      policy.evaluationScope !== "ENGINEERING" ||
+      policy.strictSourceProvenance === true ||
+      policy.strictLiveOrigin === true;
+    if (isStrictProductBinding) {
+      const missingObsProduct = observations.find((o) => {
+        const isBareMath = !o.keyword && !o.source && !o.productId && !o.evidenceReference;
+        if (isBareMath && policy.strictLiveOrigin !== true && policy.strictSourceProvenance !== true) {
+          return false;
+        }
+        return !o.productId || !String(o.productId).trim();
+      });
+      if (missingObsProduct) {
+        reasons.push(
+          `Candidate demand attribution failure: Observation is missing explicit productId binding required for target candidate '${expectedProductId}'.`
+        );
+        return { authority: "CACHED_UNVERIFIED", reasons, productAttributionValid: false };
+      }
+    }
   }
 
   if (policy.workspaceId) {
@@ -4459,7 +4478,7 @@ export function evaluateDemandSourceAuthority(
         const attr = classifyCandidateObservationAttribution(
           {
             keyword: kw,
-            productId: obs.productId ?? expectedProductId,
+            productId: obs.productId ?? null,
             workspaceId: (obs as any).workspaceId ?? policy.workspaceId,
             region: obs.region ?? policy.requiredRegion,
           },

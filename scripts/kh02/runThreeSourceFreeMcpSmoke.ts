@@ -335,20 +335,25 @@ export async function runThreeSourceFreeMcpSmoke(): Promise<McpSmokeSummary> {
     summaryVerdict: `All 6 source checks evaluated strictly within zero-cost bounds. ${s2SummaryText}; S1 Meta collector inspected without paid token; S3 TikTok Organic POLICY_DISABLED; S4 TikTok Ads US DEFERRED; S6 raw CSV files classified as LOCAL_INTEGRITY_ONLY.`,
   };
 
-  // Emit to reports/kh02/v19_3_3_g15_meta_google_closure/logs/
-  const outDirs = [
-    path.resolve(process.cwd(), "reports/kh02/v19_3_3_g15_meta_google_closure/logs"),
-  ];
-  for (const outDir of outDirs) {
-    fs.mkdirSync(outDir, { recursive: true });
-    fs.writeFileSync(
-      path.join(outDir, "10_THREE_SOURCE_MCP_PROTOCOL_AND_PROVIDER_SMOKE.json"),
-      JSON.stringify(summary, null, 2) + "\n"
-    );
-    fs.writeFileSync(
-      path.join(outDir, "10_THREE_SOURCE_FREE_MCP_SMOKE.json"),
-      JSON.stringify(summary, null, 2) + "\n"
-    );
+  // Only emit report files when executed as CLI script (not during unit test imports)
+  if (process.env.VITEST !== "true" && process.env.NODE_ENV !== "test") {
+    const outDirs = [
+      path.resolve(
+        process.cwd(),
+        "reports/kh02/v19_3_3_1_csv_trust_google_meta_provenance/logs"
+      ),
+    ];
+    for (const outDir of outDirs) {
+      fs.mkdirSync(outDir, { recursive: true });
+      fs.writeFileSync(
+        path.join(outDir, "10_THREE_SOURCE_MCP_PROTOCOL_AND_PROVIDER_SMOKE.json"),
+        JSON.stringify(summary, null, 2) + "\n"
+      );
+      fs.writeFileSync(
+        path.join(outDir, "10_THREE_SOURCE_FREE_MCP_SMOKE.json"),
+        JSON.stringify(summary, null, 2) + "\n"
+      );
+    }
   }
 
   return summary;

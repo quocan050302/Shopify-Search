@@ -126,6 +126,7 @@ describe("SWAI KH-02 V12.1.1 — Runtime Hardening & Provider Contract Suite", (
             advertiser_id: "adv_99",
             headline: "Best Dog Grooming Brush 2026",
             body: "Keep your home free from pet hair with our self-cleaning brush",
+            destination_url: "https://pupclean.com/products/self-cleaning-dog-grooming-brush",
             format: "video",
             region: "US", // Explicit US delivery
             last_shown: "2026-03-15",

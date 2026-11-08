@@ -119,6 +119,9 @@ describe("KH-02 G15 CSV Origin Integrity & Official Import Authority (30 Negativ
     process.env.TEST_CSV_AUTHORITY_STORAGE_DIR = tempAuthorityDir;
     process.env.TEST_CANDIDATE_ALIAS_STORAGE_DIR = tempAliasDir;
     process.env.KH02_AUTHORIZED_CSV_APPROVER_PRINCIPALS = "principal_reviewer_us_01,principal_lead_auditor";
+    process.env.KH02_CSV_AUTHORITY_KEY_ID = businessCsvKeyId;
+    process.env.KH02_CSV_AUTHORITY_HMAC_SECRET = businessCsvSecret;
+    process.env.KH02_CSV_AUTHORITY_KEY_STATUS = "ACTIVE";
 
     registerCsvAuthoritySigningKey({
       keyId: testCsvKeyId,
@@ -127,15 +130,6 @@ describe("KH-02 G15 CSV Origin Integrity & Official Import Authority (30 Negativ
       purpose: CSV_AUTHORITY_OPERATION_SCOPE,
       isBusinessTrusted: false,
       description: "Test-only key for ENGINEERING CSV authority tests",
-    });
-
-    registerCsvAuthoritySigningKey({
-      keyId: businessCsvKeyId,
-      secret: businessCsvSecret,
-      status: "ACTIVE",
-      purpose: CSV_AUTHORITY_OPERATION_SCOPE,
-      isBusinessTrusted: true,
-      description: "Simulated active key for testing authorized import workflow mechanics",
     });
 
     registerAliasSigningKey({
@@ -154,6 +148,9 @@ describe("KH-02 G15 CSV Origin Integrity & Official Import Authority (30 Negativ
     delete process.env.TEST_CSV_AUTHORITY_STORAGE_DIR;
     delete process.env.TEST_CANDIDATE_ALIAS_STORAGE_DIR;
     delete process.env.KH02_AUTHORIZED_CSV_APPROVER_PRINCIPALS;
+    delete process.env.KH02_CSV_AUTHORITY_KEY_ID;
+    delete process.env.KH02_CSV_AUTHORITY_HMAC_SECRET;
+    delete process.env.KH02_CSV_AUTHORITY_KEY_STATUS;
 
     while (createdCsvFiles.length > 0) {
       const f = createdCsvFiles.pop()!;

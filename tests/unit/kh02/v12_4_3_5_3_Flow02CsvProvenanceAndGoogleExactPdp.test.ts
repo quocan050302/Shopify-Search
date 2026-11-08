@@ -223,15 +223,10 @@ describe("KH-02 Final Evidence-Flow Closure — Flow 02 Test Matrix (A01–A16, 
       // 2. With Official CSV Import Authority, resolves to PRODUCT_HISTORY_VERIFIED / CACHE_AUTHORITATIVE_FRESH
       const tmpAuthDir = fs.mkdtempSync(path.join(os.tmpdir(), "kh02_flow02_a04_"));
       process.env.TEST_CSV_AUTHORITY_STORAGE_DIR = tmpAuthDir;
+      process.env.KH02_CSV_AUTHORITY_KEY_ID = "key_flow02_a04";
+      process.env.KH02_CSV_AUTHORITY_HMAC_SECRET = "11223344556677889900aabbccddeeff11223344556677889900aabbccddeeff";
+      process.env.KH02_AUTHORIZED_CSV_APPROVER_PRINCIPALS = "approver_01";
       try {
-        registerCsvAuthoritySigningKey({
-          keyId: "key_flow02_a04",
-          secret: "11223344556677889900aabbccddeeff11223344556677889900aabbccddeeff",
-          status: "ACTIVE",
-          purpose: CSV_AUTHORITY_OPERATION_SCOPE,
-          isBusinessTrusted: true,
-          description: "Simulated active key for Flow02 A04",
-        });
         const rec = createSignedCsvImportAuthority({
           rawCsvSha256: validation.sha256Checksum,
           artifactPath: verifyStoredCsvFile(validation.sha256Checksum).filePath!,
@@ -272,6 +267,9 @@ describe("KH-02 Final Evidence-Flow Closure — Flow 02 Test Matrix (A01–A16, 
       } finally {
         clearTestCsvAuthoritySigningKeys();
         delete process.env.TEST_CSV_AUTHORITY_STORAGE_DIR;
+        delete process.env.KH02_CSV_AUTHORITY_KEY_ID;
+        delete process.env.KH02_CSV_AUTHORITY_HMAC_SECRET;
+        delete process.env.KH02_AUTHORIZED_CSV_APPROVER_PRINCIPALS;
         fs.rmSync(tmpAuthDir, { recursive: true, force: true });
       }
     });
@@ -308,15 +306,10 @@ describe("KH-02 Final Evidence-Flow Closure — Flow 02 Test Matrix (A01–A16, 
       // With Official CSV Import Authority -> VERIFIED / HISTORICAL_SOURCE_VERIFIED
       const tmpAuthDir = fs.mkdtempSync(path.join(os.tmpdir(), "kh02_flow02_a05_"));
       process.env.TEST_CSV_AUTHORITY_STORAGE_DIR = tmpAuthDir;
+      process.env.KH02_CSV_AUTHORITY_KEY_ID = "key_flow02_a05";
+      process.env.KH02_CSV_AUTHORITY_HMAC_SECRET = "11223344556677889900aabbccddeeff11223344556677889900aabbccddeeff";
+      process.env.KH02_AUTHORIZED_CSV_APPROVER_PRINCIPALS = "approver_01";
       try {
-        registerCsvAuthoritySigningKey({
-          keyId: "key_flow02_a05",
-          secret: "11223344556677889900aabbccddeeff11223344556677889900aabbccddeeff",
-          status: "ACTIVE",
-          purpose: CSV_AUTHORITY_OPERATION_SCOPE,
-          isBusinessTrusted: true,
-          description: "Simulated active key for Flow02 A05",
-        });
         const rec = createSignedCsvImportAuthority({
           rawCsvSha256: validation.sha256Checksum,
           artifactPath: verifyStoredCsvFile(validation.sha256Checksum).filePath!,
@@ -359,6 +352,9 @@ describe("KH-02 Final Evidence-Flow Closure — Flow 02 Test Matrix (A01–A16, 
       } finally {
         clearTestCsvAuthoritySigningKeys();
         delete process.env.TEST_CSV_AUTHORITY_STORAGE_DIR;
+        delete process.env.KH02_CSV_AUTHORITY_KEY_ID;
+        delete process.env.KH02_CSV_AUTHORITY_HMAC_SECRET;
+        delete process.env.KH02_AUTHORIZED_CSV_APPROVER_PRINCIPALS;
         fs.rmSync(tmpAuthDir, { recursive: true, force: true });
       }
     });
@@ -958,15 +954,10 @@ describe("KH-02 Final Evidence-Flow Closure — Flow 02 Test Matrix (A01–A16, 
       // With Official CSV Import Authority -> VERIFIED
       const tmpAuthDir = fs.mkdtempSync(path.join(os.tmpdir(), "kh02_flow02_c01_"));
       process.env.TEST_CSV_AUTHORITY_STORAGE_DIR = tmpAuthDir;
+      process.env.KH02_CSV_AUTHORITY_KEY_ID = "key_flow02_c01";
+      process.env.KH02_CSV_AUTHORITY_HMAC_SECRET = "11223344556677889900aabbccddeeff11223344556677889900aabbccddeeff";
+      process.env.KH02_AUTHORIZED_CSV_APPROVER_PRINCIPALS = "approver_01";
       try {
-        registerCsvAuthoritySigningKey({
-          keyId: "key_flow02_c01",
-          secret: "11223344556677889900aabbccddeeff11223344556677889900aabbccddeeff",
-          status: "ACTIVE",
-          purpose: CSV_AUTHORITY_OPERATION_SCOPE,
-          isBusinessTrusted: true,
-          description: "Simulated active key for Flow02 C01",
-        });
         const rec = createSignedCsvImportAuthority({
           rawCsvSha256: validation.sha256Checksum,
           artifactPath: verifyStoredCsvFile(validation.sha256Checksum).filePath!,
@@ -1004,6 +995,9 @@ describe("KH-02 Final Evidence-Flow Closure — Flow 02 Test Matrix (A01–A16, 
       } finally {
         clearTestCsvAuthoritySigningKeys();
         delete process.env.TEST_CSV_AUTHORITY_STORAGE_DIR;
+        delete process.env.KH02_CSV_AUTHORITY_KEY_ID;
+        delete process.env.KH02_CSV_AUTHORITY_HMAC_SECRET;
+        delete process.env.KH02_AUTHORIZED_CSV_APPROVER_PRINCIPALS;
         fs.rmSync(tmpAuthDir, { recursive: true, force: true });
       }
     });

@@ -205,9 +205,58 @@ export interface GoogleMcpProviderInvocationRecord extends GoogleMcpInvocationPr
   errorMessage?: string | null;
 }
 
+export type GoogleProvenanceTier =
+  | "UPSTREAM_REQUEST_VERIFIED"
+  | "LOCAL_MCP_TOOL_RESULT_VERIFIED"
+  | "UNVERIFIED";
+
+export const MAX_GOOGLE_MCP_RESPONSE_BYTES = 2 * 1024 * 1024; // 2 MiB hard memory bound
+
+export function assertBoundedGoogleMcpPayloadSize(payload: unknown): void {
+  if (payload === null || payload === undefined) return;
+  if (typeof payload === "string") {
+    if (Buffer.byteLength(payload, "utf8") > MAX_GOOGLE_MCP_RESPONSE_BYTES) {
+      throw new Error(
+        `RESPONSE_SIZE_EXCEEDED_2MIB: Google MCP response exceeds maximum allowed size of ${MAX_GOOGLE_MCP_RESPONSE_BYTES} bytes.`
+      );
+    }
+    return;
+  }
+  if (typeof payload === "object") {
+    const obj = payload as Record<string, any>;
+    if (Array.isArray(obj.content)) {
+      for (const item of obj.content) {
+        if (item && typeof item.text === "string") {
+          if (Buffer.byteLength(item.text, "utf8") > MAX_GOOGLE_MCP_RESPONSE_BYTES) {
+            throw new Error(
+              `RESPONSE_SIZE_EXCEEDED_2MIB: Google MCP response text content exceeds maximum allowed size of ${MAX_GOOGLE_MCP_RESPONSE_BYTES} bytes.`
+            );
+          }
+        }
+      }
+    }
+    try {
+      const serialized = JSON.stringify(payload);
+      if (serialized && Buffer.byteLength(serialized, "utf8") > MAX_GOOGLE_MCP_RESPONSE_BYTES) {
+        throw new Error(
+          `RESPONSE_SIZE_EXCEEDED_2MIB: Google MCP response JSON exceeds maximum allowed size of ${MAX_GOOGLE_MCP_RESPONSE_BYTES} bytes.`
+        );
+      }
+    } catch (err: any) {
+      if (/RESPONSE_SIZE_EXCEEDED_2MIB/.test(String(err?.message))) {
+        throw err;
+      }
+    }
+  }
+}
+
 export interface GoogleInvocationLineageVerificationResult {
   verified: boolean;
   lineageMethod: GoogleLineageMethod;
+  provenanceTier: GoogleProvenanceTier;
+  providerVerified: boolean;
+  localMcpToolResultVerified: boolean;
+  upstreamRequestVerified: boolean;
   providerRequestIdOrigin: GoogleRequestIdOrigin;
   upstreamProviderRequestId: string | null;
   providerRequestId: string | null;
@@ -560,8 +609,48 @@ export function recordActualGoogleMcpInvocation(
 
   let decoded: any = upstreamResponse;
   try {
+    assertBoundedGoogleMcpPayloadSize(upstreamResponse);
     decoded = decodeCallToolResult(upstreamResponse);
-  } catch {
+  } catch (decodeOrSizeErr: any) {
+    if (/RESPONSE_SIZE_EXCEEDED_2MIB/.test(String(decodeOrSizeErr?.message))) {
+      return {
+        invocationId: localRef,
+        mcpInvocationRef: localRef,
+        upstreamProviderRequestId: null,
+        providerRequestId: null,
+        providerRequestIdOrigin: "ABSENT",
+        invocationEvidenceRef: null,
+        responseEvidenceRef: null,
+        transportId: transportSessionIdVal,
+        transportSessionId: transportSessionIdVal,
+        researchRunId: invocation.researchRunId || null,
+        workspaceId: invocation.workspaceId ?? null,
+        advertiserId: invocation.advertiserId || null,
+        domain: domainVal,
+        toolName: toolNameVal,
+        requestedMarket: invocation.requestedMarket || "US",
+        startedAt,
+        invocationStartedAt: startedAt,
+        completedAt,
+        invocationCompletedAt: completedAt,
+        observationReceivedAt,
+        durationMs,
+        sourceMode: "UNKNOWN",
+        isCached,
+        status: "FAILED",
+        invocationStatus: "FAILED",
+        upstreamCompleted: false,
+        rawCountReturned: 0,
+        requestArgumentsHash,
+        responseEvidenceHash: null,
+        returnedCreativeIds: [],
+        actualReturnedCreativeIds: [],
+        missingCreativeIdCount: 0,
+        duplicateCreativeIdCount: 0,
+        lineageAvailable: false,
+        errorMessage: decodeOrSizeErr.message,
+      };
+    }
     decoded = upstreamResponse;
   }
 
@@ -942,18 +1031,37 @@ export function verifyGoogleInvocationLineage(
     localRefVal: string | null,
     matchedInvId: string | null,
     respHash: string | null
-  ): GoogleInvocationLineageVerificationResult => ({
-    verified,
-    lineageMethod: method,
-    providerRequestIdOrigin: origin,
-    upstreamProviderRequestId: upId,
-    providerRequestId: upId,
-    mcpInvocationRef: localRefVal,
-    matchedInvocationId: matchedInvId,
-    responseEvidenceHash: respHash,
-    rejectionReason: reasons[0] ?? null,
-    rejectionReasons: reasons,
-  });
+  ): GoogleInvocationLineageVerificationResult => {
+    const provenanceTier: GoogleProvenanceTier = !verified
+      ? "UNVERIFIED"
+      : method === "UPSTREAM_PROVIDER_REQUEST_ID"
+      ? "UPSTREAM_REQUEST_VERIFIED"
+      : method === "VERIFIED_LOCAL_INVOCATION_ONLY"
+      ? "LOCAL_MCP_TOOL_RESULT_VERIFIED"
+      : "UNVERIFIED";
+    const upstreamRequestVerified =
+      verified && method === "UPSTREAM_PROVIDER_REQUEST_ID";
+    const localMcpToolResultVerified =
+      verified &&
+      (method === "VERIFIED_LOCAL_INVOCATION_ONLY" ||
+        method === "UPSTREAM_PROVIDER_REQUEST_ID");
+    return {
+      verified,
+      lineageMethod: method,
+      provenanceTier,
+      providerVerified: upstreamRequestVerified,
+      localMcpToolResultVerified,
+      upstreamRequestVerified,
+      providerRequestIdOrigin: origin,
+      upstreamProviderRequestId: upId,
+      providerRequestId: upId,
+      mcpInvocationRef: localRefVal,
+      matchedInvocationId: matchedInvId,
+      responseEvidenceHash: respHash,
+      rejectionReason: reasons[0] ?? null,
+      rejectionReasons: reasons,
+    };
+  };
 
   if (!creative || typeof creative !== "object") {
     addReason("INVALID_CREATIVE_OBJECT");
@@ -1184,6 +1292,30 @@ export function verifyGoogleInvocationLineage(
   if (cid && !returnedIds.includes(cid)) {
     addReason("CREATIVE_ID_NOT_IN_INVOCATION_RETURNED_SET");
     addReason("CREATIVE_ID_NOT_IN_LEDGER_RETURNED_CREATIVE_IDS");
+  }
+
+  const crAdvId =
+    creative.advertiserId ??
+    creative.advertiser_id ??
+    creative.metrics?.advertiserId ??
+    null;
+  if (
+    crAdvId &&
+    matchedRecord.advertiserId &&
+    String(crAdvId).trim() !== String(matchedRecord.advertiserId).trim()
+  ) {
+    addReason("ADVERTISER_ID_MISMATCH");
+  }
+
+  const crDomain = creative.domain ?? creative.advertiserDomain ?? null;
+  if (
+    crDomain &&
+    matchedRecord.domain &&
+    matchedRecord.domain !== "unknown" &&
+    String(crDomain).trim().toLowerCase().replace(/^www\./, "") !==
+      String(matchedRecord.domain).trim().toLowerCase().replace(/^www\./, "")
+  ) {
+    addReason("ADVERTISER_DOMAIN_MISMATCH");
   }
 
   const ledgerUpstreamId =
@@ -1528,6 +1660,8 @@ export interface GoogleTransparencyMcpClient {
 export function decodeCallToolResult(result: any): any {
   if (!result) return null;
 
+  assertBoundedGoogleMcpPayloadSize(result);
+
   // Check if provider explicitly returned an MCP execution error
   if (result.isError) {
     const errorText = Array.isArray(result.content)
@@ -1549,6 +1683,7 @@ export function decodeCallToolResult(result: any): any {
   if (Array.isArray(result.content)) {
     for (const item of result.content) {
       if (item && item.type === "text" && typeof item.text === "string") {
+        assertBoundedGoogleMcpPayloadSize(item.text);
         try {
           return JSON.parse(item.text);
         } catch {
@@ -1917,23 +2052,25 @@ export function normalizeGoogleAdsResponse(
       : [];
     const hasTopicMatch =
       topicWords.length > 0 && topicWords.some((w) => textContent.includes(w));
+    const explicitProductId = ad.product_id || ad.productId || null;
     const hasSpecificProductUrl = Boolean(
       destUrl && !isExplicitNonProductUrl && /\/products\/|\/dp\/|\/p\/|\/item\//i.test(destUrl)
     );
     const hasSpecificProductSignal =
       !isExplicitNonProductUrl &&
       (hasSpecificProductUrl ||
-        (hasTopicMatch && headline.trim().split(/\s+/).length >= 2));
+        Boolean(explicitProductId) ||
+        (Boolean(destUrl) && hasTopicMatch && headline.trim().split(/\s+/).length >= 2));
     const hasAnyContent = Boolean(headline.trim() || body.trim() || destUrl);
     const relevance:
       | "PRODUCT_SPECIFIC"
       | "BRAND_RELATED"
       | "UNRELATED"
-      | "UNKNOWN" = !hasAnyContent
+      | "UNKNOWN" = !hasAnyContent || (!destUrl && !explicitProductId)
       ? "UNKNOWN"
       : isExplicitNonProductUrl
       ? "BRAND_RELATED"
-      : hasSpecificProductSignal || hasTopicMatch
+      : hasSpecificProductSignal || (Boolean(destUrl) && hasTopicMatch)
       ? "PRODUCT_SPECIFIC"
       : "BRAND_RELATED";
 
@@ -3099,10 +3236,15 @@ export async function collectGoogleAdvertiserSignals(
     const domainOutcomes: GoogleDomainEnrichmentOutcome[] = [];
     let upstreamRateLimitedOrBlocked = false;
 
+    const effectiveResearchRunId =
+      query.researchRunId && String(query.researchRunId).trim()
+        ? String(query.researchRunId).trim()
+        : `google_mcp_run_${Date.now()}`;
+
     const isRateLimitError = (msg: string) =>
       /\b(429|too many requests|rate.?limit)\b/i.test(msg);
     const isBlockError = (msg: string) =>
-      /\b(403|sorry\/index|captcha|anti[-_\s]?bot|blocked)\b/i.test(msg);
+      /\b(403|sorry\/index|captcha|anti[-_\s]?bot|bot[-_\s]?wall|blocked)\b/i.test(msg);
     const isRateLimitOrBlockError = (msg: string) =>
       isRateLimitError(msg) || isBlockError(msg);
 
@@ -3269,7 +3411,7 @@ export async function collectGoogleAdvertiserSignals(
                 {
                   mcpInvocationRef: invocationId,
                   transportId: transportSessionId,
-                  researchRunId: query.researchRunId || null,
+                  researchRunId: effectiveResearchRunId,
                   workspaceId: query.workspaceId || null,
                   toolName: adsTool,
                   advertiserId: advId,
@@ -3293,7 +3435,7 @@ export async function collectGoogleAdvertiserSignals(
                     creativeId: null,
                     advertiserId: advId,
                     domain: regDomain,
-                    researchRunId: query.researchRunId || null,
+                    researchRunId: effectiveResearchRunId,
                     rejectionReason:
                       stamped.missingProvenanceReason || "MISSING_UPSTREAM_CREATIVE_ID",
                   });
@@ -3307,7 +3449,7 @@ export async function collectGoogleAdvertiserSignals(
                 const lineageCheck = verifyGoogleInvocationLineage(
                   stamped,
                   [invocationRecord],
-                  query.researchRunId || ""
+                  effectiveResearchRunId
                 );
                 stamped.lineageMethod = lineageCheck.lineageMethod;
                 stampedRawAds.push(stamped);
@@ -3358,7 +3500,7 @@ export async function collectGoogleAdvertiserSignals(
 
               for (const obs of normResult.observations) {
                 const st = stampedByCid.get(obs.sourceRecordId);
-                obs.researchRunId = query.researchRunId || null;
+                obs.researchRunId = effectiveResearchRunId;
                 obs.workspaceId = query.workspaceId || null;
                 obs.sourceMode = "LIVE_PROVIDER";
                 obs.sourceType = "LIVE_PROVIDER";
@@ -3387,7 +3529,7 @@ export async function collectGoogleAdvertiserSignals(
                   verifyGoogleInvocationLineage(
                     obs,
                     providerInvocationRecords,
-                    query.researchRunId || ""
+                    effectiveResearchRunId
                   ).lineageMethod;
                 obs.sourceObservationId =
                   obs.sourceObservationId || `sobs_google_${obs.sourceRecordId}`;
@@ -3417,7 +3559,7 @@ export async function collectGoogleAdvertiserSignals(
                   {
                     mcpInvocationRef: failedInvocationId,
                     transportId: transportSessionId,
-                    researchRunId: query.researchRunId || null,
+                    researchRunId: effectiveResearchRunId,
                     workspaceId: query.workspaceId || null,
                     toolName: adsTool,
                     advertiserId: advId,
@@ -3583,7 +3725,44 @@ export async function collectGoogleAdvertiserSignals(
         d.status === "QUERY_FAILED"
     ).length;
 
-    const enrichmentExecution: GoogleEnrichmentExecution = {
+    const localToolCallsVerifiedCount = observations.filter(
+      (o) =>
+        o.lineageMethod === "VERIFIED_LOCAL_INVOCATION_ONLY" ||
+        o.lineageMethod === "UPSTREAM_PROVIDER_REQUEST_ID"
+    ).length;
+    const upstreamContentVerifiedCount = observations.filter(
+      (o) =>
+        o.lineageMethod === "UPSTREAM_PROVIDER_REQUEST_ID" &&
+        Boolean(o.upstreamProviderRequestId)
+    ).length;
+    const productSpecificVerifiedCount = observations.filter(
+      (o) => (o.metrics as any)?.productRelevance === "PRODUCT_SPECIFIC"
+    ).length;
+    const usDeliveryVerifiedCount = observations.filter(
+      (o) => o.verifiedDeliveryMarket === "US"
+    ).length;
+    const eligibleG16EvidenceCount = observations.filter(
+      (o) =>
+        (o.lineageMethod === "VERIFIED_LOCAL_INVOCATION_ONLY" ||
+          o.lineageMethod === "UPSTREAM_PROVIDER_REQUEST_ID") &&
+        (o.metrics as any)?.productRelevance === "PRODUCT_SPECIFIC" &&
+        o.verifiedDeliveryMarket === "US"
+    ).length;
+
+    const enrichmentExecution: GoogleEnrichmentExecution & {
+      providerInvocations?: GoogleMcpProviderInvocationRecord[];
+      reconciledCounts?: {
+        rawMcpRows: number;
+        uniqueCreatives: number;
+        acceptedRawCreativeRows: number;
+        localToolCallsVerified: number;
+        upstreamContentVerified: number;
+        productSpecificVerified: number;
+        usDeliveryVerified: number;
+        persistedRows: number;
+        eligibleG16Evidence: number;
+      };
+    } = {
       attemptedDomains,
       advertiserLookupSucceeded: anyLookupSucceeded,
       advertisersFound: advertisersFoundCount,
@@ -3596,9 +3775,7 @@ export async function collectGoogleAdvertiserSignals(
       classifiedDistinct: 0,
       normalizedRecords: observations,
       normalizedObservations: observations.length,
-      productLevelMatches: observations.filter(
-        (o) => (o.metrics as any)?.productRelevance === "PRODUCT_SPECIFIC",
-      ).length,
+      productLevelMatches: productSpecificVerifiedCount,
       brandLevelMatches: observations.filter(
         (o) => (o.metrics as any)?.productRelevance === "BRAND_RELATED",
       ).length,
@@ -3624,6 +3801,18 @@ export async function collectGoogleAdvertiserSignals(
       cleanupCompleted: true,
       mcpInvocations,
       providerInvocationRecords,
+      providerInvocations: providerInvocationRecords,
+      reconciledCounts: {
+        rawMcpRows: allRawAds.length,
+        uniqueCreatives: observations.length,
+        acceptedRawCreativeRows: observations.length,
+        localToolCallsVerified: localToolCallsVerifiedCount,
+        upstreamContentVerified: upstreamContentVerifiedCount,
+        productSpecificVerified: productSpecificVerifiedCount,
+        usDeliveryVerified: usDeliveryVerifiedCount,
+        persistedRows: persistedRecordIds.length,
+        eligibleG16Evidence: eligibleG16EvidenceCount,
+      },
       rejectedRecords: adapterRejectedRecords,
       stepTimeline,
       stateBreakdown: {
@@ -3667,6 +3856,7 @@ export async function collectGoogleAdvertiserSignals(
       errors,
       warnings,
       enrichmentExecution,
+      providerInvocations: providerInvocationRecords,
       executionMetadata: {
         attempted: domainsAttemptedCount > 0,
         executed: anyLookupSucceeded,

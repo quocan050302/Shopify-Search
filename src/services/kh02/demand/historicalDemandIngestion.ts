@@ -324,7 +324,7 @@ export async function resolveProductDemandHistory(
       attributionBreakdown: partitionSummary.classifications,
       observations: rawRecords.map((r) => ({
         ...r,
-        productId: r.productId || targetProductId,
+        productId: r.productId ?? null,
       })),
       sourceStatus,
       cacheClassification: resolutionMeta?.cacheClassification,

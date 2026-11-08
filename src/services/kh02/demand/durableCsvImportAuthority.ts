@@ -166,19 +166,34 @@ export function registerCsvAuthoritySigningKey(entry: CsvAuthoritySigningKeyEntr
       `WRONG_KEY_PURPOSE: Key '${entry.keyId}' purpose '${entry.purpose}' does not match '${CSV_AUTHORITY_OPERATION_SCOPE}'.`
     );
   }
-  testCsvAuthorityKeys.set(entry.keyId, { ...entry });
+  const envKeyId = process.env.KH02_CSV_AUTHORITY_KEY_ID?.trim();
+  if (envKeyId && entry.keyId.trim() === envKeyId) {
+    throw new Error(
+      `KEY_SHADOW_REJECTED: Test key registry cannot register or shadow active environment issuer keyId '${envKeyId}'.`
+    );
+  }
+  // Security boundary (V19.3.3.1 P0): In-memory programmatic registration is strictly fenced to TEST_ONLY / non-business scope.
+  // Business-trusted keys MUST come exclusively from out-of-band environment secrets (KH02_CSV_AUTHORITY_KEY_ID / KH02_CSV_AUTHORITY_HMAC_SECRET).
+  const safeStatus: CsvAuthorityKeyStatus =
+    entry.status === "REVOKED" || entry.status === "COMPROMISED" ? entry.status : "TEST_ONLY";
+  testCsvAuthorityKeys.set(entry.keyId, {
+    ...entry,
+    status: safeStatus,
+    isBusinessTrusted: false,
+  });
 }
 
 export function clearTestCsvAuthoritySigningKeys(): void {
   testCsvAuthorityKeys.clear();
 }
 
-export function getCsvAuthoritySigningKey(keyId: string): CsvAuthoritySigningKeyEntry | null {
+export function getCsvAuthoritySigningKey(
+  keyId: string,
+  scope: "BUSINESS" | "ENGINEERING" = "BUSINESS"
+): CsvAuthoritySigningKeyEntry | null {
   if (!keyId) return null;
-  if (testCsvAuthorityKeys.has(keyId)) {
-    return testCsvAuthorityKeys.get(keyId) || null;
-  }
 
+  // Always resolve environment-configured business issuer key first so test keys can never shadow it
   const envKeyId = process.env.KH02_CSV_AUTHORITY_KEY_ID?.trim();
   const envSecret = process.env.KH02_CSV_AUTHORITY_HMAC_SECRET?.trim();
   const envStatus = (process.env.KH02_CSV_AUTHORITY_KEY_STATUS?.trim() || "ACTIVE") as CsvAuthorityKeyStatus;
@@ -190,6 +205,18 @@ export function getCsvAuthoritySigningKey(keyId: string): CsvAuthoritySigningKey
       status: envStatus,
       purpose: CSV_AUTHORITY_OPERATION_SCOPE,
       isBusinessTrusted: envStatus === "ACTIVE",
+    };
+  }
+
+  if (testCsvAuthorityKeys.has(keyId)) {
+    const testEntry = testCsvAuthorityKeys.get(keyId)!;
+    return {
+      ...testEntry,
+      status:
+        testEntry.status === "REVOKED" || testEntry.status === "COMPROMISED"
+          ? testEntry.status
+          : "TEST_ONLY",
+      isBusinessTrusted: false,
     };
   }
 
@@ -412,16 +439,50 @@ function acquireCsvAuthorityLedgerLock(maxWaitMs = 5000): { lockFile: string; re
 }
 
 export function readCsvAuthorityLedgerUnderLock(): ReadCsvLedgerResult {
-  const p = getCsvAuthorityLedgerPath();
-  if (!fs.existsSync(p)) {
+  const dir = getCsvAuthorityStorageDir();
+  try {
+    const dirStat = fs.lstatSync(dir);
+    if (dirStat.isSymbolicLink()) {
+      return {
+        status: "LEDGER_UNREADABLE",
+        state: null,
+        error: "SECURITY_VIOLATION: CSV authority storage directory is a symbolic link.",
+      };
+    }
+  } catch (err: any) {
     return {
-      status: "LEDGER_NOT_INITIALIZED",
-      state: {
-        version: CSV_AUTHORITY_SCHEMA_VERSION,
-        records: {},
-        revocations: {},
-        updatedAt: new Date().toISOString(),
-      },
+      status: "LEDGER_UNREADABLE",
+      state: null,
+      error: `IO_ERROR checking CSV authority storage directory: ${err?.message}`,
+    };
+  }
+
+  const p = getCsvAuthorityLedgerPath();
+  try {
+    const fileStat = fs.lstatSync(p);
+    if (fileStat.isSymbolicLink()) {
+      return {
+        status: "LEDGER_UNREADABLE",
+        state: null,
+        error: "SECURITY_VIOLATION: CSV authority ledger file is a symbolic link.",
+      };
+    }
+  } catch (err: any) {
+    if (err?.code === "ENOENT") {
+      return {
+        status: "LEDGER_NOT_INITIALIZED",
+        state: {
+          version: CSV_AUTHORITY_SCHEMA_VERSION,
+          records: {},
+          revocations: {},
+          updatedAt: new Date().toISOString(),
+        },
+      };
+    }
+    return {
+      status: "LEDGER_UNREADABLE",
+      state: null,
+      error: `IO_ERROR lstat CSV authority ledger: ${err?.message}`,
     };
   }
 
@@ -466,7 +527,18 @@ export function readCsvAuthorityLedgerUnderLock(): ReadCsvLedgerResult {
 }
 
 function writeCsvAuthorityLedgerUnderLock(state: CsvAuthorityLedgerState): void {
+  const dir = getCsvAuthorityStorageDir();
+  if (fs.lstatSync(dir).isSymbolicLink()) {
+    throw new Error("LEDGER_UNREADABLE: CSV authority storage directory is a symbolic link.");
+  }
   const p = getCsvAuthorityLedgerPath();
+  try {
+    if (fs.lstatSync(p).isSymbolicLink()) {
+      throw new Error("LEDGER_UNREADABLE: CSV authority ledger file is a symbolic link.");
+    }
+  } catch (err: any) {
+    if (err?.code !== "ENOENT") throw err;
+  }
   const tmp = `${p}.tmp_${process.pid}_${Date.now()}_${crypto.randomBytes(4).toString("hex")}`;
   state.updatedAt = new Date().toISOString();
   fs.writeFileSync(tmp, JSON.stringify(state, null, 2), "utf8");
@@ -501,6 +573,7 @@ export interface CreateCsvImportAuthorityInput {
   verificationMethod: string;
   verificationLimitation?: string;
   evidenceChainReference: string;
+  acquisitionSourceUrl?: string | null;
   issuerKeyId: string;
   isTestOnly?: boolean;
   enforceApproverAuthority?: boolean;
@@ -541,7 +614,10 @@ export function createSignedCsvImportAuthority(
     throw new Error("INVALID_INPUT: evidenceChainReference is required.");
   }
 
-  const keyEntry = getCsvAuthoritySigningKey(input.issuerKeyId);
+  const keyEntry = getCsvAuthoritySigningKey(
+    input.issuerKeyId,
+    input.isTestOnly ? "ENGINEERING" : "BUSINESS"
+  );
   if (!keyEntry) {
     throw new Error(`KEY_UNTRUSTED: Issuer keyId '${input.issuerKeyId}' is not registered in CSV Authority Key Registry.`);
   }
@@ -567,8 +643,9 @@ export function createSignedCsvImportAuthority(
     if (!input.approverPrincipalId || !input.approverPrincipalId.trim()) {
       throw new Error("INVALID_INPUT: approverPrincipalId is required for APPROVED AUTHENTICATED_OFFICIAL_EXPORT.");
     }
-    const isProduction = process.env.NODE_ENV === "production";
-    if ((isProduction && !isTest) || input.enforceApproverAuthority === true) {
+    // Security boundary (V19.3.3.1 P0): Approver allowlist is ALWAYS enforced for BUSINESS-scope
+    // records (!isTest) regardless of NODE_ENV or caller-supplied enforceApproverAuthority flag.
+    if (!isTest || input.enforceApproverAuthority === true) {
       const authorizedApprovers = getAuthorizedCsvApproverPrincipals();
       if (authorizedApprovers.length === 0) {
         throw new Error(
@@ -578,6 +655,14 @@ export function createSignedCsvImportAuthority(
       if (!authorizedApprovers.includes(input.approverPrincipalId.trim())) {
         throw new Error(
           `UNAUTHORIZED_APPROVER: Principal '${input.approverPrincipalId}' is not authorized to approve official CSV exports.`
+        );
+      }
+    }
+    if (!isTest && input.acquisitionSourceUrl !== undefined) {
+      const cleanAcqUrl = String(input.acquisitionSourceUrl || "").trim();
+      if (!cleanAcqUrl || !/^https:\/\/trends\.google\.com\//i.test(cleanAcqUrl)) {
+        throw new Error(
+          `ACQUISITION_SOURCE_REQUIRED: Verified official Google Trends acquisitionSourceUrl (https://trends.google.com/...) is required for BUSINESS-scope AUTHENTICATED_OFFICIAL_EXPORT.`
         );
       }
     }

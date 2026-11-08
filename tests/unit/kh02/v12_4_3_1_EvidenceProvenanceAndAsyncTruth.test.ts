@@ -284,15 +284,10 @@ describe("SWAI KH-02 V12.4.3.1 — Evidence Provenance, Runtime Parity & Async T
       const authSha = crypto.createHash("sha256").update(authCsvContent, "utf8").digest("hex");
       const authFile = saveOriginalGoogleTrendsCsvFile(authCsvContent, authSha);
       process.env.TEST_CSV_AUTHORITY_STORAGE_DIR = tmpAuthDir;
+      process.env.KH02_CSV_AUTHORITY_KEY_ID = "key_v12_4_3_1_active";
+      process.env.KH02_CSV_AUTHORITY_HMAC_SECRET = "aabbccddeeff00112233445566778899aabbccddeeff00112233445566778899";
+      process.env.KH02_AUTHORIZED_CSV_APPROVER_PRINCIPALS = "approver_01";
       try {
-        registerCsvAuthoritySigningKey({
-          keyId: "key_v12_4_3_1_active",
-          secret: "aabbccddeeff00112233445566778899aabbccddeeff00112233445566778899",
-          status: "ACTIVE",
-          purpose: CSV_AUTHORITY_OPERATION_SCOPE,
-          isBusinessTrusted: true,
-          description: "Simulated active key for V12.4.3.1 test",
-        });
         const rec = createSignedCsvImportAuthority({
           rawCsvSha256: authSha,
           artifactPath: authFile,
@@ -327,6 +322,9 @@ describe("SWAI KH-02 V12.4.3.1 — Evidence Provenance, Runtime Parity & Async T
       } finally {
         clearTestCsvAuthoritySigningKeys();
         delete process.env.TEST_CSV_AUTHORITY_STORAGE_DIR;
+        delete process.env.KH02_CSV_AUTHORITY_KEY_ID;
+        delete process.env.KH02_CSV_AUTHORITY_HMAC_SECRET;
+        delete process.env.KH02_AUTHORIZED_CSV_APPROVER_PRINCIPALS;
         if (fs.existsSync(authFile)) fs.unlinkSync(authFile);
         fs.rmSync(tmpAuthDir, { recursive: true, force: true });
       }
@@ -405,15 +403,10 @@ describe("SWAI KH-02 V12.4.3.1 — Evidence Provenance, Runtime Parity & Async T
       const authSha = crypto.createHash("sha256").update(authCsvContent, "utf8").digest("hex");
       const authFile = saveOriginalGoogleTrendsCsvFile(authCsvContent, authSha);
       process.env.TEST_CSV_AUTHORITY_STORAGE_DIR = tmpAuthDir;
+      process.env.KH02_CSV_AUTHORITY_KEY_ID = "key_v12_4_3_1_24";
+      process.env.KH02_CSV_AUTHORITY_HMAC_SECRET = "aabbccddeeff00112233445566778899aabbccddeeff00112233445566778899";
+      process.env.KH02_AUTHORIZED_CSV_APPROVER_PRINCIPALS = "approver_01";
       try {
-        registerCsvAuthoritySigningKey({
-          keyId: "key_v12_4_3_1_24",
-          secret: "aabbccddeeff00112233445566778899aabbccddeeff00112233445566778899",
-          status: "ACTIVE",
-          purpose: CSV_AUTHORITY_OPERATION_SCOPE,
-          isBusinessTrusted: true,
-          description: "Simulated active key for V12.4.3.1 2.4 test",
-        });
         const rec = createSignedCsvImportAuthority({
           rawCsvSha256: authSha,
           artifactPath: authFile,
@@ -460,6 +453,9 @@ describe("SWAI KH-02 V12.4.3.1 — Evidence Provenance, Runtime Parity & Async T
       } finally {
         clearTestCsvAuthoritySigningKeys();
         delete process.env.TEST_CSV_AUTHORITY_STORAGE_DIR;
+        delete process.env.KH02_CSV_AUTHORITY_KEY_ID;
+        delete process.env.KH02_CSV_AUTHORITY_HMAC_SECRET;
+        delete process.env.KH02_AUTHORIZED_CSV_APPROVER_PRINCIPALS;
         if (fs.existsSync(authFile)) fs.unlinkSync(authFile);
         fs.rmSync(tmpAuthDir, { recursive: true, force: true });
       }

@@ -179,6 +179,7 @@ describe("SWAI KH-02 — Google US Delivery Provenance Unit Tests", () => {
           content: {
             headline: "Dog Grooming Vacuum Pro",
             description: "Low noise pet hair vacuum",
+            destination_url: "https://merchant.com/products/dog-grooming-vacuum-pro",
             video_url: "https://example.com/video.mp4",
             image_url: "https://example.com/thumb.jpg",
           },

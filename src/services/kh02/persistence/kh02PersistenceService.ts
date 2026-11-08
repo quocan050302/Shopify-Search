@@ -929,8 +929,14 @@ export function requalifyHistoricalEvergreenSnapshot(
       const lineage = hasVerifiableCsvOrProviderLineage(r, null, {
         targetKeyword: c.canonicalProductName || c.title || null,
         targetProductId: c.researchProductId || null,
+        candidateId: c.candidateId || null,
         workspaceId: (snapshot as any).workspaceId || null,
         region: (snapshot as any).market || "US",
+        asOfTimestamp:
+          (snapshot as any).asOfTimestamp ||
+          (snapshot as any).evaluatedAt ||
+          (snapshot as any).completedAt ||
+          null,
         strictLiveOrigin: true,
         strictSourceProvenance: true,
         allowUnitFixtures: false,

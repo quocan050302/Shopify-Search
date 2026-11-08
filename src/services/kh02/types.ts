@@ -504,6 +504,7 @@ export interface SourceResearchResult {
   warnings: string[];
   executionMetadata?: ProviderExecutionMetadata;
   enrichmentExecution?: any;
+  providerInvocations?: any[];
 }
 
 // ─── Source-Specific Normalized Models ────────────────────────────────────────

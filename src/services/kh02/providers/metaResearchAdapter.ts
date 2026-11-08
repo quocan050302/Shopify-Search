@@ -126,6 +126,8 @@ export interface MetaCollectorDiagnostic {
   adapterInstalled: boolean;
   configured: boolean;
   transportConnected: boolean;
+  transportStatus?: "PASS" | "FAIL" | "NOT_CONFIGURED";
+  contentStatus?: "NOT_RUN" | "LIVE_QUERY_COMPLETED" | "LIVE_QUERY_EMPTY" | "LIVE_QUERY_FAILED";
   authenticated: boolean;
   discoverySupported: boolean;
   queryExecuted: boolean;
@@ -153,8 +155,8 @@ export interface MetaCollectorDiagnostic {
 
 /**
  * Inspects real MetaAdsCollector MCP server health, python virtualenv, and SQLite index.
- * V12.4.3.3 Section 3.2: Separates collector readiness and historical indexed DB counts
- * from current-run query execution. Never reports historical database records as current-run ads.
+ * V12.4.3.3 Section 3.2 & V19.3.3.1 Section 04: Separates collector readiness and historical indexed DB counts
+ * from current-run query execution. Never reports historical database records as current-run ads or provenanceVerified=true when no live query ran.
  */
 export async function diagnoseMetaLiveCollector(
   context?: {
@@ -200,6 +202,16 @@ export async function diagnoseMetaLiveCollector(
   const recordsAssociatedWithCandidates = actualQueryAttempted
     ? (context?.recordsAssociatedWithCandidates ?? 0)
     : 0;
+  const currentRunProvenanceVerified = Boolean(
+    actualQueryAttempted && upstreamQueryCompleted && rawAdsReturned > 0
+  );
+  const contentStatus: MetaCollectorDiagnostic["contentStatus"] = !actualQueryAttempted
+    ? "NOT_RUN"
+    : !upstreamQueryCompleted
+    ? "LIVE_QUERY_FAILED"
+    : rawAdsReturned > 0
+    ? "LIVE_QUERY_COMPLETED"
+    : "LIVE_QUERY_EMPTY";
 
   if (!pythonExists) {
     return {
@@ -207,11 +219,13 @@ export async function diagnoseMetaLiveCollector(
       adapterInstalled: true,
       configured: false,
       transportConnected: false,
+      transportStatus: "NOT_CONFIGURED",
+      contentStatus,
       authenticated: false,
       discoverySupported: false,
       queryExecuted: actualQueryAttempted,
       recordsReturned: rawAdsReturned,
-      provenanceVerified: workspaceRecordCount > 0,
+      provenanceVerified: false,
       lastCheckedAt,
       status: "NOT_CONFIGURED",
       reason: `MetaAdsCollector Python environment not found at '${config.pythonBin}'. Run python virtualenv setup.`,
@@ -239,11 +253,13 @@ export async function diagnoseMetaLiveCollector(
       adapterInstalled: true,
       configured: false,
       transportConnected: false,
+      transportStatus: "NOT_CONFIGURED",
+      contentStatus,
       authenticated: false,
       discoverySupported: false,
       queryExecuted: actualQueryAttempted,
       recordsReturned: rawAdsReturned,
-      provenanceVerified: workspaceRecordCount > 0,
+      provenanceVerified: false,
       lastCheckedAt,
       status: "NOT_CONFIGURED",
       reason: "MetaAdsCollector live collector is disabled via META_COLLECTOR_ENABLED=false.",
@@ -293,11 +309,13 @@ export async function diagnoseMetaLiveCollector(
     adapterInstalled: true,
     configured: Boolean(isEnabled && pythonExists),
     transportConnected,
+    transportStatus: transportConnected ? "PASS" : "FAIL",
+    contentStatus,
     authenticated: true,
     discoverySupported: transportConnected,
     queryExecuted: actualQueryAttempted,
     recordsReturned: rawAdsReturned,
-    provenanceVerified: workspaceRecordCount > 0,
+    provenanceVerified: currentRunProvenanceVerified,
     lastCheckedAt,
     status: transportConnected ? "SOURCE_ACCESS_VERIFIED" : "FAILED",
     reason,
