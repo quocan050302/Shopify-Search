@@ -1,0 +1,18 @@
+{
+  "deliverableId": "07_G16_DISTINCT_TOP3_ELIGIBILITY_VERDICT",
+  "gateId": "G16",
+  "patchVersion": "V12.4.3.7.19.3.3.3",
+  "testedCodeShaC1": "4ac0df13cb190aac01ce6094caa299f0da1defe0",
+  "testedCodeTreeShaC1": "dfade8bcbc28da97aae4cfe5becc41d3d2063da8",
+  "engineeringGateVerdict": "PASS",
+  "businessGateVerdict": "INSUFFICIENT_EVIDENCE",
+  "qualifiedDistinctTop3Count": 0,
+  "requiredDistinctTop3Count": 3,
+  "shortlistRatio": "0/3",
+  "p1BClosureSummary": {
+    "defectClosed": "calculateKH02EvergreenScore previously trusted candidate.supportingSourceTypes ('GOOGLE_ADS') and unverified sourceObservations to award +6 Pillar C points and +10 evidenceConfidence without checking providerVerified === true, upstreamRequestVerified === true, US delivery market, and candidate-specific PDP binding.",
+    "postFixBehavior": "GOOGLE_ADS is removed from sourceSet unless at least one sourceObservation passes isQualifiedGoogleAdsProductEvidence(obs, candidate). Unsupported arbitrary platform strings in supportingSourceTypes are ignored. Snapshot readback via requalifyHistoricalEvergreenSnapshot demotes any topThree winner with null demandStability score.",
+    "syntheticPositiveTestsDisclosure": "GSC-14 and GSC-16 use explicitly labeled SYNTHETIC POSITIVE ENGINEERING TEST fixtures to prove the scoring math (+6 and 14/20) when upstream flags are true; they are NOT counted as live business evidence."
+  },
+  "blockerSummary": "0/3 Verified Evergreen Top 3 winners exist in live business scope because G15 (>=60-day verified US demand history) is INSUFFICIENT_EVIDENCE and live Google MCP observations lack independent upstream Google attestation."
+}

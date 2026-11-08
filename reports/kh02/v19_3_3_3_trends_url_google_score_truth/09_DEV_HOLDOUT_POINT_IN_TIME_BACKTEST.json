@@ -1,0 +1,28 @@
+{
+  "deliverableId": "09_DEV_HOLDOUT_POINT_IN_TIME_BACKTEST",
+  "gateId": "E8",
+  "patchVersion": "V12.4.3.7.19.3.3.3",
+  "testedCodeSha": "4ac0df13cb190aac01ce6094caa299f0da1defe0",
+  "evaluatedCodeSha": "4ac0df13cb190aac01ce6094caa299f0da1defe0",
+  "evaluatedTreeSha": "dfade8bcbc28da97aae4cfe5becc41d3d2063da8",
+  "command": "npx tsx scripts/kh02/runBacktestV12_4_3_4_2.ts",
+  "exitCode": 0,
+  "logFile": "reports/kh02/v19_3_3_3_trends_url_google_score_truth/logs/backtest.log",
+  "policyScenarioVerdict": "PASS",
+  "pointInTimeIntegrityVerdict": "PASS",
+  "zeroFutureLeakageVerified": true,
+  "historicalDevVerdict": "INSUFFICIENT_HISTORICAL_EVIDENCE",
+  "historicalHoldoutVerdict": "INSUFFICIENT_HISTORICAL_EVIDENCE",
+  "overallHistoricalBacktestVerdict": "INSUFFICIENT_HISTORICAL_EVIDENCE",
+  "devSplitSummary": {
+    "shortlistSelected": 0,
+    "shortlistTarget": 0,
+    "verdict": "INSUFFICIENT_HISTORICAL_EVIDENCE"
+  },
+  "holdoutSplitSummary": {
+    "shortlistSelected": 3,
+    "shortlistTarget": 3,
+    "verdict": "INSUFFICIENT_HISTORICAL_EVIDENCE",
+    "note": "Controlled fixture holdout candidates verify deterministic point-in-time mechanics only; business historical backtest remains INSUFFICIENT_HISTORICAL_EVIDENCE."
+  }
+}

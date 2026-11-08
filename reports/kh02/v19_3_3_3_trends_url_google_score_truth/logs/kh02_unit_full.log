@@ -1,0 +1,11 @@
+
+> shopify-winning-ads-intelligence@0.1.0 kh02:test:unit
+> vitest run tests/unit/kh02 --maxWorkers=2 --reporter=json --outputFile=/tmp/kh02_v19333_logs/kh02_unit_full.json
+
+Processing request of type ListToolsRequest
+Processing request of type ListToolsRequest
+Processing request of type ListToolsRequest
+Processing request of type ListToolsRequest
+Processing request of type ListToolsRequest
+Processing request of type ListToolsRequest
+JSON report written to /tmp/kh02_v19333_logs/kh02_unit_full.json

@@ -1,0 +1,628 @@
+
+ RUN  v5.0.5 /Users/macbook/Documents/Project_Github/Meta-Ads/Shopify-Search
+
+ × tests/unit/kh02/v19_3_3_3_OfficialTrendsQueryGeoAndGoogleScoreTruth.test.ts > KH-02 V12.4.3.7.19.3.3.3 — Strict Google Trends q/geo Origin Binding + No-False-Google-Platform-Score > Part 1: P1-A — Official Google Trends Explore URL `q` & `geo` Strict Origin Binding (CSV-01..CSV-24) > CSV-01: missing geo parameter (URL has valid q) -> DENY with ACQUISITION_GEO_REQUIRED 7ms
+   → expected [Function] to throw an error
+ × tests/unit/kh02/v19_3_3_3_OfficialTrendsQueryGeoAndGoogleScoreTruth.test.ts > KH-02 V12.4.3.7.19.3.3.3 — Strict Google Trends q/geo Origin Binding + No-False-Google-Platform-Score > Part 1: P1-A — Official Google Trends Explore URL `q` & `geo` Strict Origin Binding (CSV-01..CSV-24) > CSV-02: missing q parameter (URL has valid geo) -> DENY with ACQUISITION_QUERY_REQUIRED 1ms
+   → expected [Function] to throw an error
+ × tests/unit/kh02/v19_3_3_3_OfficialTrendsQueryGeoAndGoogleScoreTruth.test.ts > KH-02 V12.4.3.7.19.3.3.3 — Strict Google Trends q/geo Origin Binding + No-False-Google-Platform-Score > Part 1: P1-A — Official Google Trends Explore URL `q` & `geo` Strict Origin Binding (CSV-01..CSV-24) > CSV-03: neither q nor geo in Explore URL -> DENY 1ms
+   → expected [Function] to throw an error
+ × tests/unit/kh02/v19_3_3_3_OfficialTrendsQueryGeoAndGoogleScoreTruth.test.ts > KH-02 V12.4.3.7.19.3.3.3 — Strict Google Trends q/geo Origin Binding + No-False-Google-Platform-Score > Part 1: P1-A — Official Google Trends Explore URL `q` & `geo` Strict Origin Binding (CSV-01..CSV-24) > CSV-04: empty or whitespace geo='' / geo=%20 / q='' / q=%20 -> DENY 1ms
+   → expected [Function] to throw error matching /ACQUISITION_GEO_REQUIRED/ but got 'ACQUISITION_GEO_MISMATCH: Acquisition…'
+ × tests/unit/kh02/v19_3_3_3_OfficialTrendsQueryGeoAndGoogleScoreTruth.test.ts > KH-02 V12.4.3.7.19.3.3.3 — Strict Google Trends q/geo Origin Binding + No-False-Google-Platform-Score > Part 1: P1-A — Official Google Trends Explore URL `q` & `geo` Strict Origin Binding (CSV-01..CSV-24) > CSV-05: duplicated geo parameters (geo=US&geo=GB or geo=US&geo=US) -> DENY with AMBIGUOUS_ACQUISITION_PARAMETERS 1ms
+   → expected [Function] to throw an error
+ × tests/unit/kh02/v19_3_3_3_OfficialTrendsQueryGeoAndGoogleScoreTruth.test.ts > KH-02 V12.4.3.7.19.3.3.3 — Strict Google Trends q/geo Origin Binding + No-False-Google-Platform-Score > Part 1: P1-A — Official Google Trends Explore URL `q` & `geo` Strict Origin Binding (CSV-01..CSV-24) > CSV-06: duplicated q parameters (q=cat%20feeder&q=dog%20feeder) -> DENY with AMBIGUOUS_ACQUISITION_PARAMETERS 1ms
+   → expected [Function] to throw an error
+ ✓ tests/unit/kh02/v19_3_3_3_OfficialTrendsQueryGeoAndGoogleScoreTruth.test.ts > KH-02 V12.4.3.7.19.3.3.3 — Strict Google Trends q/geo Origin Binding + No-False-Google-Platform-Score > Part 1: P1-A — Official Google Trends Explore URL `q` & `geo` Strict Origin Binding (CSV-01..CSV-24) > CSV-07: non-US geo (GB, CA, WW) when expected US -> DENY with ACQUISITION_GEO_MISMATCH 1ms
+ × tests/unit/kh02/v19_3_3_3_OfficialTrendsQueryGeoAndGoogleScoreTruth.test.ts > KH-02 V12.4.3.7.19.3.3.3 — Strict Google Trends q/geo Origin Binding + No-False-Google-Platform-Score > Part 1: P1-A — Official Google Trends Explore URL `q` & `geo` Strict Origin Binding (CSV-01..CSV-24) > CSV-08: ambiguous US subregion (geo=US-CA or geo=US-NY) vs explicit US -> policy-driven DENY with ACQUISITION_GEO_MISMATCH 1ms
+   → expected [Function] to throw an error
+ × tests/unit/kh02/v19_3_3_3_OfficialTrendsQueryGeoAndGoogleScoreTruth.test.ts > KH-02 V12.4.3.7.19.3.3.3 — Strict Google Trends q/geo Origin Binding + No-False-Google-Platform-Score > Part 1: P1-A — Official Google Trends Explore URL `q` & `geo` Strict Origin Binding (CSV-01..CSV-24) > CSV-09: partial prefix/substring q='cat' vs expected 'cat feeder' -> DENY with ACQUISITION_QUERY_MISMATCH 1ms
+   → expected [Function] to throw an error
+ × tests/unit/kh02/v19_3_3_3_OfficialTrendsQueryGeoAndGoogleScoreTruth.test.ts > KH-02 V12.4.3.7.19.3.3.3 — Strict Google Trends q/geo Origin Binding + No-False-Google-Platform-Score > Part 1: P1-A — Official Google Trends Explore URL `q` & `geo` Strict Origin Binding (CSV-01..CSV-24) > CSV-10: superstring q='cat feeder accessories' vs expected 'cat feeder' -> DENY with ACQUISITION_QUERY_MISMATCH 1ms
+   → expected [Function] to throw an error
+ ✓ tests/unit/kh02/v19_3_3_3_OfficialTrendsQueryGeoAndGoogleScoreTruth.test.ts > KH-02 V12.4.3.7.19.3.3.3 — Strict Google Trends q/geo Origin Binding + No-False-Google-Platform-Score > Part 1: P1-A — Official Google Trends Explore URL `q` & `geo` Strict Origin Binding (CSV-01..CSV-24) > CSV-11: encoded/Unicode canonical-equivalent keyword (+ or %20 or case difference) -> ACCEPT only when whole normalized term matches 1ms
+ × tests/unit/kh02/v19_3_3_3_OfficialTrendsQueryGeoAndGoogleScoreTruth.test.ts > KH-02 V12.4.3.7.19.3.3.3 — Strict Google Trends q/geo Origin Binding + No-False-Google-Platform-Score > Part 1: P1-A — Official Google Trends Explore URL `q` & `geo` Strict Origin Binding (CSV-01..CSV-24) > CSV-12: double-encoded (%2520) or multi-keyword comma-separated q ('cat feeder,dog feeder') -> DENY 1ms
+   → expected [Function] to throw an error
+ × tests/unit/kh02/v19_3_3_3_OfficialTrendsQueryGeoAndGoogleScoreTruth.test.ts > KH-02 V12.4.3.7.19.3.3.3 — Strict Google Trends q/geo Origin Binding + No-False-Google-Platform-Score > Part 1: P1-A — Official Google Trends Explore URL `q` & `geo` Strict Origin Binding (CSV-01..CSV-24) > CSV-13: userinfo, evil host, http scheme, custom port, or non-Explore path (/trends/yis) -> DENY 0ms
+   → expected [Function] to throw an error
+ × tests/unit/kh02/v19_3_3_3_OfficialTrendsQueryGeoAndGoogleScoreTruth.test.ts > KH-02 V12.4.3.7.19.3.3.3 — Strict Google Trends q/geo Origin Binding + No-False-Google-Platform-Score > Part 1: P1-A — Official Google Trends Explore URL `q` & `geo` Strict Origin Binding (CSV-01..CSV-24) > CSV-14: fragment-only query '#?geo=US&q=cat%20feeder' without real searchParams -> DENY 0ms
+   → expected [Function] to throw an error
+ ✓ tests/unit/kh02/v19_3_3_3_OfficialTrendsQueryGeoAndGoogleScoreTruth.test.ts > KH-02 V12.4.3.7.19.3.3.3 — Strict Google Trends q/geo Origin Binding + No-False-Google-Platform-Score > Part 1: P1-A — Official Google Trends Explore URL `q` & `geo` Strict Origin Binding (CSV-01..CSV-24) > CSV-15: correctly bound q+geo with real review chain -> positive controlled pass with providerOriginVerified=false 12ms
+ ✓ tests/unit/kh02/v19_3_3_3_OfficialTrendsQueryGeoAndGoogleScoreTruth.test.ts > KH-02 V12.4.3.7.19.3.3.3 — Strict Google Trends q/geo Origin Binding + No-False-Google-Platform-Score > Part 1: P1-A — Official Google Trends Explore URL `q` & `geo` Strict Origin Binding (CSV-01..CSV-24) > CSV-16: signed record altered q or geo in acquisitionSourceUrl on disk after issue -> DENY (INVALID_SIGNATURE) 3ms
+ × tests/unit/kh02/v19_3_3_3_OfficialTrendsQueryGeoAndGoogleScoreTruth.test.ts > KH-02 V12.4.3.7.19.3.3.3 — Strict Google Trends q/geo Origin Binding + No-False-Google-Platform-Score > Part 1: P1-A — Official Google Trends Explore URL `q` & `geo` Strict Origin Binding (CSV-01..CSV-24) > CSV-17: previously signed record missing q or geo on readback -> DENY even if HMAC signature matches stored fields 3ms
+   → expected true to be false // Object.is equality
+ ✓ tests/unit/kh02/v19_3_3_3_OfficialTrendsQueryGeoAndGoogleScoreTruth.test.ts > KH-02 V12.4.3.7.19.3.3.3 — Strict Google Trends q/geo Origin Binding + No-False-Google-Platform-Score > Part 1: P1-A — Official Google Trends Explore URL `q` & `geo` Strict Origin Binding (CSV-01..CSV-24) > CSV-18: TEST_ONLY positive fixture in ENGINEERING scope -> passes engineeringEligible=true, businessEligible=false 2ms
+ ✓ tests/unit/kh02/v19_3_3_3_OfficialTrendsQueryGeoAndGoogleScoreTruth.test.ts > KH-02 V12.4.3.7.19.3.3.3 — Strict Google Trends q/geo Origin Binding + No-False-Google-Platform-Score > Part 1: P1-A — Official Google Trends Explore URL `q` & `geo` Strict Origin Binding (CSV-01..CSV-24) > CSV-19: same TEST_ONLY fixture evaluated in BUSINESS scope -> DENY 2ms
+ ✓ tests/unit/kh02/v19_3_3_3_OfficialTrendsQueryGeoAndGoogleScoreTruth.test.ts > KH-02 V12.4.3.7.19.3.3.3 — Strict Google Trends q/geo Origin Binding + No-False-Google-Platform-Score > Part 1: P1-A — Official Google Trends Explore URL `q` & `geo` Strict Origin Binding (CSV-01..CSV-24) > CSV-20: future import/approval cutoff (> asOfTimestamp) -> DENY with IMPORT_AFTER_CUTOFF 1ms
+ ✓ tests/unit/kh02/v19_3_3_3_OfficialTrendsQueryGeoAndGoogleScoreTruth.test.ts > KH-02 V12.4.3.7.19.3.3.3 — Strict Google Trends q/geo Origin Binding + No-False-Google-Platform-Score > Part 1: P1-A — Official Google Trends Explore URL `q` & `geo` Strict Origin Binding (CSV-01..CSV-24) > CSV-21: wrong targetProductId, candidateId, workspaceId, or raw CSV SHA -> DENY 2ms
+ ✓ tests/unit/kh02/v19_3_3_3_OfficialTrendsQueryGeoAndGoogleScoreTruth.test.ts > KH-02 V12.4.3.7.19.3.3.3 — Strict Google Trends q/geo Origin Binding + No-False-Google-Platform-Score > Part 1: P1-A — Official Google Trends Explore URL `q` & `geo` Strict Origin Binding (CSV-01..CSV-24) > CSV-22: valid REAL approved CSV evidence but < 60 covered days -> G15 insufficient (eligibleForEvergreen=false) 4ms
+ ✓ tests/unit/kh02/v19_3_3_3_OfficialTrendsQueryGeoAndGoogleScoreTruth.test.ts > KH-02 V12.4.3.7.19.3.3.3 — Strict Google Trends q/geo Origin Binding + No-False-Google-Platform-Score > Part 1: P1-A — Official Google Trends Explore URL `q` & `geo` Strict Origin Binding (CSV-01..CSV-24) > CSV-23: valid >=60d engineered TEST_ONLY fixture -> passes ENGINEERING scope only, denied in BUSINESS scope 8ms
+ ✓ tests/unit/kh02/v19_3_3_3_OfficialTrendsQueryGeoAndGoogleScoreTruth.test.ts > KH-02 V12.4.3.7.19.3.3.3 — Strict Google Trends q/geo Origin Binding + No-False-Google-Platform-Score > Part 1: P1-A — Official Google Trends Explore URL `q` & `geo` Strict Origin Binding (CSV-01..CSV-24) > CSV-24: non-CSV source disguised as official -> DENY in evaluateDemandSourceAuthority 1ms
+ × tests/unit/kh02/v19_3_3_3_OfficialTrendsQueryGeoAndGoogleScoreTruth.test.ts > KH-02 V12.4.3.7.19.3.3.3 — Strict Google Trends q/geo Origin Binding + No-False-Google-Platform-Score > Part 2: P1-B — Google Ads Multi-Platform Score & Confidence Require Verified Product Evidence (GSC-01..GSC-24) > GSC-01: supportingSourceTypes has GOOGLE_ADS but zero Google observations exist -> 0 Google points (score 8/20 from Meta only) 1ms
+   → expected 14 to be 8 // Object.is equality
+ × tests/unit/kh02/v19_3_3_3_OfficialTrendsQueryGeoAndGoogleScoreTruth.test.ts > KH-02 V12.4.3.7.19.3.3.3 — Strict Google Trends q/geo Origin Binding + No-False-Google-Platform-Score > Part 2: P1-B — Google Ads Multi-Platform Score & Confidence Require Verified Product Evidence (GSC-01..GSC-24) > GSC-02: Google observation has PDP + US market but providerVerified=false -> 0 Google points 0ms
+   → expected 14 to be 8 // Object.is equality
+ × tests/unit/kh02/v19_3_3_3_OfficialTrendsQueryGeoAndGoogleScoreTruth.test.ts > KH-02 V12.4.3.7.19.3.3.3 — Strict Google Trends q/geo Origin Binding + No-False-Google-Platform-Score > Part 2: P1-B — Google Ads Multi-Platform Score & Confidence Require Verified Product Evidence (GSC-01..GSC-24) > GSC-03: Google observation has providerVerified=true but upstreamRequestVerified=false -> 0 Google points 0ms
+   → expected 6 to be +0 // Object.is equality
+ × tests/unit/kh02/v19_3_3_3_OfficialTrendsQueryGeoAndGoogleScoreTruth.test.ts > KH-02 V12.4.3.7.19.3.3.3 — Strict Google Trends q/geo Origin Binding + No-False-Google-Platform-Score > Part 2: P1-B — Google Ads Multi-Platform Score & Confidence Require Verified Product Evidence (GSC-01..GSC-24) > GSC-04: Google observation has upstreamRequestVerified=true but providerVerified=false -> 0 Google points 0ms
+   → expected 6 to be +0 // Object.is equality
+ × tests/unit/kh02/v19_3_3_3_OfficialTrendsQueryGeoAndGoogleScoreTruth.test.ts > KH-02 V12.4.3.7.19.3.3.3 — Strict Google Trends q/geo Origin Binding + No-False-Google-Platform-Score > Part 2: P1-B — Google Ads Multi-Platform Score & Confidence Require Verified Product Evidence (GSC-01..GSC-24) > GSC-05: string 'true' provenance flags ('true' instead of boolean true) -> 0 Google points 0ms
+   → expected 6 to be +0 // Object.is equality
+ × tests/unit/kh02/v19_3_3_3_OfficialTrendsQueryGeoAndGoogleScoreTruth.test.ts > KH-02 V12.4.3.7.19.3.3.3 — Strict Google Trends q/geo Origin Binding + No-False-Google-Platform-Score > Part 2: P1-B — Google Ads Multi-Platform Score & Confidence Require Verified Product Evidence (GSC-01..GSC-24) > GSC-06: local MCP verified with upstreamOriginStatus='UPSTREAM_NOT_ATTESTED' or provenanceTier='LOCAL_MCP_TOOL_RESULT_VERIFIED' -> 0 Google points 1ms
+   → expected 6 to be +0 // Object.is equality
+ × tests/unit/kh02/v19_3_3_3_OfficialTrendsQueryGeoAndGoogleScoreTruth.test.ts > KH-02 V12.4.3.7.19.3.3.3 — Strict Google Trends q/geo Origin Binding + No-False-Google-Platform-Score > Part 2: P1-B — Google Ads Multi-Platform Score & Confidence Require Verified Product Evidence (GSC-01..GSC-24) > GSC-07: fabricated upstream requestId in MCP JSON without registered execution lineage -> 0 Google points 1ms
+   → expected 6 to be +0 // Object.is equality
+ × tests/unit/kh02/v19_3_3_3_OfficialTrendsQueryGeoAndGoogleScoreTruth.test.ts > KH-02 V12.4.3.7.19.3.3.3 — Strict Google Trends q/geo Origin Binding + No-False-Google-Platform-Score > Part 2: P1-B — Google Ads Multi-Platform Score & Confidence Require Verified Product Evidence (GSC-01..GSC-24) > GSC-08: GOOGLE_ADS observation with brand/home/collection/search URL -> 0 Google points even if upstream flags true 1ms
+   → expected 6 to be +0 // Object.is equality
+ ✓ tests/unit/kh02/v19_3_3_3_OfficialTrendsQueryGeoAndGoogleScoreTruth.test.ts > KH-02 V12.4.3.7.19.3.3.3 — Strict Google Trends q/geo Origin Binding + No-False-Google-Platform-Score > Part 2: P1-B — Google Ads Multi-Platform Score & Confidence Require Verified Product Evidence (GSC-01..GSC-24) > GSC-09: Google product URL but requested US filter only (marketProvenance FILTER_ONLY or verifiedDeliveryMarket null) -> 0 Google points 0ms
+ × tests/unit/kh02/v19_3_3_3_OfficialTrendsQueryGeoAndGoogleScoreTruth.test.ts > KH-02 V12.4.3.7.19.3.3.3 — Strict Google Trends q/geo Origin Binding + No-False-Google-Platform-Score > Part 2: P1-B — Google Ads Multi-Platform Score & Confidence Require Verified Product Evidence (GSC-01..GSC-24) > GSC-10: related but wrong merchant/product/candidate URL -> 0 Google points 1ms
+   → expected 6 to be +0 // Object.is equality
+ × tests/unit/kh02/v19_3_3_3_OfficialTrendsQueryGeoAndGoogleScoreTruth.test.ts > KH-02 V12.4.3.7.19.3.3.3 — Strict Google Trends q/geo Origin Binding + No-False-Google-Platform-Score > Part 2: P1-B — Google Ads Multi-Platform Score & Confidence Require Verified Product Evidence (GSC-01..GSC-24) > GSC-11: cached/replay/fixture Google observation marked as LIVE by outer wrapper -> 0 Google points 1ms
+   → expected 6 to be +0 // Object.is equality
+ × tests/unit/kh02/v19_3_3_3_OfficialTrendsQueryGeoAndGoogleScoreTruth.test.ts > KH-02 V12.4.3.7.19.3.3.3 — Strict Google Trends q/geo Origin Binding + No-False-Google-Platform-Score > Part 2: P1-B — Google Ads Multi-Platform Score & Confidence Require Verified Product Evidence (GSC-01..GSC-24) > GSC-12: sourceObservations absent/null while supportingSourceTypes claims GOOGLE_ADS -> 0 Google points 1ms
+   → Cannot read properties of null (reading 'some')
+ ✓ tests/unit/kh02/v19_3_3_3_OfficialTrendsQueryGeoAndGoogleScoreTruth.test.ts > KH-02 V12.4.3.7.19.3.3.3 — Strict Google Trends q/geo Origin Binding + No-False-Google-Platform-Score > Part 2: P1-B — Google Ads Multi-Platform Score & Confidence Require Verified Product Evidence (GSC-01..GSC-24) > GSC-13: duplicate verified Google observations for same creative/product -> max +6 Pillar C and +10 confidence ONCE 0ms
+ ✓ tests/unit/kh02/v19_3_3_3_OfficialTrendsQueryGeoAndGoogleScoreTruth.test.ts > KH-02 V12.4.3.7.19.3.3.3 — Strict Google Trends q/geo Origin Binding + No-False-Google-Platform-Score > Part 2: P1-B — Google Ads Multi-Platform Score & Confidence Require Verified Product Evidence (GSC-01..GSC-24) > GSC-14: 1 authentic independently upstream-attested US PDP Google obs (SYNTHETIC POSITIVE ENGINEERING TEST fixture) -> +6 Google 0ms
+ × tests/unit/kh02/v19_3_3_3_OfficialTrendsQueryGeoAndGoogleScoreTruth.test.ts > KH-02 V12.4.3.7.19.3.3.3 — Strict Google Trends q/geo Origin Binding + No-False-Google-Platform-Score > Part 2: P1-B — Google Ads Multi-Platform Score & Confidence Require Verified Product Evidence (GSC-01..GSC-24) > GSC-15: 1 verified META_ADS + 1 unverified GOOGLE_ADS -> Pillar C score 8/20 1ms
+   → expected 14 to be 8 // Object.is equality
+ ✓ tests/unit/kh02/v19_3_3_3_OfficialTrendsQueryGeoAndGoogleScoreTruth.test.ts > KH-02 V12.4.3.7.19.3.3.3 — Strict Google Trends q/geo Origin Binding + No-False-Google-Platform-Score > Part 2: P1-B — Google Ads Multi-Platform Score & Confidence Require Verified Product Evidence (GSC-01..GSC-24) > GSC-16: 1 verified META_ADS + 1 verified GOOGLE_ADS (SYNTHETIC POSITIVE ENGINEERING TEST fixture) -> Pillar C score 14/20 1ms
+ ✓ tests/unit/kh02/v19_3_3_3_OfficialTrendsQueryGeoAndGoogleScoreTruth.test.ts > KH-02 V12.4.3.7.19.3.3.3 — Strict Google Trends q/geo Origin Binding + No-False-Google-Platform-Score > Part 2: P1-B — Google Ads Multi-Platform Score & Confidence Require Verified Product Evidence (GSC-01..GSC-24) > GSC-17: unrelated Google observation while supportingSourceTypes lists GOOGLE_ADS -> 0 Google points 1ms
+ × tests/unit/kh02/v19_3_3_3_OfficialTrendsQueryGeoAndGoogleScoreTruth.test.ts > KH-02 V12.4.3.7.19.3.3.3 — Strict Google Trends q/geo Origin Binding + No-False-Google-Platform-Score > Part 2: P1-B — Google Ads Multi-Platform Score & Confidence Require Verified Product Evidence (GSC-01..GSC-24) > GSC-18: no fake cross-platform strength, confidence, or platformCount across negative Google cases 0ms
+   → expected 14 to be 8 // Object.is equality
+ ✓ tests/unit/kh02/v19_3_3_3_OfficialTrendsQueryGeoAndGoogleScoreTruth.test.ts > KH-02 V12.4.3.7.19.3.3.3 — Strict Google Trends q/geo Origin Binding + No-False-Google-Platform-Score > Part 2: P1-B — Google Ads Multi-Platform Score & Confidence Require Verified Product Evidence (GSC-01..GSC-24) > GSC-19: no G15 pass from 120-day Google ad creative longevity when demandSeries is empty 0ms
+ ✓ tests/unit/kh02/v19_3_3_3_OfficialTrendsQueryGeoAndGoogleScoreTruth.test.ts > KH-02 V12.4.3.7.19.3.3.3 — Strict Google Trends q/geo Origin Binding + No-False-Google-Platform-Score > Part 2: P1-B — Google Ads Multi-Platform Score & Confidence Require Verified Product Evidence (GSC-01..GSC-24) > GSC-20: no G16 Top3 pass merely because Pillar C scores 14/20 when G15 demand history is absent 0ms
+ × tests/unit/kh02/v19_3_3_3_OfficialTrendsQueryGeoAndGoogleScoreTruth.test.ts > KH-02 V12.4.3.7.19.3.3.3 — Strict Google Trends q/geo Origin Binding + No-False-Google-Platform-Score > Part 2: P1-B — Google Ads Multi-Platform Score & Confidence Require Verified Product Evidence (GSC-01..GSC-24) > GSC-21: source aliases GOOGLE and GOOGLE_ADS_TRANSPARENCY normalized consistently; unsupported arbitrary source types ignored 0ms
+   → expected 14 to be 8 // Object.is equality
+ × tests/unit/kh02/v19_3_3_3_OfficialTrendsQueryGeoAndGoogleScoreTruth.test.ts > KH-02 V12.4.3.7.19.3.3.3 — Strict Google Trends q/geo Origin Binding + No-False-Google-Platform-Score > Part 2: P1-B — Google Ads Multi-Platform Score & Confidence Require Verified Product Evidence (GSC-01..GSC-24) > GSC-22: missing metrics, malformed booleans, null PDP, partial US ('US-CA') -> fail closed without throwing 1ms
+   → expected [Function] to not throw an error but 'TypeError: Cannot read properties of …' was thrown
+ × tests/unit/kh02/v19_3_3_3_OfficialTrendsQueryGeoAndGoogleScoreTruth.test.ts > KH-02 V12.4.3.7.19.3.3.3 — Strict Google Trends q/geo Origin Binding + No-False-Google-Platform-Score > Part 2: P1-B — Google Ads Multi-Platform Score & Confidence Require Verified Product Evidence (GSC-01..GSC-24) > GSC-23: snapshot/DB readback requalifyHistoricalEvergreenSnapshot preserves honest source confidence and demotes unverified winners 1ms
+   → expected [ { rank: 1, …(2) } ] to have a length of +0 but got 1
+ ✓ tests/unit/kh02/v19_3_3_3_OfficialTrendsQueryGeoAndGoogleScoreTruth.test.ts > KH-02 V12.4.3.7.19.3.3.3 — Strict Google Trends q/geo Origin Binding + No-False-Google-Platform-Score > Part 2: P1-B — Google Ads Multi-Platform Score & Confidence Require Verified Product Evidence (GSC-01..GSC-24) > GSC-24: repeated ad placements across Meta & Google for one merchant SKU collapse to one canonical product family 19ms
+
+⎯⎯⎯⎯⎯⎯ Failed Tests 29 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/unit/kh02/v19_3_3_3_OfficialTrendsQueryGeoAndGoogleScoreTruth.test.ts > KH-02 V12.4.3.7.19.3.3.3 — Strict Google Trends q/geo Origin Binding + No-False-Google-Platform-Score > Part 1: P1-A — Official Google Trends Explore URL `q` & `geo` Strict Origin Binding (CSV-01..CSV-24) > CSV-01: missing geo parameter (URL has valid q) -> DENY with ACQUISITION_GEO_REQUIRED
+AssertionError: expected [Function] to throw an error
+
+- Expected:
+null
+
++ Received:
+undefined
+
+ ❯ tests/unit/kh02/v19_3_3_3_OfficialTrendsQueryGeoAndGoogleScoreTruth.test.ts:192:9
+    190|       expect(() =>
+    191|         validateOfficialGoogleTrendsAcquisitionUrl(urlMissingGeo, "aut…
+    192|       ).toThrow(/ACQUISITION_GEO_REQUIRED/);
+       |         ^
+    193|
+    194|       const { parsed, artifactPath } = parseAndSaveCsv(buildTwelveWeek…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/29]⎯
+
+ FAIL  tests/unit/kh02/v19_3_3_3_OfficialTrendsQueryGeoAndGoogleScoreTruth.test.ts > KH-02 V12.4.3.7.19.3.3.3 — Strict Google Trends q/geo Origin Binding + No-False-Google-Platform-Score > Part 1: P1-A — Official Google Trends Explore URL `q` & `geo` Strict Origin Binding (CSV-01..CSV-24) > CSV-02: missing q parameter (URL has valid geo) -> DENY with ACQUISITION_QUERY_REQUIRED
+AssertionError: expected [Function] to throw an error
+
+- Expected:
+null
+
++ Received:
+undefined
+
+ ❯ tests/unit/kh02/v19_3_3_3_OfficialTrendsQueryGeoAndGoogleScoreTruth.test.ts:227:9
+    225|       expect(() =>
+    226|         validateOfficialGoogleTrendsAcquisitionUrl(urlMissingQ, "autom…
+    227|       ).toThrow(/ACQUISITION_QUERY_REQUIRED/);
+       |         ^
+    228|
+    229|       const { parsed, artifactPath } = parseAndSaveCsv(buildTwelveWeek…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/29]⎯
+
+ FAIL  tests/unit/kh02/v19_3_3_3_OfficialTrendsQueryGeoAndGoogleScoreTruth.test.ts > KH-02 V12.4.3.7.19.3.3.3 — Strict Google Trends q/geo Origin Binding + No-False-Google-Platform-Score > Part 1: P1-A — Official Google Trends Explore URL `q` & `geo` Strict Origin Binding (CSV-01..CSV-24) > CSV-03: neither q nor geo in Explore URL -> DENY
+AssertionError: expected [Function] to throw an error
+
+- Expected:
+null
+
++ Received:
+undefined
+
+ ❯ tests/unit/kh02/v19_3_3_3_OfficialTrendsQueryGeoAndGoogleScoreTruth.test.ts:262:9
+    260|       expect(() =>
+    261|         validateOfficialGoogleTrendsAcquisitionUrl(urlBareExplore, "au…
+    262|       ).toThrow(/ACQUISITION_GEO_REQUIRED|ACQUISITION_QUERY_REQUIRED/);
+       |         ^
+    263|     });
+    264|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/29]⎯
+
+ FAIL  tests/unit/kh02/v19_3_3_3_OfficialTrendsQueryGeoAndGoogleScoreTruth.test.ts > KH-02 V12.4.3.7.19.3.3.3 — Strict Google Trends q/geo Origin Binding + No-False-Google-Platform-Score > Part 1: P1-A — Official Google Trends Explore URL `q` & `geo` Strict Origin Binding (CSV-01..CSV-24) > CSV-04: empty or whitespace geo='' / geo=%20 / q='' / q=%20 -> DENY
+AssertionError: expected [Function] to throw error matching /ACQUISITION_GEO_REQUIRED/ but got 'ACQUISITION_GEO_MISMATCH: Acquisition…'
+
+- Expected:
+/ACQUISITION_GEO_REQUIRED/
+
++ Received:
+"ACQUISITION_GEO_MISMATCH: Acquisition URL geo '' does not match authority geography 'US'."
+
+ ❯ tests/unit/kh02/v19_3_3_3_OfficialTrendsQueryGeoAndGoogleScoreTruth.test.ts:272:11
+    270|         expect(() =>
+    271|           validateOfficialGoogleTrendsAcquisitionUrl(emptyGeoUrl, "aut…
+    272|         ).toThrow(/ACQUISITION_GEO_REQUIRED/);
+       |           ^
+    273|       }
+    274|       for (const emptyQUrl of [
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/29]⎯
+
+ FAIL  tests/unit/kh02/v19_3_3_3_OfficialTrendsQueryGeoAndGoogleScoreTruth.test.ts > KH-02 V12.4.3.7.19.3.3.3 — Strict Google Trends q/geo Origin Binding + No-False-Google-Platform-Score > Part 1: P1-A — Official Google Trends Explore URL `q` & `geo` Strict Origin Binding (CSV-01..CSV-24) > CSV-05: duplicated geo parameters (geo=US&geo=GB or geo=US&geo=US) -> DENY with AMBIGUOUS_ACQUISITION_PARAMETERS
+AssertionError: expected [Function] to throw an error
+
+- Expected:
+null
+
++ Received:
+undefined
+
+ ❯ tests/unit/kh02/v19_3_3_3_OfficialTrendsQueryGeoAndGoogleScoreTruth.test.ts:291:9
+    289|           "US"
+    290|         )
+    291|       ).toThrow(/AMBIGUOUS_ACQUISITION_PARAMETERS/);
+       |         ^
+    292|
+    293|       expect(() =>
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/29]⎯
+
+ FAIL  tests/unit/kh02/v19_3_3_3_OfficialTrendsQueryGeoAndGoogleScoreTruth.test.ts > KH-02 V12.4.3.7.19.3.3.3 — Strict Google Trends q/geo Origin Binding + No-False-Google-Platform-Score > Part 1: P1-A — Official Google Trends Explore URL `q` & `geo` Strict Origin Binding (CSV-01..CSV-24) > CSV-06: duplicated q parameters (q=cat%20feeder&q=dog%20feeder) -> DENY with AMBIGUOUS_ACQUISITION_PARAMETERS
+AssertionError: expected [Function] to throw an error
+
+- Expected:
+null
+
++ Received:
+undefined
+
+ ❯ tests/unit/kh02/v19_3_3_3_OfficialTrendsQueryGeoAndGoogleScoreTruth.test.ts:309:9
+    307|           "US"
+    308|         )
+    309|       ).toThrow(/AMBIGUOUS_ACQUISITION_PARAMETERS/);
+       |         ^
+    310|     });
+    311|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/29]⎯
+
+ FAIL  tests/unit/kh02/v19_3_3_3_OfficialTrendsQueryGeoAndGoogleScoreTruth.test.ts > KH-02 V12.4.3.7.19.3.3.3 — Strict Google Trends q/geo Origin Binding + No-False-Google-Platform-Score > Part 1: P1-A — Official Google Trends Explore URL `q` & `geo` Strict Origin Binding (CSV-01..CSV-24) > CSV-08: ambiguous US subregion (geo=US-CA or geo=US-NY) vs explicit US -> policy-driven DENY with ACQUISITION_GEO_MISMATCH
+AssertionError: expected [Function] to throw an error
+
+- Expected:
+null
+
++ Received:
+undefined
+
+ ❯ tests/unit/kh02/v19_3_3_3_OfficialTrendsQueryGeoAndGoogleScoreTruth.test.ts:340:9
+    338|           "US-CA"
+    339|         )
+    340|       ).toThrow(/ACQUISITION_GEO_MISMATCH/);
+       |         ^
+    341|     });
+    342|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[7/29]⎯
+
+ FAIL  tests/unit/kh02/v19_3_3_3_OfficialTrendsQueryGeoAndGoogleScoreTruth.test.ts > KH-02 V12.4.3.7.19.3.3.3 — Strict Google Trends q/geo Origin Binding + No-False-Google-Platform-Score > Part 1: P1-A — Official Google Trends Explore URL `q` & `geo` Strict Origin Binding (CSV-01..CSV-24) > CSV-09: partial prefix/substring q='cat' vs expected 'cat feeder' -> DENY with ACQUISITION_QUERY_MISMATCH
+AssertionError: expected [Function] to throw an error
+
+- Expected:
+null
+
++ Received:
+undefined
+
+ ❯ tests/unit/kh02/v19_3_3_3_OfficialTrendsQueryGeoAndGoogleScoreTruth.test.ts:350:9
+    348|           "US"
+    349|         )
+    350|       ).toThrow(/ACQUISITION_QUERY_MISMATCH/);
+       |         ^
+    351|     });
+    352|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[8/29]⎯
+
+ FAIL  tests/unit/kh02/v19_3_3_3_OfficialTrendsQueryGeoAndGoogleScoreTruth.test.ts > KH-02 V12.4.3.7.19.3.3.3 — Strict Google Trends q/geo Origin Binding + No-False-Google-Platform-Score > Part 1: P1-A — Official Google Trends Explore URL `q` & `geo` Strict Origin Binding (CSV-01..CSV-24) > CSV-10: superstring q='cat feeder accessories' vs expected 'cat feeder' -> DENY with ACQUISITION_QUERY_MISMATCH
+AssertionError: expected [Function] to throw an error
+
+- Expected:
+null
+
++ Received:
+undefined
+
+ ❯ tests/unit/kh02/v19_3_3_3_OfficialTrendsQueryGeoAndGoogleScoreTruth.test.ts:360:9
+    358|           "US"
+    359|         )
+    360|       ).toThrow(/ACQUISITION_QUERY_MISMATCH/);
+       |         ^
+    361|     });
+    362|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[9/29]⎯
+
+ FAIL  tests/unit/kh02/v19_3_3_3_OfficialTrendsQueryGeoAndGoogleScoreTruth.test.ts > KH-02 V12.4.3.7.19.3.3.3 — Strict Google Trends q/geo Origin Binding + No-False-Google-Platform-Score > Part 1: P1-A — Official Google Trends Explore URL `q` & `geo` Strict Origin Binding (CSV-01..CSV-24) > CSV-12: double-encoded (%2520) or multi-keyword comma-separated q ('cat feeder,dog feeder') -> DENY
+AssertionError: expected [Function] to throw an error
+
+- Expected:
+null
+
++ Received:
+undefined
+
+ ❯ tests/unit/kh02/v19_3_3_3_OfficialTrendsQueryGeoAndGoogleScoreTruth.test.ts:396:9
+    394|           "US"
+    395|         )
+    396|       ).toThrow(/AMBIGUOUS_ACQUISITION_PARAMETERS|ACQUISITION_QUERY_MI…
+       |         ^
+    397|     });
+    398|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[10/29]⎯
+
+ FAIL  tests/unit/kh02/v19_3_3_3_OfficialTrendsQueryGeoAndGoogleScoreTruth.test.ts > KH-02 V12.4.3.7.19.3.3.3 — Strict Google Trends q/geo Origin Binding + No-False-Google-Platform-Score > Part 1: P1-A — Official Google Trends Explore URL `q` & `geo` Strict Origin Binding (CSV-01..CSV-24) > CSV-13: userinfo, evil host, http scheme, custom port, or non-Explore path (/trends/yis) -> DENY
+AssertionError: expected [Function] to throw an error
+ ❯ tests/unit/kh02/v19_3_3_3_OfficialTrendsQueryGeoAndGoogleScoreTruth.test.ts:411:11
+    409|         expect(() =>
+    410|           validateOfficialGoogleTrendsAcquisitionUrl(bad, "cat feeder"…
+    411|         ).toThrow();
+       |           ^
+    412|       }
+    413|     });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[11/29]⎯
+
+ FAIL  tests/unit/kh02/v19_3_3_3_OfficialTrendsQueryGeoAndGoogleScoreTruth.test.ts > KH-02 V12.4.3.7.19.3.3.3 — Strict Google Trends q/geo Origin Binding + No-False-Google-Platform-Score > Part 1: P1-A — Official Google Trends Explore URL `q` & `geo` Strict Origin Binding (CSV-01..CSV-24) > CSV-14: fragment-only query '#?geo=US&q=cat%20feeder' without real searchParams -> DENY
+AssertionError: expected [Function] to throw an error
+
+- Expected:
+null
+
++ Received:
+undefined
+
+ ❯ tests/unit/kh02/v19_3_3_3_OfficialTrendsQueryGeoAndGoogleScoreTruth.test.ts:422:9
+    420|           "US"
+    421|         )
+    422|       ).toThrow(/ACQUISITION_GEO_REQUIRED|ACQUISITION_QUERY_REQUIRED|A…
+       |         ^
+    423|     });
+    424|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[12/29]⎯
+
+ FAIL  tests/unit/kh02/v19_3_3_3_OfficialTrendsQueryGeoAndGoogleScoreTruth.test.ts > KH-02 V12.4.3.7.19.3.3.3 — Strict Google Trends q/geo Origin Binding + No-False-Google-Platform-Score > Part 1: P1-A — Official Google Trends Explore URL `q` & `geo` Strict Origin Binding (CSV-01..CSV-24) > CSV-17: previously signed record missing q or geo on readback -> DENY even if HMAC signature matches stored fields
+AssertionError: expected true to be false // Object.is equality
+
+- Expected
++ Received
+
+- false
++ true
+
+ ❯ tests/unit/kh02/v19_3_3_3_OfficialTrendsQueryGeoAndGoogleScoreTruth.test.ts:573:30
+    571|         evaluationScope: "BUSINESS",
+    572|       });
+    573|       expect(check.verified).toBe(false);
+       |                              ^
+    574|       expect(check.businessEligible).toBe(false);
+    575|     });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[13/29]⎯
+
+ FAIL  tests/unit/kh02/v19_3_3_3_OfficialTrendsQueryGeoAndGoogleScoreTruth.test.ts > KH-02 V12.4.3.7.19.3.3.3 — Strict Google Trends q/geo Origin Binding + No-False-Google-Platform-Score > Part 2: P1-B — Google Ads Multi-Platform Score & Confidence Require Verified Product Evidence (GSC-01..GSC-24) > GSC-01: supportingSourceTypes has GOOGLE_ADS but zero Google observations exist -> 0 Google points (score 8/20 from Meta only)
+AssertionError: expected 14 to be 8 // Object.is equality
+
+- Expected
++ Received
+
+- 8
++ 14
+
+ ❯ tests/unit/kh02/v19_3_3_3_OfficialTrendsQueryGeoAndGoogleScoreTruth.test.ts:938:59
+    936|
+    937|       const score = calculateKH02EvergreenScore({ candidate, demandSer…
+    938|       expect(score.pillars.multiPlatformValidation.score).toBe(8);
+       |                                                           ^
+    939|       expect(score.evidenceConfidence).toBe(50); // 15 (problemStateme…
+    940|       expect(score.strengths.some((s) => s.includes("2 independent med…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[14/29]⎯
+
+ FAIL  tests/unit/kh02/v19_3_3_3_OfficialTrendsQueryGeoAndGoogleScoreTruth.test.ts > KH-02 V12.4.3.7.19.3.3.3 — Strict Google Trends q/geo Origin Binding + No-False-Google-Platform-Score > Part 2: P1-B — Google Ads Multi-Platform Score & Confidence Require Verified Product Evidence (GSC-01..GSC-24) > GSC-02: Google observation has PDP + US market but providerVerified=false -> 0 Google points
+AssertionError: expected 14 to be 8 // Object.is equality
+
+- Expected
++ Received
+
+- 8
++ 14
+
+ ❯ tests/unit/kh02/v19_3_3_3_OfficialTrendsQueryGeoAndGoogleScoreTruth.test.ts:976:59
+    974|
+    975|       const score = calculateKH02EvergreenScore({ candidate, demandSer…
+    976|       expect(score.pillars.multiPlatformValidation.score).toBe(8);
+       |                                                           ^
+    977|       expect(score.evidenceConfidence).toBe(50);
+    978|     });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[15/29]⎯
+
+ FAIL  tests/unit/kh02/v19_3_3_3_OfficialTrendsQueryGeoAndGoogleScoreTruth.test.ts > KH-02 V12.4.3.7.19.3.3.3 — Strict Google Trends q/geo Origin Binding + No-False-Google-Platform-Score > Part 2: P1-B — Google Ads Multi-Platform Score & Confidence Require Verified Product Evidence (GSC-01..GSC-24) > GSC-03: Google observation has providerVerified=true but upstreamRequestVerified=false -> 0 Google points
+AssertionError: expected 6 to be +0 // Object.is equality
+
+- Expected
++ Received
+
+- 0
++ 6
+
+ ❯ tests/unit/kh02/v19_3_3_3_OfficialTrendsQueryGeoAndGoogleScoreTruth.test.ts:1003:59
+    1001|
+    1002|       const score = calculateKH02EvergreenScore({ candidate, demandSer…
+    1003|       expect(score.pillars.multiPlatformValidation.score).toBe(0);
+       |                                                           ^
+    1004|     });
+    1005|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[16/29]⎯
+
+ FAIL  tests/unit/kh02/v19_3_3_3_OfficialTrendsQueryGeoAndGoogleScoreTruth.test.ts > KH-02 V12.4.3.7.19.3.3.3 — Strict Google Trends q/geo Origin Binding + No-False-Google-Platform-Score > Part 2: P1-B — Google Ads Multi-Platform Score & Confidence Require Verified Product Evidence (GSC-01..GSC-24) > GSC-04: Google observation has upstreamRequestVerified=true but providerVerified=false -> 0 Google points
+AssertionError: expected 6 to be +0 // Object.is equality
+
+- Expected
++ Received
+
+- 0
++ 6
+
+ ❯ tests/unit/kh02/v19_3_3_3_OfficialTrendsQueryGeoAndGoogleScoreTruth.test.ts:1029:59
+    1027|
+    1028|       const score = calculateKH02EvergreenScore({ candidate, demandSer…
+    1029|       expect(score.pillars.multiPlatformValidation.score).toBe(0);
+       |                                                           ^
+    1030|     });
+    1031|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[17/29]⎯
+
+ FAIL  tests/unit/kh02/v19_3_3_3_OfficialTrendsQueryGeoAndGoogleScoreTruth.test.ts > KH-02 V12.4.3.7.19.3.3.3 — Strict Google Trends q/geo Origin Binding + No-False-Google-Platform-Score > Part 2: P1-B — Google Ads Multi-Platform Score & Confidence Require Verified Product Evidence (GSC-01..GSC-24) > GSC-05: string 'true' provenance flags ('true' instead of boolean true) -> 0 Google points
+AssertionError: expected 6 to be +0 // Object.is equality
+
+- Expected
++ Received
+
+- 0
++ 6
+
+ ❯ tests/unit/kh02/v19_3_3_3_OfficialTrendsQueryGeoAndGoogleScoreTruth.test.ts:1055:59
+    1053|
+    1054|       const score = calculateKH02EvergreenScore({ candidate, demandSer…
+    1055|       expect(score.pillars.multiPlatformValidation.score).toBe(0);
+       |                                                           ^
+    1056|     });
+    1057|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[18/29]⎯
+
+ FAIL  tests/unit/kh02/v19_3_3_3_OfficialTrendsQueryGeoAndGoogleScoreTruth.test.ts > KH-02 V12.4.3.7.19.3.3.3 — Strict Google Trends q/geo Origin Binding + No-False-Google-Platform-Score > Part 2: P1-B — Google Ads Multi-Platform Score & Confidence Require Verified Product Evidence (GSC-01..GSC-24) > GSC-06: local MCP verified with upstreamOriginStatus='UPSTREAM_NOT_ATTESTED' or provenanceTier='LOCAL_MCP_TOOL_RESULT_VERIFIED' -> 0 Google points
+AssertionError: expected 6 to be +0 // Object.is equality
+
+- Expected
++ Received
+
+- 0
++ 6
+
+ ❯ tests/unit/kh02/v19_3_3_3_OfficialTrendsQueryGeoAndGoogleScoreTruth.test.ts:1085:59
+    1083|
+    1084|       const score = calculateKH02EvergreenScore({ candidate, demandSer…
+    1085|       expect(score.pillars.multiPlatformValidation.score).toBe(0);
+       |                                                           ^
+    1086|     });
+    1087|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[19/29]⎯
+
+ FAIL  tests/unit/kh02/v19_3_3_3_OfficialTrendsQueryGeoAndGoogleScoreTruth.test.ts > KH-02 V12.4.3.7.19.3.3.3 — Strict Google Trends q/geo Origin Binding + No-False-Google-Platform-Score > Part 2: P1-B — Google Ads Multi-Platform Score & Confidence Require Verified Product Evidence (GSC-01..GSC-24) > GSC-07: fabricated upstream requestId in MCP JSON without registered execution lineage -> 0 Google points
+AssertionError: expected 6 to be +0 // Object.is equality
+
+- Expected
++ Received
+
+- 0
++ 6
+
+ ❯ tests/unit/kh02/v19_3_3_3_OfficialTrendsQueryGeoAndGoogleScoreTruth.test.ts:1132:59
+    1130|
+    1131|       const score = calculateKH02EvergreenScore({ candidate, demandSer…
+    1132|       expect(score.pillars.multiPlatformValidation.score).toBe(0);
+       |                                                           ^
+    1133|       expect(score.evidenceConfidence).toBe(35);
+    1134|     });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[20/29]⎯
+
+ FAIL  tests/unit/kh02/v19_3_3_3_OfficialTrendsQueryGeoAndGoogleScoreTruth.test.ts > KH-02 V12.4.3.7.19.3.3.3 — Strict Google Trends q/geo Origin Binding + No-False-Google-Platform-Score > Part 2: P1-B — Google Ads Multi-Platform Score & Confidence Require Verified Product Evidence (GSC-01..GSC-24) > GSC-08: GOOGLE_ADS observation with brand/home/collection/search URL -> 0 Google points even if upstream flags true
+AssertionError: expected 6 to be +0 // Object.is equality
+
+- Expected
++ Received
+
+- 0
++ 6
+
+ ❯ tests/unit/kh02/v19_3_3_3_OfficialTrendsQueryGeoAndGoogleScoreTruth.test.ts:1164:61
+    1162|         });
+    1163|         const score = calculateKH02EvergreenScore({ candidate, demandS…
+    1164|         expect(score.pillars.multiPlatformValidation.score).toBe(0);
+       |                                                             ^
+    1165|       }
+    1166|     });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[21/29]⎯
+
+ FAIL  tests/unit/kh02/v19_3_3_3_OfficialTrendsQueryGeoAndGoogleScoreTruth.test.ts > KH-02 V12.4.3.7.19.3.3.3 — Strict Google Trends q/geo Origin Binding + No-False-Google-Platform-Score > Part 2: P1-B — Google Ads Multi-Platform Score & Confidence Require Verified Product Evidence (GSC-01..GSC-24) > GSC-10: related but wrong merchant/product/candidate URL -> 0 Google points
+AssertionError: expected 6 to be +0 // Object.is equality
+
+- Expected
++ Received
+
+- 0
++ 6
+
+ ❯ tests/unit/kh02/v19_3_3_3_OfficialTrendsQueryGeoAndGoogleScoreTruth.test.ts:1237:59
+    1235|
+    1236|       const score = calculateKH02EvergreenScore({ candidate: candidate…
+    1237|       expect(score.pillars.multiPlatformValidation.score).toBe(0);
+       |                                                           ^
+    1238|     });
+    1239|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[22/29]⎯
+
+ FAIL  tests/unit/kh02/v19_3_3_3_OfficialTrendsQueryGeoAndGoogleScoreTruth.test.ts > KH-02 V12.4.3.7.19.3.3.3 — Strict Google Trends q/geo Origin Binding + No-False-Google-Platform-Score > Part 2: P1-B — Google Ads Multi-Platform Score & Confidence Require Verified Product Evidence (GSC-01..GSC-24) > GSC-11: cached/replay/fixture Google observation marked as LIVE by outer wrapper -> 0 Google points
+AssertionError: expected 6 to be +0 // Object.is equality
+
+- Expected
++ Received
+
+- 0
++ 6
+
+ ❯ tests/unit/kh02/v19_3_3_3_OfficialTrendsQueryGeoAndGoogleScoreTruth.test.ts:1265:59
+    1263|
+    1264|       const score = calculateKH02EvergreenScore({ candidate: candidate…
+    1265|       expect(score.pillars.multiPlatformValidation.score).toBe(0);
+       |                                                           ^
+    1266|     });
+    1267|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[23/29]⎯
+
+ FAIL  tests/unit/kh02/v19_3_3_3_OfficialTrendsQueryGeoAndGoogleScoreTruth.test.ts > KH-02 V12.4.3.7.19.3.3.3 — Strict Google Trends q/geo Origin Binding + No-False-Google-Platform-Score > Part 2: P1-B — Google Ads Multi-Platform Score & Confidence Require Verified Product Evidence (GSC-01..GSC-24) > GSC-12: sourceObservations absent/null while supportingSourceTypes claims GOOGLE_ADS -> 0 Google points
+TypeError: Cannot read properties of null (reading 'some')
+ ❯ calculateKH02EvergreenScore src/services/kh02/scoring/evergreenOpportunityScoring.ts:636:42
+    634|   else if (uniqueAds === 1) pillarE_Score += 1;
+    635|
+    636|   if (c.videoUrl || c.sourceObservations.some((o) => o.media?.mediaTyp…
+       |                                          ^
+    637|     pillarE_Score += 5;
+    638|     confidencePoints += 10;
+ ❯ tests/unit/kh02/v19_3_3_3_OfficialTrendsQueryGeoAndGoogleScoreTruth.test.ts:1274:21
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[24/29]⎯
+
+ FAIL  tests/unit/kh02/v19_3_3_3_OfficialTrendsQueryGeoAndGoogleScoreTruth.test.ts > KH-02 V12.4.3.7.19.3.3.3 — Strict Google Trends q/geo Origin Binding + No-False-Google-Platform-Score > Part 2: P1-B — Google Ads Multi-Platform Score & Confidence Require Verified Product Evidence (GSC-01..GSC-24) > GSC-15: 1 verified META_ADS + 1 unverified GOOGLE_ADS -> Pillar C score 8/20
+AssertionError: expected 14 to be 8 // Object.is equality
+
+- Expected
++ Received
+
+- 8
++ 14
+
+ ❯ tests/unit/kh02/v19_3_3_3_OfficialTrendsQueryGeoAndGoogleScoreTruth.test.ts:1372:59
+    1370|
+    1371|       const score = calculateKH02EvergreenScore({ candidate, demandSer…
+    1372|       expect(score.pillars.multiPlatformValidation.score).toBe(8);
+       |                                                           ^
+    1373|       expect(score.pillars.multiPlatformValidation.maxWeight).toBe(20);
+    1374|     });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[25/29]⎯
+
+ FAIL  tests/unit/kh02/v19_3_3_3_OfficialTrendsQueryGeoAndGoogleScoreTruth.test.ts > KH-02 V12.4.3.7.19.3.3.3 — Strict Google Trends q/geo Origin Binding + No-False-Google-Platform-Score > Part 2: P1-B — Google Ads Multi-Platform Score & Confidence Require Verified Product Evidence (GSC-01..GSC-24) > GSC-18: no fake cross-platform strength, confidence, or platformCount across negative Google cases
+AssertionError: expected 14 to be 8 // Object.is equality
+
+- Expected
++ Received
+
+- 8
++ 14
+
+ ❯ tests/unit/kh02/v19_3_3_3_OfficialTrendsQueryGeoAndGoogleScoreTruth.test.ts:1473:59
+    1471|
+    1472|       const score = calculateKH02EvergreenScore({ candidate, demandSer…
+    1473|       expect(score.pillars.multiPlatformValidation.score).toBe(8);
+       |                                                           ^
+    1474|       expect(score.pillars.multiPlatformValidation.explanation).toCont…
+    1475|       expect(score.strengths.some((s) => s.includes("independent media…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[26/29]⎯
+
+ FAIL  tests/unit/kh02/v19_3_3_3_OfficialTrendsQueryGeoAndGoogleScoreTruth.test.ts > KH-02 V12.4.3.7.19.3.3.3 — Strict Google Trends q/geo Origin Binding + No-False-Google-Platform-Score > Part 2: P1-B — Google Ads Multi-Platform Score & Confidence Require Verified Product Evidence (GSC-01..GSC-24) > GSC-21: source aliases GOOGLE and GOOGLE_ADS_TRANSPARENCY normalized consistently; unsupported arbitrary source types ignored
+AssertionError: expected 14 to be 8 // Object.is equality
+
+- Expected
++ Received
+
+- 8
++ 14
+
+ ❯ tests/unit/kh02/v19_3_3_3_OfficialTrendsQueryGeoAndGoogleScoreTruth.test.ts:1561:59
+    1559|
+    1560|       const score = calculateKH02EvergreenScore({ candidate: candidate…
+    1561|       expect(score.pillars.multiPlatformValidation.score).toBe(8);
+       |                                                           ^
+    1562|       expect(score.pillars.multiPlatformValidation.explanation).toCont…
+    1563|       expect(score.strengths.some((s) => s.includes("independent media…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[27/29]⎯
+
+ FAIL  tests/unit/kh02/v19_3_3_3_OfficialTrendsQueryGeoAndGoogleScoreTruth.test.ts > KH-02 V12.4.3.7.19.3.3.3 — Strict Google Trends q/geo Origin Binding + No-False-Google-Platform-Score > Part 2: P1-B — Google Ads Multi-Platform Score & Confidence Require Verified Product Evidence (GSC-01..GSC-24) > GSC-22: missing metrics, malformed booleans, null PDP, partial US ('US-CA') -> fail closed without throwing
+AssertionError: expected [Function] to not throw an error but 'TypeError: Cannot read properties of …' was thrown
+
+- Expected:
+undefined
+
++ Received:
+"TypeError: Cannot read properties of null (reading 'media')"
+
+ ❯ tests/unit/kh02/v19_3_3_3_OfficialTrendsQueryGeoAndGoogleScoreTruth.test.ts:1586:13
+    1584|       expect(() =>
+    1585|         calculateKH02EvergreenScore({ candidate: malformedCandidate, d…
+    1586|       ).not.toThrow();
+       |             ^
+    1587|       const score = calculateKH02EvergreenScore({ candidate: malformed…
+    1588|       expect(score.pillars.multiPlatformValidation.score).toBe(0);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[28/29]⎯
+
+ FAIL  tests/unit/kh02/v19_3_3_3_OfficialTrendsQueryGeoAndGoogleScoreTruth.test.ts > KH-02 V12.4.3.7.19.3.3.3 — Strict Google Trends q/geo Origin Binding + No-False-Google-Platform-Score > Part 2: P1-B — Google Ads Multi-Platform Score & Confidence Require Verified Product Evidence (GSC-01..GSC-24) > GSC-23: snapshot/DB readback requalifyHistoricalEvergreenSnapshot preserves honest source confidence and demotes unverified winners
+AssertionError: expected [ { rank: 1, …(2) } ] to have a length of +0 but got 1
+
+- Expected
++ Received
+
+- 0
++ 1
+
+ ❯ tests/unit/kh02/v19_3_3_3_OfficialTrendsQueryGeoAndGoogleScoreTruth.test.ts:1631:46
+    1629|
+    1630|       const requalified = requalifyHistoricalEvergreenSnapshot(pollute…
+    1631|       expect(requalified.snapshot?.topThree).toHaveLength(0);
+       |                                              ^
+    1632|     });
+    1633|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[29/29]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  29 failed | 19 passed (48)
+   Start at  17:48:45
+   Duration  769ms (import 45%, transform 23%, tests 16%, setup 15%, worker 1%)
+
+JSON report written to /tmp/kh02_v19333_logs/PRE_FIX_RED_C0.json

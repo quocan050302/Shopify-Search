@@ -1,0 +1,228 @@
+{
+  "deliverableId": "04_GOOGLE_MULTI_PLATFORM_SCORE_RED_GREEN",
+  "patchVersion": "V12.4.3.7.19.3.3.3",
+  "baselineShaC0": "af1f6d0dcdbecc18ebbd3736f07c365b830f5b39",
+  "baselineTreeShaC0": "d9a0ca40cd719fa4c1dcd2491f29d9dd4eb72ee5",
+  "testedCodeShaC1": "4ac0df13cb190aac01ce6094caa299f0da1defe0",
+  "testedCodeTreeShaC1": "dfade8bcbc28da97aae4cfe5becc41d3d2063da8",
+  "testSuiteFile": "tests/unit/kh02/v19_3_3_3_OfficialTrendsQueryGeoAndGoogleScoreTruth.test.ts",
+  "rawLogReferences": {
+    "preFixRedJson": "reports/kh02/v19_3_3_3_trends_url_google_score_truth/logs/PRE_FIX_RED_C0.json",
+    "preFixRedLog": "reports/kh02/v19_3_3_3_trends_url_google_score_truth/logs/PRE_FIX_RED_C0.log",
+    "postFixGreenJson": "reports/kh02/v19_3_3_3_trends_url_google_score_truth/logs/POST_FIX_GREEN_C1.json",
+    "postFixGreenLog": "reports/kh02/v19_3_3_3_trends_url_google_score_truth/logs/POST_FIX_GREEN_C1.log"
+  },
+  "summaryCounts": {
+    "totalCases": 24,
+    "preFixC0FailedRed": 16,
+    "preFixC0PassedBaselineInvariants": 8,
+    "postFixC1PassedGreen": 24,
+    "postFixC1Failed": 0
+  },
+  "invariantsVerified": {
+    "supportingSourceTypesAloneGrantsZeroGooglePoints": true,
+    "stringBooleanOrNumericOneUpstreamFlagsRejected": true,
+    "localMcpToolResultTierGrantsZeroGooglePoints": true,
+    "nonPdpHomepageCollectionSearchUrlGrantsZeroGooglePoints": true,
+    "filterOnlyUsMarketGrantsZeroGooglePoints": true,
+    "wrongMerchantOrWrongProductPdpGrantsZeroGooglePoints": true,
+    "cachedReplayFixtureObservationGrantsZeroGooglePoints": true,
+    "duplicateVerifiedGoogleObservationsCountOnceMax6PillarCMax10Confidence": true,
+    "unsupportedArbitraryPlatformStringsIgnored": true,
+    "syntheticPositiveFixturesExplicitlyLabeledNotLiveEvidence": true
+  },
+  "cases": [
+    {
+      "caseId": "GSC-01",
+      "title": "GSC-01: supportingSourceTypes has GOOGLE_ADS but zero Google observations exist -> 0 Google points (score 8/20 from Meta only)",
+      "preFixC0Status": "FAILED",
+      "preFixC0FailureMessage": "AssertionError: expected 14 to be 8 // Object.is equality |     at /Users/macbook/Documents/Project_Github/Meta-Ads/Shopify-Search/tests/unit/kh02/v19_3_3_3_OfficialTrendsQueryGeoAndGoogleScoreTruth.test.ts:938:59 |     at file:///Users/macbook/Documents/Project_Github/Meta-Ads/Shopify-Search/node_modules/.pnpm/vitest@5.0.5_@types+node@20.19.43_vite@8.3.5_@types+node@20.19.43_esbuild@0.28.2_jiti@2.7.0_tsx@4.23.15_/node_modules/vitest/dist/chunks/run.BPv-BBRv.js:1632:35",
+      "postFixC1Status": "PASSED",
+      "durationMs": 1.07549999999992
+    },
+    {
+      "caseId": "GSC-02",
+      "title": "GSC-02: Google observation has PDP + US market but providerVerified=false -> 0 Google points",
+      "preFixC0Status": "FAILED",
+      "preFixC0FailureMessage": "AssertionError: expected 14 to be 8 // Object.is equality |     at /Users/macbook/Documents/Project_Github/Meta-Ads/Shopify-Search/tests/unit/kh02/v19_3_3_3_OfficialTrendsQueryGeoAndGoogleScoreTruth.test.ts:976:59 |     at file:///Users/macbook/Documents/Project_Github/Meta-Ads/Shopify-Search/node_modules/.pnpm/vitest@5.0.5_@types+node@20.19.43_vite@8.3.5_@types+node@20.19.43_esbuild@0.28.2_jiti@2.7.0_tsx@4.23.15_/node_modules/vitest/dist/chunks/run.BPv-BBRv.js:1632:35",
+      "postFixC1Status": "PASSED",
+      "durationMs": 0.2782919999999649
+    },
+    {
+      "caseId": "GSC-03",
+      "title": "GSC-03: Google observation has providerVerified=true but upstreamRequestVerified=false -> 0 Google points",
+      "preFixC0Status": "FAILED",
+      "preFixC0FailureMessage": "AssertionError: expected 6 to be +0 // Object.is equality |     at /Users/macbook/Documents/Project_Github/Meta-Ads/Shopify-Search/tests/unit/kh02/v19_3_3_3_OfficialTrendsQueryGeoAndGoogleScoreTruth.test.ts:1003:59 |     at file:///Users/macbook/Documents/Project_Github/Meta-Ads/Shopify-Search/node_modules/.pnpm/vitest@5.0.5_@types+node@20.19.43_vite@8.3.5_@types+node@20.19.43_esbuild@0.28.2_jiti@2.7.0_tsx@4.23.15_/node_modules/vitest/dist/chunks/run.BPv-BBRv.js:1632:35",
+      "postFixC1Status": "PASSED",
+      "durationMs": 0.6236249999999472
+    },
+    {
+      "caseId": "GSC-04",
+      "title": "GSC-04: Google observation has upstreamRequestVerified=true but providerVerified=false -> 0 Google points",
+      "preFixC0Status": "FAILED",
+      "preFixC0FailureMessage": "AssertionError: expected 6 to be +0 // Object.is equality |     at /Users/macbook/Documents/Project_Github/Meta-Ads/Shopify-Search/tests/unit/kh02/v19_3_3_3_OfficialTrendsQueryGeoAndGoogleScoreTruth.test.ts:1029:59 |     at file:///Users/macbook/Documents/Project_Github/Meta-Ads/Shopify-Search/node_modules/.pnpm/vitest@5.0.5_@types+node@20.19.43_vite@8.3.5_@types+node@20.19.43_esbuild@0.28.2_jiti@2.7.0_tsx@4.23.15_/node_modules/vitest/dist/chunks/run.BPv-BBRv.js:1632:35",
+      "postFixC1Status": "PASSED",
+      "durationMs": 0.6147920000000795
+    },
+    {
+      "caseId": "GSC-05",
+      "title": "GSC-05: string 'true' provenance flags ('true' instead of boolean true) -> 0 Google points",
+      "preFixC0Status": "FAILED",
+      "preFixC0FailureMessage": "AssertionError: expected 6 to be +0 // Object.is equality |     at /Users/macbook/Documents/Project_Github/Meta-Ads/Shopify-Search/tests/unit/kh02/v19_3_3_3_OfficialTrendsQueryGeoAndGoogleScoreTruth.test.ts:1055:59 |     at file:///Users/macbook/Documents/Project_Github/Meta-Ads/Shopify-Search/node_modules/.pnpm/vitest@5.0.5_@types+node@20.19.43_vite@8.3.5_@types+node@20.19.43_esbuild@0.28.2_jiti@2.7.0_tsx@4.23.15_/node_modules/vitest/dist/chunks/run.BPv-BBRv.js:1632:35",
+      "postFixC1Status": "PASSED",
+      "durationMs": 0.2637090000000626
+    },
+    {
+      "caseId": "GSC-06",
+      "title": "GSC-06: local MCP verified with upstreamOriginStatus='UPSTREAM_NOT_ATTESTED' or provenanceTier='LOCAL_MCP_TOOL_RESULT_VERIFIED' -> 0 Google points",
+      "preFixC0Status": "FAILED",
+      "preFixC0FailureMessage": "AssertionError: expected 6 to be +0 // Object.is equality |     at /Users/macbook/Documents/Project_Github/Meta-Ads/Shopify-Search/tests/unit/kh02/v19_3_3_3_OfficialTrendsQueryGeoAndGoogleScoreTruth.test.ts:1085:59 |     at file:///Users/macbook/Documents/Project_Github/Meta-Ads/Shopify-Search/node_modules/.pnpm/vitest@5.0.5_@types+node@20.19.43_vite@8.3.5_@types+node@20.19.43_esbuild@0.28.2_jiti@2.7.0_tsx@4.23.15_/node_modules/vitest/dist/chunks/run.BPv-BBRv.js:1632:35",
+      "postFixC1Status": "PASSED",
+      "durationMs": 0.24779199999989032
+    },
+    {
+      "caseId": "GSC-07",
+      "title": "GSC-07: fabricated upstream requestId in MCP JSON without registered execution lineage -> 0 Google points",
+      "preFixC0Status": "FAILED",
+      "preFixC0FailureMessage": "AssertionError: expected 6 to be +0 // Object.is equality |     at /Users/macbook/Documents/Project_Github/Meta-Ads/Shopify-Search/tests/unit/kh02/v19_3_3_3_OfficialTrendsQueryGeoAndGoogleScoreTruth.test.ts:1132:59 |     at file:///Users/macbook/Documents/Project_Github/Meta-Ads/Shopify-Search/node_modules/.pnpm/vitest@5.0.5_@types+node@20.19.43_vite@8.3.5_@types+node@20.19.43_esbuild@0.28.2_jiti@2.7.0_tsx@4.23.15_/node_modules/vitest/dist/chunks/run.BPv-BBRv.js:1632:35",
+      "postFixC1Status": "PASSED",
+      "durationMs": 1.1614999999999327
+    },
+    {
+      "caseId": "GSC-08",
+      "title": "GSC-08: GOOGLE_ADS observation with brand/home/collection/search URL -> 0 Google points even if upstream flags true",
+      "preFixC0Status": "FAILED",
+      "preFixC0FailureMessage": "AssertionError: expected 6 to be +0 // Object.is equality |     at /Users/macbook/Documents/Project_Github/Meta-Ads/Shopify-Search/tests/unit/kh02/v19_3_3_3_OfficialTrendsQueryGeoAndGoogleScoreTruth.test.ts:1164:61 |     at file:///Users/macbook/Documents/Project_Github/Meta-Ads/Shopify-Search/node_modules/.pnpm/vitest@5.0.5_@types+node@20.19.43_vite@8.3.5_@types+node@20.19.43_esbuild@0.28.2_jiti@2.7.0_tsx@4.23.15_/node_modules/vitest/dist/chunks/run.BPv-BBRv.js:1632:35",
+      "postFixC1Status": "PASSED",
+      "durationMs": 1.2098329999998896
+    },
+    {
+      "caseId": "GSC-09",
+      "title": "GSC-09: Google product URL but requested US filter only (marketProvenance FILTER_ONLY or verifiedDeliveryMarket null) -> 0 Google points",
+      "preFixC0Status": "PASSED",
+      "preFixC0FailureMessage": null,
+      "postFixC1Status": "PASSED",
+      "durationMs": 0.41641699999991033
+    },
+    {
+      "caseId": "GSC-10",
+      "title": "GSC-10: related but wrong merchant/product/candidate URL -> 0 Google points",
+      "preFixC0Status": "FAILED",
+      "preFixC0FailureMessage": "AssertionError: expected 6 to be +0 // Object.is equality |     at /Users/macbook/Documents/Project_Github/Meta-Ads/Shopify-Search/tests/unit/kh02/v19_3_3_3_OfficialTrendsQueryGeoAndGoogleScoreTruth.test.ts:1237:59 |     at file:///Users/macbook/Documents/Project_Github/Meta-Ads/Shopify-Search/node_modules/.pnpm/vitest@5.0.5_@types+node@20.19.43_vite@8.3.5_@types+node@20.19.43_esbuild@0.28.2_jiti@2.7.0_tsx@4.23.15_/node_modules/vitest/dist/chunks/run.BPv-BBRv.js:1632:35",
+      "postFixC1Status": "PASSED",
+      "durationMs": 0.7003330000000005
+    },
+    {
+      "caseId": "GSC-11",
+      "title": "GSC-11: cached/replay/fixture Google observation marked as LIVE by outer wrapper -> 0 Google points",
+      "preFixC0Status": "FAILED",
+      "preFixC0FailureMessage": "AssertionError: expected 6 to be +0 // Object.is equality |     at /Users/macbook/Documents/Project_Github/Meta-Ads/Shopify-Search/tests/unit/kh02/v19_3_3_3_OfficialTrendsQueryGeoAndGoogleScoreTruth.test.ts:1265:59 |     at file:///Users/macbook/Documents/Project_Github/Meta-Ads/Shopify-Search/node_modules/.pnpm/vitest@5.0.5_@types+node@20.19.43_vite@8.3.5_@types+node@20.19.43_esbuild@0.28.2_jiti@2.7.0_tsx@4.23.15_/node_modules/vitest/dist/chunks/run.BPv-BBRv.js:1632:35",
+      "postFixC1Status": "PASSED",
+      "durationMs": 0.3706250000000182
+    },
+    {
+      "caseId": "GSC-12",
+      "title": "GSC-12: sourceObservations absent/null while supportingSourceTypes claims GOOGLE_ADS -> 0 Google points",
+      "preFixC0Status": "FAILED",
+      "preFixC0FailureMessage": "TypeError: Cannot read properties of null (reading 'some') |     at calculateKH02EvergreenScore (/Users/macbook/Documents/Project_Github/Meta-Ads/Shopify-Search/src/services/kh02/scoring/evergreenOpportunityScoring.ts:636:42) |     at /Users/macbook/Documents/Project_Github/Meta-Ads/Shopify-Search/tests/unit/kh02/v19_3_3_3_OfficialTrendsQueryGeoAndGoogleScoreTruth.test.ts:1274:21",
+      "postFixC1Status": "PASSED",
+      "durationMs": 0.2857080000001133
+    },
+    {
+      "caseId": "GSC-13",
+      "title": "GSC-13: duplicate verified Google observations for same creative/product -> max +6 Pillar C and +10 confidence ONCE",
+      "preFixC0Status": "PASSED",
+      "preFixC0FailureMessage": null,
+      "postFixC1Status": "PASSED",
+      "durationMs": 0.4428330000000642
+    },
+    {
+      "caseId": "GSC-14",
+      "title": "GSC-14: 1 authentic independently upstream-attested US PDP Google obs (SYNTHETIC POSITIVE ENGINEERING TEST fixture) -> +6 Google",
+      "preFixC0Status": "PASSED",
+      "preFixC0FailureMessage": null,
+      "postFixC1Status": "PASSED",
+      "durationMs": 0.22683299999994233
+    },
+    {
+      "caseId": "GSC-15",
+      "title": "GSC-15: 1 verified META_ADS + 1 unverified GOOGLE_ADS -> Pillar C score 8/20",
+      "preFixC0Status": "FAILED",
+      "preFixC0FailureMessage": "AssertionError: expected 14 to be 8 // Object.is equality |     at /Users/macbook/Documents/Project_Github/Meta-Ads/Shopify-Search/tests/unit/kh02/v19_3_3_3_OfficialTrendsQueryGeoAndGoogleScoreTruth.test.ts:1372:59 |     at file:///Users/macbook/Documents/Project_Github/Meta-Ads/Shopify-Search/node_modules/.pnpm/vitest@5.0.5_@types+node@20.19.43_vite@8.3.5_@types+node@20.19.43_esbuild@0.28.2_jiti@2.7.0_tsx@4.23.15_/node_modules/vitest/dist/chunks/run.BPv-BBRv.js:1632:35",
+      "postFixC1Status": "PASSED",
+      "durationMs": 0.34875000000010914
+    },
+    {
+      "caseId": "GSC-16",
+      "title": "GSC-16: 1 verified META_ADS + 1 verified GOOGLE_ADS (SYNTHETIC POSITIVE ENGINEERING TEST fixture) -> Pillar C score 14/20",
+      "preFixC0Status": "PASSED",
+      "preFixC0FailureMessage": null,
+      "postFixC1Status": "PASSED",
+      "durationMs": 0.78774999999996
+    },
+    {
+      "caseId": "GSC-17",
+      "title": "GSC-17: unrelated Google observation while supportingSourceTypes lists GOOGLE_ADS -> 0 Google points",
+      "preFixC0Status": "PASSED",
+      "preFixC0FailureMessage": null,
+      "postFixC1Status": "PASSED",
+      "durationMs": 0.25287500000013097
+    },
+    {
+      "caseId": "GSC-18",
+      "title": "GSC-18: no fake cross-platform strength, confidence, or platformCount across negative Google cases",
+      "preFixC0Status": "FAILED",
+      "preFixC0FailureMessage": "AssertionError: expected 14 to be 8 // Object.is equality |     at /Users/macbook/Documents/Project_Github/Meta-Ads/Shopify-Search/tests/unit/kh02/v19_3_3_3_OfficialTrendsQueryGeoAndGoogleScoreTruth.test.ts:1473:59 |     at file:///Users/macbook/Documents/Project_Github/Meta-Ads/Shopify-Search/node_modules/.pnpm/vitest@5.0.5_@types+node@20.19.43_vite@8.3.5_@types+node@20.19.43_esbuild@0.28.2_jiti@2.7.0_tsx@4.23.15_/node_modules/vitest/dist/chunks/run.BPv-BBRv.js:1632:35",
+      "postFixC1Status": "PASSED",
+      "durationMs": 0.22095800000010968
+    },
+    {
+      "caseId": "GSC-19",
+      "title": "GSC-19: no G15 pass from 120-day Google ad creative longevity when demandSeries is empty",
+      "preFixC0Status": "PASSED",
+      "preFixC0FailureMessage": null,
+      "postFixC1Status": "PASSED",
+      "durationMs": 0.22841599999992468
+    },
+    {
+      "caseId": "GSC-20",
+      "title": "GSC-20: no G16 Top3 pass merely because Pillar C scores 14/20 when G15 demand history is absent",
+      "preFixC0Status": "PASSED",
+      "preFixC0FailureMessage": null,
+      "postFixC1Status": "PASSED",
+      "durationMs": 0.5264159999999265
+    },
+    {
+      "caseId": "GSC-21",
+      "title": "GSC-21: source aliases GOOGLE and GOOGLE_ADS_TRANSPARENCY normalized consistently; unsupported arbitrary source types ignored",
+      "preFixC0Status": "FAILED",
+      "preFixC0FailureMessage": "AssertionError: expected 14 to be 8 // Object.is equality |     at /Users/macbook/Documents/Project_Github/Meta-Ads/Shopify-Search/tests/unit/kh02/v19_3_3_3_OfficialTrendsQueryGeoAndGoogleScoreTruth.test.ts:1561:59 |     at file:///Users/macbook/Documents/Project_Github/Meta-Ads/Shopify-Search/node_modules/.pnpm/vitest@5.0.5_@types+node@20.19.43_vite@8.3.5_@types+node@20.19.43_esbuild@0.28.2_jiti@2.7.0_tsx@4.23.15_/node_modules/vitest/dist/chunks/run.BPv-BBRv.js:1632:35",
+      "postFixC1Status": "PASSED",
+      "durationMs": 0.33462499999996
+    },
+    {
+      "caseId": "GSC-22",
+      "title": "GSC-22: missing metrics, malformed booleans, null PDP, partial US ('US-CA') -> fail closed without throwing",
+      "preFixC0Status": "FAILED",
+      "preFixC0FailureMessage": "AssertionError: expected [Function] to not throw an error but 'TypeError: Cannot read properties of …' was thrown |     at Proxy.<anonymous> (file:///Users/macbook/Documents/Project_Github/Meta-Ads/Shopify-Search/node_modules/.pnpm/vitest@5.0.5_@types+node@20.19.43_vite@8.3.5_@types+node@20.19.43_esbuild@0.28.2_jiti@2.7.0_tsx@4.23.15_/node_modules/vitest/dist/chunks/index.aTZaPVhf.js:2303:114) |     at Proxy.<anonymous> (file:///Users/macbook/Documents/Project_Github/Meta-Ads/Shopify-Search/node_modules/.pnpm/vitest@5.0.5_@types+node@20.19.43_vite@8.3.5_@types+node@20.19.43_esbuild@0.28.2_jiti@2.7.0_tsx@4.23.15_/node_modules/vitest/dist/chunks/index.aTZaPVhf.js:1958:14)",
+      "postFixC1Status": "PASSED",
+      "durationMs": 0.2625000000000455
+    },
+    {
+      "caseId": "GSC-23",
+      "title": "GSC-23: snapshot/DB readback requalifyHistoricalEvergreenSnapshot preserves honest source confidence and demotes unverified winners",
+      "preFixC0Status": "FAILED",
+      "preFixC0FailureMessage": "AssertionError: expected [ { rank: 1, …(2) } ] to have a length of +0 but got 1 |     at Proxy.<anonymous> (file:///Users/macbook/Documents/Project_Github/Meta-Ads/Shopify-Search/node_modules/.pnpm/vitest@5.0.5_@types+node@20.19.43_vite@8.3.5_@types+node@20.19.43_esbuild@0.28.2_jiti@2.7.0_tsx@4.23.15_/node_modules/vitest/dist/chunks/index.aTZaPVhf.js:2163:20) |     at Proxy.<anonymous> (file:///Users/macbook/Documents/Project_Github/Meta-Ads/Shopify-Search/node_modules/.pnpm/vitest@5.0.5_@types+node@20.19.43_vite@8.3.5_@types+node@20.19.43_esbuild@0.28.2_jiti@2.7.0_tsx@4.23.15_/node_modules/vitest/dist/chunks/index.aTZaPVhf.js:1958:14)",
+      "postFixC1Status": "PASSED",
+      "durationMs": 0.5297920000000431
+    },
+    {
+      "caseId": "GSC-24",
+      "title": "GSC-24: repeated ad placements across Meta & Google for one merchant SKU collapse to one canonical product family",
+      "preFixC0Status": "PASSED",
+      "preFixC0FailureMessage": null,
+      "postFixC1Status": "PASSED",
+      "durationMs": 18.63824999999997
+    }
+  ]
+}

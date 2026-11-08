@@ -1,0 +1,232 @@
+{
+  "deliverableId": "03_CSV_Q_GEO_ADVERSARIAL_RED_GREEN",
+  "patchVersion": "V12.4.3.7.19.3.3.3",
+  "baselineShaC0": "af1f6d0dcdbecc18ebbd3736f07c365b830f5b39",
+  "baselineTreeShaC0": "d9a0ca40cd719fa4c1dcd2491f29d9dd4eb72ee5",
+  "testedCodeShaC1": "4ac0df13cb190aac01ce6094caa299f0da1defe0",
+  "testedCodeTreeShaC1": "dfade8bcbc28da97aae4cfe5becc41d3d2063da8",
+  "testSuiteFile": "tests/unit/kh02/v19_3_3_3_OfficialTrendsQueryGeoAndGoogleScoreTruth.test.ts",
+  "rawLogReferences": {
+    "preFixRedJson": "reports/kh02/v19_3_3_3_trends_url_google_score_truth/logs/PRE_FIX_RED_C0.json",
+    "preFixRedLog": "reports/kh02/v19_3_3_3_trends_url_google_score_truth/logs/PRE_FIX_RED_C0.log",
+    "postFixGreenJson": "reports/kh02/v19_3_3_3_trends_url_google_score_truth/logs/POST_FIX_GREEN_C1.json",
+    "postFixGreenLog": "reports/kh02/v19_3_3_3_trends_url_google_score_truth/logs/POST_FIX_GREEN_C1.log"
+  },
+  "summaryCounts": {
+    "totalCases": 24,
+    "preFixC0FailedRed": 13,
+    "preFixC0PassedBaselineInvariants": 11,
+    "postFixC1PassedGreen": 24,
+    "postFixC1Failed": 0
+  },
+  "invariantsVerified": {
+    "missingGeoRejected": true,
+    "emptyGeoRejected": true,
+    "nonUsAndSubregionGeoRejected": true,
+    "duplicateGeoParamsRejected": true,
+    "missingQRejected": true,
+    "emptyQRejected": true,
+    "unrelatedQRejected": true,
+    "prefixSubstringQRejected": true,
+    "superstringQRejected": true,
+    "duplicateQParamsRejected": true,
+    "doubleEncodedOrMultiKeywordQRejected": true,
+    "fragmentOnlyQueryRejected": true,
+    "readbackRevalidatesQAndGeoEvenIfSigned": true,
+    "providerOriginVerifiedAlwaysFalseForCsv": true
+  },
+  "cases": [
+    {
+      "caseId": "CSV-01",
+      "title": "CSV-01: missing geo parameter (URL has valid q) -> DENY with ACQUISITION_GEO_REQUIRED",
+      "preFixC0Status": "FAILED",
+      "preFixC0FailureMessage": "AssertionError: expected [Function] to throw an error |     at Proxy.<anonymous> (file:///Users/macbook/Documents/Project_Github/Meta-Ads/Shopify-Search/node_modules/.pnpm/vitest@5.0.5_@types+node@20.19.43_vite@8.3.5_@types+node@20.19.43_esbuild@0.28.2_jiti@2.7.0_tsx@4.23.15_/node_modules/vitest/dist/chunks/index.aTZaPVhf.js:2303:114) |     at Proxy.<anonymous> (file:///Users/macbook/Documents/Project_Github/Meta-Ads/Shopify-Search/node_modules/.pnpm/vitest@5.0.5_@types+node@20.19.43_vite@8.3.5_@types+node@20.19.43_esbuild@0.28.2_jiti@2.7.0_tsx@4.23.15_/node_modules/vitest/dist/chunks/index.aTZaPVhf.js:1958:14)",
+      "postFixC1Status": "PASSED",
+      "durationMs": 12.633084000000053
+    },
+    {
+      "caseId": "CSV-02",
+      "title": "CSV-02: missing q parameter (URL has valid geo) -> DENY with ACQUISITION_QUERY_REQUIRED",
+      "preFixC0Status": "FAILED",
+      "preFixC0FailureMessage": "AssertionError: expected [Function] to throw an error |     at Proxy.<anonymous> (file:///Users/macbook/Documents/Project_Github/Meta-Ads/Shopify-Search/node_modules/.pnpm/vitest@5.0.5_@types+node@20.19.43_vite@8.3.5_@types+node@20.19.43_esbuild@0.28.2_jiti@2.7.0_tsx@4.23.15_/node_modules/vitest/dist/chunks/index.aTZaPVhf.js:2303:114) |     at Proxy.<anonymous> (file:///Users/macbook/Documents/Project_Github/Meta-Ads/Shopify-Search/node_modules/.pnpm/vitest@5.0.5_@types+node@20.19.43_vite@8.3.5_@types+node@20.19.43_esbuild@0.28.2_jiti@2.7.0_tsx@4.23.15_/node_modules/vitest/dist/chunks/index.aTZaPVhf.js:1958:14)",
+      "postFixC1Status": "PASSED",
+      "durationMs": 1.9754590000000007
+    },
+    {
+      "caseId": "CSV-03",
+      "title": "CSV-03: neither q nor geo in Explore URL -> DENY",
+      "preFixC0Status": "FAILED",
+      "preFixC0FailureMessage": "AssertionError: expected [Function] to throw an error |     at Proxy.<anonymous> (file:///Users/macbook/Documents/Project_Github/Meta-Ads/Shopify-Search/node_modules/.pnpm/vitest@5.0.5_@types+node@20.19.43_vite@8.3.5_@types+node@20.19.43_esbuild@0.28.2_jiti@2.7.0_tsx@4.23.15_/node_modules/vitest/dist/chunks/index.aTZaPVhf.js:2303:114) |     at Proxy.<anonymous> (file:///Users/macbook/Documents/Project_Github/Meta-Ads/Shopify-Search/node_modules/.pnpm/vitest@5.0.5_@types+node@20.19.43_vite@8.3.5_@types+node@20.19.43_esbuild@0.28.2_jiti@2.7.0_tsx@4.23.15_/node_modules/vitest/dist/chunks/index.aTZaPVhf.js:1958:14)",
+      "postFixC1Status": "PASSED",
+      "durationMs": 0.43441699999993943
+    },
+    {
+      "caseId": "CSV-04",
+      "title": "CSV-04: empty or whitespace geo='' / geo=%20 / q='' / q=%20 -> DENY",
+      "preFixC0Status": "FAILED",
+      "preFixC0FailureMessage": "AssertionError: expected [Function] to throw error matching /ACQUISITION_GEO_REQUIRED/ but got 'ACQUISITION_GEO_MISMATCH: Acquisition…' |     at Proxy.<anonymous> (file:///Users/macbook/Documents/Project_Github/Meta-Ads/Shopify-Search/node_modules/.pnpm/vitest@5.0.5_@types+node@20.19.43_vite@8.3.5_@types+node@20.19.43_esbuild@0.28.2_jiti@2.7.0_tsx@4.23.15_/node_modules/vitest/dist/chunks/index.aTZaPVhf.js:2303:114) |     at Proxy.<anonymous> (file:///Users/macbook/Documents/Project_Github/Meta-Ads/Shopify-Search/node_modules/.pnpm/vitest@5.0.5_@types+node@20.19.43_vite@8.3.5_@types+node@20.19.43_esbuild@0.28.2_jiti@2.7.0_tsx@4.23.15_/node_modules/vitest/dist/chunks/index.aTZaPVhf.js:1958:14)",
+      "postFixC1Status": "PASSED",
+      "durationMs": 0.7407500000001619
+    },
+    {
+      "caseId": "CSV-05",
+      "title": "CSV-05: duplicated geo parameters (geo=US&geo=GB or geo=US&geo=US) -> DENY with AMBIGUOUS_ACQUISITION_PARAMETERS",
+      "preFixC0Status": "FAILED",
+      "preFixC0FailureMessage": "AssertionError: expected [Function] to throw an error |     at Proxy.<anonymous> (file:///Users/macbook/Documents/Project_Github/Meta-Ads/Shopify-Search/node_modules/.pnpm/vitest@5.0.5_@types+node@20.19.43_vite@8.3.5_@types+node@20.19.43_esbuild@0.28.2_jiti@2.7.0_tsx@4.23.15_/node_modules/vitest/dist/chunks/index.aTZaPVhf.js:2303:114) |     at Proxy.<anonymous> (file:///Users/macbook/Documents/Project_Github/Meta-Ads/Shopify-Search/node_modules/.pnpm/vitest@5.0.5_@types+node@20.19.43_vite@8.3.5_@types+node@20.19.43_esbuild@0.28.2_jiti@2.7.0_tsx@4.23.15_/node_modules/vitest/dist/chunks/index.aTZaPVhf.js:1958:14)",
+      "postFixC1Status": "PASSED",
+      "durationMs": 0.6730830000001333
+    },
+    {
+      "caseId": "CSV-06",
+      "title": "CSV-06: duplicated q parameters (q=cat%20feeder&q=dog%20feeder) -> DENY with AMBIGUOUS_ACQUISITION_PARAMETERS",
+      "preFixC0Status": "FAILED",
+      "preFixC0FailureMessage": "AssertionError: expected [Function] to throw an error |     at Proxy.<anonymous> (file:///Users/macbook/Documents/Project_Github/Meta-Ads/Shopify-Search/node_modules/.pnpm/vitest@5.0.5_@types+node@20.19.43_vite@8.3.5_@types+node@20.19.43_esbuild@0.28.2_jiti@2.7.0_tsx@4.23.15_/node_modules/vitest/dist/chunks/index.aTZaPVhf.js:2303:114) |     at Proxy.<anonymous> (file:///Users/macbook/Documents/Project_Github/Meta-Ads/Shopify-Search/node_modules/.pnpm/vitest@5.0.5_@types+node@20.19.43_vite@8.3.5_@types+node@20.19.43_esbuild@0.28.2_jiti@2.7.0_tsx@4.23.15_/node_modules/vitest/dist/chunks/index.aTZaPVhf.js:1958:14)",
+      "postFixC1Status": "PASSED",
+      "durationMs": 0.26766699999984667
+    },
+    {
+      "caseId": "CSV-07",
+      "title": "CSV-07: non-US geo (GB, CA, WW) when expected US -> DENY with ACQUISITION_GEO_MISMATCH",
+      "preFixC0Status": "PASSED",
+      "preFixC0FailureMessage": null,
+      "postFixC1Status": "PASSED",
+      "durationMs": 0.4963340000001608
+    },
+    {
+      "caseId": "CSV-08",
+      "title": "CSV-08: ambiguous US subregion (geo=US-CA or geo=US-NY) vs explicit US -> policy-driven DENY with ACQUISITION_GEO_MISMATCH",
+      "preFixC0Status": "FAILED",
+      "preFixC0FailureMessage": "AssertionError: expected [Function] to throw an error |     at Proxy.<anonymous> (file:///Users/macbook/Documents/Project_Github/Meta-Ads/Shopify-Search/node_modules/.pnpm/vitest@5.0.5_@types+node@20.19.43_vite@8.3.5_@types+node@20.19.43_esbuild@0.28.2_jiti@2.7.0_tsx@4.23.15_/node_modules/vitest/dist/chunks/index.aTZaPVhf.js:2303:114) |     at Proxy.<anonymous> (file:///Users/macbook/Documents/Project_Github/Meta-Ads/Shopify-Search/node_modules/.pnpm/vitest@5.0.5_@types+node@20.19.43_vite@8.3.5_@types+node@20.19.43_esbuild@0.28.2_jiti@2.7.0_tsx@4.23.15_/node_modules/vitest/dist/chunks/index.aTZaPVhf.js:1958:14)",
+      "postFixC1Status": "PASSED",
+      "durationMs": 0.5524159999999938
+    },
+    {
+      "caseId": "CSV-09",
+      "title": "CSV-09: partial prefix/substring q='cat' vs expected 'cat feeder' -> DENY with ACQUISITION_QUERY_MISMATCH",
+      "preFixC0Status": "FAILED",
+      "preFixC0FailureMessage": "AssertionError: expected [Function] to throw an error |     at Proxy.<anonymous> (file:///Users/macbook/Documents/Project_Github/Meta-Ads/Shopify-Search/node_modules/.pnpm/vitest@5.0.5_@types+node@20.19.43_vite@8.3.5_@types+node@20.19.43_esbuild@0.28.2_jiti@2.7.0_tsx@4.23.15_/node_modules/vitest/dist/chunks/index.aTZaPVhf.js:2303:114) |     at Proxy.<anonymous> (file:///Users/macbook/Documents/Project_Github/Meta-Ads/Shopify-Search/node_modules/.pnpm/vitest@5.0.5_@types+node@20.19.43_vite@8.3.5_@types+node@20.19.43_esbuild@0.28.2_jiti@2.7.0_tsx@4.23.15_/node_modules/vitest/dist/chunks/index.aTZaPVhf.js:1958:14)",
+      "postFixC1Status": "PASSED",
+      "durationMs": 0.9981669999999667
+    },
+    {
+      "caseId": "CSV-10",
+      "title": "CSV-10: superstring q='cat feeder accessories' vs expected 'cat feeder' -> DENY with ACQUISITION_QUERY_MISMATCH",
+      "preFixC0Status": "FAILED",
+      "preFixC0FailureMessage": "AssertionError: expected [Function] to throw an error |     at Proxy.<anonymous> (file:///Users/macbook/Documents/Project_Github/Meta-Ads/Shopify-Search/node_modules/.pnpm/vitest@5.0.5_@types+node@20.19.43_vite@8.3.5_@types+node@20.19.43_esbuild@0.28.2_jiti@2.7.0_tsx@4.23.15_/node_modules/vitest/dist/chunks/index.aTZaPVhf.js:2303:114) |     at Proxy.<anonymous> (file:///Users/macbook/Documents/Project_Github/Meta-Ads/Shopify-Search/node_modules/.pnpm/vitest@5.0.5_@types+node@20.19.43_vite@8.3.5_@types+node@20.19.43_esbuild@0.28.2_jiti@2.7.0_tsx@4.23.15_/node_modules/vitest/dist/chunks/index.aTZaPVhf.js:1958:14)",
+      "postFixC1Status": "PASSED",
+      "durationMs": 0.7861659999998665
+    },
+    {
+      "caseId": "CSV-11",
+      "title": "CSV-11: encoded/Unicode canonical-equivalent keyword (+ or %20 or case difference) -> ACCEPT only when whole normalized term matches",
+      "preFixC0Status": "PASSED",
+      "preFixC0FailureMessage": null,
+      "postFixC1Status": "PASSED",
+      "durationMs": 0.8988339999998516
+    },
+    {
+      "caseId": "CSV-12",
+      "title": "CSV-12: double-encoded (%2520) or multi-keyword comma-separated q ('cat feeder,dog feeder') -> DENY",
+      "preFixC0Status": "FAILED",
+      "preFixC0FailureMessage": "AssertionError: expected [Function] to throw an error |     at Proxy.<anonymous> (file:///Users/macbook/Documents/Project_Github/Meta-Ads/Shopify-Search/node_modules/.pnpm/vitest@5.0.5_@types+node@20.19.43_vite@8.3.5_@types+node@20.19.43_esbuild@0.28.2_jiti@2.7.0_tsx@4.23.15_/node_modules/vitest/dist/chunks/index.aTZaPVhf.js:2303:114) |     at Proxy.<anonymous> (file:///Users/macbook/Documents/Project_Github/Meta-Ads/Shopify-Search/node_modules/.pnpm/vitest@5.0.5_@types+node@20.19.43_vite@8.3.5_@types+node@20.19.43_esbuild@0.28.2_jiti@2.7.0_tsx@4.23.15_/node_modules/vitest/dist/chunks/index.aTZaPVhf.js:1958:14)",
+      "postFixC1Status": "PASSED",
+      "durationMs": 0.5737919999999122
+    },
+    {
+      "caseId": "CSV-13",
+      "title": "CSV-13: userinfo, evil host, http scheme, custom port, or non-Explore path (/trends/yis) -> DENY",
+      "preFixC0Status": "FAILED",
+      "preFixC0FailureMessage": "AssertionError: expected [Function] to throw an error |     at Proxy.<anonymous> (file:///Users/macbook/Documents/Project_Github/Meta-Ads/Shopify-Search/node_modules/.pnpm/vitest@5.0.5_@types+node@20.19.43_vite@8.3.5_@types+node@20.19.43_esbuild@0.28.2_jiti@2.7.0_tsx@4.23.15_/node_modules/vitest/dist/chunks/index.aTZaPVhf.js:2303:114) |     at Proxy.<anonymous> (file:///Users/macbook/Documents/Project_Github/Meta-Ads/Shopify-Search/node_modules/.pnpm/vitest@5.0.5_@types+node@20.19.43_vite@8.3.5_@types+node@20.19.43_esbuild@0.28.2_jiti@2.7.0_tsx@4.23.15_/node_modules/vitest/dist/chunks/index.aTZaPVhf.js:1958:14)",
+      "postFixC1Status": "PASSED",
+      "durationMs": 0.45591699999999946
+    },
+    {
+      "caseId": "CSV-14",
+      "title": "CSV-14: fragment-only query '#?geo=US&q=cat%20feeder' without real searchParams -> DENY",
+      "preFixC0Status": "FAILED",
+      "preFixC0FailureMessage": "AssertionError: expected [Function] to throw an error |     at Proxy.<anonymous> (file:///Users/macbook/Documents/Project_Github/Meta-Ads/Shopify-Search/node_modules/.pnpm/vitest@5.0.5_@types+node@20.19.43_vite@8.3.5_@types+node@20.19.43_esbuild@0.28.2_jiti@2.7.0_tsx@4.23.15_/node_modules/vitest/dist/chunks/index.aTZaPVhf.js:2303:114) |     at Proxy.<anonymous> (file:///Users/macbook/Documents/Project_Github/Meta-Ads/Shopify-Search/node_modules/.pnpm/vitest@5.0.5_@types+node@20.19.43_vite@8.3.5_@types+node@20.19.43_esbuild@0.28.2_jiti@2.7.0_tsx@4.23.15_/node_modules/vitest/dist/chunks/index.aTZaPVhf.js:1958:14)",
+      "postFixC1Status": "PASSED",
+      "durationMs": 0.4482500000001437
+    },
+    {
+      "caseId": "CSV-15",
+      "title": "CSV-15: correctly bound q+geo with real review chain -> positive controlled pass with providerOriginVerified=false",
+      "preFixC0Status": "PASSED",
+      "preFixC0FailureMessage": null,
+      "postFixC1Status": "PASSED",
+      "durationMs": 2.927500000000009
+    },
+    {
+      "caseId": "CSV-16",
+      "title": "CSV-16: signed record altered q or geo in acquisitionSourceUrl on disk after issue -> DENY (INVALID_SIGNATURE)",
+      "preFixC0Status": "PASSED",
+      "preFixC0FailureMessage": null,
+      "postFixC1Status": "PASSED",
+      "durationMs": 1.5302499999997963
+    },
+    {
+      "caseId": "CSV-17",
+      "title": "CSV-17: previously signed record missing q or geo on readback -> DENY even if HMAC signature matches stored fields",
+      "preFixC0Status": "FAILED",
+      "preFixC0FailureMessage": "AssertionError: expected true to be false // Object.is equality |     at /Users/macbook/Documents/Project_Github/Meta-Ads/Shopify-Search/tests/unit/kh02/v19_3_3_3_OfficialTrendsQueryGeoAndGoogleScoreTruth.test.ts:573:30 |     at file:///Users/macbook/Documents/Project_Github/Meta-Ads/Shopify-Search/node_modules/.pnpm/vitest@5.0.5_@types+node@20.19.43_vite@8.3.5_@types+node@20.19.43_esbuild@0.28.2_jiti@2.7.0_tsx@4.23.15_/node_modules/vitest/dist/chunks/run.BPv-BBRv.js:1632:35",
+      "postFixC1Status": "PASSED",
+      "durationMs": 1.9337920000000395
+    },
+    {
+      "caseId": "CSV-18",
+      "title": "CSV-18: TEST_ONLY positive fixture in ENGINEERING scope -> passes engineeringEligible=true, businessEligible=false",
+      "preFixC0Status": "PASSED",
+      "preFixC0FailureMessage": null,
+      "postFixC1Status": "PASSED",
+      "durationMs": 1.4680419999999685
+    },
+    {
+      "caseId": "CSV-19",
+      "title": "CSV-19: same TEST_ONLY fixture evaluated in BUSINESS scope -> DENY",
+      "preFixC0Status": "PASSED",
+      "preFixC0FailureMessage": null,
+      "postFixC1Status": "PASSED",
+      "durationMs": 1.2131669999998849
+    },
+    {
+      "caseId": "CSV-20",
+      "title": "CSV-20: future import/approval cutoff (> asOfTimestamp) -> DENY with IMPORT_AFTER_CUTOFF",
+      "preFixC0Status": "PASSED",
+      "preFixC0FailureMessage": null,
+      "postFixC1Status": "PASSED",
+      "durationMs": 1.61654099999987
+    },
+    {
+      "caseId": "CSV-21",
+      "title": "CSV-21: wrong targetProductId, candidateId, workspaceId, or raw CSV SHA -> DENY",
+      "preFixC0Status": "PASSED",
+      "preFixC0FailureMessage": null,
+      "postFixC1Status": "PASSED",
+      "durationMs": 1.7487080000000788
+    },
+    {
+      "caseId": "CSV-22",
+      "title": "CSV-22: valid REAL approved CSV evidence but < 60 covered days -> G15 insufficient (eligibleForEvergreen=false)",
+      "preFixC0Status": "PASSED",
+      "preFixC0FailureMessage": null,
+      "postFixC1Status": "PASSED",
+      "durationMs": 3.971083000000135
+    },
+    {
+      "caseId": "CSV-23",
+      "title": "CSV-23: valid >=60d engineered TEST_ONLY fixture -> passes ENGINEERING scope only, denied in BUSINESS scope",
+      "preFixC0Status": "PASSED",
+      "preFixC0FailureMessage": null,
+      "postFixC1Status": "PASSED",
+      "durationMs": 8.474499999999807
+    },
+    {
+      "caseId": "CSV-24",
+      "title": "CSV-24: non-CSV source disguised as official -> DENY in evaluateDemandSourceAuthority",
+      "preFixC0Status": "PASSED",
+      "preFixC0FailureMessage": null,
+      "postFixC1Status": "PASSED",
+      "durationMs": 0.7073340000001735
+    }
+  ]
+}

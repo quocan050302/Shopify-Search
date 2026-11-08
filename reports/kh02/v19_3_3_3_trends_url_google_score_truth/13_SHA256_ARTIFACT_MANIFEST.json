@@ -1,0 +1,226 @@
+{
+  "deliverableId": "13_SHA256_ARTIFACT_MANIFEST",
+  "patchVersion": "V12.4.3.7.19.3.3.3",
+  "baselineShaC0": "af1f6d0dcdbecc18ebbd3736f07c365b830f5b39",
+  "baselineTreeShaC0": "d9a0ca40cd719fa4c1dcd2491f29d9dd4eb72ee5",
+  "testedCodeShaC1": "4ac0df13cb190aac01ce6094caa299f0da1defe0",
+  "testedCodeTreeShaC1": "dfade8bcbc28da97aae4cfe5becc41d3d2063da8",
+  "artifactCount": 43,
+  "artifacts": [
+    {
+      "path": "src/services/kh02/demand/durableCsvImportAuthority.ts",
+      "sha256": "fb1d058e37381b60e4473710c4791cfa2bc2ffb7a749ff6b849529f522b8a7dc",
+      "bytes": 53943
+    },
+    {
+      "path": "src/services/kh02/scoring/evergreenOpportunityScoring.ts",
+      "sha256": "d24351e8c5415c1a2810198f9673a8b421f53c57e354401788bfd79dc2fa19de",
+      "bytes": 37606
+    },
+    {
+      "path": "src/services/kh02/persistence/kh02PersistenceService.ts",
+      "sha256": "676dabc5f94c847c834bf73cce19351f2e036fa3f7468b27e2ce40ed41f85a7b",
+      "bytes": 104245
+    },
+    {
+      "path": "tests/unit/kh02/v19_3_3_3_OfficialTrendsQueryGeoAndGoogleScoreTruth.test.ts",
+      "sha256": "b9ee7bf3e18fad70cb92347da2a55d8ab6f5f9648b7ef8a5d840d2afff16b7c0",
+      "bytes": 69714
+    },
+    {
+      "path": "reports/kh02/v19_3_3_3_trends_url_google_score_truth/01_BASELINE_BRANCH_SHA_TREE_AND_CALL_GRAPH.md",
+      "sha256": "bcc9d97d16fe1c412b0c50312e10d8cdecdb318ca4ef079695fe99e6bf7812d6",
+      "bytes": 7645
+    },
+    {
+      "path": "reports/kh02/v19_3_3_3_trends_url_google_score_truth/02_CSV_Q_GEO_REQUIREMENT_AND_SCHEMA_V2_TRUST_AUDIT.md",
+      "sha256": "351a3212070ae51e235b1ca83a5ec3de590596fc2787dc95c1f990f6a0e92643",
+      "bytes": 4733
+    },
+    {
+      "path": "reports/kh02/v19_3_3_3_trends_url_google_score_truth/03_CSV_Q_GEO_ADVERSARIAL_RED_GREEN.json",
+      "sha256": "78680b3921ed968c00121c61c930123d42f012ca174f807b4bf4dad61e84f012",
+      "bytes": 16850
+    },
+    {
+      "path": "reports/kh02/v19_3_3_3_trends_url_google_score_truth/04_GOOGLE_MULTI_PLATFORM_SCORE_RED_GREEN.json",
+      "sha256": "e7fbb7326f01d7a06daad941eba16e50018881cda1a07294251433ffc58fd30f",
+      "bytes": 17107
+    },
+    {
+      "path": "reports/kh02/v19_3_3_3_trends_url_google_score_truth/05_SOURCE_OBSERVATION_DB_API_UI_RECONCILIATION.json",
+      "sha256": "1f49dd5eca79d42fefc862799c77b866a673ba8488ce2fe1925a1ceae8bf58b4",
+      "bytes": 2305
+    },
+    {
+      "path": "reports/kh02/v19_3_3_3_trends_url_google_score_truth/06_G15_OFFICIAL_60_DAY_DEMAND_VERDICT.json",
+      "sha256": "12feed544dd6cffafa393f2dad6c507b73c9e0d69aadd75b64d671265893142d",
+      "bytes": 1282
+    },
+    {
+      "path": "reports/kh02/v19_3_3_3_trends_url_google_score_truth/07_G16_DISTINCT_TOP3_ELIGIBILITY_VERDICT.json",
+      "sha256": "bf24f0b673784f4b9a39d3aa32e854f2b4d1b7e6d71a00e675fccf00851224b1",
+      "bytes": 1659
+    },
+    {
+      "path": "reports/kh02/v19_3_3_3_trends_url_google_score_truth/08_FULL_REGRESSION_RAW_COUNTS_AND_EXACT_SHA.json",
+      "sha256": "b7f373085063ad8825be22f1af604adc062c1116088f83a079c45e968eb2feaa",
+      "bytes": 3334
+    },
+    {
+      "path": "reports/kh02/v19_3_3_3_trends_url_google_score_truth/09_DEV_HOLDOUT_POINT_IN_TIME_BACKTEST.json",
+      "sha256": "7981d02ccce78bd1bc9d7fc1c3269a882aa0f7411ccb92c34003eee2805aae2f",
+      "bytes": 1241
+    },
+    {
+      "path": "reports/kh02/v19_3_3_3_trends_url_google_score_truth/10_BOUNDED_ASYNC_DISK_RAM_TIMEOUT_AND_CLEANUP.json",
+      "sha256": "0ffab53dd8f31bfa5e50d1a4325a911f870e9328ca6e95836ce97e5cf88cbdbd",
+      "bytes": 1572
+    },
+    {
+      "path": "reports/kh02/v19_3_3_3_trends_url_google_score_truth/11_GITHUB_ACTIONS_REAL_RUN_AND_REQUIRED_JOBS.json",
+      "sha256": "ce13cae8a45266049415234034776ed8a71ccbbd56d35f910158bd191af80cad",
+      "bytes": 3041
+    },
+    {
+      "path": "reports/kh02/v19_3_3_3_trends_url_google_score_truth/12_FINAL_RELEASE_TRUTH.json",
+      "sha256": "17e165d92ac6ce38697a9e7c4feb3081d9efe84196117e28766e977c60253ce5",
+      "bytes": 2527
+    },
+    {
+      "path": "reports/kh02/v19_3_3_3_trends_url_google_score_truth/FINAL_REPORT.md",
+      "sha256": "7e21c2c1b6f9613b6ec5d6d5a1a28f6d897156558f46f40dd8f49d747d1b65be",
+      "bytes": 8984
+    },
+    {
+      "path": "reports/kh02/v19_3_3_3_trends_url_google_score_truth/logs/POST_FIX_GREEN_C1.json",
+      "sha256": "695aebfde29d9d25e106dd24b1d30e5bd93b340a339277ed2fca94160945f491",
+      "bytes": 38387
+    },
+    {
+      "path": "reports/kh02/v19_3_3_3_trends_url_google_score_truth/logs/POST_FIX_GREEN_C1.log",
+      "sha256": "b0b1a0aee47044fc061320e456583dc41e9bac2a441fd2724d610f001a535f35",
+      "bytes": 19814
+    },
+    {
+      "path": "reports/kh02/v19_3_3_3_trends_url_google_score_truth/logs/PRE_FIX_RED_C0.json",
+      "sha256": "e1f57bf9c54f91e2daea166c984da5d0c5eeb1426287b82f8e51bfb5cdb0da27",
+      "bytes": 102372
+    },
+    {
+      "path": "reports/kh02/v19_3_3_3_trends_url_google_score_truth/logs/PRE_FIX_RED_C0.log",
+      "sha256": "3904695642962a26c34982469c7ec8dfb3667b263315f2f1b1b4768071c1f93b",
+      "bytes": 48565
+    },
+    {
+      "path": "reports/kh02/v19_3_3_3_trends_url_google_score_truth/logs/backtest.log",
+      "sha256": "abf5c1aab6be8973d3dd4f87fe93b898b541d277a988f88be78ddf8527d58519",
+      "bytes": 723
+    },
+    {
+      "path": "reports/kh02/v19_3_3_3_trends_url_google_score_truth/logs/build.log",
+      "sha256": "be36af182e51f85d0173572272d52e0a85cb311d3760a814e025e0d300902420",
+      "bytes": 41088
+    },
+    {
+      "path": "reports/kh02/v19_3_3_3_trends_url_google_score_truth/logs/db_readback.log",
+      "sha256": "d40e7cf92baa1f7db7556da76f37359e9f20a5258c2fdd0af222dc95e3f0f414",
+      "bytes": 1765
+    },
+    {
+      "path": "reports/kh02/v19_3_3_3_trends_url_google_score_truth/logs/eslint.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "reports/kh02/v19_3_3_3_trends_url_google_score_truth/logs/g15_csv_origin.json",
+      "sha256": "4eb5f61b0ff672e75abb8a922a79f61cd986c2b876984a81be5e639bbf18abe0",
+      "bytes": 20036
+    },
+    {
+      "path": "reports/kh02/v19_3_3_3_trends_url_google_score_truth/logs/g15_csv_origin.log",
+      "sha256": "e746c6e9288560eb58ea6f433ede70e0576f6a697b306235bd023ad413fafd23",
+      "bytes": 65
+    },
+    {
+      "path": "reports/kh02/v19_3_3_3_trends_url_google_score_truth/logs/github_actions_jobs_C1.json",
+      "sha256": "838df1166c2d48bd8200b9139670555b44044b3b1ef9d2bb09e3336f68d8ae10",
+      "bytes": 21034
+    },
+    {
+      "path": "reports/kh02/v19_3_3_3_trends_url_google_score_truth/logs/github_actions_run_C1.json",
+      "sha256": "ff7862a502ec2011ee67cd59c33402e2a26a98599d2caa0733a72d0940c6e950",
+      "bytes": 14323
+    },
+    {
+      "path": "reports/kh02/v19_3_3_3_trends_url_google_score_truth/logs/kh01_verify.log",
+      "sha256": "bf8383ca9603c524e0912de1d60f4604da6fb6b55a4850ccb58aecf0d301fe28",
+      "bytes": 3147
+    },
+    {
+      "path": "reports/kh02/v19_3_3_3_trends_url_google_score_truth/logs/kh02_integration.json",
+      "sha256": "3c337d82254c9dda5e2cdca94b243799a7e1d67f275fe8e03053adf210ab333b",
+      "bytes": 39968
+    },
+    {
+      "path": "reports/kh02/v19_3_3_3_trends_url_google_score_truth/logs/kh02_integration.log",
+      "sha256": "31e46f23f844088ba8c0806ff9ec6d004e7a14176649415e1253c86cc6ee16d1",
+      "bytes": 67
+    },
+    {
+      "path": "reports/kh02/v19_3_3_3_trends_url_google_score_truth/logs/kh02_unit_full.json",
+      "sha256": "afd9f839a2666c40ccd64f14480a3ed2684e2ab51b40fb7223108f0fdd0651ce",
+      "bytes": 1475077
+    },
+    {
+      "path": "reports/kh02/v19_3_3_3_trends_url_google_score_truth/logs/kh02_unit_full.log",
+      "sha256": "b7bfe207fc3a677fcd9d754215ab0bd329aebd15d57ebd555c952a7d74cd1235",
+      "bytes": 502
+    },
+    {
+      "path": "reports/kh02/v19_3_3_3_trends_url_google_score_truth/logs/meta_google_flow.json",
+      "sha256": "1cb967d5e3c50b0b7a48972dbb91c2b54a2a0fe60a10cbd158e56459a6a721e6",
+      "bytes": 9729
+    },
+    {
+      "path": "reports/kh02/v19_3_3_3_trends_url_google_score_truth/logs/meta_google_flow.log",
+      "sha256": "46c40aa244c053b3c653de2189b37baf65f6d8c571bcf99f26ce8298ae3c1888",
+      "bytes": 111
+    },
+    {
+      "path": "reports/kh02/v19_3_3_3_trends_url_google_score_truth/logs/prisma_validate.log",
+      "sha256": "a7604f22c6822cd70574b47ef8f5d478a826f44f87175b584c9758551b2dc376",
+      "bytes": 1011
+    },
+    {
+      "path": "reports/kh02/v19_3_3_3_trends_url_google_score_truth/logs/three_source_smoke.log",
+      "sha256": "e6ad7046d8a632422eac17c8fbb0e01a82d9af02ee5e2d60db1fd91e62f6f686",
+      "bytes": 5398
+    },
+    {
+      "path": "reports/kh02/v19_3_3_3_trends_url_google_score_truth/logs/tsc.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "reports/kh02/v19_3_3_3_trends_url_google_score_truth/logs/v19_3_3_1.json",
+      "sha256": "c31aaf20ad7c3f3d6a69200a9897e5362b27ae1564f9f9d0cd092a2d85156afc",
+      "bytes": 24337
+    },
+    {
+      "path": "reports/kh02/v19_3_3_3_trends_url_google_score_truth/logs/v19_3_3_1.log",
+      "sha256": "bd82740ab67e9a95b47a823f1449cdeeb020bea9dc7730626c1cd644dcd56b39",
+      "bytes": 60
+    },
+    {
+      "path": "reports/kh02/v19_3_3_3_trends_url_google_score_truth/logs/v19_3_3_2.json",
+      "sha256": "22afa09e6280fa8de98887dab6ffbd97cce418d6a68c9bd0d8607fdc2f3718ee",
+      "bytes": 27980
+    },
+    {
+      "path": "reports/kh02/v19_3_3_3_trends_url_google_score_truth/logs/v19_3_3_2.log",
+      "sha256": "e4b9a35bcb9c234a519a2b05db0631d4711aef8f03cf4521903a8d64dd139394",
+      "bytes": 60
+    }
+  ]
+}

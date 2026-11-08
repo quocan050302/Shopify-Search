@@ -1,0 +1,40 @@
+{
+  "deliverableId": "12_FINAL_RELEASE_TRUTH",
+  "patchVersion": "V12.4.3.7.19.3.3.3",
+  "repository": "quocan050302/Shopify-Search",
+  "lockedBranch": "feature/kh02-walmart-us-jina-reader-v12.4.3.5.1",
+  "baselineShaC0": "af1f6d0dcdbecc18ebbd3736f07c365b830f5b39",
+  "baselineTreeShaC0": "d9a0ca40cd719fa4c1dcd2491f29d9dd4eb72ee5",
+  "testedCodeShaC1": "4ac0df13cb190aac01ce6094caa299f0da1defe0",
+  "testedCodeTreeShaC1": "dfade8bcbc28da97aae4cfe5becc41d3d2063da8",
+  "githubActionsRunIdOnC1": 42474097591,
+  "githubActionsRunUrlOnC1": "https://github.com/quocan050302/Shopify-Search/actions/runs/42474097591",
+  "githubActionsJobsPassed": "6/6",
+  "verdicts": {
+    "ENGINEERING_CORRECTNESS": "PASS",
+    "CI_VERDICT": "CI_PASS",
+    "LIVE_PROVIDER_CONTENT": "INSUFFICIENT_EVIDENCE",
+    "PRODUCTION_PIPELINE_INTEGRITY": "PASS",
+    "G15_OFFICIAL_60_DAY_DEMAND": "INSUFFICIENT_EVIDENCE",
+    "G16_DISTINCT_TOP3_ELIGIBILITY": "INSUFFICIENT_EVIDENCE",
+    "BACKTEST_POLICY_AND_POINT_IN_TIME": "PASS",
+    "BACKTEST_HISTORICAL_EVIDENCE": "INSUFFICIENT_HISTORICAL_EVIDENCE",
+    "PRODUCTION_RELEASE": "RELEASE_HOLD"
+  },
+  "counts": {
+    "targetedV19333RedFailedOnC0": 29,
+    "targetedV19333RedPassedOnC0": 19,
+    "targetedV19333GreenPassedOnC1": 48,
+    "targetedV19333GreenFailedOnC1": 0,
+    "kh02UnitPassed": 2614,
+    "kh02UnitTotal": 2614,
+    "kh01RegressionPassed": 69,
+    "kh01RegressionTotal": 69,
+    "kh02IntegrationPassed": 77,
+    "kh02IntegrationTotal": 77,
+    "verifiedOfficial60DayCsvExportsInBusinessScope": 0,
+    "verifiedEvergreenTop3WinnersInBusinessScope": 0,
+    "paidExternalApiSpendUsd": 0
+  },
+  "honestTruthStatement": "All P1-A (strict Google Trends Explore q/geo origin binding, duplicate parameter rejection, whole-term query equality, and Schema v2 readback re-validation) and P1-B (no Google Ads Pillar C +6 or +10 evidenceConfidence without boolean providerVerified===true, upstreamRequestVerified===true, US delivery market, and candidate-specific PDP binding) engineering defects are closed and verified by 48/48 targeted tests, 2,614/2,614 unit tests, 69/69 KH-01 tests, 77/77 integration tests, and 6/6 GitHub Actions CI jobs on commit 4ac0df13cb190aac01ce6094caa299f0da1defe0. Because live business-scope >=60-day official US Google Trends exports (G15) and 3 distinct live-verified Evergreen winners (G16) are not yet present in the production database, G15 remains INSUFFICIENT_EVIDENCE, G16 remains 0/3 INSUFFICIENT_EVIDENCE, and overall production release remains RELEASE_HOLD."
+}

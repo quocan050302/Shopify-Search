@@ -1,0 +1,60 @@
+{
+  "deliverableId": "05_SOURCE_OBSERVATION_DB_API_UI_RECONCILIATION",
+  "patchVersion": "V12.4.3.7.19.3.3.3",
+  "testedCodeShaC1": "4ac0df13cb190aac01ce6094caa299f0da1defe0",
+  "testedCodeTreeShaC1": "dfade8bcbc28da97aae4cfe5becc41d3d2063da8",
+  "dbReadbackStatus": "SUCCESS",
+  "rawDbReadbackLog": "reports/kh02/v19_3_3_3_trends_url_google_score_truth/logs/db_readback.log",
+  "threeSourceSmokeLog": "reports/kh02/v19_3_3_3_trends_url_google_score_truth/logs/three_source_smoke.log",
+  "reconciliationMatrix": {
+    "metaAds": {
+      "sourceId": "S1_META_ADS_LIBRARY",
+      "collectorImplemented": true,
+      "livePaidTokenConfigured": false,
+      "costUsdIncurred": 0,
+      "liveVerifiedObservationsInDb": 0,
+      "apiAndUiPropagationStatus": "HONEST_UNVERIFIED_WHEN_NO_LIVE_UPSTREAM_OBSERVATIONS"
+    },
+    "googleAdsTransparency": {
+      "sourceId": "S2_GOOGLE_ADS_TRANSPARENCY_MCP",
+      "localFastMcpTransportConnected": true,
+      "capabilityClassification": "ENRICHMENT_ONLY",
+      "localMcpToolResultVerifiedWhenCalled": true,
+      "independentUpstreamGoogleAttestationAvailable": false,
+      "providerVerified": false,
+      "upstreamRequestVerified": false,
+      "pillarCPointsFromUnverifiedGoogleObservations": 0,
+      "evidenceConfidencePointsFromUnverifiedGoogleObservations": 0,
+      "costUsdIncurred": 0
+    },
+    "tiktokOrganic": {
+      "sourceId": "S3_TIKTOK_ORGANIC",
+      "policyStatus": "POLICY_DISABLED",
+      "costUsdIncurred": 0
+    },
+    "tiktokAdsUs": {
+      "sourceId": "S4_TIKTOK_ADS_US",
+      "policyStatus": "DEFERRED_NOT_IMPLEMENTED",
+      "costUsdIncurred": 0
+    },
+    "googleTrendsOfficialCsv": {
+      "sourceId": "S6_GOOGLE_TRENDS_EXPLORE_CSV",
+      "rawCsvFilesInStore": 17,
+      "localIntegrityOnlyFiles": 17,
+      "businessEligibleOfficial60DayExports": 0,
+      "providerOriginVerified": false,
+      "rawDbDemandRows": 6,
+      "verifiedBusinessLineageRowsInDb": 0
+    }
+  },
+  "persistenceAndApiRequalification": {
+    "functionSymbol": "requalifyHistoricalEvergreenSnapshot",
+    "file": "src/services/kh02/persistence/kh02PersistenceService.ts",
+    "demotesTopThreeWhenDemandStabilityNull": true,
+    "demotesTopThreeWhenUnverifiedGoogleInflatedScore": true,
+    "verifiedByTestCases": [
+      "GSC-23",
+      "GSC-24"
+    ]
+  }
+}

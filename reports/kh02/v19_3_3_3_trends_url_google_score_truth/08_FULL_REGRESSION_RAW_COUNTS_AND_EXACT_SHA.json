@@ -1,0 +1,115 @@
+{
+  "deliverableId": "08_FULL_REGRESSION_RAW_COUNTS_AND_EXACT_SHA",
+  "patchVersion": "V12.4.3.7.19.3.3.3",
+  "baselineShaC0": "af1f6d0dcdbecc18ebbd3736f07c365b830f5b39",
+  "baselineTreeShaC0": "d9a0ca40cd719fa4c1dcd2491f29d9dd4eb72ee5",
+  "testedCodeShaC1": "4ac0df13cb190aac01ce6094caa299f0da1defe0",
+  "testedCodeTreeShaC1": "dfade8bcbc28da97aae4cfe5becc41d3d2063da8",
+  "zeroSkippedBrokenOrFlakyTests": true,
+  "staticVerification": {
+    "tscNoEmit": {
+      "exitCode": 0,
+      "status": "PASS",
+      "logFile": "logs/tsc.log"
+    },
+    "prismaValidate": {
+      "exitCode": 0,
+      "status": "PASS",
+      "logFile": "logs/prisma_validate.log"
+    },
+    "eslintChangedFiles": {
+      "exitCode": 0,
+      "status": "PASS",
+      "logFile": "logs/eslint.log"
+    },
+    "nextProductionBuild": {
+      "exitCode": 0,
+      "status": "PASS",
+      "logFile": "logs/build.log"
+    }
+  },
+  "testSuites": {
+    "v19_3_3_3_targetedRedOnC0": {
+      "sha": "af1f6d0dcdbecc18ebbd3736f07c365b830f5b39",
+      "exitCode": 1,
+      "testFilesTotal": 4,
+      "testsTotal": 48,
+      "testsPassed": 19,
+      "testsFailedRed": 29,
+      "jsonReport": "logs/PRE_FIX_RED_C0.json"
+    },
+    "v19_3_3_3_targetedGreenOnC1": {
+      "sha": "4ac0df13cb190aac01ce6094caa299f0da1defe0",
+      "exitCode": 0,
+      "testFilesTotal": 4,
+      "testsTotal": 48,
+      "testsPassed": 48,
+      "testsFailed": 0,
+      "jsonReport": "logs/POST_FIX_GREEN_C1.json"
+    },
+    "v19_3_3_2_regression": {
+      "sha": "4ac0df13cb190aac01ce6094caa299f0da1defe0",
+      "exitCode": 0,
+      "testsTotal": 40,
+      "testsPassed": 40,
+      "testsFailed": 0,
+      "jsonReport": "logs/v19_3_3_2.json"
+    },
+    "v19_3_3_1_regression": {
+      "sha": "4ac0df13cb190aac01ce6094caa299f0da1defe0",
+      "exitCode": 0,
+      "testsTotal": 34,
+      "testsPassed": 34,
+      "testsFailed": 0,
+      "jsonReport": "logs/v19_3_3_1.json"
+    },
+    "g15CsvOriginIntegrity": {
+      "sha": "4ac0df13cb190aac01ce6094caa299f0da1defe0",
+      "exitCode": 0,
+      "testsTotal": 36,
+      "testsPassed": 36,
+      "testsFailed": 0,
+      "jsonReport": "logs/g15_csv_origin.json"
+    },
+    "metaGoogleProductionFlowClosure": {
+      "sha": "4ac0df13cb190aac01ce6094caa299f0da1defe0",
+      "exitCode": 0,
+      "testsTotal": 14,
+      "testsPassed": 14,
+      "testsFailed": 0,
+      "jsonReport": "logs/meta_google_flow.json"
+    },
+    "kh02UnitFull": {
+      "sha": "4ac0df13cb190aac01ce6094caa299f0da1defe0",
+      "exitCode": 0,
+      "testSuitesTotal": 451,
+      "testSuitesPassed": 451,
+      "testSuitesFailed": 0,
+      "testsTotal": 2614,
+      "testsPassed": 2614,
+      "testsFailed": 0,
+      "jsonReport": "logs/kh02_unit_full.json"
+    },
+    "kh01RegressionVerify": {
+      "sha": "4ac0df13cb190aac01ce6094caa299f0da1defe0",
+      "exitCode": 0,
+      "testFilesTotal": 5,
+      "testFilesPassed": 5,
+      "testsTotal": 69,
+      "testsPassed": 69,
+      "testsFailed": 0,
+      "logFile": "logs/kh01_verify.log"
+    },
+    "kh02IntegrationFull": {
+      "sha": "4ac0df13cb190aac01ce6094caa299f0da1defe0",
+      "exitCode": 0,
+      "testSuitesTotal": 35,
+      "testSuitesPassed": 35,
+      "testSuitesFailed": 0,
+      "testsTotal": 77,
+      "testsPassed": 77,
+      "testsFailed": 0,
+      "jsonReport": "logs/kh02_integration.json"
+    }
+  }
+}

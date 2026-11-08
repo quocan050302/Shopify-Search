@@ -1,0 +1,24 @@
+{
+  "deliverableId": "06_G15_OFFICIAL_60_DAY_DEMAND_VERDICT",
+  "gateId": "G15",
+  "patchVersion": "V12.4.3.7.19.3.3.3",
+  "testedCodeShaC1": "4ac0df13cb190aac01ce6094caa299f0da1defe0",
+  "testedCodeTreeShaC1": "dfade8bcbc28da97aae4cfe5becc41d3d2063da8",
+  "engineeringGateVerdict": "PASS",
+  "businessGateVerdict": "INSUFFICIENT_EVIDENCE",
+  "providerOriginVerified": false,
+  "sourceOriginVerifiedForControlledTestFixturesInEngineeringScopeOnly": true,
+  "sourceOriginVerifiedForLiveBusinessCandidates": false,
+  "verifiedOfficial60DayProductsCount": 0,
+  "requiredMinimumCoveredDays": 60,
+  "requiredMinimumDistinctObservationDates": 3,
+  "requiredOfficialUrlBinding": {
+    "origin": "https://trends.google.com",
+    "pathname": "/trends/explore",
+    "singleGeoParamRequired": "US",
+    "singleQParamRequired": "exact normalized whole-term match with authority record query",
+    "schemaVersionRequired": "2.0",
+    "hmacSignedCanonicalPayloadRequired": true
+  },
+  "blockerSummary": "No authentic human-reviewed official Google Trends Explore US CSV export covering >=60 days with Schema v2 signed q/geo authority is present in the production workspace or SQLite database (6 raw DB rows have 0 verified business lineage; 17 raw CSV files on disk are LOCAL_INTEGRITY_ONLY)."
+}
