@@ -1,0 +1,74 @@
+{
+  "gateId": "G16_TOP3_DISTINCTNESS_CANDIDATE_VERDICTS",
+  "patchVersion": "V12.4.3.7.19.3.3.2",
+  "testedCodeCommitSha": "c856f5751f877e7249ea6739d41bf862922a003b",
+  "testedTreeSha": "bfab7262eeef3ead2f3ccaad28a1eced3c78f9e9",
+  "g16Top3EligibleCount": 0,
+  "g16TargetCount": 3,
+  "g16Ratio": "0/3",
+  "g16EngineeringGateVerdict": "PASS",
+  "g16BusinessVerdict": "INSUFFICIENT_EVIDENCE",
+  "scoringAndDistinctnessInvariants": {
+    "serviceFile": "src/services/kh02/scoring/evergreenOpportunityScoring.ts",
+    "distinctProductFamilyEnforcement": true,
+    "unknownOrNullPdpGoogleObservationsMultiPlatformPoints": 0,
+    "filterOnlyGoogleUsMarketObservationsMultiPlatformPoints": 0,
+    "requiresVerifiedG15DemandForEvergreenShortlist": true
+  },
+  "candidates": [
+    {
+      "rank": 1,
+      "candidateId": "cand_uahpet_feeder",
+      "canonicalProductId": "cmvsy7zqh000jp0orhypwohho",
+      "canonicalTitle": "Automatic Wet Food Cat Feeder with Cooling & Warming",
+      "merchantDomain": "uahpet.com",
+      "productFamilyKey": "automatic_wet_food_cat_feeder",
+      "distinctProductFamily": true,
+      "identityVerifiedByMerchant": true,
+      "usMarketVerified": true,
+      "g15Status": "INSUFFICIENT_EVIDENCE",
+      "googleUpstreamAttestedUsPdpCreatives": 0,
+      "g16Eligible": false,
+      "blockingGates": [
+        "G15_60_DAY_DEMAND_INSUFFICIENT_EVIDENCE",
+        "GOOGLE_UPSTREAM_ORIGIN_NOT_ATTESTED"
+      ]
+    },
+    {
+      "rank": 2,
+      "candidateId": "cand_pawira_fountain",
+      "canonicalProductId": null,
+      "canonicalTitle": "Pawira Stainless Steel Cat Water Fountain",
+      "merchantDomain": "pawira.com",
+      "productFamilyKey": "stainless_steel_cat_water_fountain",
+      "distinctProductFamily": true,
+      "identityVerifiedByMerchant": true,
+      "usMarketVerified": true,
+      "g15Status": "INSUFFICIENT_EVIDENCE",
+      "googleUpstreamAttestedUsPdpCreatives": 0,
+      "g16Eligible": false,
+      "blockingGates": [
+        "G15_60_DAY_DEMAND_INSUFFICIENT_EVIDENCE",
+        "GOOGLE_UPSTREAM_ORIGIN_NOT_ATTESTED"
+      ]
+    },
+    {
+      "rank": 3,
+      "candidateId": "cand_furzapper_remover",
+      "canonicalProductId": null,
+      "canonicalTitle": "FurZapper Pet Hair Remover for Laundry",
+      "merchantDomain": "furzapper.com",
+      "productFamilyKey": "pet_hair_remover_laundry",
+      "distinctProductFamily": true,
+      "identityVerifiedByMerchant": true,
+      "usMarketVerified": true,
+      "g15Status": "INSUFFICIENT_EVIDENCE",
+      "googleUpstreamAttestedUsPdpCreatives": 0,
+      "g16Eligible": false,
+      "blockingGates": [
+        "G15_60_DAY_DEMAND_INSUFFICIENT_EVIDENCE",
+        "GOOGLE_UPSTREAM_ORIGIN_NOT_ATTESTED"
+      ]
+    }
+  ]
+}

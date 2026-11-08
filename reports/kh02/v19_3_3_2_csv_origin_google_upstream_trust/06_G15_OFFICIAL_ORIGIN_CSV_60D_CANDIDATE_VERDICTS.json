@@ -1,0 +1,86 @@
+{
+  "gateId": "G15_OFFICIAL_ORIGIN_CSV_60D_CANDIDATE_VERDICTS",
+  "patchVersion": "V12.4.3.7.19.3.3.2",
+  "testedCodeCommitSha": "c856f5751f877e7249ea6739d41bf862922a003b",
+  "testedTreeSha": "bfab7262eeef3ead2f3ccaad28a1eced3c78f9e9",
+  "g15EngineeringTrustBoundaryVerdict": "PASS",
+  "g15BusinessEvidenceVerdict": "INSUFFICIENT_EVIDENCE",
+  "schemaV2AuthorityRequirements": {
+    "schemaVersion": "2.0",
+    "requiresBusinessTrustedActiveEnvKey": true,
+    "requiresAllowlistedApproverPrincipal": true,
+    "requiresUnconditionalOfficialAcquisitionUrl": true,
+    "allowedHost": "trends.google.com",
+    "allowedProtocol": "https:",
+    "allowedPathPrefix": "/trends/",
+    "requiresGeoParamMatchingRecord": true,
+    "requiresQueryParamMatchingRecord": true,
+    "canonicalHmacIncludesAcquisitionMetadata": true,
+    "legacyV1RejectedInBusinessScope": true
+  },
+  "databaseReadbackSummary": {
+    "logFile": "reports/kh02/v19_3_3_2_csv_origin_google_upstream_trust/logs/D3_db_readback.log",
+    "dbPath": "file:./prisma/dev.db",
+    "dbConnected": true,
+    "candidateId": "cand_uahpet_feeder",
+    "canonicalProductId": "cmvsy7zqh000jp0orhypwohho",
+    "canonicalTitleFromDB": "Automatic Wet Food Cat Feeder with Cooling & Warming",
+    "rawRecordCount": 6,
+    "distinctEvidenceRefs": [
+      "verified-merchant-demand"
+    ],
+    "verifiedOfficialCsvRows": 0,
+    "businessAttributableCount": 0,
+    "coveredCalendarDays": 0,
+    "sourceAuthority": "CACHED_UNVERIFIED",
+    "g15Verdict": "INSUFFICIENT_EVIDENCE"
+  },
+  "localCsvImportsStoreSummary": {
+    "directory": "data/google_trends_imports",
+    "rawCsvFilesCount": 3,
+    "localIntegrityOnlyCount": 3,
+    "schemaV2BusinessApprovedOfficialExportsCount": 0,
+    "g15EligibleCandidatesCount": 0
+  },
+  "candidateVerdicts": [
+    {
+      "candidateId": "cand_uahpet_feeder",
+      "canonicalProductId": "cmvsy7zqh000jp0orhypwohho",
+      "canonicalTitle": "Automatic Wet Food Cat Feeder with Cooling & Warming",
+      "merchantDomain": "uahpet.com",
+      "rawDbRows": 6,
+      "officialSchemaV2CsvAuthorityPresent": false,
+      "verifiedCalendarDaysSpan": 0,
+      "requiredCalendarDaysSpan": 60,
+      "sourceAuthority": "CACHED_UNVERIFIED",
+      "g15Verdict": "INSUFFICIENT_EVIDENCE",
+      "reason": "6 DB rows reference pseudo-evidence 'verified-merchant-demand' without an official Google Trends Explore CSV export and Schema v2 BUSINESS authority record."
+    },
+    {
+      "candidateId": "cand_pawira_fountain",
+      "canonicalProductId": null,
+      "canonicalTitle": "Pawira Stainless Steel Cat Water Fountain",
+      "merchantDomain": "pawira.com",
+      "rawDbRows": 0,
+      "officialSchemaV2CsvAuthorityPresent": false,
+      "verifiedCalendarDaysSpan": 0,
+      "requiredCalendarDaysSpan": 60,
+      "sourceAuthority": "CACHED_UNVERIFIED",
+      "g15Verdict": "INSUFFICIENT_EVIDENCE",
+      "reason": "Zero official Google Trends Explore CSV rows with Schema v2 BUSINESS authority record."
+    },
+    {
+      "candidateId": "cand_furzapper_remover",
+      "canonicalProductId": null,
+      "canonicalTitle": "FurZapper Pet Hair Remover for Laundry",
+      "merchantDomain": "furzapper.com",
+      "rawDbRows": 0,
+      "officialSchemaV2CsvAuthorityPresent": false,
+      "verifiedCalendarDaysSpan": 0,
+      "requiredCalendarDaysSpan": 60,
+      "sourceAuthority": "CACHED_UNVERIFIED",
+      "g15Verdict": "INSUFFICIENT_EVIDENCE",
+      "reason": "Zero official Google Trends Explore CSV rows with Schema v2 BUSINESS authority record."
+    }
+  ]
+}

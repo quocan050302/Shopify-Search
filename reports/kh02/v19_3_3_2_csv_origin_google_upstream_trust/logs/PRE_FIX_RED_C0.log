@@ -1,0 +1,364 @@
+
+ RUN  v5.0.5 /Users/macbook/Documents/Project_Github/Meta-Ads/Shopify-Search
+
+ ❯ tests/unit/kh02/v19_3_3_2_CsvOriginAndGoogleUpstreamTrust.test.ts (40 tests | 17 failed) 681ms
+   ❯ KH-02 V12.4.3.7.19.3.3.2 — CSV Official-Origin Binding & Google Upstream Trust Boundary (40)
+     ❯ P1-A: CSV Official-Origin Binding & Acquisition Evidence (C01..C19) (19)
+       × C01: Omitted acquisitionSourceUrl property with otherwise valid business key and approver -> DENIED at creation and on readback 18ms
+       × C02: undefined, null, empty string '', or whitespace acquisitionSourceUrl -> DENIED 2ms
+       × C03: http, unknown host, trends.google.com.evil, userinfo@, encoded host, IPv4/localhost, custom port, bad geo/query, invalid URL -> DENIED 2ms
+       ✓ C04: Valid-looking Google URL without review evidence is DENIED; and even when approved, providerOriginVerified remains strictly false 4ms
+       × C05: Issue valid signed v2 record then mutate acquisitionSourceUrl or acquisitionEvidenceRef on disk -> verification rejects SIGNATURE_MISMATCH 3ms
+       × C06: Drop acquisitionSourceUrl field from signed record on disk -> DENIED 2ms
+       × C07: Legacy v1 approved record WITHOUT signed acquisition field -> BUSINESS INELIGIBLE, no transparent promotion or silent re-signing 2ms
+       ✓ C08: Test-only key claiming isBusinessTrusted=true -> coerced to TEST_ONLY and DENIED in BUSINESS 2ms
+       × C09: Authorized issuer key, but approver missing or not allowlisted on issue OR readback -> DENIED 2ms
+       ✓ C10: Unknown/revoked/compromised key and revoked authority -> DENIED 3ms
+       ✓ C11: Altered CSV bytes/hash on disk, symlink artifact, or path traversal -> DENIED 3ms
+       ✓ C12: Foreign workspace, product, candidate, keyword, or non-US geography -> DENIED 2ms
+       ✓ C13: Import/approval/availableAt after historical cutoff -> DENIED 2ms
+       ✓ C14: 12-week positive engineering fixture -> PASS only in ENGINEERING; never counts as BUSINESS Google Trends production data 2ms
+       × C15: Stable canonical serialization: identical fields => identical digest; modifying any signed field (including acquisitionSourceUrl/acquisitionEvidenceRef) => changed digest 1ms
+       ✓ C16: Concurrent persistence and revocation across processes -> monotonic revoke, no TOCTOU false acceptance, no ledger corruption 2ms
+       ✓ C17: Missing source data for target productId cannot be backfilled by fallback to another product 521ms
+       ✓ C18: Deliberate wrong, malformed, short, or missing signing key -> no success 2ms
+       × C19: Controlled human-reviewed official import simulation with trusted server key, allowlisted approver, raw CSV, and signed acquisitionSourceUrl succeeds while keeping providerOriginVerified=false 2ms
+     ❯ P1-B: Google MCP Upstream Provenance Trust Boundary (G01..G18) (16)
+       ✓ G01: Handshake + tools/list alone => providerVerified=false, capabilityClassification=ENRICHMENT_ONLY 1ms
+       × G02: Untrusted MCP JSON includes invented requestId, creativeId and matching local invocation fields => upstreamRequestVerified=false and providerVerified=false 3ms
+       × G03: Fake GetAdvertiserById / SearchCreatives RPC envelope in a stub => NOT upstream 1ms
+       ✓ G04: Real local callTool receipt with no independent source attestation => localMcpToolResultVerified=true, providerVerified=false 1ms
+       × G05: Mismatched advertiser, domain, workspace, or researchRunId => DENIED 1ms
+       ✓ G06: Wrong response SHA or creative not in returned membership => DENIED 0ms
+       × G07: Cached/fixture/replayed data restamped LIVE_PROVIDER => DENIED 1ms
+       ✓ G08: Null destination, brand homepage, or collection URL => NOT PDP-bound 1ms
+       ✓ G09 & G10: US query filter without delivered country => FILTER_ONLY; non-US delivered country => UNVERIFIED (not US) 1ms
+       × G11: Malicious caller-provided requestId equal to local invocation ID => DENIED; request origin never promoted 1ms
+       × G12: Oversized raw payload (>2 MiB), malformed JSON, timeout, 403, 429, CAPTCHA or bot wall => bounded BLOCKED/FAILED, never success 1ms
+       ✓ G13: Synthetic upstream ID from a different creative or foreign advertiser => DENIED 1ms
+       × G14: Local verified creative persisted + DB reload => remains LOCAL_MCP_TOOL_RESULT_VERIFIED with providerVerified=false 25ms
+       ✓ G15: Google creative/ad duration (even 120 active days) cannot satisfy historical-demand G15 1ms
+       ✓ G16: Repeated creatives under same merchant/product -> consolidated into 1 product family only 19ms
+       × G17 & G18: Upstream origin status is UPSTREAM_NOT_ATTESTED without out-of-band capture; brand-only/null-PDP/FILTER_ONLY Google observations get 0 cross-platform product score 2ms
+     ✓ Meta Ads & System Integrity Invariants (M01..M04, S01..S06) (5)
+       ✓ M01: Meta diagnostics only => actualQueryAttempted=false, upstreamQueryCompleted=false, contentStatus=NOT_RUN 7ms
+       ✓ M02: Meta targetMarket US query filter does not fabricate verified US audience delivery when ad targetMarket is UNKNOWN 0ms
+       ✓ M03: Meta placement duplicates for same merchant SKU => consolidated into 1 candidate family 7ms
+       ✓ M04: Meta provenance survives SQLite round-trip 24ms
+       ✓ S01..S06: Runner & release-gate invariants fail closed on malformed counts, signal timeout, disk/RAM breach, canceled child, SHA mismatch, and missing CI jobs 3ms
+
+⎯⎯⎯⎯⎯⎯ Failed Tests 17 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/unit/kh02/v19_3_3_2_CsvOriginAndGoogleUpstreamTrust.test.ts > KH-02 V12.4.3.7.19.3.3.2 — CSV Official-Origin Binding & Google Upstream Trust Boundary > P1-A: CSV Official-Origin Binding & Acquisition Evidence (C01..C19) > C01: Omitted acquisitionSourceUrl property with otherwise valid business key and approver -> DENIED at creation and on readback
+AssertionError: expected [Function] to throw an error
+
+- Expected:
+null
+
++ Received:
+undefined
+
+ ❯ tests/unit/kh02/v19_3_3_2_CsvOriginAndGoogleUpstreamTrust.test.ts:198:9
+    196|           isTestOnly: false,
+    197|         })
+    198|       ).toThrow(/ACQUISITION_SOURCE_REQUIRED/);
+       |         ^
+    199|     });
+    200|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/17]⎯
+
+ FAIL  tests/unit/kh02/v19_3_3_2_CsvOriginAndGoogleUpstreamTrust.test.ts > KH-02 V12.4.3.7.19.3.3.2 — CSV Official-Origin Binding & Google Upstream Trust Boundary > P1-A: CSV Official-Origin Binding & Acquisition Evidence (C01..C19) > C02: undefined, null, empty string '', or whitespace acquisitionSourceUrl -> DENIED
+AssertionError: expected [Function] to throw an error
+
+- Expected:
+null
+
++ Received:
+undefined
+
+ ❯ tests/unit/kh02/v19_3_3_2_CsvOriginAndGoogleUpstreamTrust.test.ts:231:11
+    229|             isTestOnly: false,
+    230|           })
+    231|         ).toThrow(/ACQUISITION_SOURCE_REQUIRED|INVALID_ACQUISITION_SOU…
+       |           ^
+    232|       }
+    233|     });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/17]⎯
+
+ FAIL  tests/unit/kh02/v19_3_3_2_CsvOriginAndGoogleUpstreamTrust.test.ts > KH-02 V12.4.3.7.19.3.3.2 — CSV Official-Origin Binding & Google Upstream Trust Boundary > P1-A: CSV Official-Origin Binding & Acquisition Evidence (C01..C19) > C03: http, unknown host, trends.google.com.evil, userinfo@, encoded host, IPv4/localhost, custom port, bad geo/query, invalid URL -> DENIED
+AssertionError: expected [Function] to throw error matching /INVALID_ACQUISITION_SOURCE_URL|ACQUIS…/ but got 'ACQUISITION_SOURCE_REQUIRED: Verified…'
+
+- Expected:
+/INVALID_ACQUISITION_SOURCE_URL|ACQUISITION_GEO_MISMATCH|ACQUISITION_QUERY_MISMATCH/
+
++ Received:
+"ACQUISITION_SOURCE_REQUIRED: Verified official Google Trends acquisitionSourceUrl (https://trends.google.com/...) is required for BUSINESS-scope AUTHENTICATED_OFFICIAL_EXPORT."
+
+ ❯ tests/unit/kh02/v19_3_3_2_CsvOriginAndGoogleUpstreamTrust.test.ts:281:11
+    279|             isTestOnly: false,
+    280|           })
+    281|         ).toThrow(/INVALID_ACQUISITION_SOURCE_URL|ACQUISITION_GEO_MISM…
+       |           ^
+    282|       }
+    283|     });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/17]⎯
+
+ FAIL  tests/unit/kh02/v19_3_3_2_CsvOriginAndGoogleUpstreamTrust.test.ts > KH-02 V12.4.3.7.19.3.3.2 — CSV Official-Origin Binding & Google Upstream Trust Boundary > P1-A: CSV Official-Origin Binding & Acquisition Evidence (C01..C19) > C05: Issue valid signed v2 record then mutate acquisitionSourceUrl or acquisitionEvidenceRef on disk -> verification rejects SIGNATURE_MISMATCH
+AssertionError: expected true to be false // Object.is equality
+
+- Expected
++ Received
+
+- false
++ true
+
+ ❯ tests/unit/kh02/v19_3_3_2_CsvOriginAndGoogleUpstreamTrust.test.ts:401:31
+    399|         evaluationScope: "BUSINESS",
+    400|       });
+    401|       expect(check1.verified).toBe(false);
+       |                               ^
+    402|       expect(check1.businessEligible).toBe(false);
+    403|       expect(check1.code).toBe("INVALID_SIGNATURE");
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/17]⎯
+
+ FAIL  tests/unit/kh02/v19_3_3_2_CsvOriginAndGoogleUpstreamTrust.test.ts > KH-02 V12.4.3.7.19.3.3.2 — CSV Official-Origin Binding & Google Upstream Trust Boundary > P1-A: CSV Official-Origin Binding & Acquisition Evidence (C01..C19) > C06: Drop acquisitionSourceUrl field from signed record on disk -> DENIED
+AssertionError: expected true to be false // Object.is equality
+
+- Expected
++ Received
+
+- false
++ true
+
+ ❯ tests/unit/kh02/v19_3_3_2_CsvOriginAndGoogleUpstreamTrust.test.ts:465:30
+    463|         evaluationScope: "BUSINESS",
+    464|       });
+    465|       expect(check.verified).toBe(false);
+       |                              ^
+    466|       expect(check.businessEligible).toBe(false);
+    467|       expect(["INVALID_SIGNATURE", "TAMPERED_PAYLOAD", "ORIGIN_NOT_OFF…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/17]⎯
+
+ FAIL  tests/unit/kh02/v19_3_3_2_CsvOriginAndGoogleUpstreamTrust.test.ts > KH-02 V12.4.3.7.19.3.3.2 — CSV Official-Origin Binding & Google Upstream Trust Boundary > P1-A: CSV Official-Origin Binding & Acquisition Evidence (C01..C19) > C07: Legacy v1 approved record WITHOUT signed acquisition field -> BUSINESS INELIGIBLE, no transparent promotion or silent re-signing
+AssertionError: expected true to be false // Object.is equality
+
+- Expected
++ Received
+
+- false
++ true
+
+ ❯ tests/unit/kh02/v19_3_3_2_CsvOriginAndGoogleUpstreamTrust.test.ts:539:33
+    537|         evaluationScope: "BUSINESS",
+    538|       });
+    539|       expect(checkBiz.verified).toBe(false);
+       |                                 ^
+    540|       expect(checkBiz.businessEligible).toBe(false);
+    541|       expect(checkBiz.sourceOriginVerified).toBe(false);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/17]⎯
+
+ FAIL  tests/unit/kh02/v19_3_3_2_CsvOriginAndGoogleUpstreamTrust.test.ts > KH-02 V12.4.3.7.19.3.3.2 — CSV Official-Origin Binding & Google Upstream Trust Boundary > P1-A: CSV Official-Origin Binding & Acquisition Evidence (C01..C19) > C09: Authorized issuer key, but approver missing or not allowlisted on issue OR readback -> DENIED
+AssertionError: expected true to be false // Object.is equality
+
+- Expected
++ Received
+
+- false
++ true
+
+ ❯ tests/unit/kh02/v19_3_3_2_CsvOriginAndGoogleUpstreamTrust.test.ts:675:33
+    673|         evaluationScope: "BUSINESS",
+    674|       });
+    675|       expect(readback.verified).toBe(false);
+       |                                 ^
+    676|       expect(readback.businessEligible).toBe(false);
+    677|       expect(readback.code).toBe("ORIGIN_NOT_OFFICIAL_EXPORT");
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[7/17]⎯
+
+ FAIL  tests/unit/kh02/v19_3_3_2_CsvOriginAndGoogleUpstreamTrust.test.ts > KH-02 V12.4.3.7.19.3.3.2 — CSV Official-Origin Binding & Google Upstream Trust Boundary > P1-A: CSV Official-Origin Binding & Acquisition Evidence (C01..C19) > C15: Stable canonical serialization: identical fields => identical digest; modifying any signed field (including acquisitionSourceUrl/acquisitionEvidenceRef) => changed digest
+AssertionError: expected 'edb4e6f980ff96149ed42ed1a6313eefcf97a…' not to be 'edb4e6f980ff96149ed42ed1a6313eefcf97a…' // Object.is equality
+ ❯ tests/unit/kh02/v19_3_3_2_CsvOriginAndGoogleUpstreamTrust.test.ts:1059:35
+    1057|       for (const mut of mutations) {
+    1058|         const mutatedDigest = computeCsvAuthorityPayloadDigest({ ...re…
+    1059|         expect(mutatedDigest).not.toBe(baseDigest);
+       |                                   ^
+    1060|       }
+    1061|     });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[8/17]⎯
+
+ FAIL  tests/unit/kh02/v19_3_3_2_CsvOriginAndGoogleUpstreamTrust.test.ts > KH-02 V12.4.3.7.19.3.3.2 — CSV Official-Origin Binding & Google Upstream Trust Boundary > P1-A: CSV Official-Origin Binding & Acquisition Evidence (C01..C19) > C19: Controlled human-reviewed official import simulation with trusted server key, allowlisted approver, raw CSV, and signed acquisitionSourceUrl succeeds while keeping providerOriginVerified=false
+AssertionError: expected '1.0' to be '2.0' // Object.is equality
+
+Expected: "2.0"
+Received: "1.0"
+
+ ❯ tests/unit/kh02/v19_3_3_2_CsvOriginAndGoogleUpstreamTrust.test.ts:1189:33
+    1187|       } as any);
+    1188|
+    1189|       expect(rec.schemaVersion).toBe("2.0");
+       |                                 ^
+    1190|       expect((rec as any).acquisitionSourceUrl).toBe(
+    1191|         "https://trends.google.com/trends/explore?geo=US&q=uahpet%20wa…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[9/17]⎯
+
+ FAIL  tests/unit/kh02/v19_3_3_2_CsvOriginAndGoogleUpstreamTrust.test.ts > KH-02 V12.4.3.7.19.3.3.2 — CSV Official-Origin Binding & Google Upstream Trust Boundary > P1-B: Google MCP Upstream Provenance Trust Boundary (G01..G18) > G02: Untrusted MCP JSON includes invented requestId, creativeId and matching local invocation fields => upstreamRequestVerified=false and providerVerified=false
+AssertionError: expected true to be false // Object.is equality
+
+- Expected
++ Received
+
+- false
++ true
+
+ ❯ tests/unit/kh02/v19_3_3_2_CsvOriginAndGoogleUpstreamTrust.test.ts:1281:47
+    1279|       expect(lineage.localMcpToolResultVerified).toBe(true);
+    1280|       // Critical P1-B invariant: in-band MCP JSON request_id is NOT i…
+    1281|       expect(lineage.upstreamRequestVerified).toBe(false);
+       |                                               ^
+    1282|       expect(lineage.providerVerified).toBe(false);
+    1283|       expect(lineage.provenanceTier).toBe("LOCAL_MCP_TOOL_RESULT_VERIF…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[10/17]⎯
+
+ FAIL  tests/unit/kh02/v19_3_3_2_CsvOriginAndGoogleUpstreamTrust.test.ts > KH-02 V12.4.3.7.19.3.3.2 — CSV Official-Origin Binding & Google Upstream Trust Boundary > P1-B: Google MCP Upstream Provenance Trust Boundary (G01..G18) > G03: Fake GetAdvertiserById / SearchCreatives RPC envelope in a stub => NOT upstream
+AssertionError: expected true to be false // Object.is equality
+
+- Expected
++ Received
+
+- false
++ true
+
+ ❯ tests/unit/kh02/v19_3_3_2_CsvOriginAndGoogleUpstreamTrust.test.ts:1320:47
+    1318|
+    1319|       expect(lineage.localMcpToolResultVerified).toBe(true);
+    1320|       expect(lineage.upstreamRequestVerified).toBe(false);
+       |                                               ^
+    1321|       expect(lineage.providerVerified).toBe(false);
+    1322|     });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[11/17]⎯
+
+ FAIL  tests/unit/kh02/v19_3_3_2_CsvOriginAndGoogleUpstreamTrust.test.ts > KH-02 V12.4.3.7.19.3.3.2 — CSV Official-Origin Binding & Google Upstream Trust Boundary > P1-B: Google MCP Upstream Provenance Trust Boundary (G01..G18) > G05: Mismatched advertiser, domain, workspace, or researchRunId => DENIED
+AssertionError: expected true to be false // Object.is equality
+
+- Expected
++ Received
+
+- false
++ true
+
+ ❯ tests/unit/kh02/v19_3_3_2_CsvOriginAndGoogleUpstreamTrust.test.ts:1379:9
+    1377|       expect(
+    1378|         verifyGoogleInvocationLineage({ ...stamped, workspaceId: "ws_g…
+    1379|       ).toBe(false);
+       |         ^
+    1380|       expect(
+    1381|         verifyGoogleInvocationLineage(stamped, [inv], "run_g05_BETA").…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[12/17]⎯
+
+ FAIL  tests/unit/kh02/v19_3_3_2_CsvOriginAndGoogleUpstreamTrust.test.ts > KH-02 V12.4.3.7.19.3.3.2 — CSV Official-Origin Binding & Google Upstream Trust Boundary > P1-B: Google MCP Upstream Provenance Trust Boundary (G01..G18) > G07: Cached/fixture/replayed data restamped LIVE_PROVIDER => DENIED
+AssertionError: expected true to be false // Object.is equality
+
+- Expected
++ Received
+
+- false
++ true
+
+ ❯ tests/unit/kh02/v19_3_3_2_CsvOriginAndGoogleUpstreamTrust.test.ts:1434:32
+    1432|       const restamped = { ...stamped, sourceMode: "LIVE_PROVIDER" as c…
+    1433|       const lineage = verifyGoogleInvocationLineage(restamped, [inv], …
+    1434|       expect(lineage.verified).toBe(false);
+       |                                ^
+    1435|       expect(lineage.providerVerified).toBe(false);
+    1436|     });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[13/17]⎯
+
+ FAIL  tests/unit/kh02/v19_3_3_2_CsvOriginAndGoogleUpstreamTrust.test.ts > KH-02 V12.4.3.7.19.3.3.2 — CSV Official-Origin Binding & Google Upstream Trust Boundary > P1-B: Google MCP Upstream Provenance Trust Boundary (G01..G18) > G11: Malicious caller-provided requestId equal to local invocation ID => DENIED; request origin never promoted
+AssertionError: expected undefined to be true // Object.is equality
+
+- Expected:
+true
+
++ Received:
+undefined
+
+ ❯ tests/unit/kh02/v19_3_3_2_CsvOriginAndGoogleUpstreamTrust.test.ts:1545:58
+    1543|
+    1544|       expect(inv.providerRequestIdOrigin).not.toBe("UPSTREAM");
+    1545|       expect((inv as any).collidesWithLocalInvocationId).toBe(true);
+       |                                                          ^
+    1546|
+    1547|       const stamped = attachGoogleMcpCreativeProvenance(collidingRespo…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[14/17]⎯
+
+ FAIL  tests/unit/kh02/v19_3_3_2_CsvOriginAndGoogleUpstreamTrust.test.ts > KH-02 V12.4.3.7.19.3.3.2 — CSV Official-Origin Binding & Google Upstream Trust Boundary > P1-B: Google MCP Upstream Provenance Trust Boundary (G01..G18) > G12: Oversized raw payload (>2 MiB), malformed JSON, timeout, 403, 429, CAPTCHA or bot wall => bounded BLOCKED/FAILED, never success
+AssertionError: expected [Function] to throw an error
+ ❯ tests/unit/kh02/v19_3_3_2_CsvOriginAndGoogleUpstreamTrust.test.ts:1571:9
+    1569|           content: [{ type: "text", text: "{malformed_json_payload" }],
+    1570|         } as any)
+    1571|       ).toThrow();
+       |         ^
+    1572|
+    1573|       // 3. Error flag / 403 / 429 / CAPTCHA
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[15/17]⎯
+
+ FAIL  tests/unit/kh02/v19_3_3_2_CsvOriginAndGoogleUpstreamTrust.test.ts > KH-02 V12.4.3.7.19.3.3.2 — CSV Official-Origin Binding & Google Upstream Trust Boundary > P1-B: Google MCP Upstream Provenance Trust Boundary (G01..G18) > G14: Local verified creative persisted + DB reload => remains LOCAL_MCP_TOOL_RESULT_VERIFIED with providerVerified=false
+AssertionError: expected undefined to be 'LOCAL_MCP_TOOL_RESULT_VERIFIED' // Object.is equality
+
+- Expected:
+"LOCAL_MCP_TOOL_RESULT_VERIFIED"
+
++ Received:
+undefined
+
+ ❯ tests/unit/kh02/v19_3_3_2_CsvOriginAndGoogleUpstreamTrust.test.ts:1681:43
+    1679|       expect(dbObs).not.toBeNull();
+    1680|       const savedPayload = JSON.parse(dbObs!.rawPayload || "{}");
+    1681|       expect(savedPayload.provenanceTier).toBe("LOCAL_MCP_TOOL_RESULT_…
+       |                                           ^
+    1682|       expect(savedPayload.providerVerified).toBe(false);
+    1683|       expect(savedPayload.upstreamRequestVerified).toBe(false);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[16/17]⎯
+
+ FAIL  tests/unit/kh02/v19_3_3_2_CsvOriginAndGoogleUpstreamTrust.test.ts > KH-02 V12.4.3.7.19.3.3.2 — CSV Official-Origin Binding & Google Upstream Trust Boundary > P1-B: Google MCP Upstream Provenance Trust Boundary (G01..G18) > G17 & G18: Upstream origin status is UPSTREAM_NOT_ATTESTED without out-of-band capture; brand-only/null-PDP/FILTER_ONLY Google observations get 0 cross-platform product score
+AssertionError: expected 14 to be 8 // Object.is equality
+
+- Expected
++ Received
+
+- 8
++ 14
+
+ ❯ tests/unit/kh02/v19_3_3_2_CsvOriginAndGoogleUpstreamTrust.test.ts:1759:62
+    1757|
+    1758|       // META_ADS alone gives 8/20 points; unverified/null-PDP GOOGLE_…
+    1759|       expect(scoreRes.pillars.multiPlatformValidation.score).toBe(8);
+       |                                                              ^
+    1760|       expect(scoreRes.pillars.multiPlatformValidation.status).not.toBe…
+    1761|     });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[17/17]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  17 failed | 23 passed (40)
+   Start at  12:19:11
+   Duration  1.45s (tests 51%, import 28%, transform 14%, setup 7%)
+
+JSON report written to /tmp/kh02_v19332_logs/PRE_FIX_RED_C0.json

@@ -1,0 +1,163 @@
+{
+  "gateId": "GOOGLE_MCP_UPSTREAM_ID_FALSE_PROOF_RED_GREEN_MATRIX",
+  "patchVersion": "V12.4.3.7.19.3.3.2",
+  "preFixCommitSha": "bb0414b5bcf9d8edccd67ad2f098eb3b0d0faef9",
+  "postFixCommitSha": "c856f5751f877e7249ea6739d41bf862922a003b",
+  "postFixTreeSha": "bfab7262eeef3ead2f3ccaad28a1eced3c78f9e9",
+  "testFile": "tests/unit/kh02/v19_3_3_2_CsvOriginAndGoogleUpstreamTrust.test.ts",
+  "preFixLog": "reports/kh02/v19_3_3_2_csv_origin_google_upstream_trust/logs/PRE_FIX_RED_C0.log",
+  "postFixLog": "reports/kh02/v19_3_3_2_csv_origin_google_upstream_trust/logs/POST_FIX_GREEN_C1.log",
+  "summary": {
+    "totalCases": 17,
+    "preFixRedCount": 8,
+    "preFixGreenCount": 9,
+    "postFixGreenCount": 17,
+    "postFixRedCount": 0
+  },
+  "cases": [
+    {
+      "caseId": "G01",
+      "description": "Handshake + tools/list alone => providerVerified=false, capabilityClassification=ENRICHMENT_ONLY",
+      "preFixStatusOnC0": "PASS_GREEN",
+      "postFixStatusOnC1": "PASS_GREEN",
+      "localMcpToolResultVerified": false,
+      "upstreamRequestVerified": false,
+      "providerVerified": false
+    },
+    {
+      "caseId": "G02",
+      "description": "Untrusted MCP JSON includes invented requestId, creativeId and matching local invocation fields => upstreamRequestVerified=false and providerVerified=false",
+      "preFixStatusOnC0": "FAIL_RED (falsely promoted upstreamRequestVerified=true, providerVerified=true, provenanceTier=UPSTREAM_REQUEST_VERIFIED)",
+      "postFixStatusOnC1": "PASS_GREEN (localMcpToolResultVerified=true, upstreamRequestVerified=false, providerVerified=false, provenanceTier=LOCAL_MCP_TOOL_RESULT_VERIFIED, upstreamOriginStatus=UPSTREAM_NOT_ATTESTED)",
+      "localMcpToolResultVerified": true,
+      "upstreamRequestVerified": false,
+      "providerVerified": false
+    },
+    {
+      "caseId": "G03",
+      "description": "Fake GetAdvertiserById / SearchCreatives RPC envelope in a stub => NOT upstream",
+      "preFixStatusOnC0": "FAIL_RED (falsely promoted upstreamRequestVerified=true, providerVerified=true)",
+      "postFixStatusOnC1": "PASS_GREEN (upstreamRequestVerified=false, providerVerified=false)",
+      "localMcpToolResultVerified": true,
+      "upstreamRequestVerified": false,
+      "providerVerified": false
+    },
+    {
+      "caseId": "G04",
+      "description": "Real local callTool receipt with no independent source attestation => localMcpToolResultVerified=true, providerVerified=false",
+      "preFixStatusOnC0": "PASS_GREEN",
+      "postFixStatusOnC1": "PASS_GREEN",
+      "localMcpToolResultVerified": true,
+      "upstreamRequestVerified": false,
+      "providerVerified": false
+    },
+    {
+      "caseId": "G05",
+      "description": "Mismatched advertiser, domain, workspace, or researchRunId => DENIED",
+      "preFixStatusOnC0": "FAIL_RED (creative.workspaceId !== matchedRecord.workspaceId was not checked unless options.expectedWorkspaceId was passed)",
+      "postFixStatusOnC1": "PASS_GREEN (rejected with WORKSPACE_ISOLATION_MISMATCH)",
+      "localMcpToolResultVerified": false,
+      "upstreamRequestVerified": false,
+      "providerVerified": false
+    },
+    {
+      "caseId": "G06",
+      "description": "Wrong response SHA or creative not in returned membership => DENIED",
+      "preFixStatusOnC0": "PASS_GREEN",
+      "postFixStatusOnC1": "PASS_GREEN",
+      "localMcpToolResultVerified": false,
+      "upstreamRequestVerified": false,
+      "providerVerified": false
+    },
+    {
+      "caseId": "G07",
+      "description": "Cached/fixture/replayed data restamped LIVE_PROVIDER => DENIED",
+      "preFixStatusOnC0": "FAIL_RED (sourceMode='CACHE' was not caught by sourceMode==='CACHED' check)",
+      "postFixStatusOnC1": "PASS_GREEN (any sourceMode !== 'LIVE_PROVIDER' is quarantined and rejected)",
+      "localMcpToolResultVerified": false,
+      "upstreamRequestVerified": false,
+      "providerVerified": false
+    },
+    {
+      "caseId": "G08",
+      "description": "Null destination, brand homepage, or collection URL => NOT PDP-bound",
+      "preFixStatusOnC0": "PASS_GREEN",
+      "postFixStatusOnC1": "PASS_GREEN",
+      "localMcpToolResultVerified": false,
+      "upstreamRequestVerified": false,
+      "providerVerified": false
+    },
+    {
+      "caseId": "G09_G10",
+      "description": "US query filter without delivered country => FILTER_ONLY; non-US delivered country => UNVERIFIED (not US)",
+      "preFixStatusOnC0": "PASS_GREEN",
+      "postFixStatusOnC1": "PASS_GREEN",
+      "localMcpToolResultVerified": false,
+      "upstreamRequestVerified": false,
+      "providerVerified": false
+    },
+    {
+      "caseId": "G11",
+      "description": "Malicious caller-provided requestId equal to local invocation ID => DENIED; request origin never promoted",
+      "preFixStatusOnC0": "FAIL_RED (recordActualGoogleMcpInvocation promoted colliding ID to providerRequestIdOrigin='UPSTREAM')",
+      "postFixStatusOnC1": "PASS_GREEN (collidesWithLocalInvocationId=true, providerRequestIdOrigin='ABSENT', lineage rejected)",
+      "localMcpToolResultVerified": false,
+      "upstreamRequestVerified": false,
+      "providerVerified": false
+    },
+    {
+      "caseId": "G12",
+      "description": "Oversized raw payload (>2 MiB), malformed JSON, timeout, 403, 429, CAPTCHA or bot wall => bounded BLOCKED/FAILED",
+      "preFixStatusOnC0": "FAIL_RED (malformed JSON starting with '{' returned raw string instead of throwing MALFORMED_GOOGLE_MCP_JSON)",
+      "postFixStatusOnC1": "PASS_GREEN (throws MALFORMED_GOOGLE_MCP_JSON / RESPONSE_SIZE_EXCEEDED_2MIB)",
+      "localMcpToolResultVerified": false,
+      "upstreamRequestVerified": false,
+      "providerVerified": false
+    },
+    {
+      "caseId": "G13",
+      "description": "Synthetic upstream ID from a different creative or foreign advertiser => DENIED",
+      "preFixStatusOnC0": "PASS_GREEN",
+      "postFixStatusOnC1": "PASS_GREEN",
+      "localMcpToolResultVerified": false,
+      "upstreamRequestVerified": false,
+      "providerVerified": false
+    },
+    {
+      "caseId": "G14",
+      "description": "Local verified creative persisted + DB reload => remains LOCAL_MCP_TOOL_RESULT_VERIFIED with providerVerified=false",
+      "preFixStatusOnC0": "FAIL_RED (rawPayload did not persist provenanceTier=LOCAL_MCP_TOOL_RESULT_VERIFIED, providerVerified=false, upstreamRequestVerified=false)",
+      "postFixStatusOnC1": "PASS_GREEN (persists provenanceTier=LOCAL_MCP_TOOL_RESULT_VERIFIED, providerVerified=false, upstreamRequestVerified=false)",
+      "localMcpToolResultVerified": true,
+      "upstreamRequestVerified": false,
+      "providerVerified": false
+    },
+    {
+      "caseId": "G15",
+      "description": "Google creative/ad duration (even 120 active days) cannot satisfy historical-demand G15",
+      "preFixStatusOnC0": "PASS_GREEN",
+      "postFixStatusOnC1": "PASS_GREEN",
+      "localMcpToolResultVerified": false,
+      "upstreamRequestVerified": false,
+      "providerVerified": false
+    },
+    {
+      "caseId": "G16",
+      "description": "Repeated creatives under same merchant/product -> consolidated into 1 product family only",
+      "preFixStatusOnC0": "PASS_GREEN",
+      "postFixStatusOnC1": "PASS_GREEN",
+      "localMcpToolResultVerified": false,
+      "upstreamRequestVerified": false,
+      "providerVerified": false
+    },
+    {
+      "caseId": "G17_G18",
+      "description": "Upstream origin status is UPSTREAM_NOT_ATTESTED without out-of-band capture; brand-only/null-PDP/FILTER_ONLY Google observations get 0 cross-platform product score",
+      "preFixStatusOnC0": "FAIL_RED (calculateKH02EvergreenScore awarded +6 multi-platform points to UNKNOWN / null-PDP / FILTER_ONLY Google observation)",
+      "postFixStatusOnC1": "PASS_GREEN (score stays 8/20 from META_ADS alone; unverified Google observation adds 0 points)",
+      "localMcpToolResultVerified": false,
+      "upstreamRequestVerified": false,
+      "providerVerified": false
+    }
+  ]
+}

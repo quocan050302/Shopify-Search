@@ -1,0 +1,46 @@
+
+ RUN  v5.0.5 /Users/macbook/Documents/Project_Github/Meta-Ads/Shopify-Search
+
+ ✓ tests/unit/kh02/g15CsvOriginIntegrity.test.ts > KH-02 G15 CSV Origin Integrity & Official Import Authority (30 Negative + 7 Positive Cases) > REPRO-00: Exact repository fixture f300258f... (car phone mount, US, 13 weekly points, 84d) with availability timestamps fails closed in BUSINESS scope 24ms
+ ✓ tests/unit/kh02/g15CsvOriginIntegrity.test.ts > KH-02 G15 CSV Origin Integrity & Official Import Authority (30 Negative + 7 Positive Cases) > 01. Empty observations -> UNKNOWN_SOURCE / INSUFFICIENT_HISTORY, eligibleForEvergreen=false 1ms
+ ✓ tests/unit/kh02/g15CsvOriginIntegrity.test.ts > KH-02 G15 CSV Origin Integrity & Official Import Authority (30 Negative + 7 Positive Cases) > 02. Explicit fixture flag (isFixture=true) -> FIXTURE_ONLY, eligibleForEvergreen=false 5ms
+ ✓ tests/unit/kh02/g15CsvOriginIntegrity.test.ts > KH-02 G15 CSV Origin Integrity & Official Import Authority (30 Negative + 7 Positive Cases) > 03. Exact known repository CSV without fixture flag -> rejected in BUSINESS scope 4ms
+ ✓ tests/unit/kh02/g15CsvOriginIntegrity.test.ts > KH-02 G15 CSV Origin Integrity & Official Import Authority (30 Negative + 7 Positive Cases) > 04. Same fixture renamed in reference or source=HISTORICAL_INGESTION -> still rejected 5ms
+ ✓ tests/unit/kh02/g15CsvOriginIntegrity.test.ts > KH-02 G15 CSV Origin Integrity & Official Import Authority (30 Negative + 7 Positive Cases) > 05. Modified fixture bytes / new checksum (changed BOM, whitespace, and one value) -> still rejected because origin authority is missing 4ms
+ ✓ tests/unit/kh02/g15CsvOriginIntegrity.test.ts > KH-02 G15 CSV Origin Integrity & Official Import Authority (30 Negative + 7 Positive Cases) > 06. Correct schema + correct hash on disk but origin authority missing -> contentIntegrityVerified=true, sourceOriginVerified=false, businessLineageEligible=false 1ms
+ ✓ tests/unit/kh02/g15CsvOriginIntegrity.test.ts > KH-02 G15 CSV Origin Integrity & Official Import Authority (30 Negative + 7 Positive Cases) > 07. Forged caller-supplied descriptor (verified=true, businessLineageEligible=true, originKind=ACTUAL_PROVIDER_INVOCATION) -> rejected 1ms
+ ✓ tests/unit/kh02/g15CsvOriginIntegrity.test.ts > KH-02 G15 CSV Origin Integrity & Official Import Authority (30 Negative + 7 Positive Cases) > 08. Fake provider request ID and hybrid sha256+provider-request ref -> rejected 2ms
+ ✓ tests/unit/kh02/g15CsvOriginIntegrity.test.ts > KH-02 G15 CSV Origin Integrity & Official Import Authority (30 Negative + 7 Positive Cases) > 09. Local HMAC signature without valid Official Export authority (USER_UPLOADED_UNATTESTED / UNREVIEWED) -> rejected 3ms
+ ✓ tests/unit/kh02/g15CsvOriginIntegrity.test.ts > KH-02 G15 CSV Origin Integrity & Official Import Authority (30 Negative + 7 Positive Cases) > 10. Missing artifact on disk -> rawCsvFileExists=false, contentIntegrityVerified=false, CACHED_UNVERIFIED 0ms
+ ✓ tests/unit/kh02/g15CsvOriginIntegrity.test.ts > KH-02 G15 CSV Origin Integrity & Official Import Authority (30 Negative + 7 Positive Cases) > 11. Hash mismatch on disk -> hasValidFileChecksum=false, contentIntegrityVerified=false 1ms
+ ✓ tests/unit/kh02/g15CsvOriginIntegrity.test.ts > KH-02 G15 CSV Origin Integrity & Official Import Authority (30 Negative + 7 Positive Cases) > 12. Raw value mismatch -> VALUE_MISMATCH, contentIntegrityVerified=false 1ms
+ ✓ tests/unit/kh02/g15CsvOriginIntegrity.test.ts > KH-02 G15 CSV Origin Integrity & Official Import Authority (30 Negative + 7 Positive Cases) > 13. Raw row absent -> ROW_NOT_IN_CSV, contentIntegrityVerified=false 1ms
+ ✓ tests/unit/kh02/g15CsvOriginIntegrity.test.ts > KH-02 G15 CSV Origin Integrity & Official Import Authority (30 Negative + 7 Positive Cases) > 14. Wrong keyword -> KEYWORD_MISMATCH, contentIntegrityVerified=false 1ms
+ ✓ tests/unit/kh02/g15CsvOriginIntegrity.test.ts > KH-02 G15 CSV Origin Integrity & Official Import Authority (30 Negative + 7 Positive Cases) > 15. Wrong product (obs.productId != targetProductId) -> rejected even when keyword and authority exist for another product 2ms
+ ✓ tests/unit/kh02/g15CsvOriginIntegrity.test.ts > KH-02 G15 CSV Origin Integrity & Official Import Authority (30 Negative + 7 Positive Cases) > 16. Wrong region -> rejected when CSV or observation region does not match requiredRegion=US 1ms
+ ✓ tests/unit/kh02/g15CsvOriginIntegrity.test.ts > KH-02 G15 CSV Origin Integrity & Official Import Authority (30 Negative + 7 Positive Cases) > 17. Wrong workspace -> cross-workspace authority and observation rejected 2ms
+ ✓ tests/unit/kh02/g15CsvOriginIntegrity.test.ts > KH-02 G15 CSV Origin Integrity & Official Import Authority (30 Negative + 7 Positive Cases) > 18. Revoked / invalid authority -> immediately rejected after revocation 5ms
+ ✓ tests/unit/kh02/g15CsvOriginIntegrity.test.ts > KH-02 G15 CSV Origin Integrity & Official Import Authority (30 Negative + 7 Positive Cases) > 19. Cross-product alias -> alias signed for Product A is rejected when evaluating Product B 2ms
+ ✓ tests/unit/kh02/g15CsvOriginIntegrity.test.ts > KH-02 G15 CSV Origin Integrity & Official Import Authority (30 Negative + 7 Positive Cases) > 20. Future periodStart -> rejected by chronology check, eligibleForEvergreen=false 1ms
+ ✓ tests/unit/kh02/g15CsvOriginIntegrity.test.ts > KH-02 G15 CSV Origin Integrity & Official Import Authority (30 Negative + 7 Positive Cases) > 21. periodEnd after as-of cutoff -> rejected point-in-time 6ms
+ ✓ tests/unit/kh02/g15CsvOriginIntegrity.test.ts > KH-02 G15 CSV Origin Integrity & Official Import Authority (30 Negative + 7 Positive Cases) > 22. ingestedAt / capturedAt / availableAt after cutoff -> rejected point-in-time 2ms
+ ✓ tests/unit/kh02/g15CsvOriginIntegrity.test.ts > KH-02 G15 CSV Origin Integrity & Official Import Authority (30 Negative + 7 Positive Cases) > 23. Missing required availability metadata under point-in-time cutoff -> rejected 1ms
+ ✓ tests/unit/kh02/g15CsvOriginIntegrity.test.ts > KH-02 G15 CSV Origin Integrity & Official Import Authority (30 Negative + 7 Positive Cases) > 24. Duplicate timestamps -> deduplicated to insufficient distinct dates, eligibleForEvergreen=false 1ms
+ ✓ tests/unit/kh02/g15CsvOriginIntegrity.test.ts > KH-02 G15 CSV Origin Integrity & Official Import Authority (30 Negative + 7 Positive Cases) > 25. Sparse long-span observations (3 points across 84 days with 42-day gaps) -> rejected by gap/density policy 3ms
+ ✓ tests/unit/kh02/g15CsvOriginIntegrity.test.ts > KH-02 G15 CSV Origin Integrity & Official Import Authority (30 Negative + 7 Positive Cases) > 26. Overlapping periods / conflicting staggered intervals -> rejected 7ms
+ ✓ tests/unit/kh02/g15CsvOriginIntegrity.test.ts > KH-02 G15 CSV Origin Integrity & Official Import Authority (30 Negative + 7 Positive Cases) > 27. Mixed sources without valid reconciliation (GOOGLE_TRENDS_CSV + USER_MANUAL / PROVIDER_API) -> rejected 4ms
+ ✓ tests/unit/kh02/g15CsvOriginIntegrity.test.ts > KH-02 G15 CSV Origin Integrity & Official Import Authority (30 Negative + 7 Positive Cases) > 28. ENGINEERING fixture / TEST_ONLY authority is never promoted to BUSINESS even if allowUnitFixtures=true is passed 6ms
+ ✓ tests/unit/kh02/g15CsvOriginIntegrity.test.ts > KH-02 G15 CSV Origin Integrity & Official Import Authority (30 Negative + 7 Positive Cases) > 29. Restart does not magically create authority for unattested CSV on disk 1ms
+ ✓ tests/unit/kh02/g15CsvOriginIntegrity.test.ts > KH-02 G15 CSV Origin Integrity & Official Import Authority (30 Negative + 7 Positive Cases) > 30. Snapshot reload (requalifyHistoricalEvergreenSnapshot) demotes stale verified winner backed by LOCAL_INTEGRITY_ONLY CSV fixture 1ms
+ ✓ tests/unit/kh02/g15CsvOriginIntegrity.test.ts > KH-02 G15 CSV Origin Integrity & Official Import Authority (30 Negative + 7 Positive Cases) > P01 [TEST_ONLY/ENGINEERING]: Parser correctness extracts exact keyword, US region, and 13 weekly points 1ms
+ ✓ tests/unit/kh02/g15CsvOriginIntegrity.test.ts > KH-02 G15 CSV Origin Integrity & Official Import Authority (30 Negative + 7 Positive Cases) > P02 [TEST_ONLY/ENGINEERING]: Hash, file, and exact raw row verification succeed without mutating disk file 1ms
+ ✓ tests/unit/kh02/g15CsvOriginIntegrity.test.ts > KH-02 G15 CSV Origin Integrity & Official Import Authority (30 Negative + 7 Positive Cases) > P03 [TEST_ONLY/ENGINEERING]: Valid authorized transactional import persists rows and retains authority reference 156ms
+ ✓ tests/unit/kh02/g15CsvOriginIntegrity.test.ts > KH-02 G15 CSV Origin Integrity & Official Import Authority (30 Negative + 7 Positive Cases) > P04 [TEST_ONLY/ENGINEERING]: Correct product attribution accepts matching canonical productId and rejects mismatched productId 1ms
+ ✓ tests/unit/kh02/g15CsvOriginIntegrity.test.ts > KH-02 G15 CSV Origin Integrity & Official Import Authority (30 Negative + 7 Positive Cases) > P05 & P06 & P07 [TEST_ONLY/ENGINEERING]: Valid authorized CSV authority binds hash/product/workspace/query/geo, passes 84d weekly cadence, survives restart, and revokes cleanly 11ms
+
+ Test Files  1 passed (1)
+      Tests  36 passed (36)
+   Start at  12:41:50
+   Duration  540ms (tests 57%, import 20%, transform 12%, setup 11%, worker 1%)
+
+JSON report written to /tmp/kh02_v19332_logs/G15_CSV_ORIGIN_SUITE_C1.json

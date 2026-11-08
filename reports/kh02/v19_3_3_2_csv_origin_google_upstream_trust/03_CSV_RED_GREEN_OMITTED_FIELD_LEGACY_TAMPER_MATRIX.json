@@ -1,0 +1,171 @@
+{
+  "gateId": "CSV_RED_GREEN_OMITTED_FIELD_LEGACY_TAMPER_MATRIX",
+  "patchVersion": "V12.4.3.7.19.3.3.2",
+  "preFixCommitSha": "bb0414b5bcf9d8edccd67ad2f098eb3b0d0faef9",
+  "postFixCommitSha": "c856f5751f877e7249ea6739d41bf862922a003b",
+  "postFixTreeSha": "bfab7262eeef3ead2f3ccaad28a1eced3c78f9e9",
+  "testFile": "tests/unit/kh02/v19_3_3_2_CsvOriginAndGoogleUpstreamTrust.test.ts",
+  "preFixLog": "reports/kh02/v19_3_3_2_csv_origin_google_upstream_trust/logs/PRE_FIX_RED_C0.log",
+  "postFixLog": "reports/kh02/v19_3_3_2_csv_origin_google_upstream_trust/logs/POST_FIX_GREEN_C1.log",
+  "summary": {
+    "totalCases": 19,
+    "preFixRedCount": 9,
+    "preFixGreenCount": 10,
+    "postFixGreenCount": 19,
+    "postFixRedCount": 0
+  },
+  "cases": [
+    {
+      "caseId": "C01",
+      "description": "Omitted acquisitionSourceUrl property with otherwise valid business key and approver",
+      "preFixStatusOnC0": "FAIL_RED (bypassed undefined check and created record)",
+      "postFixStatusOnC1": "PASS_GREEN (throws ACQUISITION_SOURCE_REQUIRED)",
+      "businessEligible": false,
+      "providerOriginVerified": false
+    },
+    {
+      "caseId": "C02",
+      "description": "undefined, null, empty string '', or whitespace acquisitionSourceUrl",
+      "preFixStatusOnC0": "FAIL_RED (undefined bypassed check)",
+      "postFixStatusOnC1": "PASS_GREEN (throws ACQUISITION_SOURCE_REQUIRED)",
+      "businessEligible": false,
+      "providerOriginVerified": false
+    },
+    {
+      "caseId": "C03",
+      "description": "http, unknown host, trends.google.com.evil, userinfo@, IPv4/localhost, custom port, bad geo/query, invalid URL",
+      "preFixStatusOnC0": "FAIL_RED (prefix regex allowed trends.google.com.evil / bad geo / bad query)",
+      "postFixStatusOnC1": "PASS_GREEN (throws INVALID_ACQUISITION_SOURCE_URL / ACQUISITION_GEO_MISMATCH / ACQUISITION_QUERY_MISMATCH)",
+      "businessEligible": false,
+      "providerOriginVerified": false
+    },
+    {
+      "caseId": "C04",
+      "description": "Valid-looking Google URL without review evidence is DENIED; when approved, providerOriginVerified remains false",
+      "preFixStatusOnC0": "PASS_GREEN",
+      "postFixStatusOnC1": "PASS_GREEN",
+      "businessEligible": true,
+      "providerOriginVerified": false
+    },
+    {
+      "caseId": "C05",
+      "description": "Issue valid signed v2 record then mutate acquisitionSourceUrl or acquisitionEvidenceRef on disk",
+      "preFixStatusOnC0": "FAIL_RED (fields were unsigned, verification returned verified=true)",
+      "postFixStatusOnC1": "PASS_GREEN (rejected with INVALID_SIGNATURE, tamperDetected=true)",
+      "businessEligible": false,
+      "providerOriginVerified": false
+    },
+    {
+      "caseId": "C06",
+      "description": "Drop acquisitionSourceUrl field from signed record on disk",
+      "preFixStatusOnC0": "FAIL_RED (verification succeeded when field dropped)",
+      "postFixStatusOnC1": "PASS_GREEN (rejected with INVALID_SIGNATURE)",
+      "businessEligible": false,
+      "providerOriginVerified": false
+    },
+    {
+      "caseId": "C07",
+      "description": "Legacy v1 approved record WITHOUT signed acquisition field -> BUSINESS INELIGIBLE, no silent re-signing",
+      "preFixStatusOnC0": "FAIL_RED (legacy v1 record was accepted as businessEligible=true)",
+      "postFixStatusOnC1": "PASS_GREEN (rejected with ORIGIN_NOT_OFFICIAL_EXPORT, disk file untouched)",
+      "businessEligible": false,
+      "providerOriginVerified": false
+    },
+    {
+      "caseId": "C08",
+      "description": "Test-only key claiming isBusinessTrusted=true -> coerced to TEST_ONLY and DENIED in BUSINESS",
+      "preFixStatusOnC0": "PASS_GREEN",
+      "postFixStatusOnC1": "PASS_GREEN",
+      "businessEligible": false,
+      "providerOriginVerified": false
+    },
+    {
+      "caseId": "C09",
+      "description": "Authorized issuer key, but approver missing or not allowlisted on issue OR readback -> DENIED",
+      "preFixStatusOnC0": "FAIL_RED (readback did not re-check approver allowlist)",
+      "postFixStatusOnC1": "PASS_GREEN (rejected at creation and on readback as ORIGIN_NOT_OFFICIAL_EXPORT)",
+      "businessEligible": false,
+      "providerOriginVerified": false
+    },
+    {
+      "caseId": "C10",
+      "description": "Unknown/revoked/compromised key and revoked authority -> DENIED",
+      "preFixStatusOnC0": "PASS_GREEN",
+      "postFixStatusOnC1": "PASS_GREEN",
+      "businessEligible": false,
+      "providerOriginVerified": false
+    },
+    {
+      "caseId": "C11",
+      "description": "Altered CSV bytes/hash on disk, symlink artifact, or path traversal -> DENIED",
+      "preFixStatusOnC0": "PASS_GREEN",
+      "postFixStatusOnC1": "PASS_GREEN",
+      "businessEligible": false,
+      "providerOriginVerified": false
+    },
+    {
+      "caseId": "C12",
+      "description": "Foreign workspace, product, candidate, keyword, or non-US geography -> DENIED",
+      "preFixStatusOnC0": "PASS_GREEN",
+      "postFixStatusOnC1": "PASS_GREEN",
+      "businessEligible": false,
+      "providerOriginVerified": false
+    },
+    {
+      "caseId": "C13",
+      "description": "Import/approval/availableAt after historical cutoff -> DENIED",
+      "preFixStatusOnC0": "PASS_GREEN",
+      "postFixStatusOnC1": "PASS_GREEN",
+      "businessEligible": false,
+      "providerOriginVerified": false
+    },
+    {
+      "caseId": "C14",
+      "description": "12-week positive engineering fixture -> PASS only in ENGINEERING; never counts as BUSINESS Google Trends production data",
+      "preFixStatusOnC0": "PASS_GREEN",
+      "postFixStatusOnC1": "PASS_GREEN",
+      "businessEligible": false,
+      "providerOriginVerified": false
+    },
+    {
+      "caseId": "C15",
+      "description": "Stable canonical serialization: identical fields => identical digest; modifying any signed field (including acquisitionSourceUrl/acquisitionEvidenceRef) => changed digest",
+      "preFixStatusOnC0": "FAIL_RED (mutating acquisitionSourceUrl/acquisitionEvidenceRef did not change digest)",
+      "postFixStatusOnC1": "PASS_GREEN (every mutation changes canonical SHA-256 digest)",
+      "businessEligible": true,
+      "providerOriginVerified": false
+    },
+    {
+      "caseId": "C16",
+      "description": "Concurrent persistence and revocation -> monotonic revoke, no TOCTOU false acceptance, no ledger corruption",
+      "preFixStatusOnC0": "PASS_GREEN",
+      "postFixStatusOnC1": "PASS_GREEN",
+      "businessEligible": false,
+      "providerOriginVerified": false
+    },
+    {
+      "caseId": "C17",
+      "description": "Missing source data for target productId cannot be backfilled by fallback to another product",
+      "preFixStatusOnC0": "PASS_GREEN",
+      "postFixStatusOnC1": "PASS_GREEN",
+      "businessEligible": false,
+      "providerOriginVerified": false
+    },
+    {
+      "caseId": "C18",
+      "description": "Deliberate wrong, malformed, short, or missing signing key -> no success",
+      "preFixStatusOnC0": "PASS_GREEN",
+      "postFixStatusOnC1": "PASS_GREEN",
+      "businessEligible": false,
+      "providerOriginVerified": false
+    },
+    {
+      "caseId": "C19",
+      "description": "Controlled human-reviewed official import simulation with trusted server key, allowlisted approver, raw CSV, and signed v2 acquisitionSourceUrl succeeds while keeping providerOriginVerified=false",
+      "preFixStatusOnC0": "FAIL_RED (schemaVersion was 1.0 and acquisitionSourceUrl was undefined on record)",
+      "postFixStatusOnC1": "PASS_GREEN (schemaVersion=2.0, signed acquisitionSourceUrl persisted, providerOriginVerified=false)",
+      "businessEligible": true,
+      "providerOriginVerified": false
+    }
+  ]
+}

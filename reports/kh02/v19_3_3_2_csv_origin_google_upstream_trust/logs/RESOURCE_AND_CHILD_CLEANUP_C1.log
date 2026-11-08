@@ -1,0 +1,30 @@
+=== RESOURCE & CHILD PROCESS AUDIT ON C1 (c856f5751f877e7249ea6739d41bf862922a003b) ===
+--- df -h . ---
+Filesystem      Size    Used   Avail Capacity iused ifree %iused  Mounted on
+/dev/disk3s5   460Gi   422Gi   8.1Gi    99%    3.8M   85M    4%   /System/Volumes/Data
+--- vm_stat ---
+Mach Virtual Memory Statistics: (page size of 16384 bytes)
+Pages free:                                4255.
+Pages active:                            186085.
+Pages inactive:                          184547.
+Pages speculative:                          494.
+Pages throttled:                              0.
+Pages wired down:                        261288.
+Pages purgeable:                              2.
+"Translation faults":                3332217050.
+Pages copy-on-write:                   36532114.
+Pages zero filled:                    694827976.
+Pages reactivated:                    971365761.
+Pages purged:                          39839289.
+File-backed pages:                       103834.
+Anonymous pages:                         267292.
+Pages stored in compressor:             2099168.
+Pages occupied by compressor:            372546.
+Decompressions:                      1493981503.
+Compressions:                        1650515428.
+Pageins:                               65569964.
+Pageouts:                               1786876.
+Swapins:                               42065274.
+Swapouts:                              45934409.
+--- orphaned vitest/tsx child processes ---
+ZERO_ORPHAN_TEST_PROCESSES

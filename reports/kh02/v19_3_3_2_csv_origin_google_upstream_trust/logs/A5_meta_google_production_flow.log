@@ -1,0 +1,29 @@
+
+ RUN  v5.0.5 /Users/macbook/Documents/Project_Github/Meta-Ads/Shopify-Search
+
+stderr | tests/unit/kh02/metaGoogleProductionFlowClosure.test.ts
+◇ injected env (0) from .env
+◇ injected env (5) from .env.local
+
+ ✓ tests/unit/kh02/metaGoogleProductionFlowClosure.test.ts > KH-02 V19.3.3 — Meta & Google Production Flow Closure Suite > Group B: Meta Ads Production Flow > B01: diagnoseMetaLiveCollector reports configured=false and transportConnected=false when META_COLLECTOR_ENABLED=false 118ms
+ ✓ tests/unit/kh02/metaGoogleProductionFlowClosure.test.ts > KH-02 V19.3.3 — Meta & Google Production Flow Closure Suite > Group B: Meta Ads Production Flow > B02: normalizeMetaCollectorAd unwraps l.facebook.com redirect URLs, preserves creativeVariants, and rejects synthetic non-numeric IDs 2ms
+ ✓ tests/unit/kh02/metaGoogleProductionFlowClosure.test.ts > KH-02 V19.3.3 — Meta & Google Production Flow Closure Suite > Group B: Meta Ads Production Flow > B03: ingestDiscoveredAds persists rawEvidenceReference, sourceEvidence, queryId, providerRequestId & creativeVariants in AdObservation.rawPayload and survives DB reload 97ms
+ ✓ tests/unit/kh02/metaGoogleProductionFlowClosure.test.ts > KH-02 V19.3.3 — Meta & Google Production Flow Closure Suite > Group B: Meta Ads Production Flow > B04: normalizeMetaQueryOutcomeFields never fabricates upstreamReturnedCount or LIVE_PROVIDER for NOT_ATTEMPTED subqueries 1ms
+ ✓ tests/unit/kh02/metaGoogleProductionFlowClosure.test.ts > KH-02 V19.3.3 — Meta & Google Production Flow Closure Suite > Group B: Meta Ads Production Flow > B05: resolveMetaMarketProvenance distinguishes VERIFIED US, non-US, INFERRED, and UNKNOWN market provenance 0ms
+ ✓ tests/unit/kh02/metaGoogleProductionFlowClosure.test.ts > KH-02 V19.3.3 — Meta & Google Production Flow Closure Suite > Group C: Google Ads Transparency Production Flow > C01: invokeGoogleMcpTool always calls client.close() in finally when clientArg is not provided 1ms
+ ✓ tests/unit/kh02/metaGoogleProductionFlowClosure.test.ts > KH-02 V19.3.3 — Meta & Google Production Flow Closure Suite > Group C: Google Ads Transparency Production Flow > C02: normalizeGoogleAdsResponse classifies root-domain and collection destination URLs as BRAND_RELATED even when headline contains topic keywords 4ms
+ ✓ tests/unit/kh02/metaGoogleProductionFlowClosure.test.ts > KH-02 V19.3.3 — Meta & Google Production Flow Closure Suite > Group C: Google Ads Transparency Production Flow > C03: persistGoogleObservationsToDatabase preserves upstream evidenceReference, creates AdObservation with MCP receipt, sets unknown advertiser country to UNKNOWN, and returns structured counts 23ms
+ ✓ tests/unit/kh02/metaGoogleProductionFlowClosure.test.ts > KH-02 V19.3.3 — Meta & Google Production Flow Closure Suite > Group C: Google Ads Transparency Production Flow > C04: collectGoogleAdvertiserSignals enforces 429 rate-limit cooldown and skips subsequent domains cleanly 4ms
+ ✓ tests/unit/kh02/metaGoogleProductionFlowClosure.test.ts > KH-02 V19.3.3 — Meta & Google Production Flow Closure Suite > Group D: Identity, Family Variant Collapse & Multi-Platform Scoring > D01: discoverProductCandidatesFromAds collapses size/color variants of the same merchant product into 1 canonical candidate 22ms
+ ✓ tests/unit/kh02/metaGoogleProductionFlowClosure.test.ts > KH-02 V19.3.3 — Meta & Google Production Flow Closure Suite > Group D: Identity, Family Variant Collapse & Multi-Platform Scoring > D02: calculateKH02EvergreenScore normalizes FACEBOOK/INSTAGRAM/META/META_ADS into 1 platform and does not award GOOGLE_ADS product validation points for BRAND_RELATED creatives 2ms
+ ✓ tests/unit/kh02/metaGoogleProductionFlowClosure.test.ts > KH-02 V19.3.3 — Meta & Google Production Flow Closure Suite > Group D: Identity, Family Variant Collapse & Multi-Platform Scoring > D03: evaluateShortlistDistinctness rejects duplicate product family cards in Top 3 shortlist 2ms
+Processing request of type ListToolsRequest
+ ✓ tests/unit/kh02/metaGoogleProductionFlowClosure.test.ts > KH-02 V19.3.3 — Meta & Google Production Flow Closure Suite > Group E: Three-Source Smoke & Candidate DB Readback Truth > E01: runThreeSourceFreeMcpSmoke reports protocol-only Google handshake (providerVerified=false), POLICY_DISABLED TikTok Organic, and 0 official CSV exports 1387ms
+ ✓ tests/unit/kh02/metaGoogleProductionFlowClosure.test.ts > KH-02 V19.3.3 — Meta & Google Production Flow Closure Suite > Group E: Three-Source Smoke & Candidate DB Readback Truth > E02: executeCandidateDbReadback evaluates verifiedOfficialCsvRows via real BUSINESS lineage and returns dynamic globalDemandPartitionSummary 32ms
+
+ Test Files  1 passed (1)
+      Tests  14 passed (14)
+   Start at  12:46:23
+   Duration  2.45s (tests 72%, import 16%, transform 6%, setup 5%)
+
+JSON report written to /tmp/kh02_v19332_logs/A5_meta_google_production_flow.json

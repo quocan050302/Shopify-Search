@@ -1,0 +1,80 @@
+{
+  "gateId": "GITHUB_ACTIONS_RUN_WORKFLOW_JOBS_REAL_PROVIDER_STATUS",
+  "patchVersion": "V12.4.3.7.19.3.3.2",
+  "testedCodeCommitSha": "c856f5751f877e7249ea6739d41bf862922a003b",
+  "testedTreeSha": "bfab7262eeef3ead2f3ccaad28a1eced3c78f9e9",
+  "workflowName": "KH-02 Continuous Integration",
+  "workflowRunId": 42451749802,
+  "workflowRunUrl": "https://github.com/quocan050302/Shopify-Search/actions/runs/42451749802",
+  "headBranch": "feature/kh02-walmart-us-jina-reader-v12.4.3.5.1",
+  "headSha": "c856f5751f877e7249ea6739d41bf862922a003b",
+  "status": "completed",
+  "conclusion": "success",
+  "totalJobs": 6,
+  "passedJobs": 6,
+  "failedJobs": 0,
+  "rawRunJsonFile": "reports/kh02/v19_3_3_2_csv_origin_google_upstream_trust/logs/GH_ACTIONS_RUN_42451749802.json",
+  "rawJobsJsonFile": "reports/kh02/v19_3_3_2_csv_origin_google_upstream_trust/logs/GH_ACTIONS_JOBS_42451749802.json",
+  "jobs": [
+    {
+      "id": 128642259730,
+      "name": "security-negative",
+      "head_sha": "c856f5751f877e7249ea6739d41bf862922a003b",
+      "status": "completed",
+      "conclusion": "success",
+      "started_at": "2026-11-08T05:41:28Z",
+      "completed_at": "2026-11-08T05:42:00Z",
+      "html_url": "https://github.com/quocan050302/Shopify-Search/actions/runs/42451749802/job/128642259730"
+    },
+    {
+      "id": 128642259949,
+      "name": "typecheck",
+      "head_sha": "c856f5751f877e7249ea6739d41bf862922a003b",
+      "status": "completed",
+      "conclusion": "success",
+      "started_at": "2026-11-08T05:41:28Z",
+      "completed_at": "2026-11-08T05:42:22Z",
+      "html_url": "https://github.com/quocan050302/Shopify-Search/actions/runs/42451749802/job/128642259949"
+    },
+    {
+      "id": 128642442497,
+      "name": "kh01-regression",
+      "head_sha": "c856f5751f877e7249ea6739d41bf862922a003b",
+      "status": "completed",
+      "conclusion": "success",
+      "started_at": "2026-11-08T05:42:25Z",
+      "completed_at": "2026-11-08T05:43:05Z",
+      "html_url": "https://github.com/quocan050302/Shopify-Search/actions/runs/42451749802/job/128642442497"
+    },
+    {
+      "id": 128642442528,
+      "name": "kh02-unit",
+      "head_sha": "c856f5751f877e7249ea6739d41bf862922a003b",
+      "status": "completed",
+      "conclusion": "success",
+      "started_at": "2026-11-08T05:42:24Z",
+      "completed_at": "2026-11-08T05:46:35Z",
+      "html_url": "https://github.com/quocan050302/Shopify-Search/actions/runs/42451749802/job/128642442528"
+    },
+    {
+      "id": 128643252862,
+      "name": "kh02-integration",
+      "head_sha": "c856f5751f877e7249ea6739d41bf862922a003b",
+      "status": "completed",
+      "conclusion": "success",
+      "started_at": "2026-11-08T05:46:37Z",
+      "completed_at": "2026-11-08T05:48:38Z",
+      "html_url": "https://github.com/quocan050302/Shopify-Search/actions/runs/42451749802/job/128643252862"
+    },
+    {
+      "id": 128643253276,
+      "name": "backtest-policy",
+      "head_sha": "c856f5751f877e7249ea6739d41bf862922a003b",
+      "status": "completed",
+      "conclusion": "success",
+      "started_at": "2026-11-08T05:46:37Z",
+      "completed_at": "2026-11-08T05:47:18Z",
+      "html_url": "https://github.com/quocan050302/Shopify-Search/actions/runs/42451749802/job/128643253276"
+    }
+  ]
+}

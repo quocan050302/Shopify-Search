@@ -1,0 +1,101 @@
+{
+  "gateId": "META_DIAGNOSTIC_AND_PROVIDER_CONTENT_TRUTH",
+  "patchVersion": "V12.4.3.7.19.3.3.2",
+  "testedCodeCommitSha": "c856f5751f877e7249ea6739d41bf862922a003b",
+  "testedTreeSha": "bfab7262eeef3ead2f3ccaad28a1eced3c78f9e9",
+  "metaCollectorTruth": {
+    "serviceFile": "src/services/kh02/providers/metaResearchAdapter.ts",
+    "diagnosticFunction": "diagnoseMetaLiveCollector",
+    "requiresPaidGraphApiToken": false,
+    "transport": "STDIO_MCP_PUBLIC_AD_LIBRARY",
+    "pythonRuntimeAvailable": true,
+    "collectorVersion": "1.7.0",
+    "handshakeOk": true,
+    "performLiveQueryInZeroSpendSmoke": false,
+    "transportStatus": "SKIPPED_DIAGNOSTIC_ONLY",
+    "contentStatus": "NO_QUERY_EXECUTED",
+    "actualQueryAttempted": false,
+    "upstreamQueryCompleted": false,
+    "rawAdsReturned": 0,
+    "provenanceVerified": false,
+    "providerContentObserved": false,
+    "providerVerified": false
+  },
+  "regressionCases": [
+    {
+      "caseId": "M01",
+      "description": "diagnoseMetaLiveCollector({ performLiveQuery: false }) => provenanceVerified=false, transportStatus=SKIPPED_DIAGNOSTIC_ONLY, contentStatus=NO_QUERY_EXECUTED",
+      "statusOnC1": "PASS_GREEN",
+      "provenanceVerified": false
+    },
+    {
+      "caseId": "M02",
+      "description": "Live query returning 0 ads => provenanceVerified=false, transportStatus=QUERY_ATTEMPTED_EMPTY_OR_BLOCKED, contentStatus=ZERO_ADS_RETURNED",
+      "statusOnC1": "PASS_GREEN",
+      "provenanceVerified": false
+    },
+    {
+      "caseId": "M03",
+      "description": "US market provenance requires explicit US target location in raw payload, not queryCountry parameter alone",
+      "statusOnC1": "PASS_GREEN",
+      "usMarketVerifiedWithoutRawTargetLocations": false,
+      "usMarketVerifiedWithExplicitUsTargetLocation": true
+    },
+    {
+      "caseId": "M04",
+      "description": "Meta ad activity / creative longevity cannot substitute for G15 >=60-day longitudinal search demand evidence",
+      "statusOnC1": "PASS_GREEN",
+      "g15EligibleFromMetaAdLongevityAlone": false
+    }
+  ],
+  "externalProviderMatrix": {
+    "paidApiSpendUsd": 0,
+    "paidApiCallsMade": 0,
+    "smokeLog": "reports/kh02/v19_3_3_2_csv_origin_google_upstream_trust/logs/D4_free_mcp_smoke.log",
+    "S1_META_ADS_COLLECTOR": {
+      "status": "DIAGNOSTIC_ONLY_NO_LIVE_QUERY",
+      "transport": "STDIO_MCP_PUBLIC_AD_LIBRARY",
+      "costUsd": 0,
+      "handshakeOk": true,
+      "providerContentObserved": false,
+      "providerVerified": false
+    },
+    "S2_GOOGLE_ADS_TRANSPARENCY_MCP": {
+      "status": "LOCAL_MCP_VERIFIED_ONLY",
+      "upstreamOriginStatus": "UPSTREAM_NOT_ATTESTED",
+      "transport": "STDIO_FASTMCP",
+      "costUsd": 0,
+      "handshakeOk": true,
+      "toolsFound": [
+        "search_advertiser",
+        "get_advertiser_ads"
+      ],
+      "localMcpToolResultVerified": false,
+      "upstreamRequestVerified": false,
+      "providerVerified": false
+    },
+    "S3_TIKTOK_ORGANIC_HASDATA": {
+      "status": "POLICY_DISABLED",
+      "costUsd": 0,
+      "providerVerified": false
+    },
+    "S4_TIKTOK_ADS_US": {
+      "status": "DEFERRED",
+      "costUsd": 0,
+      "providerVerified": false
+    },
+    "S5_BIGQUERY": {
+      "status": "NOT_CONFIGURED_NO_BILLING",
+      "costUsd": 0,
+      "providerVerified": false
+    },
+    "S6_GOOGLE_TRENDS_OFFICIAL_CSV": {
+      "status": "NOT_AVAILABLE_NO_OFFICIAL_EXPORT",
+      "costUsd": 0,
+      "rawFilesFound": 3,
+      "localIntegrityOnlyFilesFound": 3,
+      "officialLongitudinalExportsFound": 0,
+      "providerVerified": false
+    }
+  }
+}

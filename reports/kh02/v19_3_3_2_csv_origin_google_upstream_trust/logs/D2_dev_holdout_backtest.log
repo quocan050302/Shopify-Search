@@ -1,0 +1,13 @@
+[Backtest V12.4.3.4.2] Policy=PASS | Dev=INSUFFICIENT_HISTORICAL_EVIDENCE (shortlist=0/0) | Holdout=INSUFFICIENT_HISTORICAL_EVIDENCE (shortlist=3/3) | Overall=INSUFFICIENT_HISTORICAL_EVIDENCE
+{
+  "gateId": "E8",
+  "testedCodeSha": "c856f5751f877e7249ea6739d41bf862922a003b",
+  "evaluatedCodeSha": "c856f5751f877e7249ea6739d41bf862922a003b",
+  "evaluatedTreeSha": "bfab7262eeef3ead2f3ccaad28a1eced3c78f9e9",
+  "policyScenarioVerdict": "PASS",
+  "pointInTimeIntegrityVerdict": "PASS",
+  "historicalDevVerdict": "INSUFFICIENT_HISTORICAL_EVIDENCE",
+  "historicalHoldoutVerdict": "INSUFFICIENT_HISTORICAL_EVIDENCE",
+  "overallHistoricalBacktestVerdict": "INSUFFICIENT_HISTORICAL_EVIDENCE",
+  "zeroFutureLeakageVerified": true
+}

@@ -1,0 +1,605 @@
+{
+  "total_count": 6,
+  "jobs": [
+    {
+      "id": 128642259730,
+      "run_id": 42451749802,
+      "workflow_name": "KH-02 Continuous Integration",
+      "head_branch": "feature/kh02-walmart-us-jina-reader-v12.4.3.5.1",
+      "run_url": "https://api.github.com/repos/quocan050302/Shopify-Search/actions/runs/42451749802",
+      "run_attempt": 1,
+      "node_id": "CR_kwDOVPV9XM8AAAAd860bEg",
+      "head_sha": "c856f5751f877e7249ea6739d41bf862922a003b",
+      "url": "https://api.github.com/repos/quocan050302/Shopify-Search/actions/jobs/128642259730",
+      "html_url": "https://github.com/quocan050302/Shopify-Search/actions/runs/42451749802/job/128642259730",
+      "status": "completed",
+      "conclusion": "success",
+      "created_at": "2026-11-08T05:41:26Z",
+      "started_at": "2026-11-08T05:41:28Z",
+      "completed_at": "2026-11-08T05:42:00Z",
+      "name": "security-negative",
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 1,
+          "started_at": "2026-11-08T05:41:29Z",
+          "completed_at": "2026-11-08T05:41:29Z"
+        },
+        {
+          "name": "Checkout repository",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 2,
+          "started_at": "2026-11-08T05:41:29Z",
+          "completed_at": "2026-11-08T05:41:32Z"
+        },
+        {
+          "name": "Setup Node.js 22",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 3,
+          "started_at": "2026-11-08T05:41:32Z",
+          "completed_at": "2026-11-08T05:41:35Z"
+        },
+        {
+          "name": "Resource Safety Preflight",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 4,
+          "started_at": "2026-11-08T05:41:35Z",
+          "completed_at": "2026-11-08T05:41:35Z"
+        },
+        {
+          "name": "Install dependencies (deterministic lockfile)",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 5,
+          "started_at": "2026-11-08T05:41:35Z",
+          "completed_at": "2026-11-08T05:41:54Z"
+        },
+        {
+          "name": "Run Security Negative & CI Trust Boundary Suites",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 6,
+          "started_at": "2026-11-08T05:41:54Z",
+          "completed_at": "2026-11-08T05:41:58Z"
+        },
+        {
+          "name": "Post Setup Node.js 22",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 11,
+          "started_at": "2026-11-08T05:41:58Z",
+          "completed_at": "2026-11-08T05:41:58Z"
+        },
+        {
+          "name": "Post Checkout repository",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 12,
+          "started_at": "2026-11-08T05:41:58Z",
+          "completed_at": "2026-11-08T05:41:58Z"
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 13,
+          "started_at": "2026-11-08T05:41:58Z",
+          "completed_at": "2026-11-08T05:41:58Z"
+        }
+      ],
+      "check_run_url": "https://api.github.com/repos/quocan050302/Shopify-Search/check-runs/128642259730",
+      "labels": [
+        "ubuntu-24.04"
+      ],
+      "runner_id": 1000000075,
+      "runner_name": "GitHub Actions 1000000075",
+      "runner_group_id": 0,
+      "runner_group_name": "GitHub Actions"
+    },
+    {
+      "id": 128642259949,
+      "run_id": 42451749802,
+      "workflow_name": "KH-02 Continuous Integration",
+      "head_branch": "feature/kh02-walmart-us-jina-reader-v12.4.3.5.1",
+      "run_url": "https://api.github.com/repos/quocan050302/Shopify-Search/actions/runs/42451749802",
+      "run_attempt": 1,
+      "node_id": "CR_kwDOVPV9XM8AAAAd860b7Q",
+      "head_sha": "c856f5751f877e7249ea6739d41bf862922a003b",
+      "url": "https://api.github.com/repos/quocan050302/Shopify-Search/actions/jobs/128642259949",
+      "html_url": "https://github.com/quocan050302/Shopify-Search/actions/runs/42451749802/job/128642259949",
+      "status": "completed",
+      "conclusion": "success",
+      "created_at": "2026-11-08T05:41:26Z",
+      "started_at": "2026-11-08T05:41:28Z",
+      "completed_at": "2026-11-08T05:42:22Z",
+      "name": "typecheck",
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 1,
+          "started_at": "2026-11-08T05:41:28Z",
+          "completed_at": "2026-11-08T05:41:29Z"
+        },
+        {
+          "name": "Checkout repository",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 2,
+          "started_at": "2026-11-08T05:41:29Z",
+          "completed_at": "2026-11-08T05:41:32Z"
+        },
+        {
+          "name": "Setup Node.js 22",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 3,
+          "started_at": "2026-11-08T05:41:32Z",
+          "completed_at": "2026-11-08T05:41:35Z"
+        },
+        {
+          "name": "Resource Safety Preflight",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 4,
+          "started_at": "2026-11-08T05:41:35Z",
+          "completed_at": "2026-11-08T05:41:35Z"
+        },
+        {
+          "name": "Install dependencies (deterministic lockfile)",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 5,
+          "started_at": "2026-11-08T05:41:35Z",
+          "completed_at": "2026-11-08T05:41:58Z"
+        },
+        {
+          "name": "Run TypeScript Typecheck & Workflow Contract Verification",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 6,
+          "started_at": "2026-11-08T05:41:58Z",
+          "completed_at": "2026-11-08T05:42:21Z"
+        },
+        {
+          "name": "Post Setup Node.js 22",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 11,
+          "started_at": "2026-11-08T05:42:21Z",
+          "completed_at": "2026-11-08T05:42:21Z"
+        },
+        {
+          "name": "Post Checkout repository",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 12,
+          "started_at": "2026-11-08T05:42:21Z",
+          "completed_at": "2026-11-08T05:42:21Z"
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 13,
+          "started_at": "2026-11-08T05:42:21Z",
+          "completed_at": "2026-11-08T05:42:21Z"
+        }
+      ],
+      "check_run_url": "https://api.github.com/repos/quocan050302/Shopify-Search/check-runs/128642259949",
+      "labels": [
+        "ubuntu-24.04"
+      ],
+      "runner_id": 1000000076,
+      "runner_name": "GitHub Actions 1000000076",
+      "runner_group_id": 0,
+      "runner_group_name": "GitHub Actions"
+    },
+    {
+      "id": 128642442497,
+      "run_id": 42451749802,
+      "workflow_name": "KH-02 Continuous Integration",
+      "head_branch": "feature/kh02-walmart-us-jina-reader-v12.4.3.5.1",
+      "run_url": "https://api.github.com/repos/quocan050302/Shopify-Search/actions/runs/42451749802",
+      "run_attempt": 1,
+      "node_id": "CR_kwDOVPV9XM8AAAAd86_lAQ",
+      "head_sha": "c856f5751f877e7249ea6739d41bf862922a003b",
+      "url": "https://api.github.com/repos/quocan050302/Shopify-Search/actions/jobs/128642442497",
+      "html_url": "https://github.com/quocan050302/Shopify-Search/actions/runs/42451749802/job/128642442497",
+      "status": "completed",
+      "conclusion": "success",
+      "created_at": "2026-11-08T05:42:23Z",
+      "started_at": "2026-11-08T05:42:25Z",
+      "completed_at": "2026-11-08T05:43:05Z",
+      "name": "kh01-regression",
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 1,
+          "started_at": "2026-11-08T05:42:26Z",
+          "completed_at": "2026-11-08T05:42:26Z"
+        },
+        {
+          "name": "Checkout repository",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 2,
+          "started_at": "2026-11-08T05:42:26Z",
+          "completed_at": "2026-11-08T05:42:29Z"
+        },
+        {
+          "name": "Setup Node.js 22",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 3,
+          "started_at": "2026-11-08T05:42:29Z",
+          "completed_at": "2026-11-08T05:42:34Z"
+        },
+        {
+          "name": "Resource Safety Preflight",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 4,
+          "started_at": "2026-11-08T05:42:34Z",
+          "completed_at": "2026-11-08T05:42:34Z"
+        },
+        {
+          "name": "Install dependencies (deterministic lockfile)",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 5,
+          "started_at": "2026-11-08T05:42:34Z",
+          "completed_at": "2026-11-08T05:42:58Z"
+        },
+        {
+          "name": "Run KH-01 Baseline Verification Suite",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 6,
+          "started_at": "2026-11-08T05:42:58Z",
+          "completed_at": "2026-11-08T05:43:02Z"
+        },
+        {
+          "name": "Post Setup Node.js 22",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 11,
+          "started_at": "2026-11-08T05:43:02Z",
+          "completed_at": "2026-11-08T05:43:02Z"
+        },
+        {
+          "name": "Post Checkout repository",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 12,
+          "started_at": "2026-11-08T05:43:02Z",
+          "completed_at": "2026-11-08T05:43:02Z"
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 13,
+          "started_at": "2026-11-08T05:43:02Z",
+          "completed_at": "2026-11-08T05:43:02Z"
+        }
+      ],
+      "check_run_url": "https://api.github.com/repos/quocan050302/Shopify-Search/check-runs/128642442497",
+      "labels": [
+        "ubuntu-24.04"
+      ],
+      "runner_id": 1000000077,
+      "runner_name": "GitHub Actions 1000000077",
+      "runner_group_id": 0,
+      "runner_group_name": "GitHub Actions"
+    },
+    {
+      "id": 128642442528,
+      "run_id": 42451749802,
+      "workflow_name": "KH-02 Continuous Integration",
+      "head_branch": "feature/kh02-walmart-us-jina-reader-v12.4.3.5.1",
+      "run_url": "https://api.github.com/repos/quocan050302/Shopify-Search/actions/runs/42451749802",
+      "run_attempt": 1,
+      "node_id": "CR_kwDOVPV9XM8AAAAd86_lIA",
+      "head_sha": "c856f5751f877e7249ea6739d41bf862922a003b",
+      "url": "https://api.github.com/repos/quocan050302/Shopify-Search/actions/jobs/128642442528",
+      "html_url": "https://github.com/quocan050302/Shopify-Search/actions/runs/42451749802/job/128642442528",
+      "status": "completed",
+      "conclusion": "success",
+      "created_at": "2026-11-08T05:42:23Z",
+      "started_at": "2026-11-08T05:42:24Z",
+      "completed_at": "2026-11-08T05:46:35Z",
+      "name": "kh02-unit",
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 1,
+          "started_at": "2026-11-08T05:42:25Z",
+          "completed_at": "2026-11-08T05:42:26Z"
+        },
+        {
+          "name": "Checkout repository",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 2,
+          "started_at": "2026-11-08T05:42:26Z",
+          "completed_at": "2026-11-08T05:42:29Z"
+        },
+        {
+          "name": "Setup Node.js 22",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 3,
+          "started_at": "2026-11-08T05:42:29Z",
+          "completed_at": "2026-11-08T05:42:32Z"
+        },
+        {
+          "name": "Resource Safety Preflight",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 4,
+          "started_at": "2026-11-08T05:42:32Z",
+          "completed_at": "2026-11-08T05:42:32Z"
+        },
+        {
+          "name": "Install dependencies (deterministic lockfile)",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 5,
+          "started_at": "2026-11-08T05:42:32Z",
+          "completed_at": "2026-11-08T05:43:08Z"
+        },
+        {
+          "name": "Run KH-02 Unit Test Suite",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 6,
+          "started_at": "2026-11-08T05:43:08Z",
+          "completed_at": "2026-11-08T05:46:33Z"
+        },
+        {
+          "name": "Post Setup Node.js 22",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 11,
+          "started_at": "2026-11-08T05:46:33Z",
+          "completed_at": "2026-11-08T05:46:33Z"
+        },
+        {
+          "name": "Post Checkout repository",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 12,
+          "started_at": "2026-11-08T05:46:33Z",
+          "completed_at": "2026-11-08T05:46:33Z"
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 13,
+          "started_at": "2026-11-08T05:46:33Z",
+          "completed_at": "2026-11-08T05:46:33Z"
+        }
+      ],
+      "check_run_url": "https://api.github.com/repos/quocan050302/Shopify-Search/check-runs/128642442528",
+      "labels": [
+        "ubuntu-24.04"
+      ],
+      "runner_id": 1000000078,
+      "runner_name": "GitHub Actions 1000000078",
+      "runner_group_id": 0,
+      "runner_group_name": "GitHub Actions"
+    },
+    {
+      "id": 128643252862,
+      "run_id": 42451749802,
+      "workflow_name": "KH-02 Continuous Integration",
+      "head_branch": "feature/kh02-walmart-us-jina-reader-v12.4.3.5.1",
+      "run_url": "https://api.github.com/repos/quocan050302/Shopify-Search/actions/runs/42451749802",
+      "run_attempt": 1,
+      "node_id": "CR_kwDOVPV9XM8AAAAd87xCfg",
+      "head_sha": "c856f5751f877e7249ea6739d41bf862922a003b",
+      "url": "https://api.github.com/repos/quocan050302/Shopify-Search/actions/jobs/128643252862",
+      "html_url": "https://github.com/quocan050302/Shopify-Search/actions/runs/42451749802/job/128643252862",
+      "status": "completed",
+      "conclusion": "success",
+      "created_at": "2026-11-08T05:46:35Z",
+      "started_at": "2026-11-08T05:46:37Z",
+      "completed_at": "2026-11-08T05:48:38Z",
+      "name": "kh02-integration",
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 1,
+          "started_at": "2026-11-08T05:46:37Z",
+          "completed_at": "2026-11-08T05:46:38Z"
+        },
+        {
+          "name": "Checkout repository",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 2,
+          "started_at": "2026-11-08T05:46:38Z",
+          "completed_at": "2026-11-08T05:46:41Z"
+        },
+        {
+          "name": "Setup Node.js 22",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 3,
+          "started_at": "2026-11-08T05:46:41Z",
+          "completed_at": "2026-11-08T05:46:47Z"
+        },
+        {
+          "name": "Resource Safety Preflight",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 4,
+          "started_at": "2026-11-08T05:46:47Z",
+          "completed_at": "2026-11-08T05:46:47Z"
+        },
+        {
+          "name": "Install dependencies (deterministic lockfile)",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 5,
+          "started_at": "2026-11-08T05:46:47Z",
+          "completed_at": "2026-11-08T05:47:15Z"
+        },
+        {
+          "name": "Run KH-02 Integration Test Suite (Serialized SQLite)",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 6,
+          "started_at": "2026-11-08T05:47:15Z",
+          "completed_at": "2026-11-08T05:48:36Z"
+        },
+        {
+          "name": "Post Setup Node.js 22",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 11,
+          "started_at": "2026-11-08T05:48:36Z",
+          "completed_at": "2026-11-08T05:48:36Z"
+        },
+        {
+          "name": "Post Checkout repository",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 12,
+          "started_at": "2026-11-08T05:48:36Z",
+          "completed_at": "2026-11-08T05:48:36Z"
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 13,
+          "started_at": "2026-11-08T05:48:36Z",
+          "completed_at": "2026-11-08T05:48:36Z"
+        }
+      ],
+      "check_run_url": "https://api.github.com/repos/quocan050302/Shopify-Search/check-runs/128643252862",
+      "labels": [
+        "ubuntu-24.04"
+      ],
+      "runner_id": 1000000079,
+      "runner_name": "GitHub Actions 1000000079",
+      "runner_group_id": 0,
+      "runner_group_name": "GitHub Actions"
+    },
+    {
+      "id": 128643253276,
+      "run_id": 42451749802,
+      "workflow_name": "KH-02 Continuous Integration",
+      "head_branch": "feature/kh02-walmart-us-jina-reader-v12.4.3.5.1",
+      "run_url": "https://api.github.com/repos/quocan050302/Shopify-Search/actions/runs/42451749802",
+      "run_attempt": 1,
+      "node_id": "CR_kwDOVPV9XM8AAAAd87xEHA",
+      "head_sha": "c856f5751f877e7249ea6739d41bf862922a003b",
+      "url": "https://api.github.com/repos/quocan050302/Shopify-Search/actions/jobs/128643253276",
+      "html_url": "https://github.com/quocan050302/Shopify-Search/actions/runs/42451749802/job/128643253276",
+      "status": "completed",
+      "conclusion": "success",
+      "created_at": "2026-11-08T05:46:35Z",
+      "started_at": "2026-11-08T05:46:37Z",
+      "completed_at": "2026-11-08T05:47:18Z",
+      "name": "backtest-policy",
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 1,
+          "started_at": "2026-11-08T05:46:38Z",
+          "completed_at": "2026-11-08T05:46:39Z"
+        },
+        {
+          "name": "Checkout repository",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 2,
+          "started_at": "2026-11-08T05:46:39Z",
+          "completed_at": "2026-11-08T05:46:42Z"
+        },
+        {
+          "name": "Setup Node.js 22",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 3,
+          "started_at": "2026-11-08T05:46:42Z",
+          "completed_at": "2026-11-08T05:46:48Z"
+        },
+        {
+          "name": "Resource Safety Preflight",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 4,
+          "started_at": "2026-11-08T05:46:48Z",
+          "completed_at": "2026-11-08T05:46:48Z"
+        },
+        {
+          "name": "Install dependencies (deterministic lockfile)",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 5,
+          "started_at": "2026-11-08T05:46:48Z",
+          "completed_at": "2026-11-08T05:47:11Z"
+        },
+        {
+          "name": "Run Point-in-Time Historical Backtest & Candidate DB Readback",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 6,
+          "started_at": "2026-11-08T05:47:11Z",
+          "completed_at": "2026-11-08T05:47:15Z"
+        },
+        {
+          "name": "Post Setup Node.js 22",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 11,
+          "started_at": "2026-11-08T05:47:15Z",
+          "completed_at": "2026-11-08T05:47:16Z"
+        },
+        {
+          "name": "Post Checkout repository",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 12,
+          "started_at": "2026-11-08T05:47:16Z",
+          "completed_at": "2026-11-08T05:47:16Z"
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 13,
+          "started_at": "2026-11-08T05:47:16Z",
+          "completed_at": "2026-11-08T05:47:16Z"
+        }
+      ],
+      "check_run_url": "https://api.github.com/repos/quocan050302/Shopify-Search/check-runs/128643253276",
+      "labels": [
+        "ubuntu-24.04"
+      ],
+      "runner_id": 1000000080,
+      "runner_name": "GitHub Actions 1000000080",
+      "runner_group_id": 0,
+      "runner_group_name": "GitHub Actions"
+    }
+  ]
+}

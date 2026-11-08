@@ -1,0 +1,33 @@
+{
+  "gateId": "BOUNDED_ASYNC_DISK_RAM_TIMEOUT_CHILD_CLEANUP",
+  "patchVersion": "V12.4.3.7.19.3.3.2",
+  "testedCodeCommitSha": "c856f5751f877e7249ea6739d41bf862922a003b",
+  "testedTreeSha": "bfab7262eeef3ead2f3ccaad28a1eced3c78f9e9",
+  "logFile": "reports/kh02/v19_3_3_2_csv_origin_google_upstream_trust/logs/RESOURCE_AND_CHILD_CLEANUP_C1.log",
+  "dagExecutionDiscipline": {
+    "overlappingHeavyCommands": 0,
+    "sequentialWaveOrdering": [
+      "Wave A (TSC_NO_EMIT -> ESLINT_PATCHED_FILES -> PRISMA_VALIDATE -> V19_3_3_2_SUITE -> V19_3_3_1_SUITE -> G15_CSV_ORIGIN_SUITE -> A5_META_GOOGLE_FLOW)",
+      "Wave B (D1_KH01_REGRESSION -> D2_DEV_HOLDOUT_BACKTEST -> D3_DB_READBACK -> D4_FREE_MCP_SMOKE)",
+      "Wave C (C1_KH02_INTEGRATION --no-file-parallelism)",
+      "Wave D (B1_KH02_UNIT_ALL --maxWorkers=2)",
+      "Wave E (NEXT_BUILD)"
+    ],
+    "hungOrTimedOutProcesses": 0,
+    "zombieChildProcessesAfterRun": 0,
+    "orphanProcessCheckOutput": "ZERO_ORPHAN_TEST_PROCESSES",
+    "tempFilesCleaned": true,
+    "dataImportsUntrackedTestCsvsCleaned": true
+  },
+  "resourceTelemetry": {
+    "diskMount": "/System/Volumes/Data",
+    "diskSize": "460Gi",
+    "diskAvailablePostCleanup": "8.1Gi",
+    "vmPageSizeBytes": 16384,
+    "vmPagesFree": 4255,
+    "vmPagesActive": 186085,
+    "vmPagesInactive": 184547,
+    "vmPagesSpeculative": 494,
+    "vmPagesWiredDown": 261288
+  }
+}
