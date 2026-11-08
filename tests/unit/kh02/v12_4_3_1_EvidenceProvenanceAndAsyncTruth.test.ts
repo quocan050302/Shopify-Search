@@ -307,6 +307,7 @@ describe("SWAI KH-02 V12.4.3.1 — Evidence Provenance, Runtime Parity & Async T
           reviewStatus: "APPROVED",
           verificationMethod: "TEST_AUTHORIZED_WORKFLOW_SIMULATION",
           evidenceChainReference: "urn:swai:test:v12_4_3_1:2_1",
+          acquisitionSourceUrl: "https://trends.google.com/trends/explore?geo=US&q=Automatic%20Wet%20Food%20Cat%20Feeder",
           issuerKeyId: "key_v12_4_3_1_active",
           isTestOnly: false,
         });
@@ -426,6 +427,7 @@ describe("SWAI KH-02 V12.4.3.1 — Evidence Provenance, Runtime Parity & Async T
           reviewStatus: "APPROVED",
           verificationMethod: "TEST_AUTHORIZED_WORKFLOW_SIMULATION",
           evidenceChainReference: "urn:swai:test:v12_4_3_1:2_4",
+          acquisitionSourceUrl: "https://trends.google.com/trends/explore?geo=US&q=Automatic%20Wet%20Food%20Cat%20Feeder",
           issuerKeyId: "key_v12_4_3_1_24",
           isTestOnly: false,
         });

@@ -497,6 +497,7 @@ describe("KH-02 G15 CSV Origin Integrity & Official Import Authority (30 Negativ
       verificationMethod: "LOCAL_SHA256_ONLY",
       evidenceChainReference: "urn:swai:upload:unattested:01",
       issuerKeyId: businessCsvKeyId,
+      acquisitionSourceUrl: "https://trends.google.com/trends/explore?geo=US&q=automatic%20cat%20water%20fountain",
       isTestOnly: false,
     });
     const persisted = persistCsvImportAuthorityAtomically(unattestedRecord);
@@ -620,6 +621,7 @@ describe("KH-02 G15 CSV Origin Integrity & Official Import Authority (30 Negativ
       verificationMethod: "HUMAN_REVIEWED_GOOGLE_TRENDS_EXPORT",
       evidenceChainReference: "urn:swai:review:official:15",
       issuerKeyId: businessCsvKeyId,
+      acquisitionSourceUrl: "https://trends.google.com/trends/explore?geo=US&q=automatic%20cat%20water%20fountain",
       isTestOnly: false,
     });
     persistCsvImportAuthorityAtomically(record);
@@ -706,6 +708,7 @@ describe("KH-02 G15 CSV Origin Integrity & Official Import Authority (30 Negativ
       verificationMethod: "HUMAN_REVIEWED_GOOGLE_TRENDS_EXPORT",
       evidenceChainReference: "urn:swai:review:official:17",
       issuerKeyId: businessCsvKeyId,
+      acquisitionSourceUrl: "https://trends.google.com/trends/explore?geo=US&q=automatic%20cat%20water%20fountain",
       isTestOnly: false,
     });
     persistCsvImportAuthorityAtomically(record);
@@ -759,6 +762,7 @@ describe("KH-02 G15 CSV Origin Integrity & Official Import Authority (30 Negativ
       verificationMethod: "HUMAN_REVIEWED_GOOGLE_TRENDS_EXPORT",
       evidenceChainReference: "urn:swai:review:official:18",
       issuerKeyId: businessCsvKeyId,
+      acquisitionSourceUrl: "https://trends.google.com/trends/explore?geo=US&q=automatic%20cat%20water%20fountain",
       isTestOnly: false,
     });
     persistCsvImportAuthorityAtomically(record);
@@ -858,6 +862,7 @@ describe("KH-02 G15 CSV Origin Integrity & Official Import Authority (30 Negativ
       verificationMethod: "HUMAN_REVIEWED_GOOGLE_TRENDS_EXPORT",
       evidenceChainReference: "urn:swai:review:official:20",
       issuerKeyId: businessCsvKeyId,
+      acquisitionSourceUrl: "https://trends.google.com/trends/explore?geo=US&q=automatic%20cat%20water%20fountain",
       isTestOnly: false,
     });
     persistCsvImportAuthorityAtomically(record);
@@ -912,6 +917,7 @@ describe("KH-02 G15 CSV Origin Integrity & Official Import Authority (30 Negativ
       verificationMethod: "HUMAN_REVIEWED_GOOGLE_TRENDS_EXPORT",
       evidenceChainReference: "urn:swai:review:official:21",
       issuerKeyId: businessCsvKeyId,
+      acquisitionSourceUrl: "https://trends.google.com/trends/explore?geo=US&q=automatic%20cat%20water%20fountain",
       isTestOnly: false,
     });
     persistCsvImportAuthorityAtomically(record);
@@ -971,6 +977,7 @@ describe("KH-02 G15 CSV Origin Integrity & Official Import Authority (30 Negativ
       verificationMethod: "HUMAN_REVIEWED_GOOGLE_TRENDS_EXPORT",
       evidenceChainReference: "urn:swai:review:official:22",
       issuerKeyId: businessCsvKeyId,
+      acquisitionSourceUrl: "https://trends.google.com/trends/explore?geo=US&q=automatic%20cat%20water%20fountain",
       isTestOnly: false,
     });
     persistCsvImportAuthorityAtomically(record);
@@ -1093,6 +1100,7 @@ describe("KH-02 G15 CSV Origin Integrity & Official Import Authority (30 Negativ
       verificationMethod: "HUMAN_REVIEWED_GOOGLE_TRENDS_EXPORT",
       evidenceChainReference: "urn:swai:review:official:25",
       issuerKeyId: businessCsvKeyId,
+      acquisitionSourceUrl: "https://trends.google.com/trends/explore?geo=US&q=automatic%20cat%20water%20fountain",
       isTestOnly: false,
     });
     persistCsvImportAuthorityAtomically(record);
@@ -1151,6 +1159,7 @@ describe("KH-02 G15 CSV Origin Integrity & Official Import Authority (30 Negativ
       verificationMethod: "HUMAN_REVIEWED_GOOGLE_TRENDS_EXPORT",
       evidenceChainReference: "urn:swai:review:official:26",
       issuerKeyId: businessCsvKeyId,
+      acquisitionSourceUrl: "https://trends.google.com/trends/explore?geo=US&q=automatic%20cat%20water%20fountain",
       isTestOnly: false,
     });
     persistCsvImportAuthorityAtomically(record);
@@ -1429,6 +1438,7 @@ describe("KH-02 G15 CSV Origin Integrity & Official Import Authority (30 Negativ
         reviewStatus: "APPROVED",
         verificationMethod: "TEST_AUTHORIZED_WORKFLOW_SIMULATION",
         evidenceChainReference: "urn:swai:test:p03",
+        acquisitionSourceUrl: "https://trends.google.com/trends/explore?geo=US&q=automatic%20cat%20water%20fountain",
         issuerKeyId: businessCsvKeyId,
         isTestOnly: false,
       });
@@ -1514,6 +1524,7 @@ describe("KH-02 G15 CSV Origin Integrity & Official Import Authority (30 Negativ
       verificationMethod: "TEST_AUTHORIZED_WORKFLOW_SIMULATION",
       evidenceChainReference: "urn:swai:test:p05",
       issuerKeyId: businessCsvKeyId,
+      acquisitionSourceUrl: "https://trends.google.com/trends/explore?geo=US&q=automatic%20cat%20water%20fountain",
       isTestOnly: false,
     });
 

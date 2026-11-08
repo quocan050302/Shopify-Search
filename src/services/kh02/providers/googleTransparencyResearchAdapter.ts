@@ -257,6 +257,7 @@ export interface GoogleInvocationLineageVerificationResult {
   providerVerified: boolean;
   localMcpToolResultVerified: boolean;
   upstreamRequestVerified: boolean;
+  upstreamOriginStatus: "UPSTREAM_ATTESTED" | "UPSTREAM_NOT_ATTESTED";
   providerRequestIdOrigin: GoogleRequestIdOrigin;
   upstreamProviderRequestId: string | null;
   providerRequestId: string | null;
@@ -392,8 +393,15 @@ export function isBotWallOrUnavailableResponse(rawResponse: unknown): boolean {
  */
 export function extractUpstreamGoogleRequestId(
   response: unknown,
-  creative?: unknown
+  creative?: unknown,
+  options?: {
+    localInvocationRef?: string | null;
+    researchRunId?: string | null;
+  }
 ): string | null {
+  const localRefClean = options?.localInvocationRef?.trim() || null;
+  const runIdClean = options?.researchRunId?.trim() || null;
+
   const tryExtractFromObj = (
     obj: any,
     keys: string[]
@@ -403,7 +411,12 @@ export function extractUpstreamGoogleRequestId(
       const rawVal = obj[k];
       if (typeof rawVal === "string" || typeof rawVal === "number") {
         const trimmed = String(rawVal).trim();
-        if (trimmed && !isFakeOrLocalGoogleRequestId(trimmed)) {
+        if (
+          trimmed &&
+          !isFakeOrLocalGoogleRequestId(trimmed, runIdClean) &&
+          (!localRefClean || trimmed !== localRefClean) &&
+          (!runIdClean || trimmed !== runIdClean)
+        ) {
           return trimmed;
         }
       }
@@ -612,7 +625,11 @@ export function recordActualGoogleMcpInvocation(
     assertBoundedGoogleMcpPayloadSize(upstreamResponse);
     decoded = decodeCallToolResult(upstreamResponse);
   } catch (decodeOrSizeErr: any) {
-    if (/RESPONSE_SIZE_EXCEEDED_2MIB/.test(String(decodeOrSizeErr?.message))) {
+    if (
+      /RESPONSE_SIZE_EXCEEDED_2MIB|MALFORMED_GOOGLE_MCP_JSON/.test(
+        String(decodeOrSizeErr?.message)
+      )
+    ) {
       return {
         invocationId: localRef,
         mcpInvocationRef: localRef,
@@ -726,9 +743,43 @@ export function recordActualGoogleMcpInvocation(
     }
   }
 
-  const upstreamReqId =
-    extractUpstreamGoogleRequestId(upstreamResponse) ??
-    extractUpstreamGoogleRequestId(decoded);
+  // Detect malicious collision where caller/response supplies request_id equal to local invocation ID
+  const requestIdKeysForCollision = [
+    "upstreamProviderRequestId",
+    "upstream_request_id",
+    "providerRequestId",
+    "provider_request_id",
+    "requestId",
+    "request_id",
+  ];
+  const hasRawIdCollision = (obj: any): boolean => {
+    if (!obj || typeof obj !== "object" || Array.isArray(obj)) return false;
+    for (const k of requestIdKeysForCollision) {
+      const val = obj[k];
+      if (
+        (typeof val === "string" || typeof val === "number") &&
+        String(val).trim() === localRef
+      ) {
+        return true;
+      }
+    }
+    return false;
+  };
+  const collidesWithLocalInvocationId =
+    hasRawIdCollision(upstreamResponse) ||
+    hasRawIdCollision(decoded) ||
+    rawAds.some((ad) => hasRawIdCollision(ad));
+
+  const upstreamReqId = collidesWithLocalInvocationId
+    ? null
+    : extractUpstreamGoogleRequestId(upstreamResponse, undefined, {
+        localInvocationRef: localRef,
+        researchRunId: invocation.researchRunId,
+      }) ??
+      extractUpstreamGoogleRequestId(decoded, undefined, {
+        localInvocationRef: localRef,
+        researchRunId: invocation.researchRunId,
+      });
   const providerRequestIdOrigin: GoogleRequestIdOrigin = upstreamReqId
     ? "UPSTREAM"
     : "ABSENT";
@@ -746,6 +797,8 @@ export function recordActualGoogleMcpInvocation(
     upstreamProviderRequestId: upstreamReqId,
     providerRequestId: upstreamReqId, // strictly UPSTREAM ONLY (null when absent)
     providerRequestIdOrigin,
+    collidesWithLocalInvocationId,
+    independentUpstreamCaptureVerified: false,
     invocationEvidenceRef: evidenceRef,
     responseEvidenceRef: evidenceRef,
     transportId: transportSessionIdVal,
@@ -781,7 +834,7 @@ export function recordActualGoogleMcpInvocation(
         sourceMode === "LIVE_PROVIDER"
     ),
     errorMessage: null,
-  };
+  } as GoogleMcpProviderInvocationRecord;
 }
 
 /**
@@ -801,25 +854,35 @@ export function attachGoogleMcpCreativeProvenance(
       ? String(rawCid).trim()
       : null;
 
-  const upstreamReqId =
-    extractUpstreamGoogleRequestId(null, rawCreative) ??
-    invocationRecord.upstreamProviderRequestId ??
-    null;
-  const providerRequestIdOrigin: GoogleRequestIdOrigin = upstreamReqId
-    ? "UPSTREAM"
-    : "ABSENT";
   const localInvocationRef =
     invocationRecord.mcpInvocationRef || invocationRecord.invocationId || null;
 
+  const recordCollides = Boolean(
+    (invocationRecord as any).collidesWithLocalInvocationId === true
+  );
+  const upstreamReqId = recordCollides
+    ? null
+    : extractUpstreamGoogleRequestId(null, rawCreative, {
+        localInvocationRef,
+        researchRunId: invocationRecord.researchRunId,
+      }) ??
+      invocationRecord.upstreamProviderRequestId ??
+      null;
+  const providerRequestIdOrigin: GoogleRequestIdOrigin = upstreamReqId
+    ? "UPSTREAM"
+    : "ABSENT";
+
   // Never retroactively re-stamp a cached/replay record or a record from an earlier run into the current run
+  const invModeStr = String(invocationRecord.sourceMode || "").toUpperCase();
+  const crModeStr = String(rawCreative?.sourceMode || "").toUpperCase();
   const explicitlyCachedInput =
     rawCreative?.isCached === true ||
-    rawCreative?.sourceMode === "CACHED" ||
-    rawCreative?.sourceMode === "CACHE_ONLY" ||
+    crModeStr.startsWith("CACHE") ||
     rawCreative?.provenance === "CACHED_SOURCE" ||
     rawCreative?.provenance === "CACHED_DB" ||
     invocationRecord.isCached === true ||
-    invocationRecord.sourceMode === "CACHED";
+    invModeStr.startsWith("CACHE") ||
+    invocationRecord.sourceMode !== "LIVE_PROVIDER";
 
   const preExistingRunId =
     typeof rawCreative?.researchRunId === "string" &&
@@ -1030,17 +1093,23 @@ export function verifyGoogleInvocationLineage(
     upId: string | null,
     localRefVal: string | null,
     matchedInvId: string | null,
-    respHash: string | null
+    respHash: string | null,
+    independentUpstreamCaptureVerified = false
   ): GoogleInvocationLineageVerificationResult => {
+    // V19.3.3.2 P1-B Security Boundary:
+    // An unauthenticated `request_id`/`providerRequestId` inside an MCP JSON payload is controlled
+    // by the MCP subprocess/response and is NOT an independent cryptographic attestation from Google LLC.
+    // `upstreamRequestVerified` and `providerVerified` remain strictly `false` (`LOCAL_MCP_TOOL_RESULT_VERIFIED`,
+    // `upstreamOriginStatus: "UPSTREAM_NOT_ATTESTED"`) unless verified by an independent out-of-band capture path.
+    const independentAttested = Boolean(verified && independentUpstreamCaptureVerified === true);
     const provenanceTier: GoogleProvenanceTier = !verified
       ? "UNVERIFIED"
-      : method === "UPSTREAM_PROVIDER_REQUEST_ID"
+      : independentAttested
       ? "UPSTREAM_REQUEST_VERIFIED"
-      : method === "VERIFIED_LOCAL_INVOCATION_ONLY"
+      : method === "VERIFIED_LOCAL_INVOCATION_ONLY" || method === "UPSTREAM_PROVIDER_REQUEST_ID"
       ? "LOCAL_MCP_TOOL_RESULT_VERIFIED"
       : "UNVERIFIED";
-    const upstreamRequestVerified =
-      verified && method === "UPSTREAM_PROVIDER_REQUEST_ID";
+    const upstreamRequestVerified = independentAttested;
     const localMcpToolResultVerified =
       verified &&
       (method === "VERIFIED_LOCAL_INVOCATION_ONLY" ||
@@ -1052,6 +1121,7 @@ export function verifyGoogleInvocationLineage(
       providerVerified: upstreamRequestVerified,
       localMcpToolResultVerified,
       upstreamRequestVerified,
+      upstreamOriginStatus: independentAttested ? "UPSTREAM_ATTESTED" : "UPSTREAM_NOT_ATTESTED",
       providerRequestIdOrigin: origin,
       upstreamProviderRequestId: upId,
       providerRequestId: upId,
@@ -1213,9 +1283,15 @@ export function verifyGoogleInvocationLineage(
 
   if (
     matchedRecord.isCached === true ||
-    matchedRecord.sourceMode === "CACHED"
+    matchedRecord.sourceMode !== "LIVE_PROVIDER" ||
+    String(matchedRecord.sourceMode || "").toUpperCase().startsWith("CACHE")
   ) {
     addReason("LEDGER_INVOCATION_MARKED_CACHED");
+  }
+
+  if ((matchedRecord as any).collidesWithLocalInvocationId === true) {
+    addReason("PROVIDER_REQUEST_ID_EQUALS_MCP_INVOCATION_REF");
+    addReason("LOCAL_MCP_INVOCATION_REF_PRESENTED_AS_PROVIDER_REQUEST_ID");
   }
 
   const ledgerRunId =
@@ -1234,6 +1310,15 @@ export function verifyGoogleInvocationLineage(
   ) {
     addReason("WORKSPACE_ISOLATION_MISMATCH");
     addReason("LEDGER_WORKSPACE_ID_MISMATCH");
+  }
+
+  if (
+    creative.workspaceId &&
+    matchedRecord.workspaceId &&
+    String(creative.workspaceId).trim() !== String(matchedRecord.workspaceId).trim()
+  ) {
+    addReason("WORKSPACE_ISOLATION_MISMATCH");
+    addReason("CREATIVE_LEDGER_WORKSPACE_MISMATCH");
   }
 
   const expectedMarket = options?.targetMarket || creative.requestedMarket;
@@ -1684,9 +1769,15 @@ export function decodeCallToolResult(result: any): any {
     for (const item of result.content) {
       if (item && item.type === "text" && typeof item.text === "string") {
         assertBoundedGoogleMcpPayloadSize(item.text);
+        const trimmedText = item.text.trim();
         try {
           return JSON.parse(item.text);
-        } catch {
+        } catch (jsonErr: any) {
+          if (trimmedText.startsWith("{") || trimmedText.startsWith("[")) {
+            throw new Error(
+              `MALFORMED_GOOGLE_MCP_JSON: ${jsonErr?.message || "Invalid JSON in MCP tool response"}`
+            );
+          }
           if (result.content.length === 1) return item.text;
         }
       }
@@ -2824,6 +2915,16 @@ export async function persistGoogleObservationsToDatabase(
               requestArgumentsHash: obs.requestArgumentsHash || null,
               responseEvidenceHash: obs.responseEvidenceHash || null,
               lineageMethod: obs.lineageMethod || "UNVERIFIED",
+              provenanceTier:
+                (obs.metrics as any)?.provenanceTier ||
+                (obs.lineageMethod === "VERIFIED_LOCAL_INVOCATION_ONLY" ||
+                obs.lineageMethod === "UPSTREAM_PROVIDER_REQUEST_ID"
+                  ? "LOCAL_MCP_TOOL_RESULT_VERIFIED"
+                  : "UNVERIFIED"),
+              providerVerified: Boolean((obs.metrics as any)?.providerVerified === true),
+              upstreamRequestVerified: Boolean((obs.metrics as any)?.upstreamRequestVerified === true),
+              upstreamOriginStatus:
+                (obs.metrics as any)?.upstreamOriginStatus || "UPSTREAM_NOT_ATTESTED",
               providerRequestId: obs.providerRequestId || null,
               upstreamProviderRequestId: obs.upstreamProviderRequestId || null,
               providerRequestIdOrigin: obs.providerRequestIdOrigin || "ABSENT",
@@ -3731,9 +3832,7 @@ export async function collectGoogleAdvertiserSignals(
         o.lineageMethod === "UPSTREAM_PROVIDER_REQUEST_ID"
     ).length;
     const upstreamContentVerifiedCount = observations.filter(
-      (o) =>
-        o.lineageMethod === "UPSTREAM_PROVIDER_REQUEST_ID" &&
-        Boolean(o.upstreamProviderRequestId)
+      (o) => Boolean((o.metrics as any)?.providerVerified === true)
     ).length;
     const productSpecificVerifiedCount = observations.filter(
       (o) => (o.metrics as any)?.productRelevance === "PRODUCT_SPECIFIC"

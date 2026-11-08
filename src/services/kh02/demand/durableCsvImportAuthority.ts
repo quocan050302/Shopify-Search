@@ -27,7 +27,8 @@ import os from "node:os";
 import crypto from "node:crypto";
 import { verifyStoredCsvFile } from "./googleTrendsCsvValidator";
 
-export const CSV_AUTHORITY_SCHEMA_VERSION = "1.0" as const;
+export const CSV_AUTHORITY_SCHEMA_VERSION = "2.0" as const;
+export type CsvAuthoritySchemaVersion = "1.0" | "2.0";
 export const CSV_AUTHORITY_OPERATION_SCOPE = "KH02_OFFICIAL_CSV_IMPORT_AUTHORITY_V1" as const;
 
 export type CsvOriginClassification =
@@ -59,7 +60,7 @@ export interface CsvAuthoritySigningKeyEntry {
 
 export interface OfficialCsvImportAuthorityRecord {
   authorityId: string;
-  schemaVersion: typeof CSV_AUTHORITY_SCHEMA_VERSION;
+  schemaVersion: CsvAuthoritySchemaVersion;
   operationScope: typeof CSV_AUTHORITY_OPERATION_SCOPE;
   importEventId: string;
   rawCsvSha256: string;
@@ -84,6 +85,10 @@ export interface OfficialCsvImportAuthorityRecord {
   verificationMethod: string;
   verificationLimitation: string;
   evidenceChainReference: string;
+  acquisitionSourceUrl?: string | null;
+  acquisitionEvidenceRef?: string | null;
+  acquisitionCapturedAt?: string | null;
+  acquisitionMethod?: string | null;
   isTestOnly: boolean;
   issuerKeyId: string;
   signingAlgorithm: "HMAC-SHA256";
@@ -130,6 +135,7 @@ export interface CsvAuthorityVerificationResult {
   originClassification: CsvOriginClassification;
   code: CsvAuthorityDecisionCode;
   reason: string;
+  tamperDetected?: boolean;
   record?: OfficialCsvImportAuthorityRecord;
 }
 
@@ -250,15 +256,75 @@ export function normalizeCsvAuthorityGeography(geo: string | null | undefined): 
   return cleaned;
 }
 
+export function validateOfficialGoogleTrendsAcquisitionUrl(
+  rawUrl: unknown,
+  expectedQuery?: string | null,
+  expectedGeo?: string | null
+): string {
+  if (rawUrl === undefined || rawUrl === null || typeof rawUrl !== "string" || !rawUrl.trim()) {
+    throw new Error(
+      "ACQUISITION_SOURCE_REQUIRED: Verified official Google Trends acquisitionSourceUrl (https://trends.google.com/trends/...) is required for BUSINESS-scope AUTHENTICATED_OFFICIAL_EXPORT."
+    );
+  }
+  const trimmed = rawUrl.trim();
+  if (!/^https:\/\/trends\.google\.com\/trends\//i.test(trimmed)) {
+    throw new Error(
+      `INVALID_ACQUISITION_SOURCE_URL: URL '${trimmed}' must use https://trends.google.com/trends/... without userinfo, IP literal, or custom port.`
+    );
+  }
+  let parsedUrl: URL;
+  try {
+    parsedUrl = new URL(trimmed);
+  } catch {
+    throw new Error(`INVALID_ACQUISITION_SOURCE_URL: Malformed URL '${trimmed}'.`);
+  }
+  if (
+    parsedUrl.protocol !== "https:" ||
+    parsedUrl.hostname.toLowerCase() !== "trends.google.com" ||
+    parsedUrl.username !== "" ||
+    parsedUrl.password !== "" ||
+    parsedUrl.port !== "" ||
+    !parsedUrl.pathname.startsWith("/trends/")
+  ) {
+    throw new Error(
+      `INVALID_ACQUISITION_SOURCE_URL: URL '${trimmed}' failed strict origin/path validation.`
+    );
+  }
+
+  if (parsedUrl.searchParams.has("geo")) {
+    const urlGeo = normalizeCsvAuthorityGeography(parsedUrl.searchParams.get("geo"));
+    const expGeo = normalizeCsvAuthorityGeography(expectedGeo || "US");
+    if (urlGeo !== expGeo) {
+      throw new Error(
+        `ACQUISITION_GEO_MISMATCH: Acquisition URL geo '${urlGeo}' does not match authority geography '${expGeo}'.`
+      );
+    }
+  }
+
+  if (parsedUrl.searchParams.has("q") && expectedQuery && expectedQuery.trim()) {
+    const urlQ = normalizeCsvAuthorityQuery(parsedUrl.searchParams.get("q"));
+    const expQ = normalizeCsvAuthorityQuery(expectedQuery);
+    if (!urlQ || (urlQ !== expQ && !urlQ.includes(expQ) && !expQ.includes(urlQ))) {
+      throw new Error(
+        `ACQUISITION_QUERY_MISMATCH: Acquisition URL query '${urlQ}' does not match authority query '${expQ}'.`
+      );
+    }
+  }
+
+  return trimmed;
+}
+
 // -------------------------------------------------------------------------------------
 // Canonical Serialization & HMAC Signing
 // -------------------------------------------------------------------------------------
 
-const CSV_AUTHORITY_DOMAIN_SEPARATOR = "SWAI_KH02_CSV_IMPORT_AUTHORITY_V1\n";
+const CSV_AUTHORITY_DOMAIN_SEPARATOR_V1 = "SWAI_KH02_CSV_IMPORT_AUTHORITY_V1\n";
+const CSV_AUTHORITY_DOMAIN_SEPARATOR_V2 = "SWAI_KH02_CSV_IMPORT_AUTHORITY_V2\n";
 
 export function computeCanonicalCsvAuthorityPayload(
   r: Omit<OfficialCsvImportAuthorityRecord, "payloadDigest" | "authoritySignature">
 ): string {
+  const isV1 = r.schemaVersion === "1.0";
   const fields: Array<[string, string]> = [
     ["authorityId", r.authorityId],
     ["schemaVersion", r.schemaVersion],
@@ -286,13 +352,27 @@ export function computeCanonicalCsvAuthorityPayload(
     ["verificationMethod", r.verificationMethod],
     ["verificationLimitation", r.verificationLimitation],
     ["evidenceChainReference", r.evidenceChainReference],
-    ["isTestOnly", r.isTestOnly ? "true" : "false"],
-    ["issuerKeyId", r.issuerKeyId],
-    ["signingAlgorithm", r.signingAlgorithm],
   ];
 
+  if (!isV1) {
+    fields.push(
+      ["acquisitionSourceUrl", r.acquisitionSourceUrl || ""],
+      ["acquisitionEvidenceRef", r.acquisitionEvidenceRef || ""],
+      ["acquisitionCapturedAt", r.acquisitionCapturedAt || ""],
+      ["acquisitionMethod", r.acquisitionMethod || ""]
+    );
+  }
+
+  fields.push(
+    ["isTestOnly", r.isTestOnly ? "true" : "false"],
+    ["issuerKeyId", r.issuerKeyId],
+    ["signingAlgorithm", r.signingAlgorithm]
+  );
+
+  const separator = isV1 ? CSV_AUTHORITY_DOMAIN_SEPARATOR_V1 : CSV_AUTHORITY_DOMAIN_SEPARATOR_V2;
+
   return (
-    CSV_AUTHORITY_DOMAIN_SEPARATOR +
+    separator +
     fields.map(([k, v]) => `${k}=${encodeURIComponent(v)}`).join("\n") +
     "\n"
   );
@@ -344,7 +424,7 @@ export function getCsvAuthorityLedgerPath(): string {
 }
 
 export interface CsvAuthorityLedgerState {
-  version: "1.0";
+  version: CsvAuthoritySchemaVersion;
   records: Record<string, OfficialCsvImportAuthorityRecord>;
   revocations: Record<string, { revokedAt: string; reason: string; revokedBy: string }>;
   updatedAt: string;
@@ -574,6 +654,9 @@ export interface CreateCsvImportAuthorityInput {
   verificationLimitation?: string;
   evidenceChainReference: string;
   acquisitionSourceUrl?: string | null;
+  acquisitionEvidenceRef?: string | null;
+  acquisitionCapturedAt?: string | null;
+  acquisitionMethod?: string | null;
   issuerKeyId: string;
   isTestOnly?: boolean;
   enforceApproverAuthority?: boolean;
@@ -636,6 +719,7 @@ export function createSignedCsvImportAuthority(
     );
   }
 
+  let validatedAcquisitionSourceUrl: string | null = null;
   if (
     input.originClassification === "AUTHENTICATED_OFFICIAL_EXPORT" &&
     input.reviewStatus === "APPROVED"
@@ -658,14 +742,24 @@ export function createSignedCsvImportAuthority(
         );
       }
     }
-    if (!isTest && input.acquisitionSourceUrl !== undefined) {
-      const cleanAcqUrl = String(input.acquisitionSourceUrl || "").trim();
-      if (!cleanAcqUrl || !/^https:\/\/trends\.google\.com\//i.test(cleanAcqUrl)) {
-        throw new Error(
-          `ACQUISITION_SOURCE_REQUIRED: Verified official Google Trends acquisitionSourceUrl (https://trends.google.com/...) is required for BUSINESS-scope AUTHENTICATED_OFFICIAL_EXPORT.`
-        );
-      }
+    // Security boundary (V19.3.3.2 P1-A): Unconditionally require and strictly validate
+    // official Google Trends acquisitionSourceUrl for BUSINESS-scope AUTHENTICATED_OFFICIAL_EXPORT.
+    // Omission of `acquisitionSourceUrl` (undefined) MUST NOT bypass validation.
+    if (!isTest) {
+      validatedAcquisitionSourceUrl = validateOfficialGoogleTrendsAcquisitionUrl(
+        input.acquisitionSourceUrl,
+        input.query,
+        input.geography || "US"
+      );
+    } else if (input.acquisitionSourceUrl && String(input.acquisitionSourceUrl).trim()) {
+      validatedAcquisitionSourceUrl = validateOfficialGoogleTrendsAcquisitionUrl(
+        input.acquisitionSourceUrl,
+        input.query,
+        input.geography || "US"
+      );
     }
+  } else if (input.acquisitionSourceUrl && String(input.acquisitionSourceUrl).trim()) {
+    validatedAcquisitionSourceUrl = String(input.acquisitionSourceUrl).trim();
   }
 
   const nowIso = new Date().toISOString();
@@ -709,6 +803,16 @@ export function createSignedCsvImportAuthority(
     verificationMethod: input.verificationMethod.trim(),
     verificationLimitation: (input.verificationLimitation || defaultLimitation).trim(),
     evidenceChainReference: input.evidenceChainReference.trim(),
+    acquisitionSourceUrl: validatedAcquisitionSourceUrl,
+    acquisitionEvidenceRef: input.acquisitionEvidenceRef
+      ? input.acquisitionEvidenceRef.trim()
+      : input.evidenceChainReference.trim(),
+    acquisitionCapturedAt: input.acquisitionCapturedAt
+      ? new Date(input.acquisitionCapturedAt).toISOString()
+      : new Date(importedAt).toISOString(),
+    acquisitionMethod: input.acquisitionMethod
+      ? input.acquisitionMethod.trim()
+      : input.verificationMethod.trim(),
     isTestOnly: isTest,
     issuerKeyId: input.issuerKeyId,
     signingAlgorithm: "HMAC-SHA256",
@@ -936,6 +1040,21 @@ function evaluateSingleCsvAuthorityRecord(
   }
 
   const expectedDigest = computeCsvAuthorityPayloadDigest(record);
+  const expectedSigOverRecomputed = signCsvAuthorityPayloadDigest(expectedDigest, key.secret);
+  if (!verifyCsvAuthoritySignature(expectedSigOverRecomputed, record.authoritySignature)) {
+    return {
+      verified: false,
+      sourceOriginVerified: false,
+      businessEligible: false,
+      providerOriginVerified: false,
+      originClassification: "UNKNOWN_UNVERIFIED",
+      code: "INVALID_SIGNATURE",
+      reason: "CSV authority record HMAC signature verification failed over canonical payload.",
+      tamperDetected: true,
+      record,
+    };
+  }
+
   if (record.payloadDigest !== expectedDigest) {
     return {
       verified: false,
@@ -945,20 +1064,7 @@ function evaluateSingleCsvAuthorityRecord(
       originClassification: "UNKNOWN_UNVERIFIED",
       code: "TAMPERED_PAYLOAD",
       reason: "CSV authority record payload digest mismatch (tampered record).",
-      record,
-    };
-  }
-
-  const expectedSig = signCsvAuthorityPayloadDigest(record.payloadDigest, key.secret);
-  if (!verifyCsvAuthoritySignature(expectedSig, record.authoritySignature)) {
-    return {
-      verified: false,
-      sourceOriginVerified: false,
-      businessEligible: false,
-      providerOriginVerified: false,
-      originClassification: "UNKNOWN_UNVERIFIED",
-      code: "INVALID_SIGNATURE",
-      reason: "CSV authority record HMAC signature verification failed.",
+      tamperDetected: true,
       record,
     };
   }
@@ -1054,6 +1160,53 @@ function evaluateSingleCsvAuthorityRecord(
         originClassification: "UNIT_FIXTURE",
         code: "KNOWN_FIXTURE_REJECTED",
         reason: `CSV SHA-256 '${cleanTargetSha.slice(0, 12)}...' is a known repository unit test fixture and is barred from BUSINESS scope.`,
+        record,
+      };
+    }
+    const authorizedApprovers = getAuthorizedCsvApproverPrincipals();
+    if (
+      authorizedApprovers.length === 0 ||
+      !record.approverPrincipalId ||
+      !authorizedApprovers.includes(record.approverPrincipalId.trim())
+    ) {
+      return {
+        verified: false,
+        sourceOriginVerified: false,
+        businessEligible: false,
+        providerOriginVerified: false,
+        originClassification: "LOCAL_INTEGRITY_ONLY",
+        code: "ORIGIN_NOT_OFFICIAL_EXPORT",
+        reason: `CSV authority approver '${record.approverPrincipalId}' is not in the active authorized approver allowlist on readback.`,
+        record,
+      };
+    }
+    if (record.schemaVersion === "1.0") {
+      return {
+        verified: false,
+        sourceOriginVerified: false,
+        businessEligible: false,
+        providerOriginVerified: false,
+        originClassification: "LOCAL_INTEGRITY_ONLY",
+        code: "ORIGIN_NOT_OFFICIAL_EXPORT",
+        reason: `Legacy v1 CSV authority record '${record.authorityId}' lacks cryptographically signed v2 acquisition evidence (acquisitionSourceUrl) and is not eligible for BUSINESS scope.`,
+        record,
+      };
+    }
+    try {
+      validateOfficialGoogleTrendsAcquisitionUrl(
+        record.acquisitionSourceUrl,
+        record.query,
+        record.geography
+      );
+    } catch (acqErr: any) {
+      return {
+        verified: false,
+        sourceOriginVerified: false,
+        businessEligible: false,
+        providerOriginVerified: false,
+        originClassification: "LOCAL_INTEGRITY_ONLY",
+        code: "ORIGIN_NOT_OFFICIAL_EXPORT",
+        reason: `CSV authority record '${record.authorityId}' failed signed acquisitionSourceUrl verification on readback: ${acqErr?.message}`,
         record,
       };
     }

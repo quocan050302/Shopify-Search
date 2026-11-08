@@ -550,11 +550,22 @@ export function calculateKH02EvergreenScore(
     const hasProductSpecificGoogleObs = googleObs.some((o) => {
       const rel = (o.metrics as any)?.productRelevance;
       const verdict = (o as any)?.associationVerdict || (o.metrics as any)?.associationVerdict;
+      const mktVerif = (o.metrics as any)?.marketProvenance?.verificationStatus;
       if (
         rel === "BRAND_RELATED" ||
         rel === "UNRELATED" ||
+        rel === "UNKNOWN" ||
         verdict === "BRAND_ONLY_MATCH" ||
-        verdict === "REJECTED_UNRELATED_CREATIVE"
+        verdict === "REJECTED_UNRELATED_CREATIVE" ||
+        mktVerif === "FILTER_ONLY" ||
+        mktVerif === "UNVERIFIED"
+      ) {
+        return false;
+      }
+      if (
+        o.landingPageUrl === null &&
+        !(o.metrics as any)?.productId &&
+        !(o.metrics as any)?.matchedProductHandle
       ) {
         return false;
       }
