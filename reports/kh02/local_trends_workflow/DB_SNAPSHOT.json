@@ -1,0 +1,7 @@
+{
+  "source": "/Users/macbook/Documents/Project_Github/Meta-Ads/Shopify-Search/dev.db",
+  "snapshot": "/Users/macbook/Documents/Codex/2026-11-08/files-pasted-by-the-user-codex/work/local-app-snapshot.db",
+  "snapshotSha256": "3fbcd6eceed19805a085dfad0d57e809d06f3a811f6097723689b9630cab1b8a",
+  "createdAt": "2026-11-08T13:01:08.274113+00:00",
+  "mode": "sqlite online backup from readonly source; user-owned DB unchanged"
+}

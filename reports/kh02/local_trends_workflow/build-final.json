@@ -1,0 +1,22 @@
+{
+  "taskId": "build-final",
+  "baseSha": "9ba858490fa9058ce3e7e787aeafa214f5909637",
+  "startedAt": "2026-11-08T13:17:57.261651+00:00",
+  "command": [
+    "/Users/macbook/.nvm/versions/node/v22.22.3/bin/node",
+    "node_modules/next/dist/bin/next",
+    "build"
+  ],
+  "timeoutSeconds": 300,
+  "diskBefore": 6949548032,
+  "availableMemoryEstimateBefore": 2898395136,
+  "timeout": false,
+  "status": "PASS",
+  "exitCode": 0,
+  "abortReason": null,
+  "outputSha256": "2ab8accae4257f38858215321f855008c8de0cffc50bfd4a1c9a3ae6ebbb4345",
+  "logBytes": 38621,
+  "endedAt": "2026-11-08T13:18:07.106642+00:00",
+  "elapsedSeconds": 9.87,
+  "diskAfter": 6916116480
+}

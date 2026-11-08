@@ -1,0 +1,14 @@
+
+ RUN  v5.0.5 /Users/macbook/Documents/Codex/2026-10-26/new-chat/work/kh02-g15-g16-audit
+
+Processing request of type ListToolsRequest
+Processing request of type ListToolsRequest
+Processing request of type ListToolsRequest
+Processing request of type ListToolsRequest
+Processing request of type ListToolsRequest
+Processing request of type ListToolsRequest
+
+ Test Files  109 passed (109)
+      Tests  2614 passed (2614)
+   Start at  20:09:52
+   Duration  166.62s (tests 83%, import 12%, setup 4%, transform 1%)

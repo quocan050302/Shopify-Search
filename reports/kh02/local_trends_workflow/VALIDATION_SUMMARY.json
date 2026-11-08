@@ -1,0 +1,91 @@
+{
+  "sourceCommit": "aa0f1fc3b8fdfe4c9065125f0c5732747f28ebcf",
+  "recordedAt": "2026-11-08T13:27:23.236759+00:00",
+  "localGates": {
+    "kh02-unit-complete-checkout": {
+      "result": "PASS",
+      "exitCode": 0,
+      "startedAt": "2026-11-08T13:09:52.278953+00:00",
+      "endedAt": "2026-11-08T13:12:39.577458+00:00",
+      "log": "logs/kh02-unit-complete-checkout.log",
+      "timeout": false
+    },
+    "kh02-integration": {
+      "result": "PASS",
+      "exitCode": 0,
+      "startedAt": "2026-11-08T13:12:30.738015+00:00",
+      "endedAt": "2026-11-08T13:13:41.256255+00:00",
+      "log": "logs/kh02-integration.log",
+      "timeout": false
+    },
+    "typescript": {
+      "result": "PASS",
+      "exitCode": 0,
+      "startedAt": "2026-11-08T13:14:32.066477+00:00",
+      "endedAt": "2026-11-08T13:14:46.279510+00:00",
+      "log": "logs/typescript.log",
+      "timeout": false
+    },
+    "prisma-validate": {
+      "result": "PASS",
+      "exitCode": 0,
+      "startedAt": "2026-11-08T13:14:46.357470+00:00",
+      "endedAt": "2026-11-08T13:14:47.227985+00:00",
+      "log": "logs/prisma-validate.log",
+      "timeout": false
+    },
+    "kh01-verify": {
+      "result": "PASS",
+      "exitCode": 0,
+      "startedAt": "2026-11-08T13:14:47.273888+00:00",
+      "endedAt": "2026-11-08T13:14:49.425572+00:00",
+      "log": "logs/kh01-verify.log",
+      "timeout": false
+    },
+    "backtest": {
+      "result": "PASS",
+      "exitCode": 0,
+      "startedAt": "2026-11-08T13:14:49.473673+00:00",
+      "endedAt": "2026-11-08T13:14:51.446590+00:00",
+      "log": "logs/backtest.log",
+      "timeout": false
+    },
+    "db-readback": {
+      "result": "PASS",
+      "exitCode": 0,
+      "startedAt": "2026-11-08T13:14:51.494942+00:00",
+      "endedAt": "2026-11-08T13:14:52.070229+00:00",
+      "log": "logs/db-readback.log",
+      "timeout": false
+    },
+    "smoke-test-mode": {
+      "result": "PASS",
+      "exitCode": 0,
+      "startedAt": "2026-11-08T13:14:52.116240+00:00",
+      "endedAt": "2026-11-08T13:15:07.526636+00:00",
+      "log": "logs/smoke-test-mode.log",
+      "timeout": false
+    },
+    "build-final": {
+      "result": "PASS",
+      "exitCode": 0,
+      "startedAt": "2026-11-08T13:17:57.261651+00:00",
+      "endedAt": "2026-11-08T13:18:07.106642+00:00",
+      "log": "logs/build-final.log",
+      "timeout": false
+    }
+  },
+  "unitTests": 2614,
+  "integrationTests": 91,
+  "fullSuiteIncludesNewWorkflowCases": 14,
+  "realCsvAcquisitionMode": "Previously obtained official UI export, then genuine local UI upload in this run",
+  "providerApiChargesUsd": 0,
+  "productionRelease": "RELEASE_HOLD",
+  "notes": [
+    "First full unit attempt failed due sparse checkout missing tracked fixtures/acceptance/workflow files and a legacy subprocess expecting a local DB. Expanded only relevant tracked directories and used isolated copy of actual DB; full rerun passed without weakening tests.",
+    "First build caught incompatible runtime segment export with cacheComponents; removed export before source commit; final build passed.",
+    "Local dev startup first inherited Node14 for child compilation; restarted with Node22 in PATH and rebuilt only generated dev cache; page/API now verified.",
+    "One resource-runner cleanup attempted signalling an exited process group and failed after build; corrected runner and reran build to capture actual exit 0.",
+    "No claim of fully unattended Google acquisition, Google signatures, CI/local historical dataset parity or winning products."
+  ]
+}

@@ -1,0 +1,16 @@
+{
+  "sourceCommit": "aa0f1fc3b8fdfe4c9065125f0c5732747f28ebcf",
+  "branch": "feature/kh02-walmart-us-jina-reader-v12.4.3.5.1",
+  "capturedAt": "2026-11-08T14:54:08.478168+00:00",
+  "reportContext": "Earlier RED/initial attempts retain their original base SHA and failure status; final published code is sourceCommit and matches TESTED_SOURCE_CONTENT. Real CSV and live DB/UI evidence are distinct from fixture-based engineering tests.",
+  "localAppUrl": "http://localhost:3022/products/trends?workspaceId=acceptance_v12_3_ws&productId=cand_453563126",
+  "server": "One intentional loopback Next dev process; no discovery/AI worker",
+  "fullyAutomaticAcquisition": false,
+  "paidProviderApiCalls": 0,
+  "newDemandRowsPersisted": 53,
+  "g15": "UNVERIFIED",
+  "g16Eligible": false,
+  "winnersPublished": 0,
+  "releaseVerdict": "RELEASE_HOLD",
+  "finalDisk": "Filesystem      Size    Used   Avail Capacity iused ifree %iused  Mounted on\n/dev/disk3s5   460Gi   423Gi   6.4Gi    99%    3.8M   68M    5%   /System/Volumes/Data\n"
+}

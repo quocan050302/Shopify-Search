@@ -1,0 +1,25 @@
+{
+  "taskId": "kh02-unit",
+  "baseSha": "9ba858490fa9058ce3e7e787aeafa214f5909637",
+  "startedAt": "2026-11-08T13:01:57.120940+00:00",
+  "command": [
+    "/Users/macbook/.nvm/versions/node/v22.22.3/bin/node",
+    "node_modules/vitest/vitest.mjs",
+    "run",
+    "tests/unit/kh02",
+    "--maxWorkers=1",
+    "--no-file-parallelism"
+  ],
+  "timeoutSeconds": 360,
+  "diskBefore": 7598710784,
+  "availableMemoryEstimateBefore": 3092643840,
+  "timeout": false,
+  "status": "FAIL",
+  "exitCode": 1,
+  "abortReason": null,
+  "outputSha256": "644e0a280923d3a77f20e5981dd88e56c80ecfbf40cd1bbd969683f9a74a1778",
+  "logBytes": 17232,
+  "endedAt": "2026-11-08T13:04:58.378405+00:00",
+  "elapsedSeconds": 181.29,
+  "diskAfter": 7526207488
+}

@@ -1,0 +1,23 @@
+{
+  "taskId": "db-readback",
+  "baseSha": "9ba858490fa9058ce3e7e787aeafa214f5909637",
+  "startedAt": "2026-11-08T13:14:51.494942+00:00",
+  "command": [
+    "/Users/macbook/.nvm/versions/node/v22.22.3/bin/node",
+    "--import",
+    "tsx",
+    "scripts/kh02/runCandidateDbReadback.ts"
+  ],
+  "timeoutSeconds": 60,
+  "diskBefore": 5990440960,
+  "availableMemoryEstimateBefore": 3253321728,
+  "timeout": false,
+  "status": "PASS",
+  "exitCode": 0,
+  "abortReason": null,
+  "outputSha256": "ce84548d31fc0623e70cbc9101cad0a99d1c6cbb0c8f3f3d51c195403de3b1c8",
+  "logBytes": 1782,
+  "endedAt": "2026-11-08T13:14:52.070229+00:00",
+  "elapsedSeconds": 0.589,
+  "diskAfter": 5990432768
+}

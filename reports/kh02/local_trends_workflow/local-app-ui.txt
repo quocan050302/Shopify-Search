@@ -1,0 +1,50 @@
+Browser tab: 4, Title: "SWAI — Shopify Winning Ads Intelligence", URL: "http://localhost:3022/products/trends?workspaceId=acceptance_v12_3_ws&productId=cand_453563126".
+The following is a diff from the previous accessibility tree with ~ and + representing changed and added elements, respectively. Removed elements are summarized by ID range.
+~			35 pop up button (collapsed, settable) Product, Value: Fresh Meals. Smarter Feeding., Secondary Actions: Expand
+~			40 text field (settable) Exact Google Trends search term, Value: refrigerated wet food cat feeder
+~			47 button Official CSV file
+~		48 button Re-evaluate the latest stored import
+~		56 heading Database import complete, Value: 2
++			57 text Database import complete
++		58 container
++			59 text 53  inserted ·  0  already stored ·  1  incomplete periods excluded
++		60 container
++			61 text Original CSV SHA-256:  6fdfd217947b224e991b86dd1cce9b9c3f30e0925c8efce55b5e2e19452d57c6
++		62 container
++			63 text Source review:  AUTHORITY_NOT_FOUND .  No Official CSV Import Authority record exists in durable ledger for SHA-256 '6fdfd217947b...'.
++		64 heading Fresh Meals. Smarter Feeding., Value: 2
++			65 text Fresh Meals. Smarter Feeding.
++		66 heading G15 · historical demand, Value: 3
++			67 text G15 · historical demand
++		68 text UNVERIFIED
++		69 container
++			70 text 53  stored rows ·  364  covered days
++		71 heading G16 · product eligibility, Value: 3
++			72 text G16 · product eligibility
++		73 text Not eligible
++		74 text INSUFFICIENT_EVIDENCE
++		75 text Demand source authority 'CACHED_UNVERIFIED' is not eligible for Verified Evergreen (Candidate demand attribution failure (EXCLUDED_KEYWORD_MISMATCH): Observation keyword 'refrigerated wet food cat feeder' does not match candidate query and has no verified alias.).
++		76 content list
++			77 container
++				78 AXListMarker • 
++				79 text Candidate demand attribution failure (EXCLUDED_KEYWORD_MISMATCH): Observation keyword 'refrigerated wet food cat feeder' does not match candidate query and has no verified alias.
++			80 container
++				81 AXListMarker • 
++				82 text Product identity is not verified with a canonical /products/ merchant URL and domain.
++			83 container
++				84 AXListMarker • 
++				85 text Demand source authority 'CACHED_UNVERIFIED' is not authoritative/historical verified.
++			86 container
++				87 AXListMarker • 
++				88 text Demand stability score (0/25) is below mandatory 15/25 threshold.
++			89 container
++				90 AXListMarker • 
++				91 text Demand class 'DECLINING' is not eligible for Verified Evergreen.
++			92 container
++				93 AXListMarker • 
++				94 text Opportunity score (20/100) is below 65/100 threshold.
++			95 container
++				96 AXListMarker • 
++				97 text Evidence confidence (20/100) is below 65/100 threshold.
++		98 text Release remains on hold. This evaluates one product; it does not publish or pad a Top 3 leaderboard.
+The focused UI element is 1 AXWebArea SWAI — Shopify Winning Ads Intelligence, URL: localhost:3022/products/trends?workspaceId=acceptance_v12_3_ws&productId=cand_453563126

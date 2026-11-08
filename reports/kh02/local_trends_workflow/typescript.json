@@ -1,0 +1,24 @@
+{
+  "taskId": "typescript",
+  "baseSha": "9ba858490fa9058ce3e7e787aeafa214f5909637",
+  "startedAt": "2026-11-08T13:14:32.066477+00:00",
+  "command": [
+    "/Users/macbook/.nvm/versions/node/v22.22.3/bin/node",
+    "node_modules/typescript/bin/tsc",
+    "--noEmit",
+    "--incremental",
+    "false"
+  ],
+  "timeoutSeconds": 120,
+  "diskBefore": 5994807296,
+  "availableMemoryEstimateBefore": 3687366656,
+  "timeout": false,
+  "status": "PASS",
+  "exitCode": 0,
+  "abortReason": null,
+  "outputSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "logBytes": 0,
+  "endedAt": "2026-11-08T13:14:46.279510+00:00",
+  "elapsedSeconds": 14.235,
+  "diskAfter": 5994233856
+}

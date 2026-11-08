@@ -1,0 +1,33 @@
+{
+  "baseSha": "9ba858490fa9058ce3e7e787aeafa214f5909637",
+  "files": [
+    {
+      "path": "src/services/kh02/demand/localTrendsWorkflow.ts",
+      "sha256": "8da2302e2ddea0efe045e017df2b2a144a064039c4402172e4368393250d6ce9"
+    },
+    {
+      "path": "src/app/api/v1/demand/local-trends/route.ts",
+      "sha256": "cecb921d7f6f1d46c2a664626220e6debbfbbb87bfb440e761876dbb2764bb88"
+    },
+    {
+      "path": "src/app/products/trends/page.tsx",
+      "sha256": "953d50c496301dfdd9c84bb276b1549a595c90513c3a805ad4cb41fc97d87278"
+    },
+    {
+      "path": "src/app/products/page.tsx",
+      "sha256": "84315f8b40cd216e01ba12b41a5fa0a3465dc2b3c52e35bd6c089841389850d9"
+    },
+    {
+      "path": "tests/integration/kh02/localTrendsWorkflow.test.ts",
+      "sha256": "67a3f82f15424cb57820b87744ab0ff42d992d581a0aad48c06e8a5e493f4315"
+    },
+    {
+      "path": "docs/kh02/local-google-trends-workflow.md",
+      "sha256": "0c2f2a25e9884c8e1b49d2abfb95d8edf8723594d05dd460d5b15f3cfcd775a3"
+    }
+  ],
+  "note": "These exact source bytes were built locally and are to be matched against published commit. Full unit/integration, KH01, schema validation, policy/PIT backtest, readback and protocol-only smoke executed. No paid data call.",
+  "publishedSourceCommit": "aa0f1fc3b8fdfe4c9065125f0c5732747f28ebcf",
+  "publishedSourceContentMatched": true,
+  "verifiedAt": "2026-11-08T13:25:54.152837+00:00"
+}

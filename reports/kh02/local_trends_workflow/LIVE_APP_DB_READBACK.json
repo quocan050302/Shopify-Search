@@ -1,0 +1,551 @@
+{
+  "sourceCommit": "aa0f1fc3b8fdfe4c9065125f0c5732747f28ebcf",
+  "appPath": "/Users/macbook/Documents/Project_Github/Meta-Ads/Shopify-Search",
+  "database": "/Users/macbook/Documents/Project_Github/Meta-Ads/Shopify-Search/dev.db",
+  "readAt": "2026-11-08T13:25:36.114224+00:00",
+  "newProductId": "cand_453563126",
+  "realCompletedRows": 53,
+  "totalDbDemandRows": 59,
+  "previousOrphanProductRowsPreserved": 6,
+  "rawCsvSha256": "6fdfd217947b224e991b86dd1cce9b9c3f30e0925c8efce55b5e2e19452d57c6",
+  "periodStart": "2025-11-02T00:00:00.000+00:00",
+  "periodEnd": "2026-11-01T00:00:00.000+00:00",
+  "rows": [
+    {
+      "id": "cmw7v68a600008tg9cw9e3k09",
+      "source": "GOOGLE_TRENDS_CSV",
+      "region": "US",
+      "keyword": "refrigerated wet food cat feeder",
+      "periodStart": "2025-11-02T00:00:00.000+00:00",
+      "periodEnd": "2025-11-02T00:00:00.000+00:00",
+      "evidenceReference": "csv-import:google-trends-explore:sha256:6fdfd217947b224e991b86dd1cce9b9c3f30e0925c8efce55b5e2e19452d57c6:q=refrigerated_wet_food_cat_feeder:geo=US:start=2025-11-02:end=2026-11-08:imported=2026-11-08T13:24:26.818Z:cadence=WEEKLY",
+      "observedAt": "2026-11-08T13:24:26.862+00:00"
+    },
+    {
+      "id": "cmw7v68a600018tg97h9yrht6",
+      "source": "GOOGLE_TRENDS_CSV",
+      "region": "US",
+      "keyword": "refrigerated wet food cat feeder",
+      "periodStart": "2025-11-09T00:00:00.000+00:00",
+      "periodEnd": "2025-11-09T00:00:00.000+00:00",
+      "evidenceReference": "csv-import:google-trends-explore:sha256:6fdfd217947b224e991b86dd1cce9b9c3f30e0925c8efce55b5e2e19452d57c6:q=refrigerated_wet_food_cat_feeder:geo=US:start=2025-11-02:end=2026-11-08:imported=2026-11-08T13:24:26.818Z:cadence=WEEKLY",
+      "observedAt": "2026-11-08T13:24:26.862+00:00"
+    },
+    {
+      "id": "cmw7v68a600028tg9xa7f3953",
+      "source": "GOOGLE_TRENDS_CSV",
+      "region": "US",
+      "keyword": "refrigerated wet food cat feeder",
+      "periodStart": "2025-11-16T00:00:00.000+00:00",
+      "periodEnd": "2025-11-16T00:00:00.000+00:00",
+      "evidenceReference": "csv-import:google-trends-explore:sha256:6fdfd217947b224e991b86dd1cce9b9c3f30e0925c8efce55b5e2e19452d57c6:q=refrigerated_wet_food_cat_feeder:geo=US:start=2025-11-02:end=2026-11-08:imported=2026-11-08T13:24:26.818Z:cadence=WEEKLY",
+      "observedAt": "2026-11-08T13:24:26.862+00:00"
+    },
+    {
+      "id": "cmw7v68a600038tg9ho0746za",
+      "source": "GOOGLE_TRENDS_CSV",
+      "region": "US",
+      "keyword": "refrigerated wet food cat feeder",
+      "periodStart": "2025-11-23T00:00:00.000+00:00",
+      "periodEnd": "2025-11-23T00:00:00.000+00:00",
+      "evidenceReference": "csv-import:google-trends-explore:sha256:6fdfd217947b224e991b86dd1cce9b9c3f30e0925c8efce55b5e2e19452d57c6:q=refrigerated_wet_food_cat_feeder:geo=US:start=2025-11-02:end=2026-11-08:imported=2026-11-08T13:24:26.818Z:cadence=WEEKLY",
+      "observedAt": "2026-11-08T13:24:26.862+00:00"
+    },
+    {
+      "id": "cmw7v68a600048tg95zuajfe0",
+      "source": "GOOGLE_TRENDS_CSV",
+      "region": "US",
+      "keyword": "refrigerated wet food cat feeder",
+      "periodStart": "2025-11-30T00:00:00.000+00:00",
+      "periodEnd": "2025-11-30T00:00:00.000+00:00",
+      "evidenceReference": "csv-import:google-trends-explore:sha256:6fdfd217947b224e991b86dd1cce9b9c3f30e0925c8efce55b5e2e19452d57c6:q=refrigerated_wet_food_cat_feeder:geo=US:start=2025-11-02:end=2026-11-08:imported=2026-11-08T13:24:26.818Z:cadence=WEEKLY",
+      "observedAt": "2026-11-08T13:24:26.862+00:00"
+    },
+    {
+      "id": "cmw7v68a600058tg9gzy1me9q",
+      "source": "GOOGLE_TRENDS_CSV",
+      "region": "US",
+      "keyword": "refrigerated wet food cat feeder",
+      "periodStart": "2025-12-07T00:00:00.000+00:00",
+      "periodEnd": "2025-12-07T00:00:00.000+00:00",
+      "evidenceReference": "csv-import:google-trends-explore:sha256:6fdfd217947b224e991b86dd1cce9b9c3f30e0925c8efce55b5e2e19452d57c6:q=refrigerated_wet_food_cat_feeder:geo=US:start=2025-11-02:end=2026-11-08:imported=2026-11-08T13:24:26.818Z:cadence=WEEKLY",
+      "observedAt": "2026-11-08T13:24:26.862+00:00"
+    },
+    {
+      "id": "cmw7v68a600068tg9y8kh7emx",
+      "source": "GOOGLE_TRENDS_CSV",
+      "region": "US",
+      "keyword": "refrigerated wet food cat feeder",
+      "periodStart": "2025-12-14T00:00:00.000+00:00",
+      "periodEnd": "2025-12-14T00:00:00.000+00:00",
+      "evidenceReference": "csv-import:google-trends-explore:sha256:6fdfd217947b224e991b86dd1cce9b9c3f30e0925c8efce55b5e2e19452d57c6:q=refrigerated_wet_food_cat_feeder:geo=US:start=2025-11-02:end=2026-11-08:imported=2026-11-08T13:24:26.818Z:cadence=WEEKLY",
+      "observedAt": "2026-11-08T13:24:26.862+00:00"
+    },
+    {
+      "id": "cmw7v68a600078tg9lrais9sg",
+      "source": "GOOGLE_TRENDS_CSV",
+      "region": "US",
+      "keyword": "refrigerated wet food cat feeder",
+      "periodStart": "2025-12-21T00:00:00.000+00:00",
+      "periodEnd": "2025-12-21T00:00:00.000+00:00",
+      "evidenceReference": "csv-import:google-trends-explore:sha256:6fdfd217947b224e991b86dd1cce9b9c3f30e0925c8efce55b5e2e19452d57c6:q=refrigerated_wet_food_cat_feeder:geo=US:start=2025-11-02:end=2026-11-08:imported=2026-11-08T13:24:26.818Z:cadence=WEEKLY",
+      "observedAt": "2026-11-08T13:24:26.862+00:00"
+    },
+    {
+      "id": "cmw7v68a600088tg9d9e6jheb",
+      "source": "GOOGLE_TRENDS_CSV",
+      "region": "US",
+      "keyword": "refrigerated wet food cat feeder",
+      "periodStart": "2025-12-28T00:00:00.000+00:00",
+      "periodEnd": "2025-12-28T00:00:00.000+00:00",
+      "evidenceReference": "csv-import:google-trends-explore:sha256:6fdfd217947b224e991b86dd1cce9b9c3f30e0925c8efce55b5e2e19452d57c6:q=refrigerated_wet_food_cat_feeder:geo=US:start=2025-11-02:end=2026-11-08:imported=2026-11-08T13:24:26.818Z:cadence=WEEKLY",
+      "observedAt": "2026-11-08T13:24:26.862+00:00"
+    },
+    {
+      "id": "cmw7v68a600098tg9q20qq9pg",
+      "source": "GOOGLE_TRENDS_CSV",
+      "region": "US",
+      "keyword": "refrigerated wet food cat feeder",
+      "periodStart": "2026-01-04T00:00:00.000+00:00",
+      "periodEnd": "2026-01-04T00:00:00.000+00:00",
+      "evidenceReference": "csv-import:google-trends-explore:sha256:6fdfd217947b224e991b86dd1cce9b9c3f30e0925c8efce55b5e2e19452d57c6:q=refrigerated_wet_food_cat_feeder:geo=US:start=2025-11-02:end=2026-11-08:imported=2026-11-08T13:24:26.818Z:cadence=WEEKLY",
+      "observedAt": "2026-11-08T13:24:26.862+00:00"
+    },
+    {
+      "id": "cmw7v68a6000a8tg9se0muift",
+      "source": "GOOGLE_TRENDS_CSV",
+      "region": "US",
+      "keyword": "refrigerated wet food cat feeder",
+      "periodStart": "2026-01-11T00:00:00.000+00:00",
+      "periodEnd": "2026-01-11T00:00:00.000+00:00",
+      "evidenceReference": "csv-import:google-trends-explore:sha256:6fdfd217947b224e991b86dd1cce9b9c3f30e0925c8efce55b5e2e19452d57c6:q=refrigerated_wet_food_cat_feeder:geo=US:start=2025-11-02:end=2026-11-08:imported=2026-11-08T13:24:26.818Z:cadence=WEEKLY",
+      "observedAt": "2026-11-08T13:24:26.862+00:00"
+    },
+    {
+      "id": "cmw7v68a7000b8tg9lke7hnb1",
+      "source": "GOOGLE_TRENDS_CSV",
+      "region": "US",
+      "keyword": "refrigerated wet food cat feeder",
+      "periodStart": "2026-01-18T00:00:00.000+00:00",
+      "periodEnd": "2026-01-18T00:00:00.000+00:00",
+      "evidenceReference": "csv-import:google-trends-explore:sha256:6fdfd217947b224e991b86dd1cce9b9c3f30e0925c8efce55b5e2e19452d57c6:q=refrigerated_wet_food_cat_feeder:geo=US:start=2025-11-02:end=2026-11-08:imported=2026-11-08T13:24:26.818Z:cadence=WEEKLY",
+      "observedAt": "2026-11-08T13:24:26.862+00:00"
+    },
+    {
+      "id": "cmw7v68a7000c8tg9i8qx5ckm",
+      "source": "GOOGLE_TRENDS_CSV",
+      "region": "US",
+      "keyword": "refrigerated wet food cat feeder",
+      "periodStart": "2026-01-25T00:00:00.000+00:00",
+      "periodEnd": "2026-01-25T00:00:00.000+00:00",
+      "evidenceReference": "csv-import:google-trends-explore:sha256:6fdfd217947b224e991b86dd1cce9b9c3f30e0925c8efce55b5e2e19452d57c6:q=refrigerated_wet_food_cat_feeder:geo=US:start=2025-11-02:end=2026-11-08:imported=2026-11-08T13:24:26.818Z:cadence=WEEKLY",
+      "observedAt": "2026-11-08T13:24:26.862+00:00"
+    },
+    {
+      "id": "cmw7v68a7000d8tg981vrgwn7",
+      "source": "GOOGLE_TRENDS_CSV",
+      "region": "US",
+      "keyword": "refrigerated wet food cat feeder",
+      "periodStart": "2026-02-01T00:00:00.000+00:00",
+      "periodEnd": "2026-02-01T00:00:00.000+00:00",
+      "evidenceReference": "csv-import:google-trends-explore:sha256:6fdfd217947b224e991b86dd1cce9b9c3f30e0925c8efce55b5e2e19452d57c6:q=refrigerated_wet_food_cat_feeder:geo=US:start=2025-11-02:end=2026-11-08:imported=2026-11-08T13:24:26.818Z:cadence=WEEKLY",
+      "observedAt": "2026-11-08T13:24:26.862+00:00"
+    },
+    {
+      "id": "cmw7v68a7000e8tg9o8po5fxu",
+      "source": "GOOGLE_TRENDS_CSV",
+      "region": "US",
+      "keyword": "refrigerated wet food cat feeder",
+      "periodStart": "2026-02-08T00:00:00.000+00:00",
+      "periodEnd": "2026-02-08T00:00:00.000+00:00",
+      "evidenceReference": "csv-import:google-trends-explore:sha256:6fdfd217947b224e991b86dd1cce9b9c3f30e0925c8efce55b5e2e19452d57c6:q=refrigerated_wet_food_cat_feeder:geo=US:start=2025-11-02:end=2026-11-08:imported=2026-11-08T13:24:26.818Z:cadence=WEEKLY",
+      "observedAt": "2026-11-08T13:24:26.862+00:00"
+    },
+    {
+      "id": "cmw7v68a7000f8tg91tbhmmzv",
+      "source": "GOOGLE_TRENDS_CSV",
+      "region": "US",
+      "keyword": "refrigerated wet food cat feeder",
+      "periodStart": "2026-02-15T00:00:00.000+00:00",
+      "periodEnd": "2026-02-15T00:00:00.000+00:00",
+      "evidenceReference": "csv-import:google-trends-explore:sha256:6fdfd217947b224e991b86dd1cce9b9c3f30e0925c8efce55b5e2e19452d57c6:q=refrigerated_wet_food_cat_feeder:geo=US:start=2025-11-02:end=2026-11-08:imported=2026-11-08T13:24:26.818Z:cadence=WEEKLY",
+      "observedAt": "2026-11-08T13:24:26.862+00:00"
+    },
+    {
+      "id": "cmw7v68a8000g8tg942r9x48h",
+      "source": "GOOGLE_TRENDS_CSV",
+      "region": "US",
+      "keyword": "refrigerated wet food cat feeder",
+      "periodStart": "2026-02-22T00:00:00.000+00:00",
+      "periodEnd": "2026-02-22T00:00:00.000+00:00",
+      "evidenceReference": "csv-import:google-trends-explore:sha256:6fdfd217947b224e991b86dd1cce9b9c3f30e0925c8efce55b5e2e19452d57c6:q=refrigerated_wet_food_cat_feeder:geo=US:start=2025-11-02:end=2026-11-08:imported=2026-11-08T13:24:26.818Z:cadence=WEEKLY",
+      "observedAt": "2026-11-08T13:24:26.862+00:00"
+    },
+    {
+      "id": "cmw7v68a8000h8tg9jzjk1ce1",
+      "source": "GOOGLE_TRENDS_CSV",
+      "region": "US",
+      "keyword": "refrigerated wet food cat feeder",
+      "periodStart": "2026-03-01T00:00:00.000+00:00",
+      "periodEnd": "2026-03-01T00:00:00.000+00:00",
+      "evidenceReference": "csv-import:google-trends-explore:sha256:6fdfd217947b224e991b86dd1cce9b9c3f30e0925c8efce55b5e2e19452d57c6:q=refrigerated_wet_food_cat_feeder:geo=US:start=2025-11-02:end=2026-11-08:imported=2026-11-08T13:24:26.818Z:cadence=WEEKLY",
+      "observedAt": "2026-11-08T13:24:26.862+00:00"
+    },
+    {
+      "id": "cmw7v68a8000i8tg930gwtkzv",
+      "source": "GOOGLE_TRENDS_CSV",
+      "region": "US",
+      "keyword": "refrigerated wet food cat feeder",
+      "periodStart": "2026-03-08T00:00:00.000+00:00",
+      "periodEnd": "2026-03-08T00:00:00.000+00:00",
+      "evidenceReference": "csv-import:google-trends-explore:sha256:6fdfd217947b224e991b86dd1cce9b9c3f30e0925c8efce55b5e2e19452d57c6:q=refrigerated_wet_food_cat_feeder:geo=US:start=2025-11-02:end=2026-11-08:imported=2026-11-08T13:24:26.818Z:cadence=WEEKLY",
+      "observedAt": "2026-11-08T13:24:26.862+00:00"
+    },
+    {
+      "id": "cmw7v68a8000j8tg9dmrbtixo",
+      "source": "GOOGLE_TRENDS_CSV",
+      "region": "US",
+      "keyword": "refrigerated wet food cat feeder",
+      "periodStart": "2026-03-15T00:00:00.000+00:00",
+      "periodEnd": "2026-03-15T00:00:00.000+00:00",
+      "evidenceReference": "csv-import:google-trends-explore:sha256:6fdfd217947b224e991b86dd1cce9b9c3f30e0925c8efce55b5e2e19452d57c6:q=refrigerated_wet_food_cat_feeder:geo=US:start=2025-11-02:end=2026-11-08:imported=2026-11-08T13:24:26.818Z:cadence=WEEKLY",
+      "observedAt": "2026-11-08T13:24:26.862+00:00"
+    },
+    {
+      "id": "cmw7v68a8000k8tg90cd6cf6f",
+      "source": "GOOGLE_TRENDS_CSV",
+      "region": "US",
+      "keyword": "refrigerated wet food cat feeder",
+      "periodStart": "2026-03-22T00:00:00.000+00:00",
+      "periodEnd": "2026-03-22T00:00:00.000+00:00",
+      "evidenceReference": "csv-import:google-trends-explore:sha256:6fdfd217947b224e991b86dd1cce9b9c3f30e0925c8efce55b5e2e19452d57c6:q=refrigerated_wet_food_cat_feeder:geo=US:start=2025-11-02:end=2026-11-08:imported=2026-11-08T13:24:26.818Z:cadence=WEEKLY",
+      "observedAt": "2026-11-08T13:24:26.862+00:00"
+    },
+    {
+      "id": "cmw7v68a8000l8tg9yj1mmmwv",
+      "source": "GOOGLE_TRENDS_CSV",
+      "region": "US",
+      "keyword": "refrigerated wet food cat feeder",
+      "periodStart": "2026-03-29T00:00:00.000+00:00",
+      "periodEnd": "2026-03-29T00:00:00.000+00:00",
+      "evidenceReference": "csv-import:google-trends-explore:sha256:6fdfd217947b224e991b86dd1cce9b9c3f30e0925c8efce55b5e2e19452d57c6:q=refrigerated_wet_food_cat_feeder:geo=US:start=2025-11-02:end=2026-11-08:imported=2026-11-08T13:24:26.818Z:cadence=WEEKLY",
+      "observedAt": "2026-11-08T13:24:26.862+00:00"
+    },
+    {
+      "id": "cmw7v68a8000m8tg95ssmdkum",
+      "source": "GOOGLE_TRENDS_CSV",
+      "region": "US",
+      "keyword": "refrigerated wet food cat feeder",
+      "periodStart": "2026-04-05T00:00:00.000+00:00",
+      "periodEnd": "2026-04-05T00:00:00.000+00:00",
+      "evidenceReference": "csv-import:google-trends-explore:sha256:6fdfd217947b224e991b86dd1cce9b9c3f30e0925c8efce55b5e2e19452d57c6:q=refrigerated_wet_food_cat_feeder:geo=US:start=2025-11-02:end=2026-11-08:imported=2026-11-08T13:24:26.818Z:cadence=WEEKLY",
+      "observedAt": "2026-11-08T13:24:26.862+00:00"
+    },
+    {
+      "id": "cmw7v68a8000n8tg93we9hdz4",
+      "source": "GOOGLE_TRENDS_CSV",
+      "region": "US",
+      "keyword": "refrigerated wet food cat feeder",
+      "periodStart": "2026-04-12T00:00:00.000+00:00",
+      "periodEnd": "2026-04-12T00:00:00.000+00:00",
+      "evidenceReference": "csv-import:google-trends-explore:sha256:6fdfd217947b224e991b86dd1cce9b9c3f30e0925c8efce55b5e2e19452d57c6:q=refrigerated_wet_food_cat_feeder:geo=US:start=2025-11-02:end=2026-11-08:imported=2026-11-08T13:24:26.818Z:cadence=WEEKLY",
+      "observedAt": "2026-11-08T13:24:26.862+00:00"
+    },
+    {
+      "id": "cmw7v68a8000o8tg969mgnvae",
+      "source": "GOOGLE_TRENDS_CSV",
+      "region": "US",
+      "keyword": "refrigerated wet food cat feeder",
+      "periodStart": "2026-04-19T00:00:00.000+00:00",
+      "periodEnd": "2026-04-19T00:00:00.000+00:00",
+      "evidenceReference": "csv-import:google-trends-explore:sha256:6fdfd217947b224e991b86dd1cce9b9c3f30e0925c8efce55b5e2e19452d57c6:q=refrigerated_wet_food_cat_feeder:geo=US:start=2025-11-02:end=2026-11-08:imported=2026-11-08T13:24:26.818Z:cadence=WEEKLY",
+      "observedAt": "2026-11-08T13:24:26.862+00:00"
+    },
+    {
+      "id": "cmw7v68a8000p8tg9vq48h581",
+      "source": "GOOGLE_TRENDS_CSV",
+      "region": "US",
+      "keyword": "refrigerated wet food cat feeder",
+      "periodStart": "2026-04-26T00:00:00.000+00:00",
+      "periodEnd": "2026-04-26T00:00:00.000+00:00",
+      "evidenceReference": "csv-import:google-trends-explore:sha256:6fdfd217947b224e991b86dd1cce9b9c3f30e0925c8efce55b5e2e19452d57c6:q=refrigerated_wet_food_cat_feeder:geo=US:start=2025-11-02:end=2026-11-08:imported=2026-11-08T13:24:26.818Z:cadence=WEEKLY",
+      "observedAt": "2026-11-08T13:24:26.862+00:00"
+    },
+    {
+      "id": "cmw7v68a8000q8tg9nfsd6rs9",
+      "source": "GOOGLE_TRENDS_CSV",
+      "region": "US",
+      "keyword": "refrigerated wet food cat feeder",
+      "periodStart": "2026-05-03T00:00:00.000+00:00",
+      "periodEnd": "2026-05-03T00:00:00.000+00:00",
+      "evidenceReference": "csv-import:google-trends-explore:sha256:6fdfd217947b224e991b86dd1cce9b9c3f30e0925c8efce55b5e2e19452d57c6:q=refrigerated_wet_food_cat_feeder:geo=US:start=2025-11-02:end=2026-11-08:imported=2026-11-08T13:24:26.818Z:cadence=WEEKLY",
+      "observedAt": "2026-11-08T13:24:26.862+00:00"
+    },
+    {
+      "id": "cmw7v68a8000r8tg9utbw3fbl",
+      "source": "GOOGLE_TRENDS_CSV",
+      "region": "US",
+      "keyword": "refrigerated wet food cat feeder",
+      "periodStart": "2026-05-10T00:00:00.000+00:00",
+      "periodEnd": "2026-05-10T00:00:00.000+00:00",
+      "evidenceReference": "csv-import:google-trends-explore:sha256:6fdfd217947b224e991b86dd1cce9b9c3f30e0925c8efce55b5e2e19452d57c6:q=refrigerated_wet_food_cat_feeder:geo=US:start=2025-11-02:end=2026-11-08:imported=2026-11-08T13:24:26.818Z:cadence=WEEKLY",
+      "observedAt": "2026-11-08T13:24:26.862+00:00"
+    },
+    {
+      "id": "cmw7v68a8000s8tg9m9ra45s7",
+      "source": "GOOGLE_TRENDS_CSV",
+      "region": "US",
+      "keyword": "refrigerated wet food cat feeder",
+      "periodStart": "2026-05-17T00:00:00.000+00:00",
+      "periodEnd": "2026-05-17T00:00:00.000+00:00",
+      "evidenceReference": "csv-import:google-trends-explore:sha256:6fdfd217947b224e991b86dd1cce9b9c3f30e0925c8efce55b5e2e19452d57c6:q=refrigerated_wet_food_cat_feeder:geo=US:start=2025-11-02:end=2026-11-08:imported=2026-11-08T13:24:26.818Z:cadence=WEEKLY",
+      "observedAt": "2026-11-08T13:24:26.862+00:00"
+    },
+    {
+      "id": "cmw7v68a8000t8tg91l2l116e",
+      "source": "GOOGLE_TRENDS_CSV",
+      "region": "US",
+      "keyword": "refrigerated wet food cat feeder",
+      "periodStart": "2026-05-24T00:00:00.000+00:00",
+      "periodEnd": "2026-05-24T00:00:00.000+00:00",
+      "evidenceReference": "csv-import:google-trends-explore:sha256:6fdfd217947b224e991b86dd1cce9b9c3f30e0925c8efce55b5e2e19452d57c6:q=refrigerated_wet_food_cat_feeder:geo=US:start=2025-11-02:end=2026-11-08:imported=2026-11-08T13:24:26.818Z:cadence=WEEKLY",
+      "observedAt": "2026-11-08T13:24:26.862+00:00"
+    },
+    {
+      "id": "cmw7v68a8000u8tg9dygz7vi3",
+      "source": "GOOGLE_TRENDS_CSV",
+      "region": "US",
+      "keyword": "refrigerated wet food cat feeder",
+      "periodStart": "2026-05-31T00:00:00.000+00:00",
+      "periodEnd": "2026-05-31T00:00:00.000+00:00",
+      "evidenceReference": "csv-import:google-trends-explore:sha256:6fdfd217947b224e991b86dd1cce9b9c3f30e0925c8efce55b5e2e19452d57c6:q=refrigerated_wet_food_cat_feeder:geo=US:start=2025-11-02:end=2026-11-08:imported=2026-11-08T13:24:26.818Z:cadence=WEEKLY",
+      "observedAt": "2026-11-08T13:24:26.862+00:00"
+    },
+    {
+      "id": "cmw7v68a8000v8tg9boyxa1qh",
+      "source": "GOOGLE_TRENDS_CSV",
+      "region": "US",
+      "keyword": "refrigerated wet food cat feeder",
+      "periodStart": "2026-06-07T00:00:00.000+00:00",
+      "periodEnd": "2026-06-07T00:00:00.000+00:00",
+      "evidenceReference": "csv-import:google-trends-explore:sha256:6fdfd217947b224e991b86dd1cce9b9c3f30e0925c8efce55b5e2e19452d57c6:q=refrigerated_wet_food_cat_feeder:geo=US:start=2025-11-02:end=2026-11-08:imported=2026-11-08T13:24:26.818Z:cadence=WEEKLY",
+      "observedAt": "2026-11-08T13:24:26.862+00:00"
+    },
+    {
+      "id": "cmw7v68a8000w8tg92lxobke6",
+      "source": "GOOGLE_TRENDS_CSV",
+      "region": "US",
+      "keyword": "refrigerated wet food cat feeder",
+      "periodStart": "2026-06-14T00:00:00.000+00:00",
+      "periodEnd": "2026-06-14T00:00:00.000+00:00",
+      "evidenceReference": "csv-import:google-trends-explore:sha256:6fdfd217947b224e991b86dd1cce9b9c3f30e0925c8efce55b5e2e19452d57c6:q=refrigerated_wet_food_cat_feeder:geo=US:start=2025-11-02:end=2026-11-08:imported=2026-11-08T13:24:26.818Z:cadence=WEEKLY",
+      "observedAt": "2026-11-08T13:24:26.862+00:00"
+    },
+    {
+      "id": "cmw7v68a8000x8tg9vc75qmry",
+      "source": "GOOGLE_TRENDS_CSV",
+      "region": "US",
+      "keyword": "refrigerated wet food cat feeder",
+      "periodStart": "2026-06-21T00:00:00.000+00:00",
+      "periodEnd": "2026-06-21T00:00:00.000+00:00",
+      "evidenceReference": "csv-import:google-trends-explore:sha256:6fdfd217947b224e991b86dd1cce9b9c3f30e0925c8efce55b5e2e19452d57c6:q=refrigerated_wet_food_cat_feeder:geo=US:start=2025-11-02:end=2026-11-08:imported=2026-11-08T13:24:26.818Z:cadence=WEEKLY",
+      "observedAt": "2026-11-08T13:24:26.862+00:00"
+    },
+    {
+      "id": "cmw7v68a8000y8tg9o705vg2l",
+      "source": "GOOGLE_TRENDS_CSV",
+      "region": "US",
+      "keyword": "refrigerated wet food cat feeder",
+      "periodStart": "2026-06-28T00:00:00.000+00:00",
+      "periodEnd": "2026-06-28T00:00:00.000+00:00",
+      "evidenceReference": "csv-import:google-trends-explore:sha256:6fdfd217947b224e991b86dd1cce9b9c3f30e0925c8efce55b5e2e19452d57c6:q=refrigerated_wet_food_cat_feeder:geo=US:start=2025-11-02:end=2026-11-08:imported=2026-11-08T13:24:26.818Z:cadence=WEEKLY",
+      "observedAt": "2026-11-08T13:24:26.862+00:00"
+    },
+    {
+      "id": "cmw7v68a8000z8tg9ywkpc2qz",
+      "source": "GOOGLE_TRENDS_CSV",
+      "region": "US",
+      "keyword": "refrigerated wet food cat feeder",
+      "periodStart": "2026-07-05T00:00:00.000+00:00",
+      "periodEnd": "2026-07-05T00:00:00.000+00:00",
+      "evidenceReference": "csv-import:google-trends-explore:sha256:6fdfd217947b224e991b86dd1cce9b9c3f30e0925c8efce55b5e2e19452d57c6:q=refrigerated_wet_food_cat_feeder:geo=US:start=2025-11-02:end=2026-11-08:imported=2026-11-08T13:24:26.818Z:cadence=WEEKLY",
+      "observedAt": "2026-11-08T13:24:26.862+00:00"
+    },
+    {
+      "id": "cmw7v68a800108tg901afhg0k",
+      "source": "GOOGLE_TRENDS_CSV",
+      "region": "US",
+      "keyword": "refrigerated wet food cat feeder",
+      "periodStart": "2026-07-12T00:00:00.000+00:00",
+      "periodEnd": "2026-07-12T00:00:00.000+00:00",
+      "evidenceReference": "csv-import:google-trends-explore:sha256:6fdfd217947b224e991b86dd1cce9b9c3f30e0925c8efce55b5e2e19452d57c6:q=refrigerated_wet_food_cat_feeder:geo=US:start=2025-11-02:end=2026-11-08:imported=2026-11-08T13:24:26.818Z:cadence=WEEKLY",
+      "observedAt": "2026-11-08T13:24:26.862+00:00"
+    },
+    {
+      "id": "cmw7v68a800118tg9hmvanf6r",
+      "source": "GOOGLE_TRENDS_CSV",
+      "region": "US",
+      "keyword": "refrigerated wet food cat feeder",
+      "periodStart": "2026-07-19T00:00:00.000+00:00",
+      "periodEnd": "2026-07-19T00:00:00.000+00:00",
+      "evidenceReference": "csv-import:google-trends-explore:sha256:6fdfd217947b224e991b86dd1cce9b9c3f30e0925c8efce55b5e2e19452d57c6:q=refrigerated_wet_food_cat_feeder:geo=US:start=2025-11-02:end=2026-11-08:imported=2026-11-08T13:24:26.818Z:cadence=WEEKLY",
+      "observedAt": "2026-11-08T13:24:26.862+00:00"
+    },
+    {
+      "id": "cmw7v68a800128tg9ndgcybpq",
+      "source": "GOOGLE_TRENDS_CSV",
+      "region": "US",
+      "keyword": "refrigerated wet food cat feeder",
+      "periodStart": "2026-07-26T00:00:00.000+00:00",
+      "periodEnd": "2026-07-26T00:00:00.000+00:00",
+      "evidenceReference": "csv-import:google-trends-explore:sha256:6fdfd217947b224e991b86dd1cce9b9c3f30e0925c8efce55b5e2e19452d57c6:q=refrigerated_wet_food_cat_feeder:geo=US:start=2025-11-02:end=2026-11-08:imported=2026-11-08T13:24:26.818Z:cadence=WEEKLY",
+      "observedAt": "2026-11-08T13:24:26.862+00:00"
+    },
+    {
+      "id": "cmw7v68a800138tg9uznhrama",
+      "source": "GOOGLE_TRENDS_CSV",
+      "region": "US",
+      "keyword": "refrigerated wet food cat feeder",
+      "periodStart": "2026-08-02T00:00:00.000+00:00",
+      "periodEnd": "2026-08-02T00:00:00.000+00:00",
+      "evidenceReference": "csv-import:google-trends-explore:sha256:6fdfd217947b224e991b86dd1cce9b9c3f30e0925c8efce55b5e2e19452d57c6:q=refrigerated_wet_food_cat_feeder:geo=US:start=2025-11-02:end=2026-11-08:imported=2026-11-08T13:24:26.818Z:cadence=WEEKLY",
+      "observedAt": "2026-11-08T13:24:26.862+00:00"
+    },
+    {
+      "id": "cmw7v68a800148tg9xyaz48fx",
+      "source": "GOOGLE_TRENDS_CSV",
+      "region": "US",
+      "keyword": "refrigerated wet food cat feeder",
+      "periodStart": "2026-08-09T00:00:00.000+00:00",
+      "periodEnd": "2026-08-09T00:00:00.000+00:00",
+      "evidenceReference": "csv-import:google-trends-explore:sha256:6fdfd217947b224e991b86dd1cce9b9c3f30e0925c8efce55b5e2e19452d57c6:q=refrigerated_wet_food_cat_feeder:geo=US:start=2025-11-02:end=2026-11-08:imported=2026-11-08T13:24:26.818Z:cadence=WEEKLY",
+      "observedAt": "2026-11-08T13:24:26.862+00:00"
+    },
+    {
+      "id": "cmw7v68a800158tg9io0dygf1",
+      "source": "GOOGLE_TRENDS_CSV",
+      "region": "US",
+      "keyword": "refrigerated wet food cat feeder",
+      "periodStart": "2026-08-16T00:00:00.000+00:00",
+      "periodEnd": "2026-08-16T00:00:00.000+00:00",
+      "evidenceReference": "csv-import:google-trends-explore:sha256:6fdfd217947b224e991b86dd1cce9b9c3f30e0925c8efce55b5e2e19452d57c6:q=refrigerated_wet_food_cat_feeder:geo=US:start=2025-11-02:end=2026-11-08:imported=2026-11-08T13:24:26.818Z:cadence=WEEKLY",
+      "observedAt": "2026-11-08T13:24:26.862+00:00"
+    },
+    {
+      "id": "cmw7v68a800168tg9sb1wgjzv",
+      "source": "GOOGLE_TRENDS_CSV",
+      "region": "US",
+      "keyword": "refrigerated wet food cat feeder",
+      "periodStart": "2026-08-23T00:00:00.000+00:00",
+      "periodEnd": "2026-08-23T00:00:00.000+00:00",
+      "evidenceReference": "csv-import:google-trends-explore:sha256:6fdfd217947b224e991b86dd1cce9b9c3f30e0925c8efce55b5e2e19452d57c6:q=refrigerated_wet_food_cat_feeder:geo=US:start=2025-11-02:end=2026-11-08:imported=2026-11-08T13:24:26.818Z:cadence=WEEKLY",
+      "observedAt": "2026-11-08T13:24:26.862+00:00"
+    },
+    {
+      "id": "cmw7v68a800178tg97ouci481",
+      "source": "GOOGLE_TRENDS_CSV",
+      "region": "US",
+      "keyword": "refrigerated wet food cat feeder",
+      "periodStart": "2026-08-30T00:00:00.000+00:00",
+      "periodEnd": "2026-08-30T00:00:00.000+00:00",
+      "evidenceReference": "csv-import:google-trends-explore:sha256:6fdfd217947b224e991b86dd1cce9b9c3f30e0925c8efce55b5e2e19452d57c6:q=refrigerated_wet_food_cat_feeder:geo=US:start=2025-11-02:end=2026-11-08:imported=2026-11-08T13:24:26.818Z:cadence=WEEKLY",
+      "observedAt": "2026-11-08T13:24:26.862+00:00"
+    },
+    {
+      "id": "cmw7v68a800188tg95qqepwmu",
+      "source": "GOOGLE_TRENDS_CSV",
+      "region": "US",
+      "keyword": "refrigerated wet food cat feeder",
+      "periodStart": "2026-09-06T00:00:00.000+00:00",
+      "periodEnd": "2026-09-06T00:00:00.000+00:00",
+      "evidenceReference": "csv-import:google-trends-explore:sha256:6fdfd217947b224e991b86dd1cce9b9c3f30e0925c8efce55b5e2e19452d57c6:q=refrigerated_wet_food_cat_feeder:geo=US:start=2025-11-02:end=2026-11-08:imported=2026-11-08T13:24:26.818Z:cadence=WEEKLY",
+      "observedAt": "2026-11-08T13:24:26.862+00:00"
+    },
+    {
+      "id": "cmw7v68a800198tg9gdhi4bmu",
+      "source": "GOOGLE_TRENDS_CSV",
+      "region": "US",
+      "keyword": "refrigerated wet food cat feeder",
+      "periodStart": "2026-09-13T00:00:00.000+00:00",
+      "periodEnd": "2026-09-13T00:00:00.000+00:00",
+      "evidenceReference": "csv-import:google-trends-explore:sha256:6fdfd217947b224e991b86dd1cce9b9c3f30e0925c8efce55b5e2e19452d57c6:q=refrigerated_wet_food_cat_feeder:geo=US:start=2025-11-02:end=2026-11-08:imported=2026-11-08T13:24:26.818Z:cadence=WEEKLY",
+      "observedAt": "2026-11-08T13:24:26.862+00:00"
+    },
+    {
+      "id": "cmw7v68a8001a8tg930jpkcto",
+      "source": "GOOGLE_TRENDS_CSV",
+      "region": "US",
+      "keyword": "refrigerated wet food cat feeder",
+      "periodStart": "2026-09-20T00:00:00.000+00:00",
+      "periodEnd": "2026-09-20T00:00:00.000+00:00",
+      "evidenceReference": "csv-import:google-trends-explore:sha256:6fdfd217947b224e991b86dd1cce9b9c3f30e0925c8efce55b5e2e19452d57c6:q=refrigerated_wet_food_cat_feeder:geo=US:start=2025-11-02:end=2026-11-08:imported=2026-11-08T13:24:26.818Z:cadence=WEEKLY",
+      "observedAt": "2026-11-08T13:24:26.862+00:00"
+    },
+    {
+      "id": "cmw7v68a8001b8tg9qbh7904v",
+      "source": "GOOGLE_TRENDS_CSV",
+      "region": "US",
+      "keyword": "refrigerated wet food cat feeder",
+      "periodStart": "2026-09-27T00:00:00.000+00:00",
+      "periodEnd": "2026-09-27T00:00:00.000+00:00",
+      "evidenceReference": "csv-import:google-trends-explore:sha256:6fdfd217947b224e991b86dd1cce9b9c3f30e0925c8efce55b5e2e19452d57c6:q=refrigerated_wet_food_cat_feeder:geo=US:start=2025-11-02:end=2026-11-08:imported=2026-11-08T13:24:26.818Z:cadence=WEEKLY",
+      "observedAt": "2026-11-08T13:24:26.862+00:00"
+    },
+    {
+      "id": "cmw7v68a8001c8tg9suh3ntcc",
+      "source": "GOOGLE_TRENDS_CSV",
+      "region": "US",
+      "keyword": "refrigerated wet food cat feeder",
+      "periodStart": "2026-10-04T00:00:00.000+00:00",
+      "periodEnd": "2026-10-04T00:00:00.000+00:00",
+      "evidenceReference": "csv-import:google-trends-explore:sha256:6fdfd217947b224e991b86dd1cce9b9c3f30e0925c8efce55b5e2e19452d57c6:q=refrigerated_wet_food_cat_feeder:geo=US:start=2025-11-02:end=2026-11-08:imported=2026-11-08T13:24:26.818Z:cadence=WEEKLY",
+      "observedAt": "2026-11-08T13:24:26.862+00:00"
+    },
+    {
+      "id": "cmw7v68a8001d8tg9jbshnffj",
+      "source": "GOOGLE_TRENDS_CSV",
+      "region": "US",
+      "keyword": "refrigerated wet food cat feeder",
+      "periodStart": "2026-10-11T00:00:00.000+00:00",
+      "periodEnd": "2026-10-11T00:00:00.000+00:00",
+      "evidenceReference": "csv-import:google-trends-explore:sha256:6fdfd217947b224e991b86dd1cce9b9c3f30e0925c8efce55b5e2e19452d57c6:q=refrigerated_wet_food_cat_feeder:geo=US:start=2025-11-02:end=2026-11-08:imported=2026-11-08T13:24:26.818Z:cadence=WEEKLY",
+      "observedAt": "2026-11-08T13:24:26.862+00:00"
+    },
+    {
+      "id": "cmw7v68a8001e8tg9ico8c5n9",
+      "source": "GOOGLE_TRENDS_CSV",
+      "region": "US",
+      "keyword": "refrigerated wet food cat feeder",
+      "periodStart": "2026-10-18T00:00:00.000+00:00",
+      "periodEnd": "2026-10-18T00:00:00.000+00:00",
+      "evidenceReference": "csv-import:google-trends-explore:sha256:6fdfd217947b224e991b86dd1cce9b9c3f30e0925c8efce55b5e2e19452d57c6:q=refrigerated_wet_food_cat_feeder:geo=US:start=2025-11-02:end=2026-11-08:imported=2026-11-08T13:24:26.818Z:cadence=WEEKLY",
+      "observedAt": "2026-11-08T13:24:26.862+00:00"
+    },
+    {
+      "id": "cmw7v68a8001f8tg9dqa1j7lq",
+      "source": "GOOGLE_TRENDS_CSV",
+      "region": "US",
+      "keyword": "refrigerated wet food cat feeder",
+      "periodStart": "2026-10-25T00:00:00.000+00:00",
+      "periodEnd": "2026-10-25T00:00:00.000+00:00",
+      "evidenceReference": "csv-import:google-trends-explore:sha256:6fdfd217947b224e991b86dd1cce9b9c3f30e0925c8efce55b5e2e19452d57c6:q=refrigerated_wet_food_cat_feeder:geo=US:start=2025-11-02:end=2026-11-08:imported=2026-11-08T13:24:26.818Z:cadence=WEEKLY",
+      "observedAt": "2026-11-08T13:24:26.862+00:00"
+    },
+    {
+      "id": "cmw7v68a8001g8tg9cd9g0l59",
+      "source": "GOOGLE_TRENDS_CSV",
+      "region": "US",
+      "keyword": "refrigerated wet food cat feeder",
+      "periodStart": "2026-11-01T00:00:00.000+00:00",
+      "periodEnd": "2026-11-01T00:00:00.000+00:00",
+      "evidenceReference": "csv-import:google-trends-explore:sha256:6fdfd217947b224e991b86dd1cce9b9c3f30e0925c8efce55b5e2e19452d57c6:q=refrigerated_wet_food_cat_feeder:geo=US:start=2025-11-02:end=2026-11-08:imported=2026-11-08T13:24:26.818Z:cadence=WEEKLY",
+      "observedAt": "2026-11-08T13:24:26.862+00:00"
+    }
+  ],
+  "browserProof": "local-app-result.png",
+  "providerChargesUsd": 0,
+  "automatedAcquisition": false,
+  "approvalCreated": false,
+  "workersStarted": false,
+  "serverBinding": "127.0.0.1:3022"
+}

@@ -1,0 +1,9 @@
+{
+  "originalApp": "/Users/macbook/Documents/Project_Github/Meta-Ads/Shopify-Search",
+  "head": "aa0f1fc3b8fdfe4c9065125f0c5732747f28ebcf",
+  "backup": "/Users/macbook/Documents/Codex/2026-11-08/files-pasted-by-the-user-codex/work/local-app-before-trends.db",
+  "backupSha256": "3fbcd6eceed19805a085dfad0d57e809d06f3a811f6097723689b9630cab1b8a",
+  "createdAt": "2026-11-08T13:21:29.014131+00:00",
+  "trackedStatus": "",
+  "update": "Verified fast-forward via read-tree and compare-and-swap update-ref; branch unchanged; .env files preserved"
+}

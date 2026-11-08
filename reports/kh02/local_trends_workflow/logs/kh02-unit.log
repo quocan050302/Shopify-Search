@@ -1,0 +1,274 @@
+
+ RUN  v5.0.5 /Users/macbook/Documents/Codex/2026-10-26/new-chat/work/kh02-g15-g16-audit
+
+ ❯ tests/unit/kh02/v12_4_3_PostReviewHardening_2026_11_03.test.ts (82 tests | 2 failed) 335ms
+   ❯ KH-02 Post-Review Hardening Audit Suite (2026-11-03) (82)
+     ❯ BUG P0-A: G15 Demand Source Authority & Provenance Integrity (13)
+       × verifyStoredCsvFile strictly rejects path traversal, non-hex inputs, and truncated prefixes (16, 32, 63 chars) 7ms
+     ❯ MANDATORY ADVERSARIAL NEGATIVE / POSITIVE SUITE (T01 - T30) (20)
+       × T11: original CSV full SHA byte true; prefix truncated => FAIL closed 1ms
+ ❯ tests/unit/kh02/g15CsvOriginIntegrity.test.ts (36 tests | 4 failed) 244ms
+   ❯ KH-02 G15 CSV Origin Integrity & Official Import Authority (30 Negative + 7 Positive Cases) (36)
+     × REPRO-00: Exact repository fixture f300258f... (car phone mount, US, 13 weekly points, 84d) with availability timestamps fails closed in BUSINESS scope 7ms
+     × 03. Exact known repository CSV without fixture flag -> rejected in BUSINESS scope 1ms
+     × 04. Same fixture renamed in reference or source=HISTORICAL_INGESTION -> still rejected 1ms
+     × 05. Modified fixture bytes / new checksum (changed BOM, whitespace, and one value) -> still rejected because origin authority is missing 1ms
+ ❯ tests/unit/kh02/v12_4_3_7_19_3_2_9_RealGithubCiAndRequiredJobsProof.test.ts (24 tests | 5 failed) 258ms
+   ❯ KH-02 V12.4.3.7.19.3.2.9: Real GitHub CI, Mandatory Required-Jobs Policy & Bounded Runner (A01 - A24) (24)
+     × A13: Real .github/workflows/kh02-ci.yml passes all security, SHA-pinning, cost guard, and 6-required-jobs contract checks 20ms
+     × A14: Workflow contract validator rejects YAML containing unpinned action tag (actions/checkout@v4) 1ms
+     × A15: Workflow contract validator rejects YAML containing continue-on-error: true or write permissions 0ms
+     × A16: Workflow contract validator rejects YAML missing any 1 of the 6 CANONICAL_REQUIRED_JOBS 0ms
+     × A17: Workflow contract validator rejects YAML missing if: github.repository_visibility == 'public' guard 0ms
+ ❯ tests/unit/kh02/v12_4_3_3_1_MetaGoogleLiveIntegrity.test.ts (19 tests | 1 failed) 107ms
+   ❯ G25 & Historical Requalification — requalifyHistoricalEvergreenSnapshot demotes unverified legacy winners (2)
+     × acceptance/kh02-v12.4.3.3/ directory exists with FINAL_ACCEPTANCE_REPORT.md 4ms
+=== CANDIDATE DATABASE READBACK FAILED ===
+
+Invalid `prisma.researchProduct.findUnique()` invocation in
+/Users/macbook/Documents/Codex/2026-10-26/new-chat/work/kh02-g15-g16-audit/scripts/kh02/runCandidateDbReadback.ts:95:50
+
+  92 
+  93 try {
+  94   // 1. Verify DB connection and query research product (never fabricate a default title if missing)
+→ 95   const product = await prisma.researchProduct.findUnique(
+Database error. Code: `1`. Message: `SQLITE_ERROR: no such table: main.research_products`
+ ❯ tests/unit/kh02/v12_4_3_7_19_3_2_3_TrustedCiProofAndObservableExecution.test.ts (28 tests | 1 failed) 1786ms
+   ❯ KH-02 V12.4.3.7.19.3.2.3: Trusted CI Proof Boundary & Observable Execution (28)
+     ❯ Group C: Gate E9 Candidate Database Readback Script (4)
+       × C04: CLI runCandidateDbReadback process returns exitCode 0 and valid JSON with rawRecordCount=6 1125ms
+Processing request of type ListToolsRequest
+Processing request of type ListToolsRequest
+Processing request of type ListToolsRequest
+Processing request of type ListToolsRequest
+ ❯ tests/unit/kh02/v12_4_3_7_19_ReleaseGateFromRealResults.test.ts (16 tests | 1 failed) 17ms
+   ❯ KH-02 V12.4.3.7.19: Release Gate Evaluator (D01 - D16) (16)
+     × D16: byte integrity of provider sentinel artifacts is maintained 3ms
+Processing request of type ListToolsRequest
+Processing request of type ListToolsRequest
+
+⎯⎯⎯⎯⎯⎯ Failed Tests 14 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/unit/kh02/g15CsvOriginIntegrity.test.ts > KH-02 G15 CSV Origin Integrity & Official Import Authority (30 Negative + 7 Positive Cases) > REPRO-00: Exact repository fixture f300258f... (car phone mount, US, 13 weekly points, 84d) with availability timestamps fails closed in BUSINESS scope
+AssertionError: expected false to be true // Object.is equality
+
+- Expected
++ Received
+
+- true
++ false
+
+ ❯ tests/unit/kh02/g15CsvOriginIntegrity.test.ts:184:45
+    182|   // =================================================================…
+    183|   it("REPRO-00: Exact repository fixture f300258f... (car phone mount,…
+    184|     expect(fs.existsSync(knownFixturePath)).toBe(true);
+       |                                             ^
+    185|     const parsed = parseGoogleTrendsCsvBytes(fs.readFileSync(knownFixt…
+    186|     expect(parsed.valid).toBe(true);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/14]⎯
+
+ FAIL  tests/unit/kh02/g15CsvOriginIntegrity.test.ts > KH-02 G15 CSV Origin Integrity & Official Import Authority (30 Negative + 7 Positive Cases) > 03. Exact known repository CSV without fixture flag -> rejected in BUSINESS scope
+Error: ENOENT: no such file or directory, open '/Users/macbook/Documents/Codex/2026-10-26/new-chat/work/kh02-g15-g16-audit/data/google_trends_imports/f300258f9ea08da45034f449ade0c43d643cf280838d0f370a264d6805826d39.csv'
+ ❯ tests/unit/kh02/g15CsvOriginIntegrity.test.ts:315:49
+    313|
+    314|   it("03. Exact known repository CSV without fixture flag -> rejected …
+    315|     const parsed = parseGoogleTrendsCsvBytes(fs.readFileSync(knownFixt…
+       |                                                 ^
+    316|     const points = parsed.dataPoints.map((pt, i) => ({
+    317|       id: `obs_03_${i}`,
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/14]⎯
+
+ FAIL  tests/unit/kh02/g15CsvOriginIntegrity.test.ts > KH-02 G15 CSV Origin Integrity & Official Import Authority (30 Negative + 7 Positive Cases) > 04. Same fixture renamed in reference or source=HISTORICAL_INGESTION -> still rejected
+Error: ENOENT: no such file or directory, open '/Users/macbook/Documents/Codex/2026-10-26/new-chat/work/kh02-g15-g16-audit/data/google_trends_imports/f300258f9ea08da45034f449ade0c43d643cf280838d0f370a264d6805826d39.csv'
+ ❯ tests/unit/kh02/g15CsvOriginIntegrity.test.ts:343:49
+    341|
+    342|   it("04. Same fixture renamed in reference or source=HISTORICAL_INGES…
+    343|     const parsed = parseGoogleTrendsCsvBytes(fs.readFileSync(knownFixt…
+       |                                                 ^
+    344|     const points = parsed.dataPoints.map((pt, i) => ({
+    345|       id: `obs_04_${i}`,
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/14]⎯
+
+ FAIL  tests/unit/kh02/g15CsvOriginIntegrity.test.ts > KH-02 G15 CSV Origin Integrity & Official Import Authority (30 Negative + 7 Positive Cases) > 05. Modified fixture bytes / new checksum (changed BOM, whitespace, and one value) -> still rejected because origin authority is missing
+Error: ENOENT: no such file or directory, open '/Users/macbook/Documents/Codex/2026-10-26/new-chat/work/kh02-g15-g16-audit/data/google_trends_imports/f300258f9ea08da45034f449ade0c43d643cf280838d0f370a264d6805826d39.csv'
+ ❯ tests/unit/kh02/g15CsvOriginIntegrity.test.ts:372:28
+    370|
+    371|   it("05. Modified fixture bytes / new checksum (changed BOM, whitespa…
+    372|     const rawOriginal = fs.readFileSync(knownFixturePath, "utf8");
+       |                            ^
+    373|     const modifiedContent = "\uFEFF" + rawOriginal.replace("2026-08-02…
+    374|     const newSha = crypto.createHash("sha256").update(modifiedContent,…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/14]⎯
+
+ FAIL  tests/unit/kh02/v12_4_3_3_1_MetaGoogleLiveIntegrity.test.ts > G25 & Historical Requalification — requalifyHistoricalEvergreenSnapshot demotes unverified legacy winners > acceptance/kh02-v12.4.3.3/ directory exists with FINAL_ACCEPTANCE_REPORT.md
+AssertionError: expected false to be true // Object.is equality
+
+- Expected
++ Received
+
+- true
++ false
+
+ ❯ tests/unit/kh02/v12_4_3_3_1_MetaGoogleLiveIntegrity.test.ts:486:7
+    484|         )
+    485|       )
+    486|     ).toBe(true);
+       |       ^
+    487|   });
+    488|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/14]⎯
+
+ FAIL  tests/unit/kh02/v12_4_3_7_19_3_2_3_TrustedCiProofAndObservableExecution.test.ts > KH-02 V12.4.3.7.19.3.2.3: Trusted CI Proof Boundary & Observable Execution > Group C: Gate E9 Candidate Database Readback Script > C04: CLI runCandidateDbReadback process returns exitCode 0 and valid JSON with rawRecordCount=6
+Error: Command failed: npx tsx scripts/kh02/runCandidateDbReadback.ts
+=== CANDIDATE DATABASE READBACK FAILED ===
+
+Invalid `prisma.researchProduct.findUnique()` invocation in
+/Users/macbook/Documents/Codex/2026-10-26/new-chat/work/kh02-g15-g16-audit/scripts/kh02/runCandidateDbReadback.ts:95:50
+
+  92 
+  93 try {
+  94   // 1. Verify DB connection and query research product (never fabricate a default title if missing)
+→ 95   const product = await prisma.researchProduct.findUnique(
+Database error. Code: `1`. Message: `SQLITE_ERROR: no such table: main.research_products`
+
+ ❯ tests/unit/kh02/v12_4_3_7_19_3_2_3_TrustedCiProofAndObservableExecution.test.ts:715:22
+    713|       delete env.SWAI_TEST_ISOLATION;
+    714|       delete env.SWAI_E2E_SERVER;
+    715|       const stdout = execSync("npx tsx scripts/kh02/runCandidateDbRead…
+       |                      ^
+    716|         encoding: "utf-8",
+    717|         cwd: process.cwd(),
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/14]⎯
+
+ FAIL  tests/unit/kh02/v12_4_3_7_19_3_2_9_RealGithubCiAndRequiredJobsProof.test.ts > KH-02 V12.4.3.7.19.3.2.9: Real GitHub CI, Mandatory Required-Jobs Policy & Bounded Runner (A01 - A24) > A13: Real .github/workflows/kh02-ci.yml passes all security, SHA-pinning, cost guard, and 6-required-jobs contract checks
+AssertionError: expected 'FAIL' to be 'PASS' // Object.is equality
+
+Expected: "PASS"
+Received: "FAIL"
+
+ ❯ tests/unit/kh02/v12_4_3_7_19_3_2_9_RealGithubCiAndRequiredJobsProof.test.ts:555:30
+    553|   it("A13: Real .github/workflows/kh02-ci.yml passes all security, SHA…
+    554|     const contract = verifyWorkflowContract({ expectedSha: currentTest…
+    555|     expect(contract.verdict).toBe("PASS");
+       |                              ^
+    556|     expect(contract.workflowFileExists).toBe(true);
+    557|     expect(contract.workflowPath).toBe(".github/workflows/kh02-ci.yml"…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[7/14]⎯
+
+ FAIL  tests/unit/kh02/v12_4_3_7_19_3_2_9_RealGithubCiAndRequiredJobsProof.test.ts > KH-02 V12.4.3.7.19.3.2.9: Real GitHub CI, Mandatory Required-Jobs Policy & Bounded Runner (A01 - A24) > A14: Workflow contract validator rejects YAML containing unpinned action tag (actions/checkout@v4)
+Error: ENOENT: no such file or directory, open '/Users/macbook/Documents/Codex/2026-10-26/new-chat/work/kh02-g15-g16-audit/.github/workflows/kh02-ci.yml'
+ ❯ tests/unit/kh02/v12_4_3_7_19_3_2_9_RealGithubCiAndRequiredJobsProof.test.ts:573:25
+    571|   // =================================================================…
+    572|   it("A14: Workflow contract validator rejects YAML containing unpinne…
+    573|     const realYaml = fs.readFileSync(
+       |                         ^
+    574|       path.resolve(process.cwd(), ".github/workflows/kh02-ci.yml"),
+    575|       "utf-8"
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[8/14]⎯
+
+ FAIL  tests/unit/kh02/v12_4_3_7_19_3_2_9_RealGithubCiAndRequiredJobsProof.test.ts > KH-02 V12.4.3.7.19.3.2.9: Real GitHub CI, Mandatory Required-Jobs Policy & Bounded Runner (A01 - A24) > A15: Workflow contract validator rejects YAML containing continue-on-error: true or write permissions
+Error: ENOENT: no such file or directory, open '/Users/macbook/Documents/Codex/2026-10-26/new-chat/work/kh02-g15-g16-audit/.github/workflows/kh02-ci.yml'
+ ❯ tests/unit/kh02/v12_4_3_7_19_3_2_9_RealGithubCiAndRequiredJobsProof.test.ts:590:25
+    588|   // =================================================================…
+    589|   it("A15: Workflow contract validator rejects YAML containing continu…
+    590|     const realYaml = fs.readFileSync(
+       |                         ^
+    591|       path.resolve(process.cwd(), ".github/workflows/kh02-ci.yml"),
+    592|       "utf-8"
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[9/14]⎯
+
+ FAIL  tests/unit/kh02/v12_4_3_7_19_3_2_9_RealGithubCiAndRequiredJobsProof.test.ts > KH-02 V12.4.3.7.19.3.2.9: Real GitHub CI, Mandatory Required-Jobs Policy & Bounded Runner (A01 - A24) > A16: Workflow contract validator rejects YAML missing any 1 of the 6 CANONICAL_REQUIRED_JOBS
+Error: ENOENT: no such file or directory, open '/Users/macbook/Documents/Codex/2026-10-26/new-chat/work/kh02-g15-g16-audit/.github/workflows/kh02-ci.yml'
+ ❯ tests/unit/kh02/v12_4_3_7_19_3_2_9_RealGithubCiAndRequiredJobsProof.test.ts:619:25
+    617|   // =================================================================…
+    618|   it("A16: Workflow contract validator rejects YAML missing any 1 of t…
+    619|     const realYaml = fs.readFileSync(
+       |                         ^
+    620|       path.resolve(process.cwd(), ".github/workflows/kh02-ci.yml"),
+    621|       "utf-8"
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[10/14]⎯
+
+ FAIL  tests/unit/kh02/v12_4_3_7_19_3_2_9_RealGithubCiAndRequiredJobsProof.test.ts > KH-02 V12.4.3.7.19.3.2.9: Real GitHub CI, Mandatory Required-Jobs Policy & Bounded Runner (A01 - A24) > A17: Workflow contract validator rejects YAML missing if: github.repository_visibility == 'public' guard
+Error: ENOENT: no such file or directory, open '/Users/macbook/Documents/Codex/2026-10-26/new-chat/work/kh02-g15-g16-audit/.github/workflows/kh02-ci.yml'
+ ❯ tests/unit/kh02/v12_4_3_7_19_3_2_9_RealGithubCiAndRequiredJobsProof.test.ts:636:25
+    634|   // =================================================================…
+    635|   it("A17: Workflow contract validator rejects YAML missing if: github…
+    636|     const realYaml = fs.readFileSync(
+       |                         ^
+    637|       path.resolve(process.cwd(), ".github/workflows/kh02-ci.yml"),
+    638|       "utf-8"
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[11/14]⎯
+
+ FAIL  tests/unit/kh02/v12_4_3_7_19_ReleaseGateFromRealResults.test.ts > KH-02 V12.4.3.7.19: Release Gate Evaluator (D01 - D16) > D16: byte integrity of provider sentinel artifacts is maintained
+AssertionError: expected false to be true // Object.is equality
+
+- Expected
++ Received
+
+- true
++ false
+
+ ❯ tests/unit/kh02/v12_4_3_7_19_ReleaseGateFromRealResults.test.ts:200:32
+    198|     for (const sha of sentinels) {
+    199|       const p = path.join(receiptsDir, `${sha}.json`);
+    200|       expect(fs.existsSync(p)).toBe(true);
+       |                                ^
+    201|       const computed = crypto.createHash("sha256").update(fs.readFileS…
+    202|       expect(computed).toBe(sha);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[12/14]⎯
+
+ FAIL  tests/unit/kh02/v12_4_3_PostReviewHardening_2026_11_03.test.ts > KH-02 Post-Review Hardening Audit Suite (2026-11-03) > BUG P0-A: G15 Demand Source Authority & Provenance Integrity > verifyStoredCsvFile strictly rejects path traversal, non-hex inputs, and truncated prefixes (16, 32, 63 chars)
+AssertionError: expected false to be true // Object.is equality
+
+- Expected
++ Received
+
+- true
++ false
+
+ ❯ tests/unit/kh02/v12_4_3_PostReviewHardening_2026_11_03.test.ts:64:50
+     62|       // Truncated 16, 32, 63 char prefixes of existing real file MUST…
+     63|       const real64 = "9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822c…
+     64|       expect(verifyStoredCsvFile(real64).exists).toBe(true);
+       |                                                  ^
+     65|       expect(verifyStoredCsvFile(real64).validHash).toBe(true);
+     66|       expect(verifyStoredCsvFile(real64.slice(0, 16)).exists).toBe(fal…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[13/14]⎯
+
+ FAIL  tests/unit/kh02/v12_4_3_PostReviewHardening_2026_11_03.test.ts > KH-02 Post-Review Hardening Audit Suite (2026-11-03) > MANDATORY ADVERSARIAL NEGATIVE / POSITIVE SUITE (T01 - T30) > T11: original CSV full SHA byte true; prefix truncated => FAIL closed
+AssertionError: expected false to be true // Object.is equality
+
+- Expected
++ Received
+
+- true
++ false
+
+ ❯ tests/unit/kh02/v12_4_3_PostReviewHardening_2026_11_03.test.ts:970:30
+    968|       expect(short63.exists).toBe(false);
+    969|       const valid64 = verifyStoredCsvFile("9f86d081884c7d659a2feaa0c55…
+    970|       expect(valid64.exists).toBe(true);
+       |                              ^
+    971|       expect(valid64.validHash).toBe(true);
+    972|     });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[14/14]⎯
+
+
+ Test Files  6 failed | 103 passed (109)
+      Tests  14 failed | 2600 passed (2614)
+   Start at  20:01:57
+   Duration  180.53s (tests 83%, import 12%, setup 4%, transform 2%)

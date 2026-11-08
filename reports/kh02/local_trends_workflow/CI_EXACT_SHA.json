@@ -1,0 +1,394 @@
+{
+  "sourceCommit": "aa0f1fc3b8fdfe4c9065125f0c5732747f28ebcf",
+  "runId": 42484515004,
+  "runUrl": "https://github.com/quocan050302/Shopify-Search/actions/runs/42484515004",
+  "allSixConfiguredJobsPassed": true,
+  "jobs": [
+    {
+      "id": 128743343382,
+      "name": "security-negative",
+      "status": "completed",
+      "conclusion": "success",
+      "run_id": 42484515004,
+      "logs_url": null,
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 1
+        },
+        {
+          "name": "Checkout repository",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 2
+        },
+        {
+          "name": "Setup Node.js 22",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 3
+        },
+        {
+          "name": "Resource Safety Preflight",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 4
+        },
+        {
+          "name": "Install dependencies (deterministic lockfile)",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 5
+        },
+        {
+          "name": "Run Security Negative & CI Trust Boundary Suites",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 6
+        },
+        {
+          "name": "Post Setup Node.js 22",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 11
+        },
+        {
+          "name": "Post Checkout repository",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 12
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 13
+        }
+      ]
+    },
+    {
+      "id": 128743343725,
+      "name": "typecheck",
+      "status": "completed",
+      "conclusion": "success",
+      "run_id": 42484515004,
+      "logs_url": null,
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 1
+        },
+        {
+          "name": "Checkout repository",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 2
+        },
+        {
+          "name": "Setup Node.js 22",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 3
+        },
+        {
+          "name": "Resource Safety Preflight",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 4
+        },
+        {
+          "name": "Install dependencies (deterministic lockfile)",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 5
+        },
+        {
+          "name": "Run TypeScript Typecheck & Workflow Contract Verification",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 6
+        },
+        {
+          "name": "Post Setup Node.js 22",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 11
+        },
+        {
+          "name": "Post Checkout repository",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 12
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 13
+        }
+      ]
+    },
+    {
+      "id": 128743583071,
+      "name": "kh01-regression",
+      "status": "completed",
+      "conclusion": "success",
+      "run_id": 42484515004,
+      "logs_url": null,
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 1
+        },
+        {
+          "name": "Checkout repository",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 2
+        },
+        {
+          "name": "Setup Node.js 22",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 3
+        },
+        {
+          "name": "Resource Safety Preflight",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 4
+        },
+        {
+          "name": "Install dependencies (deterministic lockfile)",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 5
+        },
+        {
+          "name": "Run KH-01 Baseline Verification Suite",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 6
+        },
+        {
+          "name": "Post Setup Node.js 22",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 11
+        },
+        {
+          "name": "Post Checkout repository",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 12
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 13
+        }
+      ]
+    },
+    {
+      "id": 128743583131,
+      "name": "kh02-unit",
+      "status": "completed",
+      "conclusion": "success",
+      "run_id": 42484515004,
+      "logs_url": null,
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 1
+        },
+        {
+          "name": "Checkout repository",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 2
+        },
+        {
+          "name": "Setup Node.js 22",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 3
+        },
+        {
+          "name": "Resource Safety Preflight",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 4
+        },
+        {
+          "name": "Install dependencies (deterministic lockfile)",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 5
+        },
+        {
+          "name": "Run KH-02 Unit Test Suite",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 6
+        },
+        {
+          "name": "Post Setup Node.js 22",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 11
+        },
+        {
+          "name": "Post Checkout repository",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 12
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 13
+        }
+      ]
+    },
+    {
+      "id": 128744650138,
+      "name": "backtest-policy",
+      "status": "completed",
+      "conclusion": "success",
+      "run_id": 42484515004,
+      "logs_url": null,
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 1
+        },
+        {
+          "name": "Checkout repository",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 2
+        },
+        {
+          "name": "Setup Node.js 22",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 3
+        },
+        {
+          "name": "Resource Safety Preflight",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 4
+        },
+        {
+          "name": "Install dependencies (deterministic lockfile)",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 5
+        },
+        {
+          "name": "Run Point-in-Time Historical Backtest & Candidate DB Readback",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 6
+        },
+        {
+          "name": "Post Setup Node.js 22",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 11
+        },
+        {
+          "name": "Post Checkout repository",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 12
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 13
+        }
+      ]
+    },
+    {
+      "id": 128744650213,
+      "name": "kh02-integration",
+      "status": "completed",
+      "conclusion": "success",
+      "run_id": 42484515004,
+      "logs_url": null,
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 1
+        },
+        {
+          "name": "Checkout repository",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 2
+        },
+        {
+          "name": "Setup Node.js 22",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 3
+        },
+        {
+          "name": "Resource Safety Preflight",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 4
+        },
+        {
+          "name": "Install dependencies (deterministic lockfile)",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 5
+        },
+        {
+          "name": "Run KH-02 Integration Test Suite (Serialized SQLite)",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 6
+        },
+        {
+          "name": "Post Setup Node.js 22",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 11
+        },
+        {
+          "name": "Post Checkout repository",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 12
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 13
+        }
+      ]
+    }
+  ],
+  "ciBacktestSelectedOutput": "2026-11-08T13:26:33.4584197Z [Backtest V12.4.3.4.2] Policy=PASS | Dev=INSUFFICIENT_HISTORICAL_EVIDENCE (shortlist=1/1) | Holdout=INSUFFICIENT_HISTORICAL_EVIDENCE (shortlist=1/1) | Overall=INSUFFICIENT_HISTORICAL_EVIDENCE\n2026-11-08T13:26:33.4620041Z   \"policyScenarioVerdict\": \"PASS\",\n2026-11-08T13:26:33.4620444Z   \"pointInTimeIntegrityVerdict\": \"PASS\",\n2026-11-08T13:26:33.4620974Z   \"historicalDevVerdict\": \"INSUFFICIENT_HISTORICAL_EVIDENCE\",\n2026-11-08T13:26:33.4621595Z   \"historicalHoldoutVerdict\": \"INSUFFICIENT_HISTORICAL_EVIDENCE\",\n2026-11-08T13:26:33.4622253Z   \"overallHistoricalBacktestVerdict\": \"INSUFFICIENT_HISTORICAL_EVIDENCE\",\n2026-11-08T13:26:34.4890722Z   \"rawRecordCount\": 6,\n2026-11-08T13:26:34.4893749Z   \"businessAttributableCount\": 0,\n2026-11-08T13:26:34.4893993Z   \"verifiedOfficialCsvRows\": 0,",
+  "note": "Exact head SHA and overall completed/success state independently saved in CI_RUN_EXACT_SHA.json. Business qualification remains insufficient. Historical dataset parity not claimed."
+}

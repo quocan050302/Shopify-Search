@@ -1,0 +1,36 @@
+import subprocess,os,signal,datetime,json,pathlib,sys,shutil,time,selectors,hashlib
+r=pathlib.Path('/Users/macbook/Documents/Codex/2026-10-26/new-chat/work/kh02-g15-g16-audit');out=r/'reports/kh02/local_trends_workflow';node='/Users/macbook/.nvm/versions/node/v22.22.3/bin/node';task=sys.argv[1];timeout=int(sys.argv[2]);args=sys.argv[3:]
+def stamp():return datetime.datetime.now(datetime.timezone.utc).isoformat()
+def mem():
+ s=subprocess.check_output(['vm_stat'],text=True);v={}
+ import re
+ for label,n in re.findall(r'^([^:\n]+):\s*(\d+)\.',s,re.M):v[label.strip()]=int(n)
+ return sum(v.get(k,0) for k in ['Pages free','Pages inactive','Pages speculative','Pages purgeable'])*16384
+start=time.monotonic();log=out/'logs'/f'{task}.log';free=shutil.disk_usage(r).free;ram=mem();m={'taskId':task,'baseSha':subprocess.check_output(['git','rev-parse','HEAD'],cwd=r,text=True).strip(),'startedAt':stamp(),'command':args,'timeoutSeconds':timeout,'diskBefore':free,'availableMemoryEstimateBefore':ram,'timeout':False};env=dict(os.environ);env.update(PATH=str(pathlib.Path(node).parent)+':'+env.get('PATH',''),NODE_OPTIONS='--max-old-space-size=2048',NEXT_TELEMETRY_DISABLED='1',NEXT_PRIVATE_BUILD_WORKER='1',DATABASE_URL='file:/Users/macbook/Documents/Codex/2026-11-08/files-pasted-by-the-user-codex/work/local-app-snapshot.db',SWAI_ACCEPTANCE_OUTPUT_DIR=str(out/'backtest'))
+if free<2*1024**3 or ram<512*1024**2:m.update(status='RESOURCE_ABORT',exitCode=None)
+else:
+ p=subprocess.Popen(args,cwd=r,env=env,stdout=subprocess.PIPE,stderr=subprocess.STDOUT,start_new_session=True);sel=selectors.DefaultSelector();sel.register(p.stdout,selectors.EVENT_READ);digest=hashlib.sha256();written=0;lastguard=0;abort=None
+ with log.open('wb') as f:
+  while sel.get_map():
+   for key,_ in sel.select(.25):
+    data=os.read(key.fileobj.fileno(),8192)
+    if data:
+     digest.update(data)
+     if written<1048576:f.write(data[:1048576-written]);written+=len(data)
+    else:sel.unregister(key.fileobj)
+   elapsed=time.monotonic()-start
+   if elapsed>timeout:abort='TIMEOUT';m['timeout']=True
+   if elapsed-lastguard>3:
+    lastguard=elapsed
+    if shutil.disk_usage(r).free<2*1024**3:abort='DISK_RESERVE'
+   if abort:
+    try:os.killpg(p.pid,signal.SIGTERM)
+    except ProcessLookupError:pass
+    try:p.wait(timeout=4)
+    except subprocess.TimeoutExpired:os.killpg(p.pid,signal.SIGKILL);p.wait()
+    break
+  rc=p.wait();m.update(status='ABORTED' if abort else 'PASS' if rc==0 else 'FAIL',exitCode=rc,abortReason=abort,outputSha256=digest.hexdigest(),logBytes=min(written,1048576))
+ # Do not signal a process group after its parent has already exited.
+ # Its ID may be gone/reused; the completed command's return code is authoritative.
+m.update(endedAt=stamp(),elapsedSeconds=round(time.monotonic()-start,3),diskAfter=shutil.disk_usage(r).free)
+(out/(task+'.json')).write_text(json.dumps(m,indent=2)+'\n');print(json.dumps({k:v for k,v in m.items() if k not in ['command']},indent=2))

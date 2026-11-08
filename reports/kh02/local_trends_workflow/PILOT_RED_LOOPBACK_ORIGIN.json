@@ -1,0 +1,27 @@
+{
+  "context": "Actual new route handlers; existing app product and genuine original CSV; isolated backup of actual application DB; no provider networking or business approval",
+  "importStatus": 403,
+  "result": {
+    "success": false,
+    "error": {
+      "code": "CROSS_ORIGIN_FORBIDDEN",
+      "message": "Use the app's own import page."
+    }
+  },
+  "readbackStatus": 200,
+  "readback": {
+    "success": true,
+    "data": {
+      "workspaceId": "acceptance_v12_3_ws",
+      "acquisitionMode": "OFFICIAL_UI_EXPORT_USER_ASSISTED",
+      "automaticAcquisitionAvailable": false,
+      "acquisitionBlocker": "GOOGLE_TRENDS_EXPLORE_ROBOTS_DISALLOW",
+      "robotsUrl": "https://trends.google.com/robots.txt",
+      "exportHelpUrl": "https://support.google.com/trends/answer/4365538?hl=en",
+      "apiAlphaUrl": "https://developers.google.com/search/apis/trends",
+      "message": "Open Google Trends and download Interest over time as CSV. Import, DB readback and G15/G16 evaluation then run locally. No paid service or automatic source approval is used.",
+      "evaluation": null
+    }
+  },
+  "readAt": "2026-11-08T13:04:16.914Z"
+}

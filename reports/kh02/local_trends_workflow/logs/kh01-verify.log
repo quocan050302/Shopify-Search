@@ -1,0 +1,11 @@
+
+ RUN  v5.0.5 /Users/macbook/Documents/Codex/2026-10-26/new-chat/work/kh02-g15-g16-audit
+
+
+ Test Files  5 passed (5)
+      Tests  69 passed (69)
+   Start at  20:14:47
+   Duration  1.81s (tests 35%, import 30%, setup 21%, transform 12%, worker 1%)
+
+    Isolate  5 workers spawned · ~76ms startup each (spawn + environment, per file)
+             at least ~302ms faster with isolate: false — reuses workers across files instead of one per file

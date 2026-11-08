@@ -1,0 +1,8 @@
+
+ RUN  v5.0.5 /Users/macbook/Documents/Codex/2026-10-26/new-chat/work/kh02-g15-g16-audit
+
+
+ Test Files  1 passed (1)
+      Tests  13 passed (13)
+   Start at  19:59:43
+   Duration  949ms (tests 57%, import 19%, transform 12%, setup 11%, worker 1%)

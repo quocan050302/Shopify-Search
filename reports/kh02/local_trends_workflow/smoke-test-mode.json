@@ -1,0 +1,26 @@
+{
+  "taskId": "smoke-test-mode",
+  "baseSha": "9ba858490fa9058ce3e7e787aeafa214f5909637",
+  "startedAt": "2026-11-08T13:14:52.116240+00:00",
+  "command": [
+    "env",
+    "VITEST=1",
+    "META_COLLECTOR_DATA_DIR=/Users/macbook/Documents/Codex/2026-11-08/files-pasted-by-the-user-codex/work/local-trends-smoke",
+    "/Users/macbook/.nvm/versions/node/v22.22.3/bin/node",
+    "--import",
+    "tsx",
+    "scripts/kh02/runThreeSourceFreeMcpSmoke.ts"
+  ],
+  "timeoutSeconds": 60,
+  "diskBefore": 5990428672,
+  "availableMemoryEstimateBefore": 3215491072,
+  "timeout": false,
+  "status": "PASS",
+  "exitCode": 0,
+  "abortReason": null,
+  "outputSha256": "774643ea5a698ad2cc4e76dfc1133424435104b6a6b227fc755038430ec51e4a",
+  "logBytes": 5443,
+  "endedAt": "2026-11-08T13:15:07.526636+00:00",
+  "elapsedSeconds": 15.425,
+  "diskAfter": 5989912576
+}

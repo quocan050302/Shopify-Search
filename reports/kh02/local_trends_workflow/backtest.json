@@ -1,0 +1,23 @@
+{
+  "taskId": "backtest",
+  "baseSha": "9ba858490fa9058ce3e7e787aeafa214f5909637",
+  "startedAt": "2026-11-08T13:14:49.473673+00:00",
+  "command": [
+    "/Users/macbook/.nvm/versions/node/v22.22.3/bin/node",
+    "--import",
+    "tsx",
+    "scripts/kh02/runBacktestV12_4_3_4_2.ts"
+  ],
+  "timeoutSeconds": 120,
+  "diskBefore": 5991141376,
+  "availableMemoryEstimateBefore": 3363717120,
+  "timeout": false,
+  "status": "PASS",
+  "exitCode": 0,
+  "abortReason": null,
+  "outputSha256": "2fa80499707543d2e830f3cbff18474dfb5afd5f2a5e097e55c1d89523455be6",
+  "logBytes": 723,
+  "endedAt": "2026-11-08T13:14:51.446590+00:00",
+  "elapsedSeconds": 1.988,
+  "diskAfter": 5990445056
+}

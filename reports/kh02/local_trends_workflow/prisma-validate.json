@@ -1,0 +1,24 @@
+{
+  "taskId": "prisma-validate",
+  "baseSha": "9ba858490fa9058ce3e7e787aeafa214f5909637",
+  "startedAt": "2026-11-08T13:14:46.357470+00:00",
+  "command": [
+    "/Users/macbook/.nvm/versions/node/v22.22.3/bin/node",
+    "node_modules/prisma/build/index.js",
+    "validate",
+    "--config",
+    "prisma7.config.ts"
+  ],
+  "timeoutSeconds": 60,
+  "diskBefore": 5994229760,
+  "availableMemoryEstimateBefore": 3721297920,
+  "timeout": false,
+  "status": "PASS",
+  "exitCode": 0,
+  "abortReason": null,
+  "outputSha256": "a7604f22c6822cd70574b47ef8f5d478a826f44f87175b584c9758551b2dc376",
+  "logBytes": 1011,
+  "endedAt": "2026-11-08T13:14:47.227985+00:00",
+  "elapsedSeconds": 0.897,
+  "diskAfter": 5994221568
+}

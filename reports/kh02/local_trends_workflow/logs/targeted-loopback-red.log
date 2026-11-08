@@ -1,0 +1,33 @@
+
+ RUN  v5.0.5 /Users/macbook/Documents/Codex/2026-10-26/new-chat/work/kh02-g15-g16-audit
+
+ ❯ tests/integration/kh02/localTrendsWorkflow.test.ts (14 tests | 1 failed) 435ms
+   ❯ Free local Trends workflow — engineering evidence only (14)
+     × accepts the original 127.0.0.1 browser origin when Next normalizes its request URL to localhost 11ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/integration/kh02/localTrendsWorkflow.test.ts > Free local Trends workflow — engineering evidence only > accepts the original 127.0.0.1 browser origin when Next normalizes its request URL to localhost
+AssertionError: expected 403 to be 400 // Object.is equality
+
+- Expected
++ Received
+
+- 400
++ 403
+
+ ❯ tests/integration/kh02/localTrendsWorkflow.test.ts:121:29
+    119|       method: "POST", headers: { host: "127.0.0.1:3022", origin: "http…
+    120|     }));
+    121|     expect(response.status).toBe(400);
+       |                             ^
+    122|     expect((await response.json()).error.code).toBe("INVALID_JSON");
+    123|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 13 passed (14)
+   Start at  20:04:59
+   Duration  783ms (tests 61%, import 17%, transform 14%, setup 8%, worker 1%)

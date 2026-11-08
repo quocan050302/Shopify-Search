@@ -1,0 +1,769 @@
+▲ Next.js 16.4.2 (Turbopack)
+✓ Running next.config.ts took 108ms
+- Cache Components enabled
+- Partial Prefetching enabled
+
+  Creating an optimized production build ...
+✓ Compiled successfully in 4.2s
+  Running TypeScript ...
+  Finished TypeScript in 3.0s ...
+  Collecting page data using 7 workers ...
+  Generating static pages using 7 workers (0/57) ...
+  Generating static pages using 7 workers (14/57) 
+  Generating static pages using 7 workers (28/57) 
+  Generating static pages using 7 workers (42/57) 
+✓ Generating static pages using 7 workers (57/57) in 566ms
+Turbopack build encountered 22 warnings:
+./src/services/kh02/demand/temporalDemandEngine.ts:1073:21
+Warning: The file pattern ('null' | <dynamic> | <dynamic> '/swai-test-provider-receipts' | <dynamic> 'swai-test-provider-receipts' | '/ROOT/' <dynamic> | '/ROOT' <dynamic> | '/ROOT/data/provider_receipts' | '/ROOTdata/provider_receipts') matches 11631 files in [project]/
+  [90m1071 |[0m   [36mif[0m (dir && fs.existsSync(dir) && dir.startsWith(os.tmpdir())) {
+  [90m1072 |[0m     [36mtry[0m {
+[33m[1m>[0m [90m1073 |[0m       [36mconst[0m files = fs.readdirSync(dir);
+  [90m     |[0m                     [33m[1m^^^^^^^^^^^^^^^^^^^[0m
+  [90m1074 |[0m       [36mfor[0m ([36mconst[0m f [36mof[0m files) {
+  [90m1075 |[0m         [36mif[0m (f.endsWith([32m".attestation.json"[0m) || (runId && f.includes(runId))) {
+  [90m1076 |[0m           [36mtry[0m { fs.unlinkSync(path.join(dir, f)); } [36mcatch[0m {}
+
+Overly broad patterns can lead to build performance issues and over bundling.
+
+Import traces:
+  #1 [App Route]:
+    ./src/services/kh02/demand/temporalDemandEngine.ts
+    ./src/services/kh02/demand/googleTrendsCsvValidator.ts
+    ./src/app/api/v1/demand/import/route.ts
+
+  #2 [App Route]:
+    ./src/services/kh02/demand/temporalDemandEngine.ts
+    ./src/services/kh02/demand/demandObservationBatchImport.ts
+    ./src/app/api/v1/demand/import/route.ts
+
+
+./src/services/kh02/demand/temporalDemandEngine.ts:1633:5
+Warning: The file pattern ('null' | <dynamic> | <dynamic> '/swai-test-provider-receipts' | <dynamic> 'swai-test-provider-receipts' | '/ROOT/' <dynamic> | '/ROOT' <dynamic> | '/ROOT/data/provider_receipts' | '/ROOTdata/provider_receipts') matches 11631 files in [project]/
+  [90m1631 |[0m [36mfunction[0m getAuthorizedReceiptStorageRoots(): string[] {
+  [90m1632 |[0m   [36mconst[0m roots = [
+[33m[1m>[0m [90m1633 |[0m     path.resolve(getProviderReceiptStorageDir()),
+  [90m     |[0m     [33m[1m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+  [90m1634 |[0m     path.resolve([33mPROVIDER_RECEIPT_STORAGE_DIR[0m),
+  [90m1635 |[0m     path.resolve([33mUNIT_FIXTURE_STORAGE_DIR[0m),
+  [90m1636 |[0m     path.resolve([33mGOOGLE_TRENDS_CSV_STORAGE_DIR[0m),
+
+Overly broad patterns can lead to build performance issues and over bundling.
+
+Import traces:
+  #1 [App Route]:
+    ./src/services/kh02/demand/temporalDemandEngine.ts
+    ./src/services/kh02/demand/googleTrendsCsvValidator.ts
+    ./src/app/api/v1/demand/import/route.ts
+
+  #2 [App Route]:
+    ./src/services/kh02/demand/temporalDemandEngine.ts
+    ./src/services/kh02/demand/demandObservationBatchImport.ts
+    ./src/app/api/v1/demand/import/route.ts
+
+
+./src/services/kh02/demand/temporalDemandEngine.ts:3582:15
+Warning: The file pattern ('null' | <dynamic> | <dynamic> '/swai-test-provider-receipts' | <dynamic> 'swai-test-provider-receipts' | '/ROOT/' <dynamic> | '/ROOT' <dynamic> | '/ROOT/data/provider_receipts' | '/ROOTdata/provider_receipts') matches 11631 files in [project]/
+  [90m3580 |[0m   rawContent: string | [33mBuffer[0m
+  [90m3581 |[0m ): { artifactPath: string; rawResponseSha256: string; byteCount: number; status: [32m"CONTEN...[0m
+[33m[1m>[0m [90m3582 |[0m   [36mconst[0m dir = path.resolve(getProviderReceiptStorageDir());
+  [90m     |[0m               [33m[1m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+  [90m3583 |[0m   [36mif[0m (!fs.existsSync(dir)) {
+  [90m3584 |[0m     fs.mkdirSync(dir, { recursive: [36mtrue[0m });
+  [90m3585 |[0m   }
+
+Overly broad patterns can lead to build performance issues and over bundling.
+
+Import traces:
+  #1 [App Route]:
+    ./src/services/kh02/demand/temporalDemandEngine.ts
+    ./src/services/kh02/demand/googleTrendsCsvValidator.ts
+    ./src/app/api/v1/demand/import/route.ts
+
+  #2 [App Route]:
+    ./src/services/kh02/demand/temporalDemandEngine.ts
+    ./src/services/kh02/demand/demandObservationBatchImport.ts
+    ./src/app/api/v1/demand/import/route.ts
+
+
+./src/services/kh02/demand/bigqueryClientAdapter.ts:152:10
+Warning: Dynamic filesystem access causes tracing of the whole project
+  [90m150 |[0m   [90m// 1. Verify existence if path is supplied[0m
+  [90m151 |[0m   [36mif[0m (credPath) {
+[33m[1m>[0m [90m152 |[0m     [36mif[0m (!fs.existsSync(credPath)) {
+  [90m    |[0m          [33m[1m^^^^^^^^^^^^^^^^^^^^^^^[0m
+  [90m153 |[0m       [36mreturn[0m {
+  [90m154 |[0m         token: [36mnull[0m,
+  [90m155 |[0m         authType: [32m"NONE"[0m,
+
+Static analysis determined that this filesystem access causes the whole project to be traced and included in the output.
+This is usually unintentional and leads to all source files (including the public folder) to be deployed as part of the server code.
+This can slow down deployments or lead to failures when size limits are exceeded.
+To resolve this, you can
+- make sure the path is statically scoped to some subfolder, for example path.join(process.cwd(), 'data', bar), or
+- only use them in development, or
+- opt out by adding an ignore comment to the highlighted call: fs.existsSync(/*turbopackIgnore: true*/ ...), or
+- remove them.
+
+Import traces:
+  #1 [App Route]:
+    ./src/services/kh02/demand/bigqueryClientAdapter.ts
+    ./src/services/kh02/demand/googleTrendsCsvValidator.ts
+    ./src/app/api/v1/demand/import/route.ts
+
+  #2 [App Route]:
+    ./src/services/kh02/demand/bigqueryClientAdapter.ts
+    ./src/services/kh02/demand/demandProviderRegistry.ts
+    ./src/services/kh02/providers/sourceRegistry.ts
+    ./src/app/api/v1/kh02/providers/test-connection/route.ts
+
+
+./src/services/kh02/demand/durableCandidateAliasAuthority.ts:303:8
+Warning: Dynamic filesystem access causes tracing of the whole project
+  [90m301 |[0m     process.env.[33mCANDIDATE_ALIAS_STORAGE_DIR[0m ||
+  [90m302 |[0m     path.join(process.cwd(), [32m"data"[0m, [32m"candidate_aliases"[0m);
+[33m[1m>[0m [90m303 |[0m   [36mif[0m (!fs.existsSync(configured)) {
+  [90m    |[0m        [33m[1m^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+  [90m304 |[0m     fs.mkdirSync(configured, { recursive: [36mtrue[0m });
+  [90m305 |[0m   }
+  [90m306 |[0m   [36mreturn[0m configured;
+
+Static analysis determined that this filesystem access causes the whole project to be traced and included in the output.
+This is usually unintentional and leads to all source files (including the public folder) to be deployed as part of the server code.
+This can slow down deployments or lead to failures when size limits are exceeded.
+To resolve this, you can
+- make sure the path is statically scoped to some subfolder, for example path.join(process.cwd(), 'data', bar), or
+- only use them in development, or
+- opt out by adding an ignore comment to the highlighted call: fs.existsSync(/*turbopackIgnore: true*/ ...), or
+- remove them.
+
+Import traces:
+  #1 [App Route]:
+    ./src/services/kh02/demand/durableCandidateAliasAuthority.ts
+    ./src/services/kh02/demand/googleTrendsCsvValidator.ts
+    ./src/app/api/v1/demand/import/route.ts
+
+  #2 [App Route]:
+    ./src/services/kh02/demand/durableCandidateAliasAuthority.ts
+    ./src/services/kh02/demand/candidateDemandAttribution.ts
+    ./src/services/kh02/demand/demandProviderRegistry.ts
+    ./src/services/kh02/providers/sourceRegistry.ts
+    ./src/app/api/v1/kh02/providers/test-connection/route.ts
+
+
+./src/services/kh02/demand/durableCsvImportAuthority.ts:464:8
+Warning: Dynamic filesystem access causes tracing of the whole project
+  [90m462 |[0m     process.env.[33mCSV_AUTHORITY_STORAGE_DIR[0m ||
+  [90m463 |[0m     path.join(process.cwd(), [32m"data"[0m, [32m"csv_import_authority"[0m);
+[33m[1m>[0m [90m464 |[0m   [36mif[0m (!fs.existsSync(configured)) {
+  [90m    |[0m        [33m[1m^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+  [90m465 |[0m     fs.mkdirSync(configured, { recursive: [36mtrue[0m });
+  [90m466 |[0m   }
+  [90m467 |[0m   [36mreturn[0m configured;
+
+Static analysis determined that this filesystem access causes the whole project to be traced and included in the output.
+This is usually unintentional and leads to all source files (including the public folder) to be deployed as part of the server code.
+This can slow down deployments or lead to failures when size limits are exceeded.
+To resolve this, you can
+- make sure the path is statically scoped to some subfolder, for example path.join(process.cwd(), 'data', bar), or
+- only use them in development, or
+- opt out by adding an ignore comment to the highlighted call: fs.existsSync(/*turbopackIgnore: true*/ ...), or
+- remove them.
+
+Import traces:
+  #1 [App Route]:
+    ./src/services/kh02/demand/durableCsvImportAuthority.ts
+    ./src/services/kh02/demand/googleTrendsCsvValidator.ts
+    ./src/app/api/v1/demand/import/route.ts
+
+  #2 [App Route]:
+    ./src/services/kh02/demand/durableCsvImportAuthority.ts
+    ./src/services/kh02/demand/localTrendsWorkflow.ts
+    ./src/app/api/v1/demand/local-trends/route.ts
+
+
+./src/services/kh02/demand/googleTrendsCsvValidator.ts:506:14
+Warning: Dynamic filesystem access causes tracing of the whole project
+  [90m504 |[0m   [36mlet[0m rawCsv = [32m""[0m;
+  [90m505 |[0m   [36mtry[0m {
+[33m[1m>[0m [90m506 |[0m     rawCsv = fs.readFileSync(fileCheck.filePath, [32m"utf8"[0m);
+  [90m    |[0m              [33m[1m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+  [90m507 |[0m   } [36mcatch[0m (err: any) {
+  [90m508 |[0m     [36mreturn[0m {
+  [90m509 |[0m       verified: [36mfalse[0m,
+
+Static analysis determined that this filesystem access causes the whole project to be traced and included in the output.
+This is usually unintentional and leads to all source files (including the public folder) to be deployed as part of the server code.
+This can slow down deployments or lead to failures when size limits are exceeded.
+To resolve this, you can
+- make sure the path is statically scoped to some subfolder, for example path.join(process.cwd(), 'data', bar), or
+- only use them in development, or
+- opt out by adding an ignore comment to the highlighted call: fs.readFileSync(/*turbopackIgnore: true*/ ...), or
+- remove them.
+
+Import trace:
+  App Route:
+    ./src/services/kh02/demand/googleTrendsCsvValidator.ts
+    ./src/app/api/v1/demand/import/route.ts
+
+
+./src/services/kh02/demand/temporalDemandEngine.ts:717:8
+Warning: Dynamic filesystem access causes tracing of the whole project
+  [90m715 |[0m
+  [90m716 |[0m   [36mconst[0m storageDir = getProviderReceiptStorageDir();
+[33m[1m>[0m [90m717 |[0m   [36mif[0m (!fs.existsSync(storageDir)) {
+  [90m    |[0m        [33m[1m^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+  [90m718 |[0m     fs.mkdirSync(storageDir, { recursive: [36mtrue[0m });
+  [90m719 |[0m   }
+  [90m720 |[0m
+
+Static analysis determined that this filesystem access causes the whole project to be traced and included in the output.
+This is usually unintentional and leads to all source files (including the public folder) to be deployed as part of the server code.
+This can slow down deployments or lead to failures when size limits are exceeded.
+To resolve this, you can
+- make sure the path is statically scoped to some subfolder, for example path.join(process.cwd(), 'data', bar), or
+- only use them in development, or
+- opt out by adding an ignore comment to the highlighted call: fs.existsSync(/*turbopackIgnore: true*/ ...), or
+- remove them.
+
+Import traces:
+  #1 [App Route]:
+    ./src/services/kh02/demand/temporalDemandEngine.ts
+    ./src/services/kh02/demand/googleTrendsCsvValidator.ts
+    ./src/app/api/v1/demand/import/route.ts
+
+  #2 [App Route]:
+    ./src/services/kh02/demand/temporalDemandEngine.ts
+    ./src/services/kh02/demand/demandObservationBatchImport.ts
+    ./src/app/api/v1/demand/import/route.ts
+
+
+./src/services/kh02/demand/temporalDemandEngine.ts:1071:14
+Warning: Dynamic filesystem access causes tracing of the whole project
+  [90m1069 |[0m   testProvenanceKeyId = [36mnull[0m;
+  [90m1070 |[0m   [36mconst[0m dir = getProviderReceiptStorageDir();
+[33m[1m>[0m [90m1071 |[0m   [36mif[0m (dir && fs.existsSync(dir) && dir.startsWith(os.tmpdir())) {
+  [90m     |[0m              [33m[1m^^^^^^^^^^^^^^^^^^[0m
+  [90m1072 |[0m     [36mtry[0m {
+  [90m1073 |[0m       [36mconst[0m files = fs.readdirSync(dir);
+  [90m1074 |[0m       [36mfor[0m ([36mconst[0m f [36mof[0m files) {
+
+Static analysis determined that this filesystem access causes the whole project to be traced and included in the output.
+This is usually unintentional and leads to all source files (including the public folder) to be deployed as part of the server code.
+This can slow down deployments or lead to failures when size limits are exceeded.
+To resolve this, you can
+- make sure the path is statically scoped to some subfolder, for example path.join(process.cwd(), 'data', bar), or
+- only use them in development, or
+- opt out by adding an ignore comment to the highlighted call: fs.existsSync(/*turbopackIgnore: true*/ ...), or
+- remove them.
+
+Import traces:
+  #1 [App Route]:
+    ./src/services/kh02/demand/temporalDemandEngine.ts
+    ./src/services/kh02/demand/googleTrendsCsvValidator.ts
+    ./src/app/api/v1/demand/import/route.ts
+
+  #2 [App Route]:
+    ./src/services/kh02/demand/temporalDemandEngine.ts
+    ./src/services/kh02/demand/demandObservationBatchImport.ts
+    ./src/app/api/v1/demand/import/route.ts
+
+
+./src/services/kh02/demand/temporalDemandEngine.ts:3583:8
+Warning: Dynamic filesystem access causes tracing of the whole project
+  [90m3581 |[0m ): { artifactPath: string; rawResponseSha256: string; byteCount: number; status: [32m"CONTEN...[0m
+  [90m3582 |[0m   [36mconst[0m dir = path.resolve(getProviderReceiptStorageDir());
+[33m[1m>[0m [90m3583 |[0m   [36mif[0m (!fs.existsSync(dir)) {
+  [90m     |[0m        [33m[1m^^^^^^^^^^^^^^^^^^[0m
+  [90m3584 |[0m     fs.mkdirSync(dir, { recursive: [36mtrue[0m });
+  [90m3585 |[0m   }
+  [90m3586 |[0m   [36mif[0m (fs.lstatSync(dir).isSymbolicLink()) {
+
+Static analysis determined that this filesystem access causes the whole project to be traced and included in the output.
+This is usually unintentional and leads to all source files (including the public folder) to be deployed as part of the server code.
+This can slow down deployments or lead to failures when size limits are exceeded.
+To resolve this, you can
+- make sure the path is statically scoped to some subfolder, for example path.join(process.cwd(), 'data', bar), or
+- only use them in development, or
+- opt out by adding an ignore comment to the highlighted call: fs.existsSync(/*turbopackIgnore: true*/ ...), or
+- remove them.
+
+Import traces:
+  #1 [App Route]:
+    ./src/services/kh02/demand/temporalDemandEngine.ts
+    ./src/services/kh02/demand/googleTrendsCsvValidator.ts
+    ./src/app/api/v1/demand/import/route.ts
+
+  #2 [App Route]:
+    ./src/services/kh02/demand/temporalDemandEngine.ts
+    ./src/services/kh02/demand/demandObservationBatchImport.ts
+    ./src/app/api/v1/demand/import/route.ts
+
+
+./src/services/kh02/demand/temporalDemandEngine.ts:3755:30
+Warning: Dynamic filesystem access causes tracing of the whole project
+  [90m3753 |[0m   }
+  [90m3754 |[0m
+[33m[1m>[0m [90m3755 |[0m   [36mif[0m (!foundArtifactPath || !fs.existsSync(foundArtifactPath)) {
+  [90m     |[0m                              [33m[1m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+  [90m3756 |[0m     revokeReceiptEligibilitySync(cleanReqId, [32m"MISSING_ARTIFACT"[0m);
+  [90m3757 |[0m     [36mreturn[0m {
+  [90m3758 |[0m       authentic: [36mfalse[0m,
+
+Static analysis determined that this filesystem access causes the whole project to be traced and included in the output.
+This is usually unintentional and leads to all source files (including the public folder) to be deployed as part of the server code.
+This can slow down deployments or lead to failures when size limits are exceeded.
+To resolve this, you can
+- make sure the path is statically scoped to some subfolder, for example path.join(process.cwd(), 'data', bar), or
+- only use them in development, or
+- opt out by adding an ignore comment to the highlighted call: fs.existsSync(/*turbopackIgnore: true*/ ...), or
+- remove them.
+
+Import traces:
+  #1 [App Route]:
+    ./src/services/kh02/demand/temporalDemandEngine.ts
+    ./src/services/kh02/demand/googleTrendsCsvValidator.ts
+    ./src/app/api/v1/demand/import/route.ts
+
+  #2 [App Route]:
+    ./src/services/kh02/demand/temporalDemandEngine.ts
+    ./src/services/kh02/demand/demandObservationBatchImport.ts
+    ./src/app/api/v1/demand/import/route.ts
+
+
+./src/services/kh02/demand/temporalDemandEngine.ts:3770:13
+Warning: Dynamic filesystem access causes tracing of the whole project
+  [90m3768 |[0m       [36mreturn[0m { authentic: [36mfalse[0m, reason: [32m"Raw artifact cannot be a symbolic link."[0m, erro...
+  [90m3769 |[0m     }
+[33m[1m>[0m [90m3770 |[0m     bytes = fs.readFileSync(foundArtifactPath);
+  [90m     |[0m             [33m[1m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+  [90m3771 |[0m     [36mconst[0m computedSha = crypto.createHash([32m"sha256"[0m).update(bytes).digest([32m"hex"[0m).toLowerC...
+  [90m3772 |[0m     [36mif[0m (computedSha !== normSha) {
+  [90m3773 |[0m       revokeReceiptEligibilitySync(cleanReqId, [32m"HASH_MISMATCH"[0m);
+
+Static analysis determined that this filesystem access causes the whole project to be traced and included in the output.
+This is usually unintentional and leads to all source files (including the public folder) to be deployed as part of the server code.
+This can slow down deployments or lead to failures when size limits are exceeded.
+To resolve this, you can
+- make sure the path is statically scoped to some subfolder, for example path.join(process.cwd(), 'data', bar), or
+- only use them in development, or
+- opt out by adding an ignore comment to the highlighted call: fs.readFileSync(/*turbopackIgnore: true*/ ...), or
+- remove them.
+
+Import traces:
+  #1 [App Route]:
+    ./src/services/kh02/demand/temporalDemandEngine.ts
+    ./src/services/kh02/demand/googleTrendsCsvValidator.ts
+    ./src/app/api/v1/demand/import/route.ts
+
+  #2 [App Route]:
+    ./src/services/kh02/demand/temporalDemandEngine.ts
+    ./src/services/kh02/demand/demandObservationBatchImport.ts
+    ./src/app/api/v1/demand/import/route.ts
+
+
+./src/services/kh02/demand/temporalDemandEngine.ts:1073:21
+Warning: Dynamic filesystem access causes tracing of the whole project
+  [90m1071 |[0m   [36mif[0m (dir && fs.existsSync(dir) && dir.startsWith(os.tmpdir())) {
+  [90m1072 |[0m     [36mtry[0m {
+[33m[1m>[0m [90m1073 |[0m       [36mconst[0m files = fs.readdirSync(dir);
+  [90m     |[0m                     [33m[1m^^^^^^^^^^^^^^^^^^^[0m
+  [90m1074 |[0m       [36mfor[0m ([36mconst[0m f [36mof[0m files) {
+  [90m1075 |[0m         [36mif[0m (f.endsWith([32m".attestation.json"[0m) || (runId && f.includes(runId))) {
+  [90m1076 |[0m           [36mtry[0m { fs.unlinkSync(path.join(dir, f)); } [36mcatch[0m {}
+
+Static analysis determined that this filesystem access causes the whole project to be traced and included in the output.
+This is usually unintentional and leads to all source files (including the public folder) to be deployed as part of the server code.
+This can slow down deployments or lead to failures when size limits are exceeded.
+To resolve this, you can
+- make sure the path is statically scoped to some subfolder, for example path.join(process.cwd(), 'data', bar), or
+- only use them in development, or
+- opt out by adding an ignore comment to the highlighted call: fs.readdir(/*turbopackIgnore: true*/ ...), or
+- remove them.
+
+Import traces:
+  #1 [App Route]:
+    ./src/services/kh02/demand/temporalDemandEngine.ts
+    ./src/services/kh02/demand/googleTrendsCsvValidator.ts
+    ./src/app/api/v1/demand/import/route.ts
+
+  #2 [App Route]:
+    ./src/services/kh02/demand/temporalDemandEngine.ts
+    ./src/services/kh02/demand/demandObservationBatchImport.ts
+    ./src/app/api/v1/demand/import/route.ts
+
+
+./src/services/kh02/demand/temporalDemandEngine.ts:1076:31
+Warning: Dynamic filesystem access causes tracing of the whole project
+  [90m1074 |[0m       [36mfor[0m ([36mconst[0m f [36mof[0m files) {
+  [90m1075 |[0m         [36mif[0m (f.endsWith([32m".attestation.json"[0m) || (runId && f.includes(runId))) {
+[33m[1m>[0m [90m1076 |[0m           [36mtry[0m { fs.unlinkSync(path.join(dir, f)); } [36mcatch[0m {}
+  [90m     |[0m                               [33m[1m^^^^^^^^^^^^^^^^^[0m
+  [90m1077 |[0m         }
+  [90m1078 |[0m       }
+  [90m1079 |[0m     } [36mcatch[0m {}
+
+Static analysis determined that this filesystem access causes the whole project to be traced and included in the output.
+This is usually unintentional and leads to all source files (including the public folder) to be deployed as part of the server code.
+This can slow down deployments or lead to failures when size limits are exceeded.
+To resolve this, you can
+- make sure the path is statically scoped to some subfolder, for example path.join(process.cwd(), 'data', bar), or
+- only use them in development, or
+- opt out by adding an ignore comment to the highlighted call: path.join(/*turbopackIgnore: true*/ ...), or
+- remove them.
+
+Import traces:
+  #1 [App Route]:
+    ./src/services/kh02/demand/temporalDemandEngine.ts
+    ./src/services/kh02/demand/googleTrendsCsvValidator.ts
+    ./src/app/api/v1/demand/import/route.ts
+
+  #2 [App Route]:
+    ./src/services/kh02/demand/temporalDemandEngine.ts
+    ./src/services/kh02/demand/demandObservationBatchImport.ts
+    ./src/app/api/v1/demand/import/route.ts
+
+
+./src/services/kh02/demand/temporalDemandEngine.ts:45:45
+Warning: Dynamic filesystem access causes tracing of the whole project
+  [90m43 |[0m   isKnownRepositoryFixtureCsvSha,
+  [90m44 |[0m } [36mfrom[0m [32m"./durableCsvImportAuthority"[0m;
+[33m[1m>[0m [90m45 |[0m [36mexport[0m [36mconst[0m [33mPROVIDER_RECEIPT_STORAGE_DIR[0m = path.resolve(
+  [90m   |[0m                                             [33m[1m^^^^^^^^^^^^[0m
+[33m[1m>[0m [90m46 |[0m   process.cwd(),
+  [90m   |[0m [33m[1m^^^^^^^^^^^^^^^^[0m
+[33m[1m>[0m [90m47 |[0m   process.env.[33mPROVIDER_RECEIPT_STORAGE_DIR[0m || [32m"data/provider_receipts"[0m
+  [90m   |[0m [33m[1m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+[33m[1m>[0m [90m48 |[0m );
+  [90m   |[0m [33m[1m^[0m
+  [90m49 |[0m
+  [90m50 |[0m [36mlet[0m testProviderReceiptStorageDir: string | [36mnull[0m = [36mnull[0m;
+  [90m51 |[0m
+
+Static analysis determined that this filesystem access causes the whole project to be traced and included in the output.
+This is usually unintentional and leads to all source files (including the public folder) to be deployed as part of the server code.
+This can slow down deployments or lead to failures when size limits are exceeded.
+To resolve this, you can
+- make sure the path is statically scoped to some subfolder, for example path.join(process.cwd(), 'data', bar), or
+- only use them in development, or
+- opt out by adding an ignore comment to the highlighted call: path.resolve(/*turbopackIgnore: true*/ ...), or
+- remove them.
+
+Import traces:
+  #1 [App Route]:
+    ./src/services/kh02/demand/temporalDemandEngine.ts
+    ./src/services/kh02/demand/googleTrendsCsvValidator.ts
+    ./src/app/api/v1/demand/import/route.ts
+
+  #2 [App Route]:
+    ./src/services/kh02/demand/temporalDemandEngine.ts
+    ./src/services/kh02/demand/demandObservationBatchImport.ts
+    ./src/app/api/v1/demand/import/route.ts
+
+
+./src/services/kh02/demand/temporalDemandEngine.ts:1633:5
+Warning: Dynamic filesystem access causes tracing of the whole project
+  [90m1631 |[0m [36mfunction[0m getAuthorizedReceiptStorageRoots(): string[] {
+  [90m1632 |[0m   [36mconst[0m roots = [
+[33m[1m>[0m [90m1633 |[0m     path.resolve(getProviderReceiptStorageDir()),
+  [90m     |[0m     [33m[1m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+  [90m1634 |[0m     path.resolve([33mPROVIDER_RECEIPT_STORAGE_DIR[0m),
+  [90m1635 |[0m     path.resolve([33mUNIT_FIXTURE_STORAGE_DIR[0m),
+  [90m1636 |[0m     path.resolve([33mGOOGLE_TRENDS_CSV_STORAGE_DIR[0m),
+
+Static analysis determined that this filesystem access causes the whole project to be traced and included in the output.
+This is usually unintentional and leads to all source files (including the public folder) to be deployed as part of the server code.
+This can slow down deployments or lead to failures when size limits are exceeded.
+To resolve this, you can
+- make sure the path is statically scoped to some subfolder, for example path.join(process.cwd(), 'data', bar), or
+- only use them in development, or
+- opt out by adding an ignore comment to the highlighted call: path.resolve(/*turbopackIgnore: true*/ ...), or
+- remove them.
+
+Import traces:
+  #1 [App Route]:
+    ./src/services/kh02/demand/temporalDemandEngine.ts
+    ./src/services/kh02/demand/googleTrendsCsvValidator.ts
+    ./src/app/api/v1/demand/import/route.ts
+
+  #2 [App Route]:
+    ./src/services/kh02/demand/temporalDemandEngine.ts
+    ./src/services/kh02/demand/demandObservationBatchImport.ts
+    ./src/app/api/v1/demand/import/route.ts
+
+
+./src/services/kh02/demand/temporalDemandEngine.ts:1634:5
+Warning: Dynamic filesystem access causes tracing of the whole project
+  [90m1632 |[0m   [36mconst[0m roots = [
+  [90m1633 |[0m     path.resolve(getProviderReceiptStorageDir()),
+[33m[1m>[0m [90m1634 |[0m     path.resolve([33mPROVIDER_RECEIPT_STORAGE_DIR[0m),
+  [90m     |[0m     [33m[1m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+  [90m1635 |[0m     path.resolve([33mUNIT_FIXTURE_STORAGE_DIR[0m),
+  [90m1636 |[0m     path.resolve([33mGOOGLE_TRENDS_CSV_STORAGE_DIR[0m),
+  [90m1637 |[0m   ];
+
+Static analysis determined that this filesystem access causes the whole project to be traced and included in the output.
+This is usually unintentional and leads to all source files (including the public folder) to be deployed as part of the server code.
+This can slow down deployments or lead to failures when size limits are exceeded.
+To resolve this, you can
+- make sure the path is statically scoped to some subfolder, for example path.join(process.cwd(), 'data', bar), or
+- only use them in development, or
+- opt out by adding an ignore comment to the highlighted call: path.resolve(/*turbopackIgnore: true*/ ...), or
+- remove them.
+
+Import traces:
+  #1 [App Route]:
+    ./src/services/kh02/demand/temporalDemandEngine.ts
+    ./src/services/kh02/demand/googleTrendsCsvValidator.ts
+    ./src/app/api/v1/demand/import/route.ts
+
+  #2 [App Route]:
+    ./src/services/kh02/demand/temporalDemandEngine.ts
+    ./src/services/kh02/demand/demandObservationBatchImport.ts
+    ./src/app/api/v1/demand/import/route.ts
+
+
+./src/services/kh02/demand/temporalDemandEngine.ts:1639:16
+Warning: Dynamic filesystem access causes tracing of the whole project
+  [90m1637 |[0m   ];
+  [90m1638 |[0m   [36mif[0m (testProviderReceiptStorageDir) {
+[33m[1m>[0m [90m1639 |[0m     roots.push(path.resolve(testProviderReceiptStorageDir));
+  [90m     |[0m                [33m[1m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+  [90m1640 |[0m   }
+  [90m1641 |[0m   [36mreturn[0m roots;
+  [90m1642 |[0m }
+
+Static analysis determined that this filesystem access causes the whole project to be traced and included in the output.
+This is usually unintentional and leads to all source files (including the public folder) to be deployed as part of the server code.
+This can slow down deployments or lead to failures when size limits are exceeded.
+To resolve this, you can
+- make sure the path is statically scoped to some subfolder, for example path.join(process.cwd(), 'data', bar), or
+- only use them in development, or
+- opt out by adding an ignore comment to the highlighted call: path.resolve(/*turbopackIgnore: true*/ ...), or
+- remove them.
+
+Import traces:
+  #1 [App Route]:
+    ./src/services/kh02/demand/temporalDemandEngine.ts
+    ./src/services/kh02/demand/googleTrendsCsvValidator.ts
+    ./src/app/api/v1/demand/import/route.ts
+
+  #2 [App Route]:
+    ./src/services/kh02/demand/temporalDemandEngine.ts
+    ./src/services/kh02/demand/demandObservationBatchImport.ts
+    ./src/app/api/v1/demand/import/route.ts
+
+
+./src/services/kh02/demand/temporalDemandEngine.ts:3582:15
+Warning: Dynamic filesystem access causes tracing of the whole project
+  [90m3580 |[0m   rawContent: string | [33mBuffer[0m
+  [90m3581 |[0m ): { artifactPath: string; rawResponseSha256: string; byteCount: number; status: [32m"CONTEN...[0m
+[33m[1m>[0m [90m3582 |[0m   [36mconst[0m dir = path.resolve(getProviderReceiptStorageDir());
+  [90m     |[0m               [33m[1m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+  [90m3583 |[0m   [36mif[0m (!fs.existsSync(dir)) {
+  [90m3584 |[0m     fs.mkdirSync(dir, { recursive: [36mtrue[0m });
+  [90m3585 |[0m   }
+
+Static analysis determined that this filesystem access causes the whole project to be traced and included in the output.
+This is usually unintentional and leads to all source files (including the public folder) to be deployed as part of the server code.
+This can slow down deployments or lead to failures when size limits are exceeded.
+To resolve this, you can
+- make sure the path is statically scoped to some subfolder, for example path.join(process.cwd(), 'data', bar), or
+- only use them in development, or
+- opt out by adding an ignore comment to the highlighted call: path.resolve(/*turbopackIgnore: true*/ ...), or
+- remove them.
+
+Import traces:
+  #1 [App Route]:
+    ./src/services/kh02/demand/temporalDemandEngine.ts
+    ./src/services/kh02/demand/googleTrendsCsvValidator.ts
+    ./src/app/api/v1/demand/import/route.ts
+
+  #2 [App Route]:
+    ./src/services/kh02/demand/temporalDemandEngine.ts
+    ./src/services/kh02/demand/demandObservationBatchImport.ts
+    ./src/app/api/v1/demand/import/route.ts
+
+
+./src/services/kh02/marketplace/amazonUsMcpTransport.ts:2521:16
+Warning: Dynamic filesystem access causes tracing of the whole project
+  [90m2519 |[0m         ];
+  [90m2520 |[0m         [36mfor[0m ([36mconst[0m npxDir [36mof[0m candidateNpxDirs) {
+[33m[1m>[0m [90m2521 |[0m           [36mif[0m (!fs.existsSync(npxDir)) [36mcontinue[0m;
+  [90m     |[0m                [33m[1m^^^^^^^^^^^^^^^^^^^^^[0m
+  [90m2522 |[0m           [36mfor[0m ([36mconst[0m d [36mof[0m fs.readdirSync(npxDir)) {
+  [90m2523 |[0m             [36mconst[0m pkgDir = path.join(
+  [90m2524 |[0m               npxDir,
+
+Static analysis determined that this filesystem access causes the whole project to be traced and included in the output.
+This is usually unintentional and leads to all source files (including the public folder) to be deployed as part of the server code.
+This can slow down deployments or lead to failures when size limits are exceeded.
+To resolve this, you can
+- make sure the path is statically scoped to some subfolder, for example path.join(process.cwd(), 'data', bar), or
+- only use them in development, or
+- opt out by adding an ignore comment to the highlighted call: fs.existsSync(/*turbopackIgnore: true*/ ...), or
+- remove them.
+
+Import traces:
+  #1 [App Route]:
+    ./src/services/kh02/marketplace/amazonUsMcpTransport.ts
+    ./src/services/kh02/demand/googleTrendsCsvValidator.ts
+    ./src/app/api/v1/demand/import/route.ts
+
+  #2 [App Route]:
+    ./src/services/kh02/marketplace/amazonUsMcpTransport.ts
+    ./src/services/kh02/marketplace/amazonUsEvidenceAdapter.ts
+    ./src/workers/kh02Worker.ts
+    ./src/app/api/v1/kh02/worker/status/route.ts
+
+
+./src/services/kh02/marketplace/amazonUsMcpTransport.ts:2522:27
+Warning: Dynamic filesystem access causes tracing of the whole project
+  [90m2520 |[0m         [36mfor[0m ([36mconst[0m npxDir [36mof[0m candidateNpxDirs) {
+  [90m2521 |[0m           [36mif[0m (!fs.existsSync(npxDir)) [36mcontinue[0m;
+[33m[1m>[0m [90m2522 |[0m           [36mfor[0m ([36mconst[0m d [36mof[0m fs.readdirSync(npxDir)) {
+  [90m     |[0m                           [33m[1m^^^^^^^^^^^^^^^^^^^^^^[0m
+  [90m2523 |[0m             [36mconst[0m pkgDir = path.join(
+  [90m2524 |[0m               npxDir,
+  [90m2525 |[0m               d,
+
+Static analysis determined that this filesystem access causes the whole project to be traced and included in the output.
+This is usually unintentional and leads to all source files (including the public folder) to be deployed as part of the server code.
+This can slow down deployments or lead to failures when size limits are exceeded.
+To resolve this, you can
+- make sure the path is statically scoped to some subfolder, for example path.join(process.cwd(), 'data', bar), or
+- only use them in development, or
+- opt out by adding an ignore comment to the highlighted call: fs.readdir(/*turbopackIgnore: true*/ ...), or
+- remove them.
+
+Import traces:
+  #1 [App Route]:
+    ./src/services/kh02/marketplace/amazonUsMcpTransport.ts
+    ./src/services/kh02/demand/googleTrendsCsvValidator.ts
+    ./src/app/api/v1/demand/import/route.ts
+
+  #2 [App Route]:
+    ./src/services/kh02/marketplace/amazonUsMcpTransport.ts
+    ./src/services/kh02/marketplace/amazonUsEvidenceAdapter.ts
+    ./src/workers/kh02Worker.ts
+    ./src/app/api/v1/kh02/worker/status/route.ts
+
+
+./src/services/kh02/marketplace/amazonUsMcpTransport.ts:2818:31
+Warning: Dynamic filesystem access causes tracing of the whole project
+  [90m2816 |[0m           [36mfor[0m ([36mconst[0m relLink [36mof[0m snapshotFileLinks) {
+  [90m2817 |[0m             [36mtry[0m {
+[33m[1m>[0m [90m2818 |[0m               [36mconst[0m absPath = path.resolve(process.cwd(), relLink);
+  [90m     |[0m                               [33m[1m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+  [90m2819 |[0m               [36mif[0m (absPath.startsWith(mcpRoot) && fs.existsSync(absPath)) {
+  [90m2820 |[0m                 loadedSnapshots.push(fs.readFileSync(absPath, [32m"utf8"[0m));
+  [90m2821 |[0m               }
+
+Static analysis determined that this filesystem access causes the whole project to be traced and included in the output.
+This is usually unintentional and leads to all source files (including the public folder) to be deployed as part of the server code.
+This can slow down deployments or lead to failures when size limits are exceeded.
+To resolve this, you can
+- make sure the path is statically scoped to some subfolder, for example path.join(process.cwd(), 'data', bar), or
+- only use them in development, or
+- opt out by adding an ignore comment to the highlighted call: path.resolve(/*turbopackIgnore: true*/ ...), or
+- remove them.
+
+Import traces:
+  #1 [App Route]:
+    ./src/services/kh02/marketplace/amazonUsMcpTransport.ts
+    ./src/services/kh02/demand/googleTrendsCsvValidator.ts
+    ./src/app/api/v1/demand/import/route.ts
+
+  #2 [App Route]:
+    ./src/services/kh02/marketplace/amazonUsMcpTransport.ts
+    ./src/services/kh02/marketplace/amazonUsEvidenceAdapter.ts
+    ./src/workers/kh02Worker.ts
+    ./src/app/api/v1/kh02/worker/status/route.ts
+
+
+  Finalizing page optimization ...
+
+Route (app)
+┌ ○ /
+├ ○ /_not-found
+├ ○ /analyzer
+├ ƒ /api/v1/ads
+├ ƒ /api/v1/ads/[id]
+├ ƒ /api/v1/ads/[id]/analyze
+├ ƒ /api/v1/ads/[id]/product-candidate
+├ ƒ /api/v1/ads/batch
+├ ƒ /api/v1/audit/integrity
+├ ƒ /api/v1/auth/status
+├ ƒ /api/v1/demand/import
+├ ƒ /api/v1/demand/local-trends
+├ ƒ /api/v1/discovery/config
+├ ƒ /api/v1/discovery/jobs
+├ ƒ /api/v1/discovery/jobs/[id]
+├ ƒ /api/v1/discovery/jobs/[id]/cancel
+├ ƒ /api/v1/discovery/meta/provider/health
+├ ƒ /api/v1/discovery/meta/requests
+├ ƒ /api/v1/discovery/meta/requests/[id]
+├ ƒ /api/v1/discovery/meta/requests/[id]/ads
+├ ƒ /api/v1/discovery/meta/requests/[id]/cancel
+├ ƒ /api/v1/discovery/meta/requests/[id]/retry
+├ ƒ /api/v1/discovery/providers
+├ ƒ /api/v1/discovery/run
+├ ƒ /api/v1/discovery/stats
+├ ƒ /api/v1/evergreen/ads
+├ ƒ /api/v1/evergreen/ads/[id]
+├ ƒ /api/v1/evergreen/rankings
+├ ƒ /api/v1/health
+├ ƒ /api/v1/kh02/leaderboard
+├ ƒ /api/v1/kh02/marketplace/amazon
+├ ƒ /api/v1/kh02/marketplace/walmart
+├ ƒ /api/v1/kh02/product-matches/[matchId]/review
+├ ƒ /api/v1/kh02/providers/discover
+├ ƒ /api/v1/kh02/providers/status
+├ ƒ /api/v1/kh02/providers/test-connection
+├ ƒ /api/v1/kh02/research
+├ ƒ /api/v1/kh02/research/active
+├ ƒ /api/v1/kh02/research/runs
+├ ƒ /api/v1/kh02/research/runs/[runId]
+├ ƒ /api/v1/kh02/version
+├ ƒ /api/v1/kh02/worker/status
+├ ƒ /api/v1/links/validate
+├ ƒ /api/v1/media/upload
+├ ƒ /api/v1/products
+├ ƒ /api/v1/products/[id]
+├ ƒ /api/v1/providers
+├ ƒ /api/v1/providers/feasibility
+├ ƒ /api/v1/reports/export
+├ ƒ /api/v1/research/jobs/[jobId]
+├ ƒ /api/v1/research/products/[id]/decisions
+├ ƒ /api/v1/research/products/[id]/economics
+├ ƒ /api/v1/research/products/[id]/fulfillment
+├ ƒ /api/v1/research/products/[id]/funnel
+├ ƒ /api/v1/research/products/[id]/landing-page-jobs
+├ ƒ /api/v1/research/products/[id]/offers
+├ ƒ /api/v1/research/products/[id]/opportunity
+├ ƒ /api/v1/research/products/[id]/overview
+├ ƒ /api/v1/research/products/from-ad
+├ ƒ /api/v1/search
+├ ƒ /api/v1/settings/budgets
+├ ƒ /api/v1/settings/credentials
+├ ƒ /api/v1/settings/credentials/test
+├ ƒ /api/v1/settings/integrations
+├ ƒ /api/v1/test/db-observation
+├ ƒ /api/v1/watchlists
+├ ○ /discovery
+├ ○ /explorer
+├ ○ /meta-discovery
+├ ○ /my-store
+├ ○ /products
+├   /products/[id]/intelligence
+│ └ ◐ /products/[id]/intelligence
+├ ○ /products/trends
+├ ○ /reports
+├ ○ /settings
+├ ○ /tracker
+└ ○ /watchlist
+
+
+○  (Static)             prerendered as static content
+◐  (Partial Prerender)  prerendered as static HTML with dynamic server-streamed content
+ƒ  (Dynamic)            server-rendered on demand
