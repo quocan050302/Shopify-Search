@@ -1,0 +1,35 @@
+{
+  "exports": [
+    {
+      "key": "feeder",
+      "valid": true,
+      "errors": [],
+      "points": 54,
+      "cadence": "WEEKLY",
+      "g15": "UNVERIFIED",
+      "authority": "CACHED_UNVERIFIED",
+      "scoreStatus": "PROVISIONAL"
+    },
+    {
+      "key": "fountain",
+      "valid": true,
+      "errors": [],
+      "points": 54,
+      "cadence": "WEEKLY",
+      "g15": "UNVERIFIED",
+      "authority": "CACHED_UNVERIFIED",
+      "scoreStatus": "PROVISIONAL"
+    },
+    {
+      "key": "laundry",
+      "valid": true,
+      "errors": [],
+      "points": 54,
+      "cadence": "WEEKLY",
+      "g15": "UNVERIFIED",
+      "authority": "CACHED_UNVERIFIED",
+      "scoreStatus": "PROVISIONAL"
+    }
+  ],
+  "discovered": 0
+}

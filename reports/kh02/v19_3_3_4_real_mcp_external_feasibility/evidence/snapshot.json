@@ -1,0 +1,9 @@
+{
+  "codeSha": "f2ab3e34e080ac5558176109f99f0c6bd9e817b8",
+  "source": "/Users/macbook/Documents/Codex/2026-10-26/new-chat/work/kh02-g15-g16-audit/reports/kh02/g15-g16-live-audit-20261107/scratch/live-audit.db",
+  "snapshot": "/Users/macbook/Documents/Codex/2026-11-08/files-pasted-by-the-user-codex/work/audit-snapshot.db",
+  "snapshotSha256": "8bfa9a8a704e8bdc6ce1db4d5fc8e54d77164f3cd99ce9472521f03381a1c477",
+  "createdAt": "2026-11-08T12:34:28.167898+00:00",
+  "classification": "PRIOR_AUDIT_SNAPSHOT_UNTRUSTED_NOT_CURRENT_RUN_EXTERNAL_DATA",
+  "limitations": "Contains two prior audit candidates and zero demand rows; source/provider provenance not independently verified. No business success may be inferred."
+}

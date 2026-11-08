@@ -1,0 +1,2 @@
+Processing request of type ListToolsRequest
+Existing Meta client consumed local discover; existing Google client discovered tools; no upstream query or persistence.

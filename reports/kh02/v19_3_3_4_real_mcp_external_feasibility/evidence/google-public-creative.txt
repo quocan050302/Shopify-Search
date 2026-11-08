@@ -1,0 +1,59 @@
+codeSha=f2ab3e34e080ac5558176109f99f0c6bd9e817b8
+CapturedAt=2026-11-08T12:34:45.657Z
+Browser tab: 3, Title: "Thông tin chi tiết về quảng cáo", URL: "https://adstransparency.google.com/advertiser/AR11363703404665765889/creative/CR13389152531976814593?region=US".
+1 AXWebArea Thông tin chi tiết về quảng cáo, URL: adstransparency.google.com/advertiser/AR11363703404665765889/creative/CR13389152531976814593?region=US
+	2 container gb
+		3 container
+			4 link Description: Go to Ads Transparency Center home page., Value: adstransparency.google.com/
+			5 button (collapsed) Description: Các ứng dụng của Google, Secondary Actions: Expand
+			6 link Description: Đăng nhập, Value: [SIGN_IN_LINK_OMITTED]
+	7 container
+		8 button Trang chủ
+			9 text Trang chủ
+		10 button 深圳有哈科技有限公司
+			11 text 深圳有哈科技有限公司
+		12 text Thông tin chi tiết về quảng cáo
+		13 button Câu hỏi thường gặp
+			14 text Câu hỏi thường gặp
+		15 text Thông tin chi tiết về quảng cáo
+		16 container Liên kết đến trang nhà quảng cáo cho 深圳有哈科技有限公司
+			17 text 深圳有哈科技有限公司
+		18 text Thông tin về quảng cáo này có thể khác nhau theo vị trí
+		19 pop up button Nút lọc lựa chọn về khu vực
+			20 text Hiển thị ở Hoa Kỳ
+		21 button Xoá lựa chọn về khu vực
+		22 text Lần hiển thị gần đây nhất:
+		23 text  8 thg 11, 2026
+		24 text Định dạng:
+		25 text  Hình ảnh
+		26 text Bên tài trợ cho quảng cáo:
+		27 text  Sinointeractive Digital Marketing Co., Ltd.
+		28 container Thông tin về Người thanh toán cuối.
+			29 pop up button Thông tin về Người thanh toán cuối.
+		30 button Báo quảng cáo này vi phạm
+			31 text Báo quảng cáo này vi phạm
+		32 button (disabled) Biến thể trước
+		33 AXWebArea adstransparency.google.com/adframe
+			34 container
+				35 container square
+					36 link Description: Wireless Stainless Steel Cat…, Value: [AD_TRACKING_LINK_OMITTED; public decoded adurl=https://www.uahpet.com/products/uah-pet-2025-upgrade-stainless-steel-cordless-pet-water-fountain]
+					37 link [AD_TRACKING_LINK_OMITTED; public decoded adurl=https://www.uahpet.com/products/uah-pet-2025-upgrade-stainless-steel-cordless-pet-water-fountain]
+		38 button Biến thể tiếp theo
+		39 text 1/3 biến thể
+		40 button Xem thêm quảng cáo của nhà quảng cáo này
+			41 text Xem thêm quảng cáo của nhà quảng cáo này
+		42 container
+			43 button Quyền riêng tư
+			44 text •
+			45 button Điều khoản
+			46 text •
+			47 button Chính sách quảng cáo
+			48 text •
+			49 link Description: Câu hỏi thường gặp, Value: adstransparency.google.com/faq
+		50 container
+			51 text •
+			52 button Nguyên tắc
+			53 text •
+			54 button Blog Google Ads
+
+The focused UI element is 1 AXWebArea Thông tin chi tiết về quảng cáo, URL: adstransparency.google.com/advertiser/AR11363703404665765889/creative/CR13389152531976814593?region=US

@@ -1,0 +1,357 @@
+{
+  "codeSha": "f2ab3e34e080ac5558176109f99f0c6bd9e817b8",
+  "treeSha": "1b3b1ef23854dd0acede2ec6dae82d88f545ae55",
+  "branch": "feature/kh02-walmart-us-jina-reader-v12.4.3.5.1",
+  "executedAt": "2026-11-08T12:42:46.229179+00:00",
+  "executionContext": "local macOS; existing sparse checkout; no .env/.env.local provider credentials; isolated protocol stores and copied diagnostic SQLite snapshot; $0 paid provider charges",
+  "distinctEligibleWinners": 0,
+  "topThree": [],
+  "padded": false,
+  "productsDiscoveredByApplicationFromCurrentMcpProviderResponses": 0,
+  "publicUiSelectedCreativesExamined": 2,
+  "publicUiAdToSelectedMerchantPdpMatches": 1,
+  "verifiedBusinessProductObservations": 0,
+  "distinctCanonicalFamiliesDiscoveredByMcp": 0,
+  "plannedTargetFamilies": 3,
+  "g15EligibleProducts": 0,
+  "candidates": [
+    {
+      "target": "feeder",
+      "merchantDomain": "uahpet.com",
+      "canonicalProductPdp": "https://www.uahpet.com/products/uahpet-fresh-food-automatic-pet-feeder",
+      "publicAdEvidence": "META_PUBLIC_UI_PDP_MATCH",
+      "sourceRecordIds": [
+        "993496460459817"
+      ],
+      "advertiserIds": [
+        "61579328780946"
+      ],
+      "g15": "UNVERIFIED",
+      "g16": "INELIGIBLE",
+      "scoreEvidence": {
+        "candidateId": "audit-target-feeder",
+        "opportunityScore": 16,
+        "evidenceConfidence": 10,
+        "scoreStatus": "PROVISIONAL",
+        "formulaVersion": "12.1.0",
+        "demandClass": "INSUFFICIENT_HISTORY",
+        "pillars": {
+          "demandStability": {
+            "score": null,
+            "maxWeight": 25,
+            "status": "MISSING_DATA",
+            "explanation": "Insufficient historical data (0 points observed, minimum 3 required). Evergreen sustainability cannot be verified."
+          },
+          "problemSolutionFit": {
+            "score": 0,
+            "maxWeight": 20,
+            "status": "FAIL",
+            "explanation": "Functional utility observed across promotional creative hooks."
+          },
+          "multiPlatformValidation": {
+            "score": 0,
+            "maxWeight": 20,
+            "status": "FAIL",
+            "explanation": "Observed across 0 platform source(s): ."
+          },
+          "brandabilityStoreFit": {
+            "score": 15,
+            "maxWeight": 15,
+            "status": "PASS",
+            "explanation": "Well-suited for dedicated pets branded store (uahpet.com)."
+          },
+          "creativeDepth": {
+            "score": 0,
+            "maxWeight": 10,
+            "status": "FAIL",
+            "explanation": "0 distinct creative variation(s) observed."
+          },
+          "competitionSustainability": {
+            "score": 0,
+            "maxWeight": 10,
+            "status": "FAIL",
+            "explanation": "0 independent advertiser(s) actively running campaigns."
+          }
+        },
+        "strengths": [
+          "Identified commercial domain: uahpet.com with branded catalog potential."
+        ],
+        "risks": [],
+        "missingEvidence": [
+          "Insufficient historical data (0 points observed, minimum 3 required). Evergreen sustainability cannot be verified.",
+          "Explicit customer pain point statement is not verified in ad copy.",
+          "No verified video creative available for hook analysis."
+        ],
+        "recommendation": "RESEARCH_MORE",
+        "recommendationRationale": "Moderate score (16/100). Requires additional demand history and creative validation.",
+        "evaluatedAt": "2026-11-08T12:39:02.260Z",
+        "tier": "INSUFFICIENT_EVIDENCE",
+        "demandSourceAuthority": "UNKNOWN_SOURCE",
+        "evergreenVerification": {
+          "candidateId": "audit-target-feeder",
+          "productId": null,
+          "canonicalProductName": "Automatic Wet Food Cat Feeder with Cooling & Warming",
+          "merchantDomain": "uahpet.com",
+          "canonicalProductUrl": "https://www.uahpet.com/products/uahpet-fresh-food-automatic-pet-feeder",
+          "identityVerified": false,
+          "physicalProductVerified": true,
+          "relevanceVerified": true,
+          "demandSourceAuthority": "UNKNOWN_SOURCE",
+          "demandObservationsCount": 0,
+          "distinctDemandDatesCount": 0,
+          "coveredDays": 0,
+          "demandStabilityScore": 0,
+          "demandClass": "INSUFFICIENT_HISTORY",
+          "opportunityScore": 16,
+          "evidenceConfidence": 10,
+          "observationRecordIds": [],
+          "demandObservationIds": [],
+          "verifiedByGate": false,
+          "disqualifiers": [
+            "Product identity is not verified with a canonical /products/ merchant URL and domain.",
+            "Demand source authority 'UNKNOWN_SOURCE' is not authoritative/historical verified.",
+            "Insufficient distinct demand observations (0/3 required).",
+            "Demand coverage (0D) is below mandatory 60D threshold.",
+            "Demand stability score (0/25) is below mandatory 15/25 threshold.",
+            "Demand class 'INSUFFICIENT_HISTORY' is not eligible for Verified Evergreen.",
+            "Opportunity score (16/100) is below 65/100 threshold.",
+            "Evidence confidence (10/100) is below 65/100 threshold.",
+            "Candidate lacks traceable source observation record IDs.",
+            "Candidate lacks >= 3 traceable demand observation IDs."
+          ]
+        },
+        "verificationDimensions": {
+          "identityVerifiedByMerchant": false,
+          "demandVerifiedByHistoricalSource": false,
+          "aiReviewed": false,
+          "multiPlatformValidated": false,
+          "evergreenIndependentlyVerified": false
+        }
+      },
+      "reason": "No approved product-attributable longitudinal business demand; no current-run qualified MCP ad evidence."
+    },
+    {
+      "target": "fountain",
+      "merchantDomain": "kittyspout.com",
+      "canonicalProductPdp": "https://www.kittyspout.com/products/2-2l-fountain",
+      "publicAdEvidence": "GOOGLE_PUBLIC_UI_OTHER_MERCHANT_MISMATCH",
+      "sourceRecordIds": [],
+      "advertiserIds": [],
+      "g15": "UNVERIFIED",
+      "g16": "INELIGIBLE",
+      "scoreEvidence": {
+        "candidateId": "audit-target-fountain",
+        "opportunityScore": 16,
+        "evidenceConfidence": 10,
+        "scoreStatus": "PROVISIONAL",
+        "formulaVersion": "12.1.0",
+        "demandClass": "INSUFFICIENT_HISTORY",
+        "pillars": {
+          "demandStability": {
+            "score": null,
+            "maxWeight": 25,
+            "status": "MISSING_DATA",
+            "explanation": "Insufficient historical data (0 points observed, minimum 3 required). Evergreen sustainability cannot be verified."
+          },
+          "problemSolutionFit": {
+            "score": 0,
+            "maxWeight": 20,
+            "status": "FAIL",
+            "explanation": "Functional utility observed across promotional creative hooks."
+          },
+          "multiPlatformValidation": {
+            "score": 0,
+            "maxWeight": 20,
+            "status": "FAIL",
+            "explanation": "Observed across 0 platform source(s): ."
+          },
+          "brandabilityStoreFit": {
+            "score": 15,
+            "maxWeight": 15,
+            "status": "PASS",
+            "explanation": "Well-suited for dedicated pets branded store (kittyspout.com)."
+          },
+          "creativeDepth": {
+            "score": 0,
+            "maxWeight": 10,
+            "status": "FAIL",
+            "explanation": "0 distinct creative variation(s) observed."
+          },
+          "competitionSustainability": {
+            "score": 0,
+            "maxWeight": 10,
+            "status": "FAIL",
+            "explanation": "0 independent advertiser(s) actively running campaigns."
+          }
+        },
+        "strengths": [
+          "Identified commercial domain: kittyspout.com with branded catalog potential."
+        ],
+        "risks": [],
+        "missingEvidence": [
+          "Insufficient historical data (0 points observed, minimum 3 required). Evergreen sustainability cannot be verified.",
+          "Explicit customer pain point statement is not verified in ad copy.",
+          "No verified video creative available for hook analysis."
+        ],
+        "recommendation": "RESEARCH_MORE",
+        "recommendationRationale": "Moderate score (16/100). Requires additional demand history and creative validation.",
+        "evaluatedAt": "2026-11-08T12:39:02.265Z",
+        "tier": "INSUFFICIENT_EVIDENCE",
+        "demandSourceAuthority": "UNKNOWN_SOURCE",
+        "evergreenVerification": {
+          "candidateId": "audit-target-fountain",
+          "productId": null,
+          "canonicalProductName": "Stainless Steel Cat Water Fountain",
+          "merchantDomain": "kittyspout.com",
+          "canonicalProductUrl": "https://www.kittyspout.com/products/2-2l-fountain",
+          "identityVerified": false,
+          "physicalProductVerified": true,
+          "relevanceVerified": true,
+          "demandSourceAuthority": "UNKNOWN_SOURCE",
+          "demandObservationsCount": 0,
+          "distinctDemandDatesCount": 0,
+          "coveredDays": 0,
+          "demandStabilityScore": 0,
+          "demandClass": "INSUFFICIENT_HISTORY",
+          "opportunityScore": 16,
+          "evidenceConfidence": 10,
+          "observationRecordIds": [],
+          "demandObservationIds": [],
+          "verifiedByGate": false,
+          "disqualifiers": [
+            "Product identity is not verified with a canonical /products/ merchant URL and domain.",
+            "Demand source authority 'UNKNOWN_SOURCE' is not authoritative/historical verified.",
+            "Insufficient distinct demand observations (0/3 required).",
+            "Demand coverage (0D) is below mandatory 60D threshold.",
+            "Demand stability score (0/25) is below mandatory 15/25 threshold.",
+            "Demand class 'INSUFFICIENT_HISTORY' is not eligible for Verified Evergreen.",
+            "Opportunity score (16/100) is below 65/100 threshold.",
+            "Evidence confidence (10/100) is below 65/100 threshold.",
+            "Candidate lacks traceable source observation record IDs.",
+            "Candidate lacks >= 3 traceable demand observation IDs."
+          ]
+        },
+        "verificationDimensions": {
+          "identityVerifiedByMerchant": false,
+          "demandVerifiedByHistoricalSource": false,
+          "aiReviewed": false,
+          "multiPlatformValidated": false,
+          "evergreenIndependentlyVerified": false
+        }
+      },
+      "reason": "No approved product-attributable longitudinal business demand; no current-run qualified MCP ad evidence."
+    },
+    {
+      "target": "laundry",
+      "merchantDomain": "uprootclean.com",
+      "canonicalProductPdp": null,
+      "publicAdEvidence": "NO_PILOT_AD_EVIDENCE",
+      "sourceRecordIds": [],
+      "advertiserIds": [],
+      "g15": "UNVERIFIED",
+      "g16": "INELIGIBLE",
+      "scoreEvidence": {
+        "candidateId": "audit-target-laundry",
+        "opportunityScore": 16,
+        "evidenceConfidence": 10,
+        "scoreStatus": "PROVISIONAL",
+        "formulaVersion": "12.1.0",
+        "demandClass": "INSUFFICIENT_HISTORY",
+        "pillars": {
+          "demandStability": {
+            "score": null,
+            "maxWeight": 25,
+            "status": "MISSING_DATA",
+            "explanation": "Insufficient historical data (0 points observed, minimum 3 required). Evergreen sustainability cannot be verified."
+          },
+          "problemSolutionFit": {
+            "score": 0,
+            "maxWeight": 20,
+            "status": "FAIL",
+            "explanation": "Functional utility observed across promotional creative hooks."
+          },
+          "multiPlatformValidation": {
+            "score": 0,
+            "maxWeight": 20,
+            "status": "FAIL",
+            "explanation": "Observed across 0 platform source(s): ."
+          },
+          "brandabilityStoreFit": {
+            "score": 15,
+            "maxWeight": 15,
+            "status": "PASS",
+            "explanation": "Well-suited for dedicated pets branded store (uprootclean.com)."
+          },
+          "creativeDepth": {
+            "score": 0,
+            "maxWeight": 10,
+            "status": "FAIL",
+            "explanation": "0 distinct creative variation(s) observed."
+          },
+          "competitionSustainability": {
+            "score": 0,
+            "maxWeight": 10,
+            "status": "FAIL",
+            "explanation": "0 independent advertiser(s) actively running campaigns."
+          }
+        },
+        "strengths": [
+          "Identified commercial domain: uprootclean.com with branded catalog potential."
+        ],
+        "risks": [],
+        "missingEvidence": [
+          "Insufficient historical data (0 points observed, minimum 3 required). Evergreen sustainability cannot be verified.",
+          "Explicit customer pain point statement is not verified in ad copy.",
+          "No verified video creative available for hook analysis."
+        ],
+        "recommendation": "RESEARCH_MORE",
+        "recommendationRationale": "Moderate score (16/100). Requires additional demand history and creative validation.",
+        "evaluatedAt": "2026-11-08T12:39:02.297Z",
+        "tier": "INSUFFICIENT_EVIDENCE",
+        "demandSourceAuthority": "UNKNOWN_SOURCE",
+        "evergreenVerification": {
+          "candidateId": "audit-target-laundry",
+          "productId": null,
+          "canonicalProductName": "Pet Hair Remover for Laundry",
+          "merchantDomain": "uprootclean.com",
+          "canonicalProductUrl": "",
+          "identityVerified": false,
+          "physicalProductVerified": true,
+          "relevanceVerified": true,
+          "demandSourceAuthority": "UNKNOWN_SOURCE",
+          "demandObservationsCount": 0,
+          "distinctDemandDatesCount": 0,
+          "coveredDays": 0,
+          "demandStabilityScore": 0,
+          "demandClass": "INSUFFICIENT_HISTORY",
+          "opportunityScore": 16,
+          "evidenceConfidence": 10,
+          "observationRecordIds": [],
+          "demandObservationIds": [],
+          "verifiedByGate": false,
+          "disqualifiers": [
+            "Product identity is not verified with a canonical /products/ merchant URL and domain.",
+            "Demand source authority 'UNKNOWN_SOURCE' is not authoritative/historical verified.",
+            "Insufficient distinct demand observations (0/3 required).",
+            "Demand coverage (0D) is below mandatory 60D threshold.",
+            "Demand stability score (0/25) is below mandatory 15/25 threshold.",
+            "Demand class 'INSUFFICIENT_HISTORY' is not eligible for Verified Evergreen.",
+            "Opportunity score (16/100) is below 65/100 threshold.",
+            "Evidence confidence (10/100) is below 65/100 threshold.",
+            "Candidate lacks traceable source observation record IDs.",
+            "Candidate lacks >= 3 traceable demand observation IDs."
+          ]
+        },
+        "verificationDimensions": {
+          "identityVerifiedByMerchant": false,
+          "demandVerifiedByHistoricalSource": false,
+          "aiReviewed": false,
+          "multiPlatformValidated": false,
+          "evergreenIndependentlyVerified": false
+        }
+      },
+      "reason": "No approved product-attributable longitudinal business demand; no current-run qualified MCP ad evidence."
+    }
+  ],
+  "guardrails": "Actual empty discovery/shortlist and no-demand scoring ran. Forged IDs, source-only authority, US-filter-only claims, cutoff leakage and historical promotion guards covered by targeted fixture tests, separate from genuine external probes. No creative/ad identity used as a canonical product ID."
+}

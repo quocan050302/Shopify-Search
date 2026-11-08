@@ -1,0 +1,156 @@
+{
+  "codeSha": "f2ab3e34e080ac5558176109f99f0c6bd9e817b8",
+  "treeSha": "1b3b1ef23854dd0acede2ec6dae82d88f545ae55",
+  "branch": "feature/kh02-walmart-us-jina-reader-v12.4.3.5.1",
+  "executedAt": "2026-11-08T12:42:46.229179+00:00",
+  "executionContext": "local macOS; existing sparse checkout; no .env/.env.local provider credentials; isolated protocol stores and copied diagnostic SQLite snapshot; $0 paid provider charges",
+  "callGraph": [
+    {
+      "stage": "Meta public source → Python MCP",
+      "sourceReferences": "services/meta-ads-collector/README.md; meta_ads_collector_mcp/server.py",
+      "currentRunClassification": "implemented; local configured; protocol executed; upstream collection blocked"
+    },
+    {
+      "stage": "Meta MCP → collector",
+      "sourceReferences": "src/services/discovery/metaCollector/metaCollectorMcpClient.ts:createMetaCollectorClient; src/services/kh02/providers/metaResearchAdapter.ts:161,813,1471",
+      "currentRunClassification": "adapter capabilities consumed; collectLiveMetaAds and collectMetaProductSignals upstream not executed"
+    },
+    {
+      "stage": "Meta collector → normalization → DB",
+      "sourceReferences": "src/services/kh02/providers/metaResearchAdapter.ts:1251,1322; src/services/discovery/normalization/normalizeMetaCollectorAd.ts; src/services/discovery/discoveryIngestionService.ts",
+      "currentRunClassification": "implemented; zero MCP raw ads; no real ad normalization/persistence executed"
+    },
+    {
+      "stage": "Google public source → MCP bridge",
+      "sourceReferences": "scripts/googleTransparencyServer.py; installed google_ads_transparency_mcp/scraper.py",
+      "currentRunClassification": "implemented; protocol configured/executed; real RPC blocked"
+    },
+    {
+      "stage": "Google MCP → collector → normalization → DB",
+      "sourceReferences": "src/services/kh02/providers/googleTransparencyResearchAdapter.ts:2972,3511,3550,3582,3777",
+      "currentRunClassification": "local capabilities consumed; empty normalization executed; upstream collector/persistence not executed"
+    },
+    {
+      "stage": "Ads → canonical candidates → score",
+      "sourceReferences": "src/services/kh02/evergreenResearchOrchestrator.ts:919,955,1300,1841,2030; src/services/kh02/identity/productCandidateDiscovery.ts:2135,3076",
+      "currentRunClassification": "empty genuine-MCP record set executed; discovered=0; no ad ID minted as product ID"
+    },
+    {
+      "stage": "Trends UI → original CSV → validator → authority",
+      "sourceReferences": "src/services/kh02/demand/googleTrendsCsvValidator.ts:379; src/services/kh02/demand/durableCsvImportAuthority.ts:259,713; src/services/kh02/demand/temporalDemandEngine.ts:4353,5492",
+      "currentRunClassification": "genuine original bytes persisted; URL/parser/authority/history evaluation executed; approval blocked; database demand rows=0"
+    },
+    {
+      "stage": "Worker → materialization → snapshot",
+      "sourceReferences": "src/workers/kh02Worker.ts; src/services/kh02/persistence/kh02PersistenceService.ts:863,1069,1116,1469",
+      "currentRunClassification": "implemented; no worker launched; copied previous diagnostic DB read only for evidence; no current genuine business records"
+    },
+    {
+      "stage": "Database → G15/G16 → API",
+      "sourceReferences": "src/app/api/v1/kh02/leaderboard/route.ts:18; src/app/api/v1/kh02/research/runs/[runId]/route.ts; src/services/kh02/persistence/kh02PersistenceService.ts",
+      "currentRunClassification": "implemented; readback executed with no target product/demand/run; live API request not executed; no configured authorized application workspace"
+    },
+    {
+      "stage": "API → UI",
+      "sourceReferences": "src/app/products/page.tsx:991,1629,1772,2560",
+      "currentRunClassification": "source inspected; winner/provisional surfaces distinct; no app runtime/UI lineage claimed"
+    }
+  ],
+  "functionIndex": "evidence/source-function-index.json",
+  "databaseSnapshot": {
+    "codeSha": "f2ab3e34e080ac5558176109f99f0c6bd9e817b8",
+    "source": "/Users/macbook/Documents/Codex/2026-10-26/new-chat/work/kh02-g15-g16-audit/reports/kh02/g15-g16-live-audit-20261107/scratch/live-audit.db",
+    "snapshot": "/Users/macbook/Documents/Codex/2026-11-08/files-pasted-by-the-user-codex/work/audit-snapshot.db",
+    "snapshotSha256": "8bfa9a8a704e8bdc6ce1db4d5fc8e54d77164f3cd99ce9472521f03381a1c477",
+    "createdAt": "2026-11-08T12:34:28.167898+00:00",
+    "classification": "PRIOR_AUDIT_SNAPSHOT_UNTRUSTED_NOT_CURRENT_RUN_EXTERNAL_DATA",
+    "limitations": "Contains two prior audit candidates and zero demand rows; source/provider provenance not independently verified. No business success may be inferred."
+  },
+  "readback": {
+    "dbConnected": true,
+    "dbReadbackExecuted": true,
+    "dbConnectionStatus": "SUCCESS",
+    "productLookupStatus": "NOT_FOUND",
+    "dbPathOrMaskedDsn": "file:./prisma/audit-snapshot.db",
+    "testedCodeSha": "f2ab3e34e080ac5558176109f99f0c6bd9e817b8",
+    "testedTreeSha": "1b3b1ef23854dd0acede2ec6dae82d88f545ae55",
+    "runId": null,
+    "candidateId": "cand_uahpet_feeder",
+    "canonicalProductId": "cmvsy7zqh000jp0orhypwohho",
+    "canonicalTitleFromDB": null,
+    "rawRecordCount": 0,
+    "distinctKeywords": [],
+    "sourceClassifications": [],
+    "distinctEvidenceRefs": [],
+    "candidateAttributableCount": 0,
+    "businessAttributableCount": 0,
+    "verifiedOfficialCsvRows": 0,
+    "coveredCalendarDays": 0,
+    "g15Verdict": "INSUFFICIENT_EVIDENCE",
+    "g16Verdict": "INSUFFICIENT_EVIDENCE",
+    "g16EvaluationStatus": "NOT_EVALUATED_SINGLE_PRODUCT_NO_RUN_CONTEXT",
+    "identityAmbiguity": "ResearchProduct 'cmvsy7zqh000jp0orhypwohho' not found in current database",
+    "discrepancyNote": "Database contains 0 raw rows (0 verified CSV rows).",
+    "globalDemandPartitionSummary": {
+      "totalRawDemandRows": 0,
+      "bySource": {},
+      "fixtureProductRows": 0,
+      "candidateSpecificRows": 0,
+      "verifiedBusinessLineageRows": 0
+    },
+    "executedAt": "2026-11-08T12:35:37.386Z"
+  },
+  "publicObservationOnly": [
+    {
+      "adId": "993496460459817",
+      "sourceUrl": "https://www.facebook.com/ads/library/?id=993496460459817",
+      "advertiserName": "flwr.paws with UahPet",
+      "advertiserPage": "https://www.facebook.com/61579328780946/",
+      "brandPage": "https://www.facebook.com/uahpet/",
+      "displayedActive": true,
+      "displayedStartDate": "2026-10-25",
+      "creativeExcerpt": "Meal time, simplified thanks to @uahpet_official Fresh Food Feeder.",
+      "landingUrl": "https://www.uahpet.com/products/uahpet-fresh-food-automatic-pet-feeder",
+      "productMatch": "PUBLIC_UI_LANDING_PDP_MATCH",
+      "usRequested": true,
+      "usDeliveryVerified": false,
+      "observedAt": "2026-11-08T12:32:00Z",
+      "timestampPrecision": "approximate session minute; evidence screenshot and UI text captured in this run",
+      "upstreamOriginStatus": "OFFICIAL_PUBLIC_UI_OBSERVATION_NOT_MCP_ATTESTATION",
+      "evidence": [
+        "evidence/meta-public-ad.png",
+        "evidence/meta-public-ad-observation.txt"
+      ]
+    },
+    {
+      "advertiserId": "AR11363703404665765889",
+      "creativeId": "CR13389152531976814593",
+      "advertiserName": "深圳有哈科技有限公司",
+      "payerName": "Sinointeractive Digital Marketing Co., Ltd.",
+      "sourceUrl": "https://adstransparency.google.com/advertiser/AR11363703404665765889/creative/CR13389152531976814593?region=US",
+      "displayedLastShownDate": "2026-11-08",
+      "displayedFormat": "IMAGE",
+      "displayedRegionText": "Hiển thị ở Hoa Kỳ",
+      "regionInterpretation": "Official UI says shown in United States; observational evidence, not authenticated MCP transport attestation.",
+      "landingUrlDecodedFromVisibleLink": "https://www.uahpet.com/products/uah-pet-2025-upgrade-stainless-steel-cordless-pet-water-fountain",
+      "selectedTargetMerchant": "kittyspout.com",
+      "productMatchVerdict": "WRONG_MERCHANT_DOMAIN_FOR_SELECTED_FOUNTAIN; NOT_FEEDER",
+      "localMcpToolResultVerified": false,
+      "upstreamRequestVerified": false,
+      "providerVerified": false,
+      "upstreamOriginStatus": "PUBLIC_UI_OBSERVATION_ONLY",
+      "mcpInvocationRef": null,
+      "evidence": [
+        "evidence/google-public-creative.txt",
+        "evidence/google-public-creative.png"
+      ]
+    }
+  ],
+  "fullPipelineVerdict": "BLOCKED_BEFORE_BUSINESS_DB_PERSISTENCE",
+  "rawCsvFilePersistence": 3,
+  "currentRunBusinessAdRowsPersisted": 0,
+  "currentRunBusinessDemandRowsPersisted": 0,
+  "apiRuntimeVerified": false,
+  "uiRuntimeVerified": false,
+  "sourceInspectionFinding": "Products UI says 6+ months while scoring verifier uses minimumCoveredDays=60. This is a presentation inconsistency, recorded without changing gate policy."
+}

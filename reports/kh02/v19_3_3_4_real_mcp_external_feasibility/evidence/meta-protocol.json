@@ -1,0 +1,2590 @@
+{
+  "codeSha": "f2ab3e34e080ac5558176109f99f0c6bd9e817b8",
+  "taskId": "protocol-meta",
+  "dependencies": [
+    "official-access-and-server-inspection"
+  ],
+  "startedAt": "2026-11-08T12:29:12.798Z",
+  "command": "/Users/macbook/Documents/Codex/2026-10-26/new-chat/work/kh02-g15-g16-audit/services/meta-ads-collector/.venv/bin/python",
+  "args": [
+    "-m",
+    "meta_ads_collector_mcp",
+    "serve",
+    "--data-dir",
+    "/Users/macbook/Documents/Codex/2026-10-26/new-chat/work/kh02-g15-g16-audit/reports/kh02/v19_3_3_4_real_mcp_external_feasibility/evidence/isolated-meta-runtime",
+    "--concurrency",
+    "1"
+  ],
+  "stages": {
+    "MCP_STARTUP_PASS": true,
+    "MCP_HANDSHAKE_PASS": true,
+    "MCP_TOOL_DISCOVERY_PASS": true,
+    "MCP_TOOL_CALL_EXECUTED": true,
+    "MCP_TOOL_RESULT_RECEIVED": true,
+    "UPSTREAM_PROVIDER_CONTENT_OBSERVED": false,
+    "UPSTREAM_PROVIDER_ORIGIN_VERIFIED": false,
+    "PRODUCT_EVIDENCE_VERIFIED": false,
+    "BUSINESS_ELIGIBLE": false
+  },
+  "upstreamQueryAttempted": false,
+  "providerContentObserved": false,
+  "businessEligible": false,
+  "serverVersion": {
+    "name": "MetaAdsCollector",
+    "version": "0.1.0"
+  },
+  "serverCapabilities": {
+    "prompts": {
+      "listChanged": false
+    },
+    "resources": {
+      "subscribe": false,
+      "listChanged": false
+    },
+    "tools": {
+      "listChanged": false
+    }
+  },
+  "tools": {
+    "tools": [
+      {
+        "name": "discover",
+        "description": "Discover supported capabilities, schemas, fields, budgets, coverage and monitoring requirements.",
+        "inputSchema": {
+          "type": "object",
+          "properties": {},
+          "title": "discoverArguments"
+        },
+        "outputSchema": {
+          "type": "object",
+          "additionalProperties": true,
+          "title": "discoverDictOutput"
+        },
+        "annotations": {
+          "readOnlyHint": true,
+          "destructiveHint": false,
+          "openWorldHint": false
+        }
+      },
+      {
+        "name": "advertisers",
+        "description": "Resolve a numeric Facebook URL or find advertiser candidates.\n\n        Never silently select an ambiguous name.\n        ",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "query": {
+              "default": "",
+              "title": "Query",
+              "type": "string"
+            },
+            "country": {
+              "default": "US",
+              "title": "Country",
+              "type": "string"
+            },
+            "url": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Url"
+            },
+            "limit": {
+              "default": 20,
+              "title": "Limit",
+              "type": "integer"
+            },
+            "proxy_profile": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Proxy Profile"
+            }
+          },
+          "title": "advertisersArguments"
+        },
+        "outputSchema": {
+          "type": "object",
+          "additionalProperties": true,
+          "title": "advertisersDictOutput"
+        },
+        "annotations": {
+          "readOnlyHint": true,
+          "destructiveHint": false,
+          "openWorldHint": true
+        }
+      },
+      {
+        "name": "search",
+        "description": "Collect a bounded ad batch or enqueue a durable job.\n\n        Returns reusable results and explicit collection state.\n        ",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "search": {
+              "$ref": "#/$defs/Search"
+            },
+            "batch_size": {
+              "default": 20,
+              "title": "Batch Size",
+              "type": "integer"
+            },
+            "background": {
+              "default": false,
+              "title": "Background",
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "search"
+          ],
+          "$defs": {
+            "Filters": {
+              "additionalProperties": false,
+              "properties": {
+                "min_impressions": {
+                  "anyOf": [
+                    {
+                      "minimum": 0,
+                      "type": "integer"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ],
+                  "default": null,
+                  "title": "Min Impressions"
+                },
+                "max_impressions": {
+                  "anyOf": [
+                    {
+                      "minimum": 0,
+                      "type": "integer"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ],
+                  "default": null,
+                  "title": "Max Impressions"
+                },
+                "min_spend": {
+                  "anyOf": [
+                    {
+                      "minimum": 0,
+                      "type": "integer"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ],
+                  "default": null,
+                  "title": "Min Spend"
+                },
+                "max_spend": {
+                  "anyOf": [
+                    {
+                      "minimum": 0,
+                      "type": "integer"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ],
+                  "default": null,
+                  "title": "Max Spend"
+                },
+                "start_date": {
+                  "anyOf": [
+                    {
+                      "format": "date-time",
+                      "type": "string"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ],
+                  "default": null,
+                  "title": "Start Date"
+                },
+                "end_date": {
+                  "anyOf": [
+                    {
+                      "format": "date-time",
+                      "type": "string"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ],
+                  "default": null,
+                  "title": "End Date"
+                },
+                "media_type": {
+                  "anyOf": [
+                    {
+                      "enum": [
+                        "ALL",
+                        "IMAGE",
+                        "VIDEO",
+                        "MEME",
+                        "NONE"
+                      ],
+                      "type": "string"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ],
+                  "default": null,
+                  "title": "Media Type"
+                },
+                "publisher_platforms": {
+                  "anyOf": [
+                    {
+                      "items": {
+                        "type": "string"
+                      },
+                      "type": "array"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ],
+                  "default": null,
+                  "title": "Publisher Platforms"
+                },
+                "languages": {
+                  "anyOf": [
+                    {
+                      "items": {
+                        "type": "string"
+                      },
+                      "type": "array"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ],
+                  "default": null,
+                  "title": "Languages"
+                },
+                "has_video": {
+                  "anyOf": [
+                    {
+                      "type": "boolean"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ],
+                  "default": null,
+                  "title": "Has Video"
+                },
+                "has_image": {
+                  "anyOf": [
+                    {
+                      "type": "boolean"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ],
+                  "default": null,
+                  "title": "Has Image"
+                },
+                "missing_data": {
+                  "default": "include",
+                  "enum": [
+                    "include",
+                    "exclude"
+                  ],
+                  "title": "Missing Data",
+                  "type": "string"
+                }
+              },
+              "title": "Filters",
+              "type": "object"
+            },
+            "Search": {
+              "additionalProperties": false,
+              "properties": {
+                "query": {
+                  "default": "",
+                  "maxLength": 1000,
+                  "title": "Query",
+                  "type": "string"
+                },
+                "country": {
+                  "default": "US",
+                  "title": "Country",
+                  "type": "string"
+                },
+                "ad_type": {
+                  "default": "ALL",
+                  "title": "Ad Type",
+                  "type": "string"
+                },
+                "status": {
+                  "default": "ACTIVE",
+                  "title": "Status",
+                  "type": "string"
+                },
+                "search_type": {
+                  "default": "KEYWORD_UNORDERED",
+                  "title": "Search Type",
+                  "type": "string"
+                },
+                "page_ids": {
+                  "anyOf": [
+                    {
+                      "items": {
+                        "type": "string"
+                      },
+                      "maxItems": 50,
+                      "type": "array"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ],
+                  "default": null,
+                  "title": "Page Ids"
+                },
+                "sort_by": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ],
+                  "default": null,
+                  "title": "Sort By"
+                },
+                "filters": {
+                  "$ref": "#/$defs/Filters"
+                },
+                "max_results": {
+                  "default": 100,
+                  "maximum": 100000,
+                  "minimum": 1,
+                  "title": "Max Results",
+                  "type": "integer"
+                },
+                "page_size": {
+                  "default": 20,
+                  "maximum": 30,
+                  "minimum": 1,
+                  "title": "Page Size",
+                  "type": "integer"
+                },
+                "max_requests": {
+                  "default": 100,
+                  "maximum": 10000,
+                  "minimum": 1,
+                  "title": "Max Requests",
+                  "type": "integer"
+                },
+                "max_seconds": {
+                  "default": 600,
+                  "maximum": 86400,
+                  "minimum": 1,
+                  "title": "Max Seconds",
+                  "type": "integer"
+                },
+                "proxy_profile": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ],
+                  "default": null,
+                  "title": "Proxy Profile"
+                },
+                "timeout": {
+                  "default": 30,
+                  "maximum": 120,
+                  "minimum": 1,
+                  "title": "Timeout",
+                  "type": "integer"
+                },
+                "max_retries": {
+                  "default": 3,
+                  "maximum": 5,
+                  "minimum": 1,
+                  "title": "Max Retries",
+                  "type": "integer"
+                },
+                "rate_limit_delay": {
+                  "default": 1,
+                  "maximum": 60,
+                  "minimum": 0,
+                  "title": "Rate Limit Delay",
+                  "type": "number"
+                },
+                "jitter": {
+                  "default": 0.5,
+                  "maximum": 10,
+                  "minimum": 0,
+                  "title": "Jitter",
+                  "type": "number"
+                },
+                "cookie_env": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ],
+                  "default": null,
+                  "title": "Cookie Env"
+                }
+              },
+              "title": "Search",
+              "type": "object"
+            }
+          },
+          "title": "searchArguments"
+        },
+        "outputSchema": {
+          "type": "object",
+          "additionalProperties": true,
+          "title": "searchDictOutput"
+        },
+        "annotations": {
+          "readOnlyHint": false,
+          "destructiveHint": false,
+          "openWorldHint": true
+        }
+      },
+      {
+        "name": "continue_search",
+        "description": "Continue a paused collection using its original query/session.\n\n        A restart replays committed-page state with deduplication.\n        ",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "result_set_id": {
+              "title": "Result Set Id",
+              "type": "string"
+            },
+            "batch_size": {
+              "default": 20,
+              "title": "Batch Size",
+              "type": "integer"
+            }
+          },
+          "required": [
+            "result_set_id"
+          ],
+          "title": "continue_searchArguments"
+        },
+        "outputSchema": {
+          "type": "object",
+          "additionalProperties": true,
+          "title": "continue_searchDictOutput"
+        },
+        "annotations": {
+          "readOnlyHint": false,
+          "destructiveHint": false,
+          "openWorldHint": true
+        }
+      },
+      {
+        "name": "inspect_ads",
+        "description": "Batch inspect up to 20 stored ads, optionally enrich and download bounded Meta-hosted creative media.",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "result_set_id": {
+              "title": "Result Set Id",
+              "type": "string"
+            },
+            "ad_ids": {
+              "items": {
+                "type": "string"
+              },
+              "title": "Ad Ids",
+              "type": "array"
+            },
+            "enrich": {
+              "default": false,
+              "title": "Enrich",
+              "type": "boolean"
+            },
+            "download_media": {
+              "default": false,
+              "title": "Download Media",
+              "type": "boolean"
+            },
+            "view": {
+              "default": "detailed",
+              "enum": [
+                "summary",
+                "detailed",
+                "raw"
+              ],
+              "title": "View",
+              "type": "string"
+            },
+            "fields": {
+              "anyOf": [
+                {
+                  "items": {
+                    "type": "string"
+                  },
+                  "type": "array"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Fields"
+            },
+            "max_file_bytes": {
+              "default": 67108864,
+              "title": "Max File Bytes",
+              "type": "integer"
+            },
+            "max_total_bytes": {
+              "default": 268435456,
+              "title": "Max Total Bytes",
+              "type": "integer"
+            }
+          },
+          "required": [
+            "result_set_id",
+            "ad_ids"
+          ],
+          "title": "inspect_adsArguments"
+        },
+        "outputSchema": {
+          "type": "object",
+          "additionalProperties": true,
+          "title": "inspect_adsDictOutput"
+        },
+        "annotations": {
+          "readOnlyHint": false,
+          "destructiveHint": false,
+          "openWorldHint": true
+        }
+      },
+      {
+        "name": "results",
+        "description": "Query saved results without Meta requests.\n\n        Supports local filters, sorting, field selection and newly observed ads.\n        ",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "result_set_id": {
+              "title": "Result Set Id",
+              "type": "string"
+            },
+            "offset": {
+              "default": 0,
+              "title": "Offset",
+              "type": "integer"
+            },
+            "limit": {
+              "default": 20,
+              "title": "Limit",
+              "type": "integer"
+            },
+            "view": {
+              "default": "summary",
+              "enum": [
+                "summary",
+                "detailed",
+                "raw"
+              ],
+              "title": "View",
+              "type": "string"
+            },
+            "fields": {
+              "anyOf": [
+                {
+                  "items": {
+                    "type": "string"
+                  },
+                  "type": "array"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Fields"
+            },
+            "filters": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/Filters"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null
+            },
+            "sort": {
+              "default": "collected",
+              "enum": [
+                "collected",
+                "id",
+                "start_date"
+              ],
+              "title": "Sort",
+              "type": "string"
+            },
+            "descending": {
+              "default": false,
+              "title": "Descending",
+              "type": "boolean"
+            },
+            "newly_only": {
+              "default": false,
+              "title": "Newly Only",
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "result_set_id"
+          ],
+          "$defs": {
+            "Filters": {
+              "additionalProperties": false,
+              "properties": {
+                "min_impressions": {
+                  "anyOf": [
+                    {
+                      "minimum": 0,
+                      "type": "integer"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ],
+                  "default": null,
+                  "title": "Min Impressions"
+                },
+                "max_impressions": {
+                  "anyOf": [
+                    {
+                      "minimum": 0,
+                      "type": "integer"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ],
+                  "default": null,
+                  "title": "Max Impressions"
+                },
+                "min_spend": {
+                  "anyOf": [
+                    {
+                      "minimum": 0,
+                      "type": "integer"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ],
+                  "default": null,
+                  "title": "Min Spend"
+                },
+                "max_spend": {
+                  "anyOf": [
+                    {
+                      "minimum": 0,
+                      "type": "integer"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ],
+                  "default": null,
+                  "title": "Max Spend"
+                },
+                "start_date": {
+                  "anyOf": [
+                    {
+                      "format": "date-time",
+                      "type": "string"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ],
+                  "default": null,
+                  "title": "Start Date"
+                },
+                "end_date": {
+                  "anyOf": [
+                    {
+                      "format": "date-time",
+                      "type": "string"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ],
+                  "default": null,
+                  "title": "End Date"
+                },
+                "media_type": {
+                  "anyOf": [
+                    {
+                      "enum": [
+                        "ALL",
+                        "IMAGE",
+                        "VIDEO",
+                        "MEME",
+                        "NONE"
+                      ],
+                      "type": "string"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ],
+                  "default": null,
+                  "title": "Media Type"
+                },
+                "publisher_platforms": {
+                  "anyOf": [
+                    {
+                      "items": {
+                        "type": "string"
+                      },
+                      "type": "array"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ],
+                  "default": null,
+                  "title": "Publisher Platforms"
+                },
+                "languages": {
+                  "anyOf": [
+                    {
+                      "items": {
+                        "type": "string"
+                      },
+                      "type": "array"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ],
+                  "default": null,
+                  "title": "Languages"
+                },
+                "has_video": {
+                  "anyOf": [
+                    {
+                      "type": "boolean"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ],
+                  "default": null,
+                  "title": "Has Video"
+                },
+                "has_image": {
+                  "anyOf": [
+                    {
+                      "type": "boolean"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ],
+                  "default": null,
+                  "title": "Has Image"
+                },
+                "missing_data": {
+                  "default": "include",
+                  "enum": [
+                    "include",
+                    "exclude"
+                  ],
+                  "title": "Missing Data",
+                  "type": "string"
+                }
+              },
+              "title": "Filters",
+              "type": "object"
+            }
+          },
+          "title": "resultsArguments"
+        },
+        "outputSchema": {
+          "type": "object",
+          "additionalProperties": true,
+          "title": "resultsDictOutput"
+        },
+        "annotations": {
+          "readOnlyHint": true,
+          "destructiveHint": false,
+          "openWorldHint": false
+        }
+      },
+      {
+        "name": "export_results",
+        "description": "Export existing evidence without recollection.\n\n        Optional webhook delivery requires a private destination reference.\n        ",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "result_set_id": {
+              "title": "Result Set Id",
+              "type": "string"
+            },
+            "format": {
+              "default": "json",
+              "enum": [
+                "json",
+                "jsonl",
+                "csv"
+              ],
+              "title": "Format",
+              "type": "string"
+            },
+            "filename": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Filename"
+            },
+            "webhook_environment": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Webhook Environment"
+            },
+            "webhook_batch_size": {
+              "default": 50,
+              "title": "Webhook Batch Size",
+              "type": "integer"
+            }
+          },
+          "required": [
+            "result_set_id"
+          ],
+          "title": "export_resultsArguments"
+        },
+        "outputSchema": {
+          "type": "object",
+          "additionalProperties": true,
+          "title": "export_resultsDictOutput"
+        },
+        "annotations": {
+          "readOnlyHint": false,
+          "destructiveHint": false,
+          "openWorldHint": true
+        }
+      },
+      {
+        "name": "jobs",
+        "description": "List jobs or batch inspect/control up to 20 jobs.\n\n        Events use sequence cursors; deleting removes saved evidence.\n        ",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "action": {
+              "default": "list",
+              "enum": [
+                "list",
+                "status",
+                "events",
+                "report",
+                "cancel",
+                "resume",
+                "delete"
+              ],
+              "title": "Action",
+              "type": "string"
+            },
+            "job_ids": {
+              "anyOf": [
+                {
+                  "items": {
+                    "type": "string"
+                  },
+                  "type": "array"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Job Ids"
+            },
+            "after": {
+              "default": 0,
+              "title": "After",
+              "type": "integer"
+            },
+            "limit": {
+              "default": 50,
+              "title": "Limit",
+              "type": "integer"
+            },
+            "offset": {
+              "default": 0,
+              "title": "Offset",
+              "type": "integer"
+            }
+          },
+          "title": "jobsArguments"
+        },
+        "outputSchema": {
+          "type": "object",
+          "additionalProperties": true,
+          "title": "jobsDictOutput"
+        },
+        "annotations": {
+          "readOnlyHint": false,
+          "destructiveHint": true,
+          "openWorldHint": true
+        }
+      },
+      {
+        "name": "monitoring",
+        "description": "Manage durable monitoring schedules; requires a running server or worker.\n\n        First observed is not launch time.\n        ",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "action": {
+              "default": "list",
+              "enum": [
+                "list",
+                "create",
+                "enable",
+                "disable",
+                "delete"
+              ],
+              "title": "Action",
+              "type": "string"
+            },
+            "schedule": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/Schedule"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null
+            },
+            "schedule_id": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Schedule Id"
+            }
+          },
+          "$defs": {
+            "Filters": {
+              "additionalProperties": false,
+              "properties": {
+                "min_impressions": {
+                  "anyOf": [
+                    {
+                      "minimum": 0,
+                      "type": "integer"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ],
+                  "default": null,
+                  "title": "Min Impressions"
+                },
+                "max_impressions": {
+                  "anyOf": [
+                    {
+                      "minimum": 0,
+                      "type": "integer"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ],
+                  "default": null,
+                  "title": "Max Impressions"
+                },
+                "min_spend": {
+                  "anyOf": [
+                    {
+                      "minimum": 0,
+                      "type": "integer"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ],
+                  "default": null,
+                  "title": "Min Spend"
+                },
+                "max_spend": {
+                  "anyOf": [
+                    {
+                      "minimum": 0,
+                      "type": "integer"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ],
+                  "default": null,
+                  "title": "Max Spend"
+                },
+                "start_date": {
+                  "anyOf": [
+                    {
+                      "format": "date-time",
+                      "type": "string"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ],
+                  "default": null,
+                  "title": "Start Date"
+                },
+                "end_date": {
+                  "anyOf": [
+                    {
+                      "format": "date-time",
+                      "type": "string"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ],
+                  "default": null,
+                  "title": "End Date"
+                },
+                "media_type": {
+                  "anyOf": [
+                    {
+                      "enum": [
+                        "ALL",
+                        "IMAGE",
+                        "VIDEO",
+                        "MEME",
+                        "NONE"
+                      ],
+                      "type": "string"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ],
+                  "default": null,
+                  "title": "Media Type"
+                },
+                "publisher_platforms": {
+                  "anyOf": [
+                    {
+                      "items": {
+                        "type": "string"
+                      },
+                      "type": "array"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ],
+                  "default": null,
+                  "title": "Publisher Platforms"
+                },
+                "languages": {
+                  "anyOf": [
+                    {
+                      "items": {
+                        "type": "string"
+                      },
+                      "type": "array"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ],
+                  "default": null,
+                  "title": "Languages"
+                },
+                "has_video": {
+                  "anyOf": [
+                    {
+                      "type": "boolean"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ],
+                  "default": null,
+                  "title": "Has Video"
+                },
+                "has_image": {
+                  "anyOf": [
+                    {
+                      "type": "boolean"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ],
+                  "default": null,
+                  "title": "Has Image"
+                },
+                "missing_data": {
+                  "default": "include",
+                  "enum": [
+                    "include",
+                    "exclude"
+                  ],
+                  "title": "Missing Data",
+                  "type": "string"
+                }
+              },
+              "title": "Filters",
+              "type": "object"
+            },
+            "Schedule": {
+              "additionalProperties": false,
+              "properties": {
+                "name": {
+                  "maxLength": 100,
+                  "minLength": 1,
+                  "title": "Name",
+                  "type": "string"
+                },
+                "search": {
+                  "$ref": "#/$defs/Search"
+                },
+                "interval_seconds": {
+                  "default": 3600,
+                  "maximum": 31536000,
+                  "minimum": 60,
+                  "title": "Interval Seconds",
+                  "type": "integer"
+                },
+                "retention_days": {
+                  "default": 30,
+                  "maximum": 3650,
+                  "minimum": 1,
+                  "title": "Retention Days",
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "name",
+                "search"
+              ],
+              "title": "Schedule",
+              "type": "object"
+            },
+            "Search": {
+              "additionalProperties": false,
+              "properties": {
+                "query": {
+                  "default": "",
+                  "maxLength": 1000,
+                  "title": "Query",
+                  "type": "string"
+                },
+                "country": {
+                  "default": "US",
+                  "title": "Country",
+                  "type": "string"
+                },
+                "ad_type": {
+                  "default": "ALL",
+                  "title": "Ad Type",
+                  "type": "string"
+                },
+                "status": {
+                  "default": "ACTIVE",
+                  "title": "Status",
+                  "type": "string"
+                },
+                "search_type": {
+                  "default": "KEYWORD_UNORDERED",
+                  "title": "Search Type",
+                  "type": "string"
+                },
+                "page_ids": {
+                  "anyOf": [
+                    {
+                      "items": {
+                        "type": "string"
+                      },
+                      "maxItems": 50,
+                      "type": "array"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ],
+                  "default": null,
+                  "title": "Page Ids"
+                },
+                "sort_by": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ],
+                  "default": null,
+                  "title": "Sort By"
+                },
+                "filters": {
+                  "$ref": "#/$defs/Filters"
+                },
+                "max_results": {
+                  "default": 100,
+                  "maximum": 100000,
+                  "minimum": 1,
+                  "title": "Max Results",
+                  "type": "integer"
+                },
+                "page_size": {
+                  "default": 20,
+                  "maximum": 30,
+                  "minimum": 1,
+                  "title": "Page Size",
+                  "type": "integer"
+                },
+                "max_requests": {
+                  "default": 100,
+                  "maximum": 10000,
+                  "minimum": 1,
+                  "title": "Max Requests",
+                  "type": "integer"
+                },
+                "max_seconds": {
+                  "default": 600,
+                  "maximum": 86400,
+                  "minimum": 1,
+                  "title": "Max Seconds",
+                  "type": "integer"
+                },
+                "proxy_profile": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ],
+                  "default": null,
+                  "title": "Proxy Profile"
+                },
+                "timeout": {
+                  "default": 30,
+                  "maximum": 120,
+                  "minimum": 1,
+                  "title": "Timeout",
+                  "type": "integer"
+                },
+                "max_retries": {
+                  "default": 3,
+                  "maximum": 5,
+                  "minimum": 1,
+                  "title": "Max Retries",
+                  "type": "integer"
+                },
+                "rate_limit_delay": {
+                  "default": 1,
+                  "maximum": 60,
+                  "minimum": 0,
+                  "title": "Rate Limit Delay",
+                  "type": "number"
+                },
+                "jitter": {
+                  "default": 0.5,
+                  "maximum": 10,
+                  "minimum": 0,
+                  "title": "Jitter",
+                  "type": "number"
+                },
+                "cookie_env": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ],
+                  "default": null,
+                  "title": "Cookie Env"
+                }
+              },
+              "title": "Search",
+              "type": "object"
+            }
+          },
+          "title": "monitoringArguments"
+        },
+        "outputSchema": {
+          "type": "object",
+          "additionalProperties": true,
+          "title": "monitoringDictOutput"
+        },
+        "annotations": {
+          "readOnlyHint": false,
+          "destructiveHint": false,
+          "openWorldHint": true
+        }
+      },
+      {
+        "name": "proxy",
+        "description": "Configure/select redacted proxy profiles using environment/private-file references.\n\n        Can also verify actual Meta access.\n        ",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "action": {
+              "default": "list",
+              "enum": [
+                "list",
+                "configure",
+                "default",
+                "clear_default",
+                "check"
+              ],
+              "title": "Action",
+              "type": "string"
+            },
+            "profile": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/ProxyProfile"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null
+            },
+            "name": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Name"
+            }
+          },
+          "$defs": {
+            "ProxyProfile": {
+              "additionalProperties": false,
+              "properties": {
+                "name": {
+                  "pattern": "^[A-Za-z0-9_-]{1,64}$",
+                  "title": "Name",
+                  "type": "string"
+                },
+                "environment": {
+                  "anyOf": [
+                    {
+                      "pattern": "^[A-Za-z_][A-Za-z0-9_]*$",
+                      "type": "string"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ],
+                  "default": null,
+                  "title": "Environment"
+                },
+                "secret_file": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ],
+                  "default": null,
+                  "title": "Secret File"
+                },
+                "max_failures": {
+                  "default": 3,
+                  "maximum": 100,
+                  "minimum": 1,
+                  "title": "Max Failures",
+                  "type": "integer"
+                },
+                "cooldown": {
+                  "default": 300,
+                  "maximum": 86400,
+                  "minimum": 0,
+                  "title": "Cooldown",
+                  "type": "number"
+                }
+              },
+              "required": [
+                "name"
+              ],
+              "title": "ProxyProfile",
+              "type": "object"
+            }
+          },
+          "title": "proxyArguments"
+        },
+        "outputSchema": {
+          "type": "object",
+          "additionalProperties": true,
+          "title": "proxyDictOutput"
+        },
+        "annotations": {
+          "readOnlyHint": false,
+          "destructiveHint": false,
+          "openWorldHint": true
+        }
+      }
+    ]
+  },
+  "arguments": {
+    "name": "discover",
+    "arguments": {}
+  },
+  "toolResponse": {
+    "content": [
+      {
+        "type": "text",
+        "text": "{\n  \"extension_version\": \"0.1.0\",\n  \"collector_version\": \"1.7.0\",\n  \"transport\": \"stdio\",\n  \"persistent_worker_alive\": false,\n  \"operations\": [\n    \"discover\",\n    \"advertisers\",\n    \"search\",\n    \"continue_search\",\n    \"inspect_ads\",\n    \"results\",\n    \"export_results\",\n    \"jobs\",\n    \"monitoring\",\n    \"proxy\"\n  ],\n  \"search_schema\": {\n    \"$defs\": {\n      \"Filters\": {\n        \"additionalProperties\": false,\n        \"properties\": {\n          \"min_impressions\": {\n            \"anyOf\": [\n              {\n                \"minimum\": 0,\n                \"type\": \"integer\"\n              },\n              {\n                \"type\": \"null\"\n              }\n            ],\n            \"default\": null,\n            \"title\": \"Min Impressions\"\n          },\n          \"max_impressions\": {\n            \"anyOf\": [\n              {\n                \"minimum\": 0,\n                \"type\": \"integer\"\n              },\n              {\n                \"type\": \"null\"\n              }\n            ],\n            \"default\": null,\n            \"title\": \"Max Impressions\"\n          },\n          \"min_spend\": {\n            \"anyOf\": [\n              {\n                \"minimum\": 0,\n                \"type\": \"integer\"\n              },\n              {\n                \"type\": \"null\"\n              }\n            ],\n            \"default\": null,\n            \"title\": \"Min Spend\"\n          },\n          \"max_spend\": {\n            \"anyOf\": [\n              {\n                \"minimum\": 0,\n                \"type\": \"integer\"\n              },\n              {\n                \"type\": \"null\"\n              }\n            ],\n            \"default\": null,\n            \"title\": \"Max Spend\"\n          },\n          \"start_date\": {\n            \"anyOf\": [\n              {\n                \"format\": \"date-time\",\n                \"type\": \"string\"\n              },\n              {\n                \"type\": \"null\"\n              }\n            ],\n            \"default\": null,\n            \"title\": \"Start Date\"\n          },\n          \"end_date\": {\n            \"anyOf\": [\n              {\n                \"format\": \"date-time\",\n                \"type\": \"string\"\n              },\n              {\n                \"type\": \"null\"\n              }\n            ],\n            \"default\": null,\n            \"title\": \"End Date\"\n          },\n          \"media_type\": {\n            \"anyOf\": [\n              {\n                \"enum\": [\n                  \"ALL\",\n                  \"IMAGE\",\n                  \"VIDEO\",\n                  \"MEME\",\n                  \"NONE\"\n                ],\n                \"type\": \"string\"\n              },\n              {\n                \"type\": \"null\"\n              }\n            ],\n            \"default\": null,\n            \"title\": \"Media Type\"\n          },\n          \"publisher_platforms\": {\n            \"anyOf\": [\n              {\n                \"items\": {\n                  \"type\": \"string\"\n                },\n                \"type\": \"array\"\n              },\n              {\n                \"type\": \"null\"\n              }\n            ],\n            \"default\": null,\n            \"title\": \"Publisher Platforms\"\n          },\n          \"languages\": {\n            \"anyOf\": [\n              {\n                \"items\": {\n                  \"type\": \"string\"\n                },\n                \"type\": \"array\"\n              },\n              {\n                \"type\": \"null\"\n              }\n            ],\n            \"default\": null,\n            \"title\": \"Languages\"\n          },\n          \"has_video\": {\n            \"anyOf\": [\n              {\n                \"type\": \"boolean\"\n              },\n              {\n                \"type\": \"null\"\n              }\n            ],\n            \"default\": null,\n            \"title\": \"Has Video\"\n          },\n          \"has_image\": {\n            \"anyOf\": [\n              {\n                \"type\": \"boolean\"\n              },\n              {\n                \"type\": \"null\"\n              }\n            ],\n            \"default\": null,\n            \"title\": \"Has Image\"\n          },\n          \"missing_data\": {\n            \"default\": \"include\",\n            \"enum\": [\n              \"include\",\n              \"exclude\"\n            ],\n            \"title\": \"Missing Data\",\n            \"type\": \"string\"\n          }\n        },\n        \"title\": \"Filters\",\n        \"type\": \"object\"\n      }\n    },\n    \"additionalProperties\": false,\n    \"properties\": {\n      \"query\": {\n        \"default\": \"\",\n        \"maxLength\": 1000,\n        \"title\": \"Query\",\n        \"type\": \"string\"\n      },\n      \"country\": {\n        \"default\": \"US\",\n        \"title\": \"Country\",\n        \"type\": \"string\"\n      },\n      \"ad_type\": {\n        \"default\": \"ALL\",\n        \"title\": \"Ad Type\",\n        \"type\": \"string\"\n      },\n      \"status\": {\n        \"default\": \"ACTIVE\",\n        \"title\": \"Status\",\n        \"type\": \"string\"\n      },\n      \"search_type\": {\n        \"default\": \"KEYWORD_UNORDERED\",\n        \"title\": \"Search Type\",\n        \"type\": \"string\"\n      },\n      \"page_ids\": {\n        \"anyOf\": [\n          {\n            \"items\": {\n              \"type\": \"string\"\n            },\n            \"maxItems\": 50,\n            \"type\": \"array\"\n          },\n          {\n            \"type\": \"null\"\n          }\n        ],\n        \"default\": null,\n        \"title\": \"Page Ids\"\n      },\n      \"sort_by\": {\n        \"anyOf\": [\n          {\n            \"type\": \"string\"\n          },\n          {\n            \"type\": \"null\"\n          }\n        ],\n        \"default\": null,\n        \"title\": \"Sort By\"\n      },\n      \"filters\": {\n        \"$ref\": \"#/$defs/Filters\"\n      },\n      \"max_results\": {\n        \"default\": 100,\n        \"maximum\": 100000,\n        \"minimum\": 1,\n        \"title\": \"Max Results\",\n        \"type\": \"integer\"\n      },\n      \"page_size\": {\n        \"default\": 20,\n        \"maximum\": 30,\n        \"minimum\": 1,\n        \"title\": \"Page Size\",\n        \"type\": \"integer\"\n      },\n      \"max_requests\": {\n        \"default\": 100,\n        \"maximum\": 10000,\n        \"minimum\": 1,\n        \"title\": \"Max Requests\",\n        \"type\": \"integer\"\n      },\n      \"max_seconds\": {\n        \"default\": 600,\n        \"maximum\": 86400,\n        \"minimum\": 1,\n        \"title\": \"Max Seconds\",\n        \"type\": \"integer\"\n      },\n      \"proxy_profile\": {\n        \"anyOf\": [\n          {\n            \"type\": \"string\"\n          },\n          {\n            \"type\": \"null\"\n          }\n        ],\n        \"default\": null,\n        \"title\": \"Proxy Profile\"\n      },\n      \"timeout\": {\n        \"default\": 30,\n        \"maximum\": 120,\n        \"minimum\": 1,\n        \"title\": \"Timeout\",\n        \"type\": \"integer\"\n      },\n      \"max_retries\": {\n        \"default\": 3,\n        \"maximum\": 5,\n        \"minimum\": 1,\n        \"title\": \"Max Retries\",\n        \"type\": \"integer\"\n      },\n      \"rate_limit_delay\": {\n        \"default\": 1.0,\n        \"maximum\": 60,\n        \"minimum\": 0,\n        \"title\": \"Rate Limit Delay\",\n        \"type\": \"number\"\n      },\n      \"jitter\": {\n        \"default\": 0.5,\n        \"maximum\": 10,\n        \"minimum\": 0,\n        \"title\": \"Jitter\",\n        \"type\": \"number\"\n      },\n      \"cookie_env\": {\n        \"anyOf\": [\n          {\n            \"type\": \"string\"\n          },\n          {\n            \"type\": \"null\"\n          }\n        ],\n        \"default\": null,\n        \"title\": \"Cookie Env\"\n      }\n    },\n    \"title\": \"Search\",\n    \"type\": \"object\"\n  },\n  \"filter_schema\": {\n    \"additionalProperties\": false,\n    \"properties\": {\n      \"min_impressions\": {\n        \"anyOf\": [\n          {\n            \"minimum\": 0,\n            \"type\": \"integer\"\n          },\n          {\n            \"type\": \"null\"\n          }\n        ],\n        \"default\": null,\n        \"title\": \"Min Impressions\"\n      },\n      \"max_impressions\": {\n        \"anyOf\": [\n          {\n            \"minimum\": 0,\n            \"type\": \"integer\"\n          },\n          {\n            \"type\": \"null\"\n          }\n        ],\n        \"default\": null,\n        \"title\": \"Max Impressions\"\n      },\n      \"min_spend\": {\n        \"anyOf\": [\n          {\n            \"minimum\": 0,\n            \"type\": \"integer\"\n          },\n          {\n            \"type\": \"null\"\n          }\n        ],\n        \"default\": null,\n        \"title\": \"Min Spend\"\n      },\n      \"max_spend\": {\n        \"anyOf\": [\n          {\n            \"minimum\": 0,\n            \"type\": \"integer\"\n          },\n          {\n            \"type\": \"null\"\n          }\n        ],\n        \"default\": null,\n        \"title\": \"Max Spend\"\n      },\n      \"start_date\": {\n        \"anyOf\": [\n          {\n            \"format\": \"date-time\",\n            \"type\": \"string\"\n          },\n          {\n            \"type\": \"null\"\n          }\n        ],\n        \"default\": null,\n        \"title\": \"Start Date\"\n      },\n      \"end_date\": {\n        \"anyOf\": [\n          {\n            \"format\": \"date-time\",\n            \"type\": \"string\"\n          },\n          {\n            \"type\": \"null\"\n          }\n        ],\n        \"default\": null,\n        \"title\": \"End Date\"\n      },\n      \"media_type\": {\n        \"anyOf\": [\n          {\n            \"enum\": [\n              \"ALL\",\n              \"IMAGE\",\n              \"VIDEO\",\n              \"MEME\",\n              \"NONE\"\n            ],\n            \"type\": \"string\"\n          },\n          {\n            \"type\": \"null\"\n          }\n        ],\n        \"default\": null,\n        \"title\": \"Media Type\"\n      },\n      \"publisher_platforms\": {\n        \"anyOf\": [\n          {\n            \"items\": {\n              \"type\": \"string\"\n            },\n            \"type\": \"array\"\n          },\n          {\n            \"type\": \"null\"\n          }\n        ],\n        \"default\": null,\n        \"title\": \"Publisher Platforms\"\n      },\n      \"languages\": {\n        \"anyOf\": [\n          {\n            \"items\": {\n              \"type\": \"string\"\n            },\n            \"type\": \"array\"\n          },\n          {\n            \"type\": \"null\"\n          }\n        ],\n        \"default\": null,\n        \"title\": \"Languages\"\n      },\n      \"has_video\": {\n        \"anyOf\": [\n          {\n            \"type\": \"boolean\"\n          },\n          {\n            \"type\": \"null\"\n          }\n        ],\n        \"default\": null,\n        \"title\": \"Has Video\"\n      },\n      \"has_image\": {\n        \"anyOf\": [\n          {\n            \"type\": \"boolean\"\n          },\n          {\n            \"type\": \"null\"\n          }\n        ],\n        \"default\": null,\n        \"title\": \"Has Image\"\n      },\n      \"missing_data\": {\n        \"default\": \"include\",\n        \"enum\": [\n          \"include\",\n          \"exclude\"\n        ],\n        \"title\": \"Missing Data\",\n        \"type\": \"string\"\n      }\n    },\n    \"title\": \"Filters\",\n    \"type\": \"object\"\n  },\n  \"schedule_schema\": {\n    \"$defs\": {\n      \"Filters\": {\n        \"additionalProperties\": false,\n        \"properties\": {\n          \"min_impressions\": {\n            \"anyOf\": [\n              {\n                \"minimum\": 0,\n                \"type\": \"integer\"\n              },\n              {\n                \"type\": \"null\"\n              }\n            ],\n            \"default\": null,\n            \"title\": \"Min Impressions\"\n          },\n          \"max_impressions\": {\n            \"anyOf\": [\n              {\n                \"minimum\": 0,\n                \"type\": \"integer\"\n              },\n              {\n                \"type\": \"null\"\n              }\n            ],\n            \"default\": null,\n            \"title\": \"Max Impressions\"\n          },\n          \"min_spend\": {\n            \"anyOf\": [\n              {\n                \"minimum\": 0,\n                \"type\": \"integer\"\n              },\n              {\n                \"type\": \"null\"\n              }\n            ],\n            \"default\": null,\n            \"title\": \"Min Spend\"\n          },\n          \"max_spend\": {\n            \"anyOf\": [\n              {\n                \"minimum\": 0,\n                \"type\": \"integer\"\n              },\n              {\n                \"type\": \"null\"\n              }\n            ],\n            \"default\": null,\n            \"title\": \"Max Spend\"\n          },\n          \"start_date\": {\n            \"anyOf\": [\n              {\n                \"format\": \"date-time\",\n                \"type\": \"string\"\n              },\n              {\n                \"type\": \"null\"\n              }\n            ],\n            \"default\": null,\n            \"title\": \"Start Date\"\n          },\n          \"end_date\": {\n            \"anyOf\": [\n              {\n                \"format\": \"date-time\",\n                \"type\": \"string\"\n              },\n              {\n                \"type\": \"null\"\n              }\n            ],\n            \"default\": null,\n            \"title\": \"End Date\"\n          },\n          \"media_type\": {\n            \"anyOf\": [\n              {\n                \"enum\": [\n                  \"ALL\",\n                  \"IMAGE\",\n                  \"VIDEO\",\n                  \"MEME\",\n                  \"NONE\"\n                ],\n                \"type\": \"string\"\n              },\n              {\n                \"type\": \"null\"\n              }\n            ],\n            \"default\": null,\n            \"title\": \"Media Type\"\n          },\n          \"publisher_platforms\": {\n            \"anyOf\": [\n              {\n                \"items\": {\n                  \"type\": \"string\"\n                },\n                \"type\": \"array\"\n              },\n              {\n                \"type\": \"null\"\n              }\n            ],\n            \"default\": null,\n            \"title\": \"Publisher Platforms\"\n          },\n          \"languages\": {\n            \"anyOf\": [\n              {\n                \"items\": {\n                  \"type\": \"string\"\n                },\n                \"type\": \"array\"\n              },\n              {\n                \"type\": \"null\"\n              }\n            ],\n            \"default\": null,\n            \"title\": \"Languages\"\n          },\n          \"has_video\": {\n            \"anyOf\": [\n              {\n                \"type\": \"boolean\"\n              },\n              {\n                \"type\": \"null\"\n              }\n            ],\n            \"default\": null,\n            \"title\": \"Has Video\"\n          },\n          \"has_image\": {\n            \"anyOf\": [\n              {\n                \"type\": \"boolean\"\n              },\n              {\n                \"type\": \"null\"\n              }\n            ],\n            \"default\": null,\n            \"title\": \"Has Image\"\n          },\n          \"missing_data\": {\n            \"default\": \"include\",\n            \"enum\": [\n              \"include\",\n              \"exclude\"\n            ],\n            \"title\": \"Missing Data\",\n            \"type\": \"string\"\n          }\n        },\n        \"title\": \"Filters\",\n        \"type\": \"object\"\n      },\n      \"Search\": {\n        \"additionalProperties\": false,\n        \"properties\": {\n          \"query\": {\n            \"default\": \"\",\n            \"maxLength\": 1000,\n            \"title\": \"Query\",\n            \"type\": \"string\"\n          },\n          \"country\": {\n            \"default\": \"US\",\n            \"title\": \"Country\",\n            \"type\": \"string\"\n          },\n          \"ad_type\": {\n            \"default\": \"ALL\",\n            \"title\": \"Ad Type\",\n            \"type\": \"string\"\n          },\n          \"status\": {\n            \"default\": \"ACTIVE\",\n            \"title\": \"Status\",\n            \"type\": \"string\"\n          },\n          \"search_type\": {\n            \"default\": \"KEYWORD_UNORDERED\",\n            \"title\": \"Search Type\",\n            \"type\": \"string\"\n          },\n          \"page_ids\": {\n            \"anyOf\": [\n              {\n                \"items\": {\n                  \"type\": \"string\"\n                },\n                \"maxItems\": 50,\n                \"type\": \"array\"\n              },\n              {\n                \"type\": \"null\"\n              }\n            ],\n            \"default\": null,\n            \"title\": \"Page Ids\"\n          },\n          \"sort_by\": {\n            \"anyOf\": [\n              {\n                \"type\": \"string\"\n              },\n              {\n                \"type\": \"null\"\n              }\n            ],\n            \"default\": null,\n            \"title\": \"Sort By\"\n          },\n          \"filters\": {\n            \"$ref\": \"#/$defs/Filters\"\n          },\n          \"max_results\": {\n            \"default\": 100,\n            \"maximum\": 100000,\n            \"minimum\": 1,\n            \"title\": \"Max Results\",\n            \"type\": \"integer\"\n          },\n          \"page_size\": {\n            \"default\": 20,\n            \"maximum\": 30,\n            \"minimum\": 1,\n            \"title\": \"Page Size\",\n            \"type\": \"integer\"\n          },\n          \"max_requests\": {\n            \"default\": 100,\n            \"maximum\": 10000,\n            \"minimum\": 1,\n            \"title\": \"Max Requests\",\n            \"type\": \"integer\"\n          },\n          \"max_seconds\": {\n            \"default\": 600,\n            \"maximum\": 86400,\n            \"minimum\": 1,\n            \"title\": \"Max Seconds\",\n            \"type\": \"integer\"\n          },\n          \"proxy_profile\": {\n            \"anyOf\": [\n              {\n                \"type\": \"string\"\n              },\n              {\n                \"type\": \"null\"\n              }\n            ],\n            \"default\": null,\n            \"title\": \"Proxy Profile\"\n          },\n          \"timeout\": {\n            \"default\": 30,\n            \"maximum\": 120,\n            \"minimum\": 1,\n            \"title\": \"Timeout\",\n            \"type\": \"integer\"\n          },\n          \"max_retries\": {\n            \"default\": 3,\n            \"maximum\": 5,\n            \"minimum\": 1,\n            \"title\": \"Max Retries\",\n            \"type\": \"integer\"\n          },\n          \"rate_limit_delay\": {\n            \"default\": 1.0,\n            \"maximum\": 60,\n            \"minimum\": 0,\n            \"title\": \"Rate Limit Delay\",\n            \"type\": \"number\"\n          },\n          \"jitter\": {\n            \"default\": 0.5,\n            \"maximum\": 10,\n            \"minimum\": 0,\n            \"title\": \"Jitter\",\n            \"type\": \"number\"\n          },\n          \"cookie_env\": {\n            \"anyOf\": [\n              {\n                \"type\": \"string\"\n              },\n              {\n                \"type\": \"null\"\n              }\n            ],\n            \"default\": null,\n            \"title\": \"Cookie Env\"\n          }\n        },\n        \"title\": \"Search\",\n        \"type\": \"object\"\n      }\n    },\n    \"additionalProperties\": false,\n    \"properties\": {\n      \"name\": {\n        \"maxLength\": 100,\n        \"minLength\": 1,\n        \"title\": \"Name\",\n        \"type\": \"string\"\n      },\n      \"search\": {\n        \"$ref\": \"#/$defs/Search\"\n      },\n      \"interval_seconds\": {\n        \"default\": 3600,\n        \"maximum\": 31536000,\n        \"minimum\": 60,\n        \"title\": \"Interval Seconds\",\n        \"type\": \"integer\"\n      },\n      \"retention_days\": {\n        \"default\": 30,\n        \"maximum\": 3650,\n        \"minimum\": 1,\n        \"title\": \"Retention Days\",\n        \"type\": \"integer\"\n      }\n    },\n    \"required\": [\n      \"name\",\n      \"search\"\n    ],\n    \"title\": \"Schedule\",\n    \"type\": \"object\"\n  },\n  \"proxy_schema\": {\n    \"additionalProperties\": false,\n    \"properties\": {\n      \"name\": {\n        \"pattern\": \"^[A-Za-z0-9_-]{1,64}$\",\n        \"title\": \"Name\",\n        \"type\": \"string\"\n      },\n      \"environment\": {\n        \"anyOf\": [\n          {\n            \"pattern\": \"^[A-Za-z_][A-Za-z0-9_]*$\",\n            \"type\": \"string\"\n          },\n          {\n            \"type\": \"null\"\n          }\n        ],\n        \"default\": null,\n        \"title\": \"Environment\"\n      },\n      \"secret_file\": {\n        \"anyOf\": [\n          {\n            \"type\": \"string\"\n          },\n          {\n            \"type\": \"null\"\n          }\n        ],\n        \"default\": null,\n        \"title\": \"Secret File\"\n      },\n      \"max_failures\": {\n        \"default\": 3,\n        \"maximum\": 100,\n        \"minimum\": 1,\n        \"title\": \"Max Failures\",\n        \"type\": \"integer\"\n      },\n      \"cooldown\": {\n        \"default\": 300,\n        \"maximum\": 86400,\n        \"minimum\": 0,\n        \"title\": \"Cooldown\",\n        \"type\": \"number\"\n      }\n    },\n    \"required\": [\n      \"name\"\n    ],\n    \"title\": \"ProxyProfile\",\n    \"type\": \"object\"\n  },\n  \"supported\": {\n    \"ad_types\": [\n      \"ALL\",\n      \"CREDIT_ADS\",\n      \"EMPLOYMENT_ADS\",\n      \"HOUSING_ADS\",\n      \"POLITICAL_AND_ISSUE_ADS\"\n    ],\n    \"statuses\": [\n      \"ACTIVE\",\n      \"ALL\",\n      \"INACTIVE\"\n    ],\n    \"search_types\": [\n      \"KEYWORD_EXACT_PHRASE\",\n      \"KEYWORD_UNORDERED\",\n      \"PAGE\"\n    ],\n    \"sort_modes\": [\n      null,\n      \"SORT_BY_TOTAL_IMPRESSIONS\"\n    ],\n    \"export_formats\": [\n      \"json\",\n      \"jsonl\",\n      \"csv\"\n    ],\n    \"fields\": [\n      \"id\",\n      \"ad_library_id\",\n      \"page\",\n      \"is_active\",\n      \"ad_status\",\n      \"delivery_start_time\",\n      \"delivery_stop_time\",\n      \"creatives\",\n      \"snapshot_url\",\n      \"ad_snapshot_url\",\n      \"impressions\",\n      \"spend\",\n      \"reach\",\n      \"currency\",\n      \"age_gender_distribution\",\n      \"region_distribution\",\n      \"targeting\",\n      \"estimated_audience_size_lower\",\n      \"estimated_audience_size_upper\",\n      \"publisher_platforms\",\n      \"languages\",\n      \"bylines\",\n      \"funding_entity\",\n      \"disclaimer\",\n      \"ad_type\",\n      \"categories\",\n      \"beneficiary_payers\",\n      \"ad_id\",\n      \"display_format\",\n      \"country_iso_code\",\n      \"targeted_or_reached_countries\",\n      \"total_active_time\",\n      \"regional_regulation_data\",\n      \"additional_info\",\n      \"ec_certificates\",\n      \"brazil_tax_id\",\n      \"page_is_deleted\",\n      \"contains_sensitive_content\",\n      \"contains_digital_created_media\",\n      \"is_aaa_eligible\",\n      \"branded_content\",\n      \"event\",\n      \"has_user_reported\",\n      \"report_count\",\n      \"state_media_run_label\",\n      \"hide_data_status\",\n      \"gated_type\",\n      \"menu_items\",\n      \"is_reshared\",\n      \"root_reshared_post\",\n      \"fev_info\",\n      \"page_categories\",\n      \"impressions_text\",\n      \"impressions_index\",\n      \"extra_texts\",\n      \"extra_links\",\n      \"extra_images\",\n      \"extra_videos\",\n      \"ad_details\",\n      \"eu_transparency\",\n      \"uk_transparency\",\n      \"br_transparency\",\n      \"eu_total_reach\",\n      \"targets_eu\",\n      \"payer_beneficiary_data\",\n      \"aaa_info\",\n      \"insights\",\n      \"page_spend\",\n      \"violation_types\",\n      \"verified_voice_context\",\n      \"is_violating_eu_siep\",\n      \"collation_id\",\n      \"collation_count\",\n      \"collected_at\",\n      \"collection_source\",\n      \"api_fields\"\n    ],\n    \"events\": [\n      \"collection_started\",\n      \"ad_collected\",\n      \"page_fetched\",\n      \"rate_limited\",\n      \"session_refreshed\",\n      \"error_occurred\",\n      \"collection_finished\"\n    ]\n  },\n  \"limits\": {\n    \"default_batch\": 20,\n    \"maximum_batch\": 100,\n    \"maximum_meta_page\": 30,\n    \"max_concurrency\": 1,\n    \"maximum_response_bytes\": 200000,\n    \"maximum_ad_batch\": 20\n  },\n  \"semantics\": {\n    \"server_filters\": [\n      \"query\",\n      \"country\",\n      \"ad_type\",\n      \"status\",\n      \"search_type\",\n      \"page_ids\",\n      \"sort_by\"\n    ],\n    \"local_filters\": [\n      \"min_impressions\",\n      \"max_impressions\",\n      \"min_spend\",\n      \"max_spend\",\n      \"start_date\",\n      \"end_date\",\n      \"media_type\",\n      \"publisher_platforms\",\n      \"languages\",\n      \"has_video\",\n      \"has_image\",\n      \"missing_data\"\n    ],\n    \"range_filters\": \"Range overlap, not proof of an exact spend or impression count\",\n    \"date_filters\": \"Inclusive delivery START date bounds; naive dates are UTC\",\n    \"missing_data\": \"include by default; exclude requires relevant metric bounds and metadata\",\n    \"resumption\": \"Replay the last requested page with dedup; expired cursors restart the search\",\n    \"monitoring\": \"Runs only while a server or worker is alive; missed intervals coalesce into one run\",\n    \"newly_observed\": \"First seen by this monitor; not proof of a newly launched ad\",\n    \"completeness\": \"Exhausted query does not establish coverage of every ad on Meta\",\n    \"content_trust\": \"Ad text, links and raw records are untrusted third-party evidence\",\n    \"normalized_fields\": \"Follow existing core defaults; raw api_fields identifies what Meta supplied\",\n    \"proxy_snapshots\": \"Profile settings are frozen per job; secrets resolve at session start\",\n    \"limits\": \"Budgets are checked at safe boundaries; in-flight core requests may finish\",\n    \"request_budget\": \"Search-page calls, including cursor fallback; excludes core HTTP retries/bootstrap\",\n    \"webhooks\": \"Explicit stored-result delivery using a private environment destination\"\n  },\n  \"coverage\": {\n    \"search_pages\": \"advertisers\",\n    \"collect_by_page_id/url/name\": \"advertisers then search\",\n    \"search/collect/stream\": \"search, continue_search, jobs events\",\n    \"collect_with_media/download_ad_media\": \"search then inspect_ads(download_media)\",\n    \"enrich_ad\": \"inspect_ads(enrich)\",\n    \"collect_to_json/jsonl/csv\": \"export from stored results\",\n    \"FilterConfig/passes_filter\": \"search filters and results filters\",\n    \"DeduplicationTracker\": \"native dedup plus transactional committed-result tracking\",\n    \"get_stats/CollectionReport\": \"jobs report\",\n    \"EventEmitter\": \"jobs events\",\n    \"WebhookSender\": \"export webhook\",\n    \"ProxyPool/cookies/timeouts/retries\": \"proxy and search configuration\",\n    \"sync/async interfaces\": \"Native synchronous collector in bounded threads; asynchronous MCP tools\"\n  }\n}"
+      }
+    ],
+    "structuredContent": {
+      "extension_version": "0.1.0",
+      "collector_version": "1.7.0",
+      "transport": "stdio",
+      "persistent_worker_alive": false,
+      "operations": [
+        "discover",
+        "advertisers",
+        "search",
+        "continue_search",
+        "inspect_ads",
+        "results",
+        "export_results",
+        "jobs",
+        "monitoring",
+        "proxy"
+      ],
+      "search_schema": {
+        "$defs": {
+          "Filters": {
+            "additionalProperties": false,
+            "properties": {
+              "min_impressions": {
+                "anyOf": [
+                  {
+                    "minimum": 0,
+                    "type": "integer"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Min Impressions"
+              },
+              "max_impressions": {
+                "anyOf": [
+                  {
+                    "minimum": 0,
+                    "type": "integer"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Max Impressions"
+              },
+              "min_spend": {
+                "anyOf": [
+                  {
+                    "minimum": 0,
+                    "type": "integer"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Min Spend"
+              },
+              "max_spend": {
+                "anyOf": [
+                  {
+                    "minimum": 0,
+                    "type": "integer"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Max Spend"
+              },
+              "start_date": {
+                "anyOf": [
+                  {
+                    "format": "date-time",
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Start Date"
+              },
+              "end_date": {
+                "anyOf": [
+                  {
+                    "format": "date-time",
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "End Date"
+              },
+              "media_type": {
+                "anyOf": [
+                  {
+                    "enum": [
+                      "ALL",
+                      "IMAGE",
+                      "VIDEO",
+                      "MEME",
+                      "NONE"
+                    ],
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Media Type"
+              },
+              "publisher_platforms": {
+                "anyOf": [
+                  {
+                    "items": {
+                      "type": "string"
+                    },
+                    "type": "array"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Publisher Platforms"
+              },
+              "languages": {
+                "anyOf": [
+                  {
+                    "items": {
+                      "type": "string"
+                    },
+                    "type": "array"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Languages"
+              },
+              "has_video": {
+                "anyOf": [
+                  {
+                    "type": "boolean"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Has Video"
+              },
+              "has_image": {
+                "anyOf": [
+                  {
+                    "type": "boolean"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Has Image"
+              },
+              "missing_data": {
+                "default": "include",
+                "enum": [
+                  "include",
+                  "exclude"
+                ],
+                "title": "Missing Data",
+                "type": "string"
+              }
+            },
+            "title": "Filters",
+            "type": "object"
+          }
+        },
+        "additionalProperties": false,
+        "properties": {
+          "query": {
+            "default": "",
+            "maxLength": 1000,
+            "title": "Query",
+            "type": "string"
+          },
+          "country": {
+            "default": "US",
+            "title": "Country",
+            "type": "string"
+          },
+          "ad_type": {
+            "default": "ALL",
+            "title": "Ad Type",
+            "type": "string"
+          },
+          "status": {
+            "default": "ACTIVE",
+            "title": "Status",
+            "type": "string"
+          },
+          "search_type": {
+            "default": "KEYWORD_UNORDERED",
+            "title": "Search Type",
+            "type": "string"
+          },
+          "page_ids": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "maxItems": 50,
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Page Ids"
+          },
+          "sort_by": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Sort By"
+          },
+          "filters": {
+            "$ref": "#/$defs/Filters"
+          },
+          "max_results": {
+            "default": 100,
+            "maximum": 100000,
+            "minimum": 1,
+            "title": "Max Results",
+            "type": "integer"
+          },
+          "page_size": {
+            "default": 20,
+            "maximum": 30,
+            "minimum": 1,
+            "title": "Page Size",
+            "type": "integer"
+          },
+          "max_requests": {
+            "default": 100,
+            "maximum": 10000,
+            "minimum": 1,
+            "title": "Max Requests",
+            "type": "integer"
+          },
+          "max_seconds": {
+            "default": 600,
+            "maximum": 86400,
+            "minimum": 1,
+            "title": "Max Seconds",
+            "type": "integer"
+          },
+          "proxy_profile": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Proxy Profile"
+          },
+          "timeout": {
+            "default": 30,
+            "maximum": 120,
+            "minimum": 1,
+            "title": "Timeout",
+            "type": "integer"
+          },
+          "max_retries": {
+            "default": 3,
+            "maximum": 5,
+            "minimum": 1,
+            "title": "Max Retries",
+            "type": "integer"
+          },
+          "rate_limit_delay": {
+            "default": 1,
+            "maximum": 60,
+            "minimum": 0,
+            "title": "Rate Limit Delay",
+            "type": "number"
+          },
+          "jitter": {
+            "default": 0.5,
+            "maximum": 10,
+            "minimum": 0,
+            "title": "Jitter",
+            "type": "number"
+          },
+          "cookie_env": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Cookie Env"
+          }
+        },
+        "title": "Search",
+        "type": "object"
+      },
+      "filter_schema": {
+        "additionalProperties": false,
+        "properties": {
+          "min_impressions": {
+            "anyOf": [
+              {
+                "minimum": 0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Min Impressions"
+          },
+          "max_impressions": {
+            "anyOf": [
+              {
+                "minimum": 0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Max Impressions"
+          },
+          "min_spend": {
+            "anyOf": [
+              {
+                "minimum": 0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Min Spend"
+          },
+          "max_spend": {
+            "anyOf": [
+              {
+                "minimum": 0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Max Spend"
+          },
+          "start_date": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Start Date"
+          },
+          "end_date": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "End Date"
+          },
+          "media_type": {
+            "anyOf": [
+              {
+                "enum": [
+                  "ALL",
+                  "IMAGE",
+                  "VIDEO",
+                  "MEME",
+                  "NONE"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Media Type"
+          },
+          "publisher_platforms": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Publisher Platforms"
+          },
+          "languages": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Languages"
+          },
+          "has_video": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Has Video"
+          },
+          "has_image": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Has Image"
+          },
+          "missing_data": {
+            "default": "include",
+            "enum": [
+              "include",
+              "exclude"
+            ],
+            "title": "Missing Data",
+            "type": "string"
+          }
+        },
+        "title": "Filters",
+        "type": "object"
+      },
+      "schedule_schema": {
+        "$defs": {
+          "Filters": {
+            "additionalProperties": false,
+            "properties": {
+              "min_impressions": {
+                "anyOf": [
+                  {
+                    "minimum": 0,
+                    "type": "integer"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Min Impressions"
+              },
+              "max_impressions": {
+                "anyOf": [
+                  {
+                    "minimum": 0,
+                    "type": "integer"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Max Impressions"
+              },
+              "min_spend": {
+                "anyOf": [
+                  {
+                    "minimum": 0,
+                    "type": "integer"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Min Spend"
+              },
+              "max_spend": {
+                "anyOf": [
+                  {
+                    "minimum": 0,
+                    "type": "integer"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Max Spend"
+              },
+              "start_date": {
+                "anyOf": [
+                  {
+                    "format": "date-time",
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Start Date"
+              },
+              "end_date": {
+                "anyOf": [
+                  {
+                    "format": "date-time",
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "End Date"
+              },
+              "media_type": {
+                "anyOf": [
+                  {
+                    "enum": [
+                      "ALL",
+                      "IMAGE",
+                      "VIDEO",
+                      "MEME",
+                      "NONE"
+                    ],
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Media Type"
+              },
+              "publisher_platforms": {
+                "anyOf": [
+                  {
+                    "items": {
+                      "type": "string"
+                    },
+                    "type": "array"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Publisher Platforms"
+              },
+              "languages": {
+                "anyOf": [
+                  {
+                    "items": {
+                      "type": "string"
+                    },
+                    "type": "array"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Languages"
+              },
+              "has_video": {
+                "anyOf": [
+                  {
+                    "type": "boolean"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Has Video"
+              },
+              "has_image": {
+                "anyOf": [
+                  {
+                    "type": "boolean"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Has Image"
+              },
+              "missing_data": {
+                "default": "include",
+                "enum": [
+                  "include",
+                  "exclude"
+                ],
+                "title": "Missing Data",
+                "type": "string"
+              }
+            },
+            "title": "Filters",
+            "type": "object"
+          },
+          "Search": {
+            "additionalProperties": false,
+            "properties": {
+              "query": {
+                "default": "",
+                "maxLength": 1000,
+                "title": "Query",
+                "type": "string"
+              },
+              "country": {
+                "default": "US",
+                "title": "Country",
+                "type": "string"
+              },
+              "ad_type": {
+                "default": "ALL",
+                "title": "Ad Type",
+                "type": "string"
+              },
+              "status": {
+                "default": "ACTIVE",
+                "title": "Status",
+                "type": "string"
+              },
+              "search_type": {
+                "default": "KEYWORD_UNORDERED",
+                "title": "Search Type",
+                "type": "string"
+              },
+              "page_ids": {
+                "anyOf": [
+                  {
+                    "items": {
+                      "type": "string"
+                    },
+                    "maxItems": 50,
+                    "type": "array"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Page Ids"
+              },
+              "sort_by": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Sort By"
+              },
+              "filters": {
+                "$ref": "#/$defs/Filters"
+              },
+              "max_results": {
+                "default": 100,
+                "maximum": 100000,
+                "minimum": 1,
+                "title": "Max Results",
+                "type": "integer"
+              },
+              "page_size": {
+                "default": 20,
+                "maximum": 30,
+                "minimum": 1,
+                "title": "Page Size",
+                "type": "integer"
+              },
+              "max_requests": {
+                "default": 100,
+                "maximum": 10000,
+                "minimum": 1,
+                "title": "Max Requests",
+                "type": "integer"
+              },
+              "max_seconds": {
+                "default": 600,
+                "maximum": 86400,
+                "minimum": 1,
+                "title": "Max Seconds",
+                "type": "integer"
+              },
+              "proxy_profile": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Proxy Profile"
+              },
+              "timeout": {
+                "default": 30,
+                "maximum": 120,
+                "minimum": 1,
+                "title": "Timeout",
+                "type": "integer"
+              },
+              "max_retries": {
+                "default": 3,
+                "maximum": 5,
+                "minimum": 1,
+                "title": "Max Retries",
+                "type": "integer"
+              },
+              "rate_limit_delay": {
+                "default": 1,
+                "maximum": 60,
+                "minimum": 0,
+                "title": "Rate Limit Delay",
+                "type": "number"
+              },
+              "jitter": {
+                "default": 0.5,
+                "maximum": 10,
+                "minimum": 0,
+                "title": "Jitter",
+                "type": "number"
+              },
+              "cookie_env": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Cookie Env"
+              }
+            },
+            "title": "Search",
+            "type": "object"
+          }
+        },
+        "additionalProperties": false,
+        "properties": {
+          "name": {
+            "maxLength": 100,
+            "minLength": 1,
+            "title": "Name",
+            "type": "string"
+          },
+          "search": {
+            "$ref": "#/$defs/Search"
+          },
+          "interval_seconds": {
+            "default": 3600,
+            "maximum": 31536000,
+            "minimum": 60,
+            "title": "Interval Seconds",
+            "type": "integer"
+          },
+          "retention_days": {
+            "default": 30,
+            "maximum": 3650,
+            "minimum": 1,
+            "title": "Retention Days",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "name",
+          "search"
+        ],
+        "title": "Schedule",
+        "type": "object"
+      },
+      "proxy_schema": {
+        "additionalProperties": false,
+        "properties": {
+          "name": {
+            "pattern": "^[A-Za-z0-9_-]{1,64}$",
+            "title": "Name",
+            "type": "string"
+          },
+          "environment": {
+            "anyOf": [
+              {
+                "pattern": "^[A-Za-z_][A-Za-z0-9_]*$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Environment"
+          },
+          "secret_file": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Secret File"
+          },
+          "max_failures": {
+            "default": 3,
+            "maximum": 100,
+            "minimum": 1,
+            "title": "Max Failures",
+            "type": "integer"
+          },
+          "cooldown": {
+            "default": 300,
+            "maximum": 86400,
+            "minimum": 0,
+            "title": "Cooldown",
+            "type": "number"
+          }
+        },
+        "required": [
+          "name"
+        ],
+        "title": "ProxyProfile",
+        "type": "object"
+      },
+      "supported": {
+        "ad_types": [
+          "ALL",
+          "CREDIT_ADS",
+          "EMPLOYMENT_ADS",
+          "HOUSING_ADS",
+          "POLITICAL_AND_ISSUE_ADS"
+        ],
+        "statuses": [
+          "ACTIVE",
+          "ALL",
+          "INACTIVE"
+        ],
+        "search_types": [
+          "KEYWORD_EXACT_PHRASE",
+          "KEYWORD_UNORDERED",
+          "PAGE"
+        ],
+        "sort_modes": [
+          null,
+          "SORT_BY_TOTAL_IMPRESSIONS"
+        ],
+        "export_formats": [
+          "json",
+          "jsonl",
+          "csv"
+        ],
+        "fields": [
+          "id",
+          "ad_library_id",
+          "page",
+          "is_active",
+          "ad_status",
+          "delivery_start_time",
+          "delivery_stop_time",
+          "creatives",
+          "snapshot_url",
+          "ad_snapshot_url",
+          "impressions",
+          "spend",
+          "reach",
+          "currency",
+          "age_gender_distribution",
+          "region_distribution",
+          "targeting",
+          "estimated_audience_size_lower",
+          "estimated_audience_size_upper",
+          "publisher_platforms",
+          "languages",
+          "bylines",
+          "funding_entity",
+          "disclaimer",
+          "ad_type",
+          "categories",
+          "beneficiary_payers",
+          "ad_id",
+          "display_format",
+          "country_iso_code",
+          "targeted_or_reached_countries",
+          "total_active_time",
+          "regional_regulation_data",
+          "additional_info",
+          "ec_certificates",
+          "brazil_tax_id",
+          "page_is_deleted",
+          "contains_sensitive_content",
+          "contains_digital_created_media",
+          "is_aaa_eligible",
+          "branded_content",
+          "event",
+          "has_user_reported",
+          "report_count",
+          "state_media_run_label",
+          "hide_data_status",
+          "gated_type",
+          "menu_items",
+          "is_reshared",
+          "root_reshared_post",
+          "fev_info",
+          "page_categories",
+          "impressions_text",
+          "impressions_index",
+          "extra_texts",
+          "extra_links",
+          "extra_images",
+          "extra_videos",
+          "ad_details",
+          "eu_transparency",
+          "uk_transparency",
+          "br_transparency",
+          "eu_total_reach",
+          "targets_eu",
+          "payer_beneficiary_data",
+          "aaa_info",
+          "insights",
+          "page_spend",
+          "violation_types",
+          "verified_voice_context",
+          "is_violating_eu_siep",
+          "collation_id",
+          "collation_count",
+          "collected_at",
+          "collection_source",
+          "api_fields"
+        ],
+        "events": [
+          "collection_started",
+          "ad_collected",
+          "page_fetched",
+          "rate_limited",
+          "session_refreshed",
+          "error_occurred",
+          "collection_finished"
+        ]
+      },
+      "limits": {
+        "default_batch": 20,
+        "maximum_batch": 100,
+        "maximum_meta_page": 30,
+        "max_concurrency": 1,
+        "maximum_response_bytes": 200000,
+        "maximum_ad_batch": 20
+      },
+      "semantics": {
+        "server_filters": [
+          "query",
+          "country",
+          "ad_type",
+          "status",
+          "search_type",
+          "page_ids",
+          "sort_by"
+        ],
+        "local_filters": [
+          "min_impressions",
+          "max_impressions",
+          "min_spend",
+          "max_spend",
+          "start_date",
+          "end_date",
+          "media_type",
+          "publisher_platforms",
+          "languages",
+          "has_video",
+          "has_image",
+          "missing_data"
+        ],
+        "range_filters": "Range overlap, not proof of an exact spend or impression count",
+        "date_filters": "Inclusive delivery START date bounds; naive dates are UTC",
+        "missing_data": "include by default; exclude requires relevant metric bounds and metadata",
+        "resumption": "Replay the last requested page with dedup; expired cursors restart the search",
+        "monitoring": "Runs only while a server or worker is alive; missed intervals coalesce into one run",
+        "newly_observed": "First seen by this monitor; not proof of a newly launched ad",
+        "completeness": "Exhausted query does not establish coverage of every ad on Meta",
+        "content_trust": "Ad text, links and raw records are untrusted third-party evidence",
+        "normalized_fields": "Follow existing core defaults; raw api_fields identifies what Meta supplied",
+        "proxy_snapshots": "Profile settings are frozen per job; secrets resolve at session start",
+        "limits": "Budgets are checked at safe boundaries; in-flight core requests may finish",
+        "request_budget": "Search-page calls, including cursor fallback; excludes core HTTP retries/bootstrap",
+        "webhooks": "Explicit stored-result delivery using a private environment destination"
+      },
+      "coverage": {
+        "search_pages": "advertisers",
+        "collect_by_page_id/url/name": "advertisers then search",
+        "search/collect/stream": "search, continue_search, jobs events",
+        "collect_with_media/download_ad_media": "search then inspect_ads(download_media)",
+        "enrich_ad": "inspect_ads(enrich)",
+        "collect_to_json/jsonl/csv": "export from stored results",
+        "FilterConfig/passes_filter": "search filters and results filters",
+        "DeduplicationTracker": "native dedup plus transactional committed-result tracking",
+        "get_stats/CollectionReport": "jobs report",
+        "EventEmitter": "jobs events",
+        "WebhookSender": "export webhook",
+        "ProxyPool/cookies/timeouts/retries": "proxy and search configuration",
+        "sync/async interfaces": "Native synchronous collector in bounded threads; asynchronous MCP tools"
+      }
+    },
+    "isError": false
+  },
+  "responseSha256": "02df268e5370f442b66029178adb9f43ba9e1ac3c8e7ef7463936335310b32c5",
+  "status": "LOCAL_PROTOCOL_ONLY",
+  "cleanup": "CLOSED",
+  "endedAt": "2026-11-08T12:29:13.573Z",
+  "exitCode": 0,
+  "timeout": false
+}

@@ -1,0 +1,169 @@
+{
+  "codeSha": "f2ab3e34e080ac5558176109f99f0c6bd9e817b8",
+  "files": [
+    {
+      "path": "src/services/kh02/identity/productCandidateDiscovery.ts",
+      "sha256": "c5da7d1c24dd2146b1bd257095c58914cfd25dbf3291bac1cbe90fcbbc287431",
+      "functions": [
+        {
+          "name": "discoverProductCandidatesFromAds",
+          "line": 2135
+        },
+        {
+          "name": "selectTopResearchShortlist",
+          "line": 3076
+        }
+      ]
+    },
+    {
+      "path": "src/services/kh02/providers/metaResearchAdapter.ts",
+      "sha256": "03b1448216765e3187e873cc170b109c3b4953129192c20c7bc50eff26b5a534",
+      "functions": [
+        {
+          "name": "resolveMetaMarketProvenance",
+          "line": 59
+        },
+        {
+          "name": "diagnoseMetaLiveCollector",
+          "line": 161
+        },
+        {
+          "name": "resolveMetaExecutionPolicyWithDiagnostics",
+          "line": 359
+        },
+        {
+          "name": "resolveMetaExecutionPolicy",
+          "line": 469
+        },
+        {
+          "name": "normalizeMetaQueryOutcomeFields",
+          "line": 554
+        },
+        {
+          "name": "collectLiveMetaAds",
+          "line": 813
+        },
+        {
+          "name": "collectMetaProductSignals",
+          "line": 1471
+        }
+      ]
+    },
+    {
+      "path": "src/services/kh02/providers/googleTransparencyResearchAdapter.ts",
+      "sha256": "10bd5dd1309eb8763deaba09f75257bb918b7e3ed0f5314620ebc374ca791964",
+      "functions": [
+        {
+          "name": "extractUpstreamGoogleRequestId",
+          "line": 394
+        },
+        {
+          "name": "recordActualGoogleMcpInvocation",
+          "line": 495
+        },
+        {
+          "name": "verifyGoogleInvocationLineage",
+          "line": 1074
+        },
+        {
+          "name": "discoverGoogleAdsMcpCapabilities",
+          "line": 1877
+        },
+        {
+          "name": "invokeGoogleMcpTool",
+          "line": 1990
+        },
+        {
+          "name": "normalizeGoogleAdsResponse",
+          "line": 2067
+        },
+        {
+          "name": "resolveGoogleMcpConfig",
+          "line": 2357
+        },
+        {
+          "name": "createGoogleTransparencyMcpClient",
+          "line": 2450
+        },
+        {
+          "name": "persistGoogleObservationsToDatabase",
+          "line": 2733
+        },
+        {
+          "name": "collectGoogleAdvertiserSignals",
+          "line": 2972
+        }
+      ]
+    },
+    {
+      "path": "src/services/kh02/persistence/kh02PersistenceService.ts",
+      "sha256": "676dabc5f94c847c834bf73cce19351f2e036fa3f7468b27e2ce40ed41f85a7b",
+      "functions": [
+        {
+          "name": "requalifyHistoricalEvergreenSnapshot",
+          "line": 863
+        }
+      ]
+    },
+    {
+      "path": "src/services/kh02/scoring/evergreenOpportunityScoring.ts",
+      "sha256": "d24351e8c5415c1a2810198f9673a8b421f53c57e354401788bfd79dc2fa19de",
+      "functions": [
+        {
+          "name": "isQualifiedGoogleAdsProductEvidence",
+          "line": 470
+        },
+        {
+          "name": "calculateKH02EvergreenScore",
+          "line": 637
+        }
+      ]
+    },
+    {
+      "path": "src/services/kh02/demand/temporalDemandEngine.ts",
+      "sha256": "f495670abf4db7dde3504e5795911d7749eb5572df0858df7aac31be15e587d0",
+      "functions": [
+        {
+          "name": "evaluateDemandSourceAuthority",
+          "line": 4353
+        },
+        {
+          "name": "evaluateDemandHistoryEvidence",
+          "line": 5492
+        }
+      ]
+    },
+    {
+      "path": "src/services/kh02/demand/durableCsvImportAuthority.ts",
+      "sha256": "fb1d058e37381b60e4473710c4791cfa2bc2ffb7a749ff6b849529f522b8a7dc",
+      "functions": [
+        {
+          "name": "getAuthorizedCsvApproverPrincipals",
+          "line": 232
+        },
+        {
+          "name": "validateOfficialGoogleTrendsAcquisitionUrl",
+          "line": 259
+        },
+        {
+          "name": "createSignedCsvImportAuthority",
+          "line": 713
+        },
+        {
+          "name": "verifyDurableCsvImportAuthority",
+          "line": 1431
+        }
+      ]
+    },
+    {
+      "path": "src/services/kh02/demand/googleTrendsCsvValidator.ts",
+      "sha256": "4eb37e1091fcf429faa5fcea33025ff8ad1a2b84447ba4dbcb1660eb4e8c6a69",
+      "functions": [
+        {
+          "name": "validateAndParseGoogleTrendsCsv",
+          "line": 379
+        }
+      ]
+    }
+  ]
+}

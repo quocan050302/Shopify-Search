@@ -1,0 +1,23 @@
+{
+  "taskId": "baseline-tsc",
+  "dependencies": [
+    "baseline"
+  ],
+  "inputSha": "f2ab3e34e080ac5558176109f99f0c6bd9e817b8",
+  "startedAt": "2026-11-08T12:30:29.727788+00:00",
+  "arguments": [
+    "node_modules/.bin/tsc",
+    "--noEmit",
+    "--incremental",
+    "false"
+  ],
+  "timeoutSeconds": 180,
+  "diskFreeBytesBefore": 6732922880,
+  "timeout": false,
+  "memoryBefore": "Mach Virtual Memory Statistics: (page size of 16384 bytes)\nPages free:                                2519.\nPages active:                            161237.\nPages inactive:                          160075.\nPages speculative:                          353.\nPages throttled:                              0.\nPages wired down:                        256050.\nPages purgeable:                             18.\n\"Translation faults\":                3768732274.\nPages copy-on-write:                   39234355.\nPages zero filled:                    770302605.\nPages reactivated:                   1112331068.\nPages purged:                          45666192.\nFile-backed pages:                       108554.\nAnonymous pages:                         213111.\nPages stored in compressor:             2136228.\nPages occupied by compressor:            428925.\nDecompressions:                      1713986845.\nCompressions:                        1895056209.\nPageins:                               71986664.\nPageouts:                               1994169.\nSwapins:                               47597365.\nSwapouts:                              51860829.\n",
+  "exitCode": 0,
+  "status": "PASS",
+  "logBytes": 0,
+  "endedAt": "2026-11-08T12:31:09.511853+00:00",
+  "diskFreeBytesAfter": 6722318336
+}

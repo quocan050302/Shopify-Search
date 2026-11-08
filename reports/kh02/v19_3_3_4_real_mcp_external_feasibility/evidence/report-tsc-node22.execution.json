@@ -1,0 +1,24 @@
+{
+  "taskId": "report-tsc-node22",
+  "dependencies": [
+    "baseline"
+  ],
+  "inputSha": "f2ab3e34e080ac5558176109f99f0c6bd9e817b8",
+  "startedAt": "2026-11-08T12:37:05.955017+00:00",
+  "arguments": [
+    "/Users/macbook/.nvm/versions/node/v22.22.3/bin/node",
+    "node_modules/typescript/bin/tsc",
+    "--noEmit",
+    "--incremental",
+    "false"
+  ],
+  "timeoutSeconds": 120,
+  "diskFreeBytesBefore": 6714449920,
+  "timeout": false,
+  "memoryBefore": "Mach Virtual Memory Statistics: (page size of 16384 bytes)\nPages free:                                4471.\nPages active:                            176515.\nPages inactive:                          175017.\nPages speculative:                          699.\nPages throttled:                              0.\nPages wired down:                        260491.\nPages purgeable:                              2.\n\"Translation faults\":                3779124241.\nPages copy-on-write:                   39305159.\nPages zero filled:                    771763409.\nPages reactivated:                   1115760434.\nPages purged:                          45782690.\nFile-backed pages:                       101327.\nAnonymous pages:                         250904.\nPages stored in compressor:             2130872.\nPages occupied by compressor:            392037.\nDecompressions:                      1719420365.\nCompressions:                        1900963882.\nPageins:                               72105349.\nPageouts:                               1998650.\nSwapins:                               47708560.\nSwapouts:                              52010305.\n",
+  "exitCode": 0,
+  "status": "PASS",
+  "logBytes": 0,
+  "endedAt": "2026-11-08T12:37:24.037381+00:00",
+  "diskFreeBytesAfter": 6707011584
+}

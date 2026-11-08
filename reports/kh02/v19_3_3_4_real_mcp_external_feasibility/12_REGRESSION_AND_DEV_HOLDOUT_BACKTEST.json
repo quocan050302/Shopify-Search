@@ -1,0 +1,115 @@
+{
+  "codeSha": "f2ab3e34e080ac5558176109f99f0c6bd9e817b8",
+  "treeSha": "1b3b1ef23854dd0acede2ec6dae82d88f545ae55",
+  "branch": "feature/kh02-walmart-us-jina-reader-v12.4.3.5.1",
+  "executedAt": "2026-11-08T12:42:46.229179+00:00",
+  "executionContext": "local macOS; existing sparse checkout; no .env/.env.local provider credentials; isolated protocol stores and copied diagnostic SQLite snapshot; $0 paid provider charges",
+  "sourceOrEligibilityCodeChanged": false,
+  "fullMandatoryCodeChangeSuite": "NOT_REQUIRED_NO_APPLICATION_CODE_CHANGE; NOT_RUN; no full-suite PASS claim",
+  "staticChecks": {
+    "typescript": "PASS initial and Node22 report check",
+    "prismaValidate": "PASS"
+  },
+  "targetedRegression": {
+    "result": "PASS",
+    "files": 5,
+    "tests": 157,
+    "workers": 1,
+    "evidence": "logs/targeted-regression-node22.log",
+    "classification": "FIXTURE_ENGINEERING_NOT_REAL_PROVIDER_DATA",
+    "initialAttempt": "FAIL_BEFORE_TEST_EXECUTION Node14 syntax error; subsequent explicit Node22 run passed"
+  },
+  "backtestProcessExit": 0,
+  "backtestSemanticVerdicts": {
+    "version": "12.4.3.5.1",
+    "sourceSha": "f2ab3e34e080ac5558176109f99f0c6bd9e817b8",
+    "evaluatedCodeSha": "f2ab3e34e080ac5558176109f99f0c6bd9e817b8",
+    "evaluatedTreeSha": "1b3b1ef23854dd0acede2ec6dae82d88f545ae55",
+    "inputBaselineCommitSha": "f2ab3e34e080ac5558176109f99f0c6bd9e817b8",
+    "evaluatedAt": "2026-11-08T12:34:30.694Z",
+    "niche": "Pet Gadgets",
+    "policyScenarioVerdict": "FAIL",
+    "pointInTimeIntegrityVerdict": "FAIL",
+    "historicalDevVerdict": "INSUFFICIENT_HISTORICAL_EVIDENCE",
+    "historicalHoldoutVerdict": "INSUFFICIENT_HISTORICAL_EVIDENCE",
+    "overallVerdict": "INSUFFICIENT_HISTORICAL_EVIDENCE",
+    "temporalPartitions": {
+      "devWindow": {
+        "start": "2026-06-01T00:00:00.000Z",
+        "end": "2026-10-24T00:00:00.000Z"
+      },
+      "holdoutWindow": {
+        "start": "2026-10-24T00:00:00.000Z",
+        "end": "2026-10-30T12:00:00.000Z"
+      },
+      "zeroOverlapVerified": true,
+      "devRecordsEvaluated": 0,
+      "holdoutRecordsEvaluated": 0,
+      "devDatasetFingerprintSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "holdoutDatasetFingerprintSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "devShortlistCount": 0,
+      "devShortlistNicheMatchedCount": 0,
+      "devNicheCoverageStatus": "INSUFFICIENT_NICHE_COVERAGE",
+      "holdoutShortlistCount": 0,
+      "holdoutShortlistNicheMatchedCount": 0,
+      "holdoutNicheCoverageStatus": "INSUFFICIENT_NICHE_COVERAGE",
+      "walmartPointInTimeVacuousAsHistoricalParityProof": true,
+      "zeroFutureLeakageVerified": false
+    }
+  },
+  "policyScenarioSummary": {
+    "version": "12.4.3.4.3",
+    "evaluatedAt": "2026-11-08T12:34:30.519Z",
+    "verdict": "FAIL",
+    "totalScenarios": 21,
+    "devScenariosCount": 9,
+    "holdoutScenariosCount": 12,
+    "passedCount": 20,
+    "failedCount": 1
+  },
+  "failedPolicyScenarios": [
+    {
+      "caseId": "v124342_dev_03_csv_valid_disk_file_authoritative",
+      "split": "DEV",
+      "category": "CSV_CRYPTOGRAPHIC_INTEGRITY",
+      "description": "Verifies authentic CSV file on disk produces rawCsvFileExists and hasValidFileChecksum",
+      "executed": true,
+      "passed": false,
+      "assertion": "lineage.rawCsvFileExists === true && lineage.hasValidFileChecksum === true",
+      "observed": {
+        "rawCsvFileExists": false,
+        "hasValidFileChecksum": false,
+        "hasProviderRequestLineage": false,
+        "isMerchantDomainPseudoRef": false,
+        "lineagePresent": true,
+        "lineageVerified": false,
+        "verificationReason": "Referenced CSV file with checksum '49f452e84131...' not found in storage.",
+        "originKind": "UNVERIFIED",
+        "contentIntegrityVerified": false,
+        "providerOriginVerified": false,
+        "sourceOriginVerified": false,
+        "rawContentIntegrityValid": false,
+        "csvOriginalIntegrityValid": false,
+        "fixtureOnly": true,
+        "businessLineageEligible": false,
+        "sourceAuthority": "CACHED_UNVERIFIED",
+        "csvImportAuthorityId": null,
+        "csvImportRejectionCode": "CONTENT_INTEGRITY_FAILED"
+      },
+      "detail": "rawCsvFileExists=false, hasValidFileChecksum=false"
+    }
+  ],
+  "failureInterpretation": "Existing harness expects checksum 49f452e8413178ee0b3e1e2d42c2fd495693b552f211bc908a16511b63302109 in CSV storage; it is absent. Do not fabricate missing bytes or change policy to pass. Process completion is not semantic PASS.",
+  "snapshot": "evidence/snapshot.json",
+  "newNovember8ExportsIncludedInHistoricalReplay": false,
+  "ciDatasetParity": "NOT_ESTABLISHED_NO_MATCHING_REMOTE_RUN_OR_INPUT_ARTIFACT",
+  "smoke": "Actual VITEST=1 command completed; protocol/tool listing only, no upstream tool call and providerVerified=false. Raw files found by smoke are not official business-approved exports.",
+  "adversarialCoverage": "157 existing targeted tests cover recent CSV trust/URL binding, Google provenance/score forgery, identity/async evidence integrity and demand gating. Full Phase J failure-mode matrix was not all executed; external failure injection not performed on restricted upstream routes.",
+  "omittedChecks": [
+    "Full kh02 unit suite",
+    "Full kh02 integration suite",
+    "kh01:verify",
+    "Next build"
+  ],
+  "omissionReason": "Audit-only reports; no source or eligibility repair. Resource-bounded external feasibility task; no full regression or release PASS asserted."
+}

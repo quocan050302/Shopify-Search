@@ -1,0 +1,9 @@
+import fs from 'node:fs';
+import path from 'node:path';
+import {createMetaCollectorClient} from '../../../../src/services/discovery/metaCollector/metaCollectorMcpClient';
+import {resolveGoogleMcpConfig,createGoogleTransparencyMcpClient,discoverGoogleAdsMcpCapabilities,normalizeGoogleAdsResponse} from '../../../../src/services/kh02/providers/googleTransparencyResearchAdapter';
+const o=path.resolve('reports/kh02/v19_3_3_4_real_mcp_external_feasibility');process.env.META_COLLECTOR_DATA_DIR=path.join(o,'evidence','isolated-meta-adapter-runtime');
+(async()=>{const result:any={codeSha:'f2ab3e34e080ac5558176109f99f0c6bd9e817b8',startedAt:new Date().toISOString(),upstreamQueryAttempted:false};
+ const m=await createMetaCollectorClient();try{result.metaCapabilities=await m.getCapabilities()}finally{await m.close()}
+ const config=resolveGoogleMcpConfig();result.googleConfig=config;const g=createGoogleTransparencyMcpClient(config);try{result.googleCapabilities=await discoverGoogleAdsMcpCapabilities(config,g)}finally{await g.close()}
+ result.emptyGoogleNormalization=normalizeGoogleAdsResponse({advertisers:[]},{requestedDomain:'',observedAt:new Date().toISOString(),toolName:'search_advertiser'});result.endedAt=new Date().toISOString();fs.writeFileSync(path.join(o,'evidence/adapter-probe.json'),JSON.stringify(result,null,2)+'\n');console.log('Existing Meta client consumed local discover; existing Google client discovered tools; no upstream query or persistence.');})().catch(e=>{console.error(e);process.exitCode=1});

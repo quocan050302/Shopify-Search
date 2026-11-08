@@ -1,0 +1,29 @@
+{
+  "taskId": "targeted-regression-node22",
+  "dependencies": [
+    "baseline"
+  ],
+  "inputSha": "f2ab3e34e080ac5558176109f99f0c6bd9e817b8",
+  "startedAt": "2026-11-08T12:33:02.650529+00:00",
+  "arguments": [
+    "/Users/macbook/.nvm/versions/node/v22.22.3/bin/node",
+    "node_modules/vitest/vitest.mjs",
+    "run",
+    "tests/unit/kh02/v19_3_3_1_CsvTrustAndGoogleMetaProvenance.test.ts",
+    "tests/unit/kh02/v19_3_3_2_CsvOriginAndGoogleUpstreamTrust.test.ts",
+    "tests/unit/kh02/v19_3_3_3_OfficialTrendsQueryGeoAndGoogleScoreTruth.test.ts",
+    "tests/unit/kh02/v12_4_3_1_EvidenceProvenanceAndAsyncTruth.test.ts",
+    "tests/unit/kh02/v12_4_3_3_2_DemandAndIdentityIntegrity.test.ts",
+    "--maxWorkers=1",
+    "--no-file-parallelism"
+  ],
+  "timeoutSeconds": 240,
+  "diskFreeBytesBefore": 6706302976,
+  "timeout": false,
+  "memoryBefore": "Mach Virtual Memory Statistics: (page size of 16384 bytes)\nPages free:                                2667.\nPages active:                            172993.\nPages inactive:                          171532.\nPages speculative:                          709.\nPages throttled:                              0.\nPages wired down:                        261265.\nPages purgeable:                              2.\n\"Translation faults\":                3772740365.\nPages copy-on-write:                   39258759.\nPages zero filled:                    770862366.\nPages reactivated:                   1113511278.\nPages purged:                          45707267.\nFile-backed pages:                       107416.\nAnonymous pages:                         237818.\nPages stored in compressor:             2132358.\nPages occupied by compressor:            400006.\nDecompressions:                      1715753522.\nCompressions:                        1897002515.\nPageins:                               72025539.\nPageouts:                               1995958.\nSwapins:                               47638216.\nSwapouts:                              51927421.\n",
+  "exitCode": 0,
+  "status": "PASS",
+  "logBytes": 436,
+  "endedAt": "2026-11-08T12:33:07.749459+00:00",
+  "diskFreeBytesAfter": 6700756992
+}

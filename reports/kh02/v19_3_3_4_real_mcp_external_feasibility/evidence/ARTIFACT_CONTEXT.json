@@ -1,0 +1,18 @@
+{
+  "codeSha": "f2ab3e34e080ac5558176109f99f0c6bd9e817b8",
+  "treeSha": "1b3b1ef23854dd0acede2ec6dae82d88f545ae55",
+  "branch": "feature/kh02-walmart-us-jina-reader-v12.4.3.5.1",
+  "executedAt": "2026-11-08T12:42:46.229179+00:00",
+  "executionContext": "local macOS; existing sparse checkout; no .env/.env.local provider credentials; isolated protocol stores and copied diagnostic SQLite snapshot; $0 paid provider charges",
+  "appliesTo": "Every file under this report directory, including immutable CSVs/screenshots and retained logs; embedded historical code/version fields are unmodified source outputs.",
+  "realEvidenceFiles": [
+    "evidence/trends-feeder-original.csv",
+    "evidence/trends-fountain-original.csv",
+    "evidence/trends-laundry-original.csv",
+    "evidence/meta-public-ad.png",
+    "evidence/google-public-creative.png",
+    "evidence/trends-laundry.png"
+  ],
+  "engineeringFiles": "Policy scenario outputs, fixture regression logs and diagnostic snapshot readback are engineering evidence only.",
+  "sourceDocuments": "Official provider URLs and retrieval date listed in 02_OFFICIAL_PROVIDER_ACCESS_CAPABILITIES.md."
+}

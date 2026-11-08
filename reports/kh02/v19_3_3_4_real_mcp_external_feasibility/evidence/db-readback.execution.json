@@ -1,0 +1,23 @@
+{
+  "taskId": "db-readback",
+  "dependencies": [
+    "baseline"
+  ],
+  "inputSha": "f2ab3e34e080ac5558176109f99f0c6bd9e817b8",
+  "startedAt": "2026-11-08T12:35:36.598266+00:00",
+  "arguments": [
+    "/Users/macbook/.nvm/versions/node/v22.22.3/bin/node",
+    "--import",
+    "tsx",
+    "reports/kh02/v19_3_3_4_real_mcp_external_feasibility/evidence/readback.ts"
+  ],
+  "timeoutSeconds": 60,
+  "diskFreeBytesBefore": 6708793344,
+  "timeout": false,
+  "memoryBefore": "Mach Virtual Memory Statistics: (page size of 16384 bytes)\nPages free:                                3375.\nPages active:                            190224.\nPages inactive:                          188670.\nPages speculative:                          851.\nPages throttled:                              0.\nPages wired down:                        251473.\nPages purgeable:                              2.\n\"Translation faults\":                3777310363.\nPages copy-on-write:                   39289283.\nPages zero filled:                    771523033.\nPages reactivated:                   1115077611.\nPages purged:                          45756534.\nFile-backed pages:                       100117.\nAnonymous pages:                         279628.\nPages stored in compressor:             2120573.\nPages occupied by compressor:            374591.\nDecompressions:                      1718371621.\nCompressions:                        1899818770.\nPageins:                               72081530.\nPageouts:                               1997997.\nSwapins:                               47690885.\nSwapouts:                              52002289.\n",
+  "exitCode": 0,
+  "status": "PASS",
+  "logBytes": 1255,
+  "endedAt": "2026-11-08T12:35:37.713082+00:00",
+  "diskFreeBytesAfter": 6708760576
+}

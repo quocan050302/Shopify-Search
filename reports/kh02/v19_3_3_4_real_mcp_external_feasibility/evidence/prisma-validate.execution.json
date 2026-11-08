@@ -1,0 +1,24 @@
+{
+  "taskId": "prisma-validate",
+  "dependencies": [
+    "baseline"
+  ],
+  "inputSha": "f2ab3e34e080ac5558176109f99f0c6bd9e817b8",
+  "startedAt": "2026-11-08T12:35:37.742682+00:00",
+  "arguments": [
+    "/Users/macbook/.nvm/versions/node/v22.22.3/bin/node",
+    "node_modules/prisma/build/index.js",
+    "validate",
+    "--config",
+    "prisma7.config.ts"
+  ],
+  "timeoutSeconds": 60,
+  "diskFreeBytesBefore": 6708752384,
+  "timeout": false,
+  "memoryBefore": "Mach Virtual Memory Statistics: (page size of 16384 bytes)\nPages free:                               16150.\nPages active:                            179033.\nPages inactive:                          176706.\nPages speculative:                         1701.\nPages throttled:                              0.\nPages wired down:                        256136.\nPages purgeable:                            166.\n\"Translation faults\":                3777388589.\nPages copy-on-write:                   39290487.\nPages zero filled:                    771542457.\nPages reactivated:                   1115106563.\nPages purged:                          45756712.\nFile-backed pages:                       104869.\nAnonymous pages:                         252571.\nPages stored in compressor:             2140604.\nPages occupied by compressor:            379323.\nDecompressions:                      1718403635.\nCompressions:                        1899871707.\nPageins:                               72085879.\nPageouts:                               1997997.\nSwapins:                               47690933.\nSwapouts:                              52002289.\n",
+  "exitCode": 0,
+  "status": "PASS",
+  "logBytes": 143,
+  "endedAt": "2026-11-08T12:35:38.636671+00:00",
+  "diskFreeBytesAfter": 6708744192
+}

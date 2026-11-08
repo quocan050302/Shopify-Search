@@ -1,0 +1,37 @@
+{
+  "version": "12.4.3.5.1",
+  "sourceSha": "f2ab3e34e080ac5558176109f99f0c6bd9e817b8",
+  "evaluatedCodeSha": "f2ab3e34e080ac5558176109f99f0c6bd9e817b8",
+  "evaluatedTreeSha": "1b3b1ef23854dd0acede2ec6dae82d88f545ae55",
+  "inputBaselineCommitSha": "f2ab3e34e080ac5558176109f99f0c6bd9e817b8",
+  "evaluatedAt": "2026-11-08T12:34:30.694Z",
+  "niche": "Pet Gadgets",
+  "policyScenarioVerdict": "FAIL",
+  "pointInTimeIntegrityVerdict": "FAIL",
+  "historicalDevVerdict": "INSUFFICIENT_HISTORICAL_EVIDENCE",
+  "historicalHoldoutVerdict": "INSUFFICIENT_HISTORICAL_EVIDENCE",
+  "overallVerdict": "INSUFFICIENT_HISTORICAL_EVIDENCE",
+  "temporalPartitions": {
+    "devWindow": {
+      "start": "2026-06-01T00:00:00.000Z",
+      "end": "2026-10-24T00:00:00.000Z"
+    },
+    "holdoutWindow": {
+      "start": "2026-10-24T00:00:00.000Z",
+      "end": "2026-10-30T12:00:00.000Z"
+    },
+    "zeroOverlapVerified": true,
+    "devRecordsEvaluated": 0,
+    "holdoutRecordsEvaluated": 0,
+    "devDatasetFingerprintSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+    "holdoutDatasetFingerprintSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+    "devShortlistCount": 0,
+    "devShortlistNicheMatchedCount": 0,
+    "devNicheCoverageStatus": "INSUFFICIENT_NICHE_COVERAGE",
+    "holdoutShortlistCount": 0,
+    "holdoutShortlistNicheMatchedCount": 0,
+    "holdoutNicheCoverageStatus": "INSUFFICIENT_NICHE_COVERAGE",
+    "walmartPointInTimeVacuousAsHistoricalParityProof": true,
+    "zeroFutureLeakageVerified": false
+  }
+}

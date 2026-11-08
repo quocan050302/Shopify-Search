@@ -1,0 +1,40 @@
+# KH-02 V19.3.3.4 — FINAL_REPORT.md
+
+Audited code: `f2ab3e34e080ac5558176109f99f0c6bd9e817b8`; branch `feature/kh02-walmart-us-jina-reader-v12.4.3.5.1`. Retrieved/executed 2026-11-08 (Asia/Ho_Chi_Minh).
+
+**RELEASE_HOLD. Zero G15-eligible products; zero G16 winners. Recommendation: OPTION D, with a bounded human-assisted Trends acquisition workflow demonstrated (Option B component).**
+
+Audited remote/source HEAD and tree: `f2ab3e34e080ac5558176109f99f0c6bd9e817b8` / `1b3b1ef23854dd0acede2ec6dae82d88f545ae55`. The existing locked branch was fetched and fast-forwarded from `c5f69173aab4a0df0788962b3dd78019c14f6fb8` without branch switch, merge, rebase or reset. Existing untracked user audit files were preserved. No application source or eligibility rules changed.
+
+| Source | MCP Protocol | Real Tool Call | Real Records | US Verified | Product Matched | DB Persisted | Business Eligible | Blocker |
+|---|---|---|---|---|---|---|---|---|
+| Meta Ads | Actual initialize/list passed | discover() local only; upstream 0 | MCP 0; one selected public UI ad | 0 delivery-verified | UI feeder→UAHPET PDP 1; MCP 0 | 0 ad rows | No | Unofficial GraphQL permission not established; API scope differs |
+| Google Ads | Actual initialize/list passed | empty search local only; upstream 0 | MCP 0; one selected UI creative | UI says shown in US; MCP verified 0 | 0 selected merchant matches | 0 ad rows | No | Undocumented RPC; public creative belongs to different merchant |
+| Google Trends | N/A | Three actual official UI downloads | 3 CSVs / 162 raw weekly rows | geo=US plus CSV headers | Family terms only | 3 raw files; 0 demand rows | No | No authorized approval/product binding; feeder alias unverified |
+| TikTok Organic | Policy-disabled | 0 | 0 | 0 | 0 | 0 | No | Unconditional source policy; HasData credits not called |
+| TikTok Ads US | Deferred | 0 | 0 | 0 | 0 | 0 | No | DEFERRED_DO_NOT_TEST |
+| Amazon | Not configured | 0 | 0 | 0 | 0 | 0 | No | No credential/entitlement or enabled MCP |
+| Walmart / Jina | Disabled | 0 | 0 | 0 | 0 | 0 | No | Live policy flags absent; target access permission unresolved |
+| BigQuery Trends | Not configured | 0 | 0 | 0 | 0 | 0 | No | No independently verified sandbox/billing configuration |
+
+Application discovery from current real MCP provider responses: **0 products, 0 ads/creatives, 0 distinct canonical families**. Separate public UI inspection examined **2 selected creatives**, establishing **1 ad-to-selected-merchant-PDP relationship**, but **0 accepted business observations**. Public page result estimates and repeated placements were not counted as products. The three planned families are research targets, not discovered winners.
+
+Official historical acquisition: **3 genuine CSV exports, 54 weekly rows each**, spanning November 2, 2025 through November 8, 2026 period starts (371 elapsed calendar days). They are relative search-interest evidence, not sales. The final weekly bucket is incomplete. Values are sparse for the feeder (47 zeros) and laundry term (36 zeros); the fountain has no zero rows. The [original files and validator output](evidence/real-csv-evaluation.json) are retained separately from engineering fixtures.
+
+G15’s actual code requires at least **60 covered calendar days and 3 points**, plus source authority, attribution, cadence, gap/density and other validity checks. It does not require sixty daily rows. All three actual evaluations return `UNVERIFIED`; no approved workspace/product-bound authority exists. Feeder matching additionally rejects an unverified term alias. All three fail G16; no Top 3 is padded. Internal signatures are local integrity evidence, never Google signatures. See [candidate verdicts](09_G15_REAL_DEMAND_EVIDENCE_VERDICTS.json).
+
+The existing application clients consumed local capabilities successfully. The genuine-data application path stops before approved DB observation persistence: source → MCP upstream acquisition is blocked for ads, and CSV → approved product-bound business authority is blocked for demand. Files were saved to the original CSV store, but no product-demand observation or ad row was inserted by this run. The copied diagnostic database contains two prior audit products and zero demand rows; the expected UAHPET product is absent. It is not production evidence. [Runtime graph and API/UI source references](08_EXTERNAL_RECORD_TO_DB_API_UI_LINEAGE.json) distinguish source implementation from execution. No live API/UI full-pipeline PASS is claimed.
+
+Validation: TypeScript and Prisma validation passed; **157 targeted tests across 5 files passed** using one worker and explicit Node 22. The first attempted fixture run failed before executing tests because Python inherited Node 14; its failure log remains. Existing smoke in `VITEST=1` performed protocol discovery, with no upstream tool query or providerVerified success. No full regression suite/build PASS is claimed.
+
+Backtest process exit was zero, but **policy verdict FAIL (20/21)**: the existing runner expects CSV checksum `49f452e8413178ee0b3e1e2d42c2fd495693b552f211bc908a16511b63302109`, which is absent. DEV cutoff is October 24, 2026 00:00 UTC; HOLDOUT cutoff October 30, 2026 12:00 UTC. Both contain zero replay records and the same empty-set fingerprint `4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945`. Historical business evidence is insufficient, and point-in-time integrity is not PASS. November 8 CSV acquisition cannot be leaked backward into those cutoffs. [Detailed validation](12_REGRESSION_AND_DEV_HOLDOUT_BACKTEST.json).
+
+CI: GitHub connector and unfiltered public Actions API returned no matching run for the audited code SHA. The checked-in workflow excludes `reports/kh02/**` pushes, so report-only publication is not CI validation. Six configured jobs were inspected from git, because this is a sparse checkout. No required-job or dataset parity claim is made. Publication SHA and post-push check are provided in the delivery receipt; [CI record](13_GITHUB_CI_EXACT_SHA_AND_REQUIRED_JOBS.json).
+
+Cost: **$0 paid API charges**, no subscriptions, credit-consuming data APIs or paid retries. Existing hardware/network/browser operating costs were not measured. Disk started around 7.4 GiB available, remained above the runner reserve; final values are in [telemetry](11_ASYNC_RESOURCE_TIMEOUT_AND_DISK_TELEMETRY.json). No build, duplicate dependency install, production worker or deployment was launched.
+
+Scaling conclusion: small UI-assisted official CSV acquisition is feasible now; an authorized, repeatable unattended commercial-ad route and arbitrary-SKU historical-demand route were **not demonstrated in this environment**. The public Meta feeder ad and Google creative confirm UI visibility, not official API equivalence. Meta’s [official API scope](https://br-fr.facebook.com/ads/library/api/?source=onboarding) and Google’s [EEA/outside-EEA access distinction](https://support.google.com/adspolicy/answer/13733850?hl=en) explain key access gaps. Google documents [official CSV export](https://support.google.com/trends/answer/4365538?hl=en) and [limited Alpha access](https://developers.google.com/search/apis/trends).
+
+Build next: finish one authorized, product-bound CSV review/import plus canonical PDP and ad-observation review for one curated target, then verify real DB→API→UI behavior. For a fully automated many-niche product, obtain a legitimate data-access contract or separately review a consenting-merchant historical-data architecture. Do not lower G15, promote generic family interest into SKU demand, or continue treating protocol tests as provider success. [Blockers and concrete decisions](14_EXTERNAL_BLOCKERS_AND_DECISION_OPTIONS.md).
+
+Audit coverage is bounded: restricted upstream calls, approval creation, full live pipeline, exhaustive Phase J adversarial matrix and full code-change regression were not executed. Their limits are explicit; this report is a completed feasibility deliverable, not a Production READY or completed code-fix claim.

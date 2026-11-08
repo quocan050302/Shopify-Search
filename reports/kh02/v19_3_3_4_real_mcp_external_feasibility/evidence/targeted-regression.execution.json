@@ -1,0 +1,28 @@
+{
+  "taskId": "targeted-regression",
+  "dependencies": [
+    "baseline"
+  ],
+  "inputSha": "f2ab3e34e080ac5558176109f99f0c6bd9e817b8",
+  "startedAt": "2026-11-08T12:32:29.318432+00:00",
+  "arguments": [
+    "node_modules/.bin/vitest",
+    "run",
+    "tests/unit/kh02/v19_3_3_1_CsvTrustAndGoogleMetaProvenance.test.ts",
+    "tests/unit/kh02/v19_3_3_2_CsvOriginAndGoogleUpstreamTrust.test.ts",
+    "tests/unit/kh02/v19_3_3_3_OfficialTrendsQueryGeoAndGoogleScoreTruth.test.ts",
+    "tests/unit/kh02/v12_4_3_1_EvidenceProvenanceAndAsyncTruth.test.ts",
+    "tests/unit/kh02/v12_4_3_3_2_DemandAndIdentityIntegrity.test.ts",
+    "--maxWorkers=2",
+    "--no-file-parallelism"
+  ],
+  "timeoutSeconds": 240,
+  "diskFreeBytesBefore": 6707023872,
+  "timeout": false,
+  "memoryBefore": "Mach Virtual Memory Statistics: (page size of 16384 bytes)\nPages free:                                3584.\nPages active:                            173075.\nPages inactive:                          170681.\nPages speculative:                         1550.\nPages throttled:                              0.\nPages wired down:                        252621.\nPages purgeable:                             10.\n\"Translation faults\":                3772417796.\nPages copy-on-write:                   39252091.\nPages zero filled:                    770801583.\nPages reactivated:                   1113395913.\nPages purged:                          45701552.\nFile-backed pages:                       108258.\nAnonymous pages:                         237048.\nPages stored in compressor:             2148989.\nPages occupied by compressor:            407542.\nDecompressions:                      1715613761.\nCompressions:                        1896866890.\nPageins:                               72019622.\nPageouts:                               1995677.\nSwapins:                               47635635.\nSwapouts:                              51927421.\n",
+  "exitCode": 1,
+  "status": "FAIL",
+  "logBytes": 282,
+  "endedAt": "2026-11-08T12:32:29.631913+00:00",
+  "diskFreeBytesAfter": 6707019776
+}

@@ -1,0 +1,11 @@
+Code SHA: f2ab3e34e080ac5558176109f99f0c6bd9e817b8
+Original UI text SHA256 before minimization: 603ef716fc3d8ac463f92f1188bbe340f715408de2574f1006cefc5fac83e3da
+Official public UI observation, current audit session.
+Library ID: 993496460459817
+Active; started 25 Oct 2026
+Advertiser: flwr.paws with UahPet
+Public page: https://www.facebook.com/61579328780946/
+Creative excerpt: Meal time, simplified thanks to @uahpet_official Fresh Food Feeder.
+Decoded visible landing link: https://www.uahpet.com/products/uahpet-fresh-food-automatic-pet-feeder
+Country filter US is not independently verified delivery.
+See meta-public-ad.png. Full UI text minimized to avoid unnecessary creative duplication.

@@ -1,0 +1,4 @@
+import path from 'node:path';
+import {runBacktestV12_4_3_4_2} from '../../../../scripts/kh02/runBacktestV12_4_3_4_2';
+import {prisma} from '../../../../src/lib/db';
+(async()=>{try{const r=await runBacktestV12_4_3_4_2({outputDir:path.resolve('reports/kh02/v19_3_3_4_real_mcp_external_feasibility/evidence/backtest')});console.log(JSON.stringify(r,null,2));}finally{await prisma.$disconnect()}})().catch(e=>{console.error(e);process.exitCode=1});

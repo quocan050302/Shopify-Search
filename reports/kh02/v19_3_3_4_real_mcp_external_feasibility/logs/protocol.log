@@ -1,0 +1,30 @@
+[
+  {
+    "status": "fulfilled",
+    "value": {
+      "source": "meta",
+      "status": "LOCAL_PROTOCOL_ONLY",
+      "stages": {
+        "MCP_STARTUP_PASS": true,
+        "MCP_HANDSHAKE_PASS": true,
+        "MCP_TOOL_DISCOVERY_PASS": true,
+        "MCP_TOOL_CALL_EXECUTED": true,
+        "MCP_TOOL_RESULT_RECEIVED": true
+      }
+    }
+  },
+  {
+    "status": "fulfilled",
+    "value": {
+      "source": "google",
+      "status": "LOCAL_PROTOCOL_ONLY",
+      "stages": {
+        "MCP_STARTUP_PASS": true,
+        "MCP_HANDSHAKE_PASS": true,
+        "MCP_TOOL_DISCOVERY_PASS": true,
+        "MCP_TOOL_CALL_EXECUTED": true,
+        "MCP_TOOL_RESULT_RECEIVED": true
+      }
+    }
+  }
+]

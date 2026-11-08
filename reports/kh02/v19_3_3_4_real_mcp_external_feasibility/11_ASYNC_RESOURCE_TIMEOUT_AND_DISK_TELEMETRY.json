@@ -1,0 +1,348 @@
+{
+  "codeSha": "f2ab3e34e080ac5558176109f99f0c6bd9e817b8",
+  "treeSha": "1b3b1ef23854dd0acede2ec6dae82d88f545ae55",
+  "branch": "feature/kh02-walmart-us-jina-reader-v12.4.3.5.1",
+  "executedAt": "2026-11-08T12:42:46.229179+00:00",
+  "executionContext": "local macOS; existing sparse checkout; no .env/.env.local provider credentials; isolated protocol stores and copied diagnostic SQLite snapshot; $0 paid provider charges",
+  "executionDAG": {
+    "waveA": [
+      "branch-fetch",
+      "environment",
+      "official-contracts",
+      "implementation-inspection",
+      "baseline-tsc"
+    ],
+    "waveB": [
+      "protocol-meta",
+      "protocol-google"
+    ],
+    "waveC": [
+      "three sequential official UI Trends downloads",
+      "one Meta UI query",
+      "one Google UI domain query/creative"
+    ],
+    "waveD": [
+      "genuine CSV raw persistence and evaluation",
+      "diagnostic snapshot readback"
+    ],
+    "waveE": [
+      "source-authority/G15 evaluation",
+      "empty-source G16 scoring"
+    ],
+    "waveF": [
+      "targeted fixture regression",
+      "isolated DEV/HOLDOUT backtest",
+      "schema validation",
+      "test-mode smoke",
+      "final Node22 tsc"
+    ]
+  },
+  "limits": {
+    "externalOperationsMaxConcurrent": 2,
+    "vitestWorkersMaxConcurrent": 1,
+    "sqliteWritersMaxConcurrent": 1,
+    "nodeHeapMB": 2048,
+    "subprocessTimeoutSecondsMax": 240,
+    "paidCalls": 0,
+    "pagination": "No manual bulk pagination; one selected ad/creative per UI.",
+    "builds": 0,
+    "retryPolicy": "No upstream retries or identities/proxies rotated."
+  },
+  "ledger": [
+    {
+      "taskId": "adapter-probe",
+      "dependencies": [
+        "baseline"
+      ],
+      "inputSha": "f2ab3e34e080ac5558176109f99f0c6bd9e817b8",
+      "startedAt": "2026-11-08T12:35:52.939544+00:00",
+      "arguments": [
+        "/Users/macbook/.nvm/versions/node/v22.22.3/bin/node",
+        "--import",
+        "tsx",
+        "reports/kh02/v19_3_3_4_real_mcp_external_feasibility/evidence/adapter-probe.ts"
+      ],
+      "timeoutSeconds": 55,
+      "diskFreeBytesBefore": 6708137984,
+      "timeout": false,
+      "memoryBefore": "Mach Virtual Memory Statistics: (page size of 16384 bytes)\nPages free:                                2954.\nPages active:                            188873.\nPages inactive:                          187403.\nPages speculative:                          468.\nPages throttled:                              0.\nPages wired down:                        250449.\nPages purgeable:                             24.\n\"Translation faults\":                3777660446.\nPages copy-on-write:                   39293808.\nPages zero filled:                    771587352.\nPages reactivated:                   1115172616.\nPages purged:                          45758647.\nFile-backed pages:                       102900.\nAnonymous pages:                         273844.\nPages stored in compressor:             2122351.\nPages occupied by compressor:            378935.\nDecompressions:                      1718526742.\nCompressions:                        1899984835.\nPageins:                               72092103.\nPageouts:                               1998091.\nSwapins:                               47697536.\nSwapouts:                              52002289.\n",
+      "exitCode": 0,
+      "status": "PASS",
+      "logBytes": 165,
+      "endedAt": "2026-11-08T12:36:08.491345+00:00",
+      "diskFreeBytesAfter": 6711341056
+    },
+    {
+      "taskId": "backtest",
+      "dependencies": [
+        "baseline"
+      ],
+      "inputSha": "f2ab3e34e080ac5558176109f99f0c6bd9e817b8",
+      "startedAt": "2026-11-08T12:34:28.205041+00:00",
+      "arguments": [
+        "/Users/macbook/.nvm/versions/node/v22.22.3/bin/node",
+        "--import",
+        "tsx",
+        "reports/kh02/v19_3_3_4_real_mcp_external_feasibility/evidence/backtest.ts"
+      ],
+      "timeoutSeconds": 120,
+      "diskFreeBytesBefore": 6714195968,
+      "timeout": false,
+      "memoryBefore": "Mach Virtual Memory Statistics: (page size of 16384 bytes)\nPages free:                                2226.\nPages active:                            167313.\nPages inactive:                          165331.\nPages speculative:                         1078.\nPages throttled:                              0.\nPages wired down:                        257017.\nPages purgeable:                             58.\n\"Translation faults\":                3774878376.\nPages copy-on-write:                   39273813.\nPages zero filled:                    771231161.\nPages reactivated:                   1114185159.\nPages purged:                          45732666.\nFile-backed pages:                       105519.\nAnonymous pages:                         228203.\nPages stored in compressor:             2190369.\nPages occupied by compressor:            416074.\nDecompressions:                      1716900898.\nCompressions:                        1898289266.\nPageins:                               72052732.\nPageouts:                               1996922.\nSwapins:                               47656546.\nSwapouts:                              51973425.\n",
+      "exitCode": 0,
+      "status": "PASS",
+      "logBytes": 29655,
+      "endedAt": "2026-11-08T12:34:30.845580+00:00",
+      "diskFreeBytesAfter": 6713569280
+    },
+    {
+      "taskId": "baseline-tsc",
+      "dependencies": [
+        "baseline"
+      ],
+      "inputSha": "f2ab3e34e080ac5558176109f99f0c6bd9e817b8",
+      "startedAt": "2026-11-08T12:30:29.727788+00:00",
+      "arguments": [
+        "node_modules/.bin/tsc",
+        "--noEmit",
+        "--incremental",
+        "false"
+      ],
+      "timeoutSeconds": 180,
+      "diskFreeBytesBefore": 6732922880,
+      "timeout": false,
+      "memoryBefore": "Mach Virtual Memory Statistics: (page size of 16384 bytes)\nPages free:                                2519.\nPages active:                            161237.\nPages inactive:                          160075.\nPages speculative:                          353.\nPages throttled:                              0.\nPages wired down:                        256050.\nPages purgeable:                             18.\n\"Translation faults\":                3768732274.\nPages copy-on-write:                   39234355.\nPages zero filled:                    770302605.\nPages reactivated:                   1112331068.\nPages purged:                          45666192.\nFile-backed pages:                       108554.\nAnonymous pages:                         213111.\nPages stored in compressor:             2136228.\nPages occupied by compressor:            428925.\nDecompressions:                      1713986845.\nCompressions:                        1895056209.\nPageins:                               71986664.\nPageouts:                               1994169.\nSwapins:                               47597365.\nSwapouts:                              51860829.\n",
+      "exitCode": 0,
+      "status": "PASS",
+      "logBytes": 0,
+      "endedAt": "2026-11-08T12:31:09.511853+00:00",
+      "diskFreeBytesAfter": 6722318336
+    },
+    {
+      "taskId": "db-readback",
+      "dependencies": [
+        "baseline"
+      ],
+      "inputSha": "f2ab3e34e080ac5558176109f99f0c6bd9e817b8",
+      "startedAt": "2026-11-08T12:35:36.598266+00:00",
+      "arguments": [
+        "/Users/macbook/.nvm/versions/node/v22.22.3/bin/node",
+        "--import",
+        "tsx",
+        "reports/kh02/v19_3_3_4_real_mcp_external_feasibility/evidence/readback.ts"
+      ],
+      "timeoutSeconds": 60,
+      "diskFreeBytesBefore": 6708793344,
+      "timeout": false,
+      "memoryBefore": "Mach Virtual Memory Statistics: (page size of 16384 bytes)\nPages free:                                3375.\nPages active:                            190224.\nPages inactive:                          188670.\nPages speculative:                          851.\nPages throttled:                              0.\nPages wired down:                        251473.\nPages purgeable:                              2.\n\"Translation faults\":                3777310363.\nPages copy-on-write:                   39289283.\nPages zero filled:                    771523033.\nPages reactivated:                   1115077611.\nPages purged:                          45756534.\nFile-backed pages:                       100117.\nAnonymous pages:                         279628.\nPages stored in compressor:             2120573.\nPages occupied by compressor:            374591.\nDecompressions:                      1718371621.\nCompressions:                        1899818770.\nPageins:                               72081530.\nPageouts:                               1997997.\nSwapins:                               47690885.\nSwapouts:                              52002289.\n",
+      "exitCode": 0,
+      "status": "PASS",
+      "logBytes": 1255,
+      "endedAt": "2026-11-08T12:35:37.713082+00:00",
+      "diskFreeBytesAfter": 6708760576
+    },
+    {
+      "taskId": "prisma-validate",
+      "dependencies": [
+        "baseline"
+      ],
+      "inputSha": "f2ab3e34e080ac5558176109f99f0c6bd9e817b8",
+      "startedAt": "2026-11-08T12:35:37.742682+00:00",
+      "arguments": [
+        "/Users/macbook/.nvm/versions/node/v22.22.3/bin/node",
+        "node_modules/prisma/build/index.js",
+        "validate",
+        "--config",
+        "prisma7.config.ts"
+      ],
+      "timeoutSeconds": 60,
+      "diskFreeBytesBefore": 6708752384,
+      "timeout": false,
+      "memoryBefore": "Mach Virtual Memory Statistics: (page size of 16384 bytes)\nPages free:                               16150.\nPages active:                            179033.\nPages inactive:                          176706.\nPages speculative:                         1701.\nPages throttled:                              0.\nPages wired down:                        256136.\nPages purgeable:                            166.\n\"Translation faults\":                3777388589.\nPages copy-on-write:                   39290487.\nPages zero filled:                    771542457.\nPages reactivated:                   1115106563.\nPages purged:                          45756712.\nFile-backed pages:                       104869.\nAnonymous pages:                         252571.\nPages stored in compressor:             2140604.\nPages occupied by compressor:            379323.\nDecompressions:                      1718403635.\nCompressions:                        1899871707.\nPageins:                               72085879.\nPageouts:                               1997997.\nSwapins:                               47690933.\nSwapouts:                              52002289.\n",
+      "exitCode": 0,
+      "status": "PASS",
+      "logBytes": 143,
+      "endedAt": "2026-11-08T12:35:38.636671+00:00",
+      "diskFreeBytesAfter": 6708744192
+    },
+    {
+      "taskId": "protocol",
+      "dependencies": [
+        "baseline"
+      ],
+      "inputSha": "f2ab3e34e080ac5558176109f99f0c6bd9e817b8",
+      "startedAt": "2026-11-08T12:29:08.570774+00:00",
+      "arguments": [
+        "node",
+        "reports/kh02/v19_3_3_4_real_mcp_external_feasibility/evidence/probe.mjs"
+      ],
+      "timeoutSeconds": 55,
+      "diskFreeBytesBefore": 6779707392,
+      "timeout": false,
+      "memoryBefore": "Mach Virtual Memory Statistics: (page size of 16384 bytes)\nPages free:                                4039.\nPages active:                            157216.\nPages inactive:                          156104.\nPages speculative:                          445.\nPages throttled:                              0.\nPages wired down:                        260505.\nPages purgeable:                              2.\n\"Translation faults\":                3767362559.\nPages copy-on-write:                   39224358.\nPages zero filled:                    770091587.\nPages reactivated:                   1111786662.\nPages purged:                          45650342.\nFile-backed pages:                       109913.\nAnonymous pages:                         203852.\nPages stored in compressor:             2156472.\nPages occupied by compressor:            430810.\nDecompressions:                      1713266826.\nCompressions:                        1894309319.\nPageins:                               71948463.\nPageouts:                               1993366.\nSwapins:                               47577035.\nSwapouts:                              51847901.\n",
+      "exitCode": 0,
+      "status": "PASS",
+      "logBytes": 681,
+      "endedAt": "2026-11-08T12:29:13.640989+00:00",
+      "diskFreeBytesAfter": 6735831040
+    },
+    {
+      "taskId": "real-csv-evaluation",
+      "dependencies": [
+        "baseline"
+      ],
+      "inputSha": "f2ab3e34e080ac5558176109f99f0c6bd9e817b8",
+      "startedAt": "2026-11-08T12:34:00.618231+00:00",
+      "arguments": [
+        "/Users/macbook/.nvm/versions/node/v22.22.3/bin/node",
+        "--import",
+        "tsx",
+        "reports/kh02/v19_3_3_4_real_mcp_external_feasibility/evidence/evaluate.ts"
+      ],
+      "timeoutSeconds": 75,
+      "diskFreeBytesBefore": 6695378944,
+      "timeout": false,
+      "memoryBefore": "Mach Virtual Memory Statistics: (page size of 16384 bytes)\nPages free:                                3065.\nPages active:                            168008.\nPages inactive:                          166589.\nPages speculative:                          698.\nPages throttled:                              0.\nPages wired down:                        250402.\nPages purgeable:                              2.\n\"Translation faults\":                3773773134.\nPages copy-on-write:                   39266882.\nPages zero filled:                    771107636.\nPages reactivated:                   1113807531.\nPages purged:                          45720596.\nFile-backed pages:                       108532.\nAnonymous pages:                         226763.\nPages stored in compressor:             2162016.\nPages occupied by compressor:            420325.\nDecompressions:                      1716234192.\nCompressions:                        1897550220.\nPageins:                               72037226.\nPageouts:                               1996516.\nSwapins:                               47642644.\nSwapouts:                              51927685.\n",
+      "exitCode": 0,
+      "status": "PASS",
+      "logBytes": 722,
+      "endedAt": "2026-11-08T12:34:01.613540+00:00",
+      "diskFreeBytesAfter": 6694428672
+    },
+    {
+      "taskId": "real-csv-ingestion",
+      "dependencies": [
+        "baseline"
+      ],
+      "inputSha": "f2ab3e34e080ac5558176109f99f0c6bd9e817b8",
+      "startedAt": "2026-11-08T12:39:01.430623+00:00",
+      "arguments": [
+        "/Users/macbook/.nvm/versions/node/v22.22.3/bin/node",
+        "--import",
+        "tsx",
+        "reports/kh02/v19_3_3_4_real_mcp_external_feasibility/evidence/evaluate.ts"
+      ],
+      "timeoutSeconds": 75,
+      "diskFreeBytesBefore": 6729543680,
+      "timeout": false,
+      "memoryBefore": "Mach Virtual Memory Statistics: (page size of 16384 bytes)\nPages free:                                3772.\nPages active:                            177920.\nPages inactive:                          174842.\nPages speculative:                         2594.\nPages throttled:                              0.\nPages wired down:                        258283.\nPages purgeable:                              2.\n\"Translation faults\":                3783261937.\nPages copy-on-write:                   39333698.\nPages zero filled:                    772528745.\nPages reactivated:                   1117092232.\nPages purged:                          45840993.\nFile-backed pages:                       108281.\nAnonymous pages:                         247075.\nPages stored in compressor:             2147760.\nPages occupied by compressor:            391663.\nDecompressions:                      1721779684.\nCompressions:                        1903670891.\nPageins:                               72140817.\nPageouts:                               1999744.\nSwapins:                               47754433.\nSwapouts:                              52072081.\n",
+      "exitCode": 0,
+      "status": "PASS",
+      "logBytes": 722,
+      "endedAt": "2026-11-08T12:39:02.392703+00:00",
+      "diskFreeBytesAfter": 6728912896
+    },
+    {
+      "taskId": "report-tsc-node22",
+      "dependencies": [
+        "baseline"
+      ],
+      "inputSha": "f2ab3e34e080ac5558176109f99f0c6bd9e817b8",
+      "startedAt": "2026-11-08T12:37:05.955017+00:00",
+      "arguments": [
+        "/Users/macbook/.nvm/versions/node/v22.22.3/bin/node",
+        "node_modules/typescript/bin/tsc",
+        "--noEmit",
+        "--incremental",
+        "false"
+      ],
+      "timeoutSeconds": 120,
+      "diskFreeBytesBefore": 6714449920,
+      "timeout": false,
+      "memoryBefore": "Mach Virtual Memory Statistics: (page size of 16384 bytes)\nPages free:                                4471.\nPages active:                            176515.\nPages inactive:                          175017.\nPages speculative:                          699.\nPages throttled:                              0.\nPages wired down:                        260491.\nPages purgeable:                              2.\n\"Translation faults\":                3779124241.\nPages copy-on-write:                   39305159.\nPages zero filled:                    771763409.\nPages reactivated:                   1115760434.\nPages purged:                          45782690.\nFile-backed pages:                       101327.\nAnonymous pages:                         250904.\nPages stored in compressor:             2130872.\nPages occupied by compressor:            392037.\nDecompressions:                      1719420365.\nCompressions:                        1900963882.\nPageins:                               72105349.\nPageouts:                               1998650.\nSwapins:                               47708560.\nSwapouts:                              52010305.\n",
+      "exitCode": 0,
+      "status": "PASS",
+      "logBytes": 0,
+      "endedAt": "2026-11-08T12:37:24.037381+00:00",
+      "diskFreeBytesAfter": 6707011584
+    },
+    {
+      "taskId": "smoke-test-mode",
+      "dependencies": [
+        "baseline"
+      ],
+      "inputSha": "f2ab3e34e080ac5558176109f99f0c6bd9e817b8",
+      "startedAt": "2026-11-08T12:35:38.663549+00:00",
+      "arguments": [
+        "env",
+        "VITEST=1",
+        "META_COLLECTOR_DATA_DIR=/Users/macbook/Documents/Codex/2026-11-08/files-pasted-by-the-user-codex/work/smoke-meta-runtime",
+        "/Users/macbook/.nvm/versions/node/v22.22.3/bin/node",
+        "--import",
+        "tsx",
+        "scripts/kh02/runThreeSourceFreeMcpSmoke.ts"
+      ],
+      "timeoutSeconds": 60,
+      "diskFreeBytesBefore": 6708740096,
+      "timeout": false,
+      "memoryBefore": "Mach Virtual Memory Statistics: (page size of 16384 bytes)\nPages free:                               16817.\nPages active:                            177689.\nPages inactive:                          174706.\nPages speculative:                         2716.\nPages throttled:                              0.\nPages wired down:                        250620.\nPages purgeable:                              2.\n\"Translation faults\":                3777413304.\nPages copy-on-write:                   39291337.\nPages zero filled:                    771556553.\nPages reactivated:                   1115109994.\nPages purged:                          45756906.\nFile-backed pages:                       109685.\nAnonymous pages:                         245426.\nPages stored in compressor:             2153928.\nPages occupied by compressor:            386541.\nDecompressions:                      1718405951.\nCompressions:                        1899887394.\nPageins:                               72089672.\nPageouts:                               1998002.\nSwapins:                               47690945.\nSwapouts:                              52002289.\n",
+      "exitCode": 0,
+      "status": "PASS",
+      "logBytes": 5441,
+      "endedAt": "2026-11-08T12:35:54.252494+00:00",
+      "diskFreeBytesAfter": 6707937280
+    },
+    {
+      "taskId": "targeted-regression-node22",
+      "dependencies": [
+        "baseline"
+      ],
+      "inputSha": "f2ab3e34e080ac5558176109f99f0c6bd9e817b8",
+      "startedAt": "2026-11-08T12:33:02.650529+00:00",
+      "arguments": [
+        "/Users/macbook/.nvm/versions/node/v22.22.3/bin/node",
+        "node_modules/vitest/vitest.mjs",
+        "run",
+        "tests/unit/kh02/v19_3_3_1_CsvTrustAndGoogleMetaProvenance.test.ts",
+        "tests/unit/kh02/v19_3_3_2_CsvOriginAndGoogleUpstreamTrust.test.ts",
+        "tests/unit/kh02/v19_3_3_3_OfficialTrendsQueryGeoAndGoogleScoreTruth.test.ts",
+        "tests/unit/kh02/v12_4_3_1_EvidenceProvenanceAndAsyncTruth.test.ts",
+        "tests/unit/kh02/v12_4_3_3_2_DemandAndIdentityIntegrity.test.ts",
+        "--maxWorkers=1",
+        "--no-file-parallelism"
+      ],
+      "timeoutSeconds": 240,
+      "diskFreeBytesBefore": 6706302976,
+      "timeout": false,
+      "memoryBefore": "Mach Virtual Memory Statistics: (page size of 16384 bytes)\nPages free:                                2667.\nPages active:                            172993.\nPages inactive:                          171532.\nPages speculative:                          709.\nPages throttled:                              0.\nPages wired down:                        261265.\nPages purgeable:                              2.\n\"Translation faults\":                3772740365.\nPages copy-on-write:                   39258759.\nPages zero filled:                    770862366.\nPages reactivated:                   1113511278.\nPages purged:                          45707267.\nFile-backed pages:                       107416.\nAnonymous pages:                         237818.\nPages stored in compressor:             2132358.\nPages occupied by compressor:            400006.\nDecompressions:                      1715753522.\nCompressions:                        1897002515.\nPageins:                               72025539.\nPageouts:                               1995958.\nSwapins:                               47638216.\nSwapouts:                              51927421.\n",
+      "exitCode": 0,
+      "status": "PASS",
+      "logBytes": 436,
+      "endedAt": "2026-11-08T12:33:07.749459+00:00",
+      "diskFreeBytesAfter": 6700756992
+    },
+    {
+      "taskId": "targeted-regression",
+      "dependencies": [
+        "baseline"
+      ],
+      "inputSha": "f2ab3e34e080ac5558176109f99f0c6bd9e817b8",
+      "startedAt": "2026-11-08T12:32:29.318432+00:00",
+      "arguments": [
+        "node_modules/.bin/vitest",
+        "run",
+        "tests/unit/kh02/v19_3_3_1_CsvTrustAndGoogleMetaProvenance.test.ts",
+        "tests/unit/kh02/v19_3_3_2_CsvOriginAndGoogleUpstreamTrust.test.ts",
+        "tests/unit/kh02/v19_3_3_3_OfficialTrendsQueryGeoAndGoogleScoreTruth.test.ts",
+        "tests/unit/kh02/v12_4_3_1_EvidenceProvenanceAndAsyncTruth.test.ts",
+        "tests/unit/kh02/v12_4_3_3_2_DemandAndIdentityIntegrity.test.ts",
+        "--maxWorkers=2",
+        "--no-file-parallelism"
+      ],
+      "timeoutSeconds": 240,
+      "diskFreeBytesBefore": 6707023872,
+      "timeout": false,
+      "memoryBefore": "Mach Virtual Memory Statistics: (page size of 16384 bytes)\nPages free:                                3584.\nPages active:                            173075.\nPages inactive:                          170681.\nPages speculative:                         1550.\nPages throttled:                              0.\nPages wired down:                        252621.\nPages purgeable:                             10.\n\"Translation faults\":                3772417796.\nPages copy-on-write:                   39252091.\nPages zero filled:                    770801583.\nPages reactivated:                   1113395913.\nPages purged:                          45701552.\nFile-backed pages:                       108258.\nAnonymous pages:                         237048.\nPages stored in compressor:             2148989.\nPages occupied by compressor:            407542.\nDecompressions:                      1715613761.\nCompressions:                        1896866890.\nPageins:                               72019622.\nPageouts:                               1995677.\nSwapins:                               47635635.\nSwapouts:                              51927421.\n",
+      "exitCode": 1,
+      "status": "FAIL",
+      "logBytes": 282,
+      "endedAt": "2026-11-08T12:32:29.631913+00:00",
+      "diskFreeBytesAfter": 6707019776
+    }
+  ],
+  "telemetryLimitations": "vm_stat recorded before commands; runner disk guard 2 GiB. Memory was observed but not enforced by a dynamic abort monitor. Payloads are small; no heavy build or full suite launched. Do not claim complete resource-abort adversarial coverage.",
+  "finalDisk": "Filesystem      Size    Used   Avail Capacity iused ifree %iused  Mounted on\n/dev/disk3s5   460Gi   423Gi   6.2Gi    99%    3.8M   65M    5%   /System/Volumes/Data\n",
+  "finalMemory": "Mach Virtual Memory Statistics: (page size of 16384 bytes)\nPages free:                                4118.\nPages active:                            176970.\nPages inactive:                          175274.\nPages speculative:                         1042.\nPages throttled:                              0.\nPages wired down:                        277359.\nPages purgeable:                              2.\n\"Translation faults\":                3788595669.\nPages copy-on-write:                   39357662.\nPages zero filled:                    773331523.\nPages reactivated:                   1119006542.\nPages purged:                          45923715.\nFile-backed pages:                       110352.\nAnonymous pages:                         242934.\nPages stored in compressor:             2100343.\nPages occupied by compressor:            374343.\nDecompressions:                      1724734618.\nCompressions:                        1906920772.\nPageins:                               72202789.\nPageouts:                               2001760.\nSwapins:                               47828369.\nSwapouts:                              52139197.\n",
+  "timedOutTasks": [],
+  "processCleanup": "All known command sessions completed; SDK clients closed; task process groups cleaned."
+}

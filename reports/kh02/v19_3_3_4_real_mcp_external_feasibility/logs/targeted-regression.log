@@ -1,0 +1,6 @@
+file:///Users/macbook/Documents/Codex/2026-10-26/new-chat/work/kh02-g15-g16-audit/node_modules/vitest/dist/chunks/pathe.M-eThtNZ.Ba-7h1rE.js:130
+	array ??= [];
+	      ^^^
+
+SyntaxError: Unexpected token '??='
+    at Loader.moduleStrategy (internal/modules/esm/translators.js:145:18)

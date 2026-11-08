@@ -1,0 +1,21 @@
+{
+  "taskId": "protocol",
+  "dependencies": [
+    "baseline"
+  ],
+  "inputSha": "f2ab3e34e080ac5558176109f99f0c6bd9e817b8",
+  "startedAt": "2026-11-08T12:29:08.570774+00:00",
+  "arguments": [
+    "node",
+    "reports/kh02/v19_3_3_4_real_mcp_external_feasibility/evidence/probe.mjs"
+  ],
+  "timeoutSeconds": 55,
+  "diskFreeBytesBefore": 6779707392,
+  "timeout": false,
+  "memoryBefore": "Mach Virtual Memory Statistics: (page size of 16384 bytes)\nPages free:                                4039.\nPages active:                            157216.\nPages inactive:                          156104.\nPages speculative:                          445.\nPages throttled:                              0.\nPages wired down:                        260505.\nPages purgeable:                              2.\n\"Translation faults\":                3767362559.\nPages copy-on-write:                   39224358.\nPages zero filled:                    770091587.\nPages reactivated:                   1111786662.\nPages purged:                          45650342.\nFile-backed pages:                       109913.\nAnonymous pages:                         203852.\nPages stored in compressor:             2156472.\nPages occupied by compressor:            430810.\nDecompressions:                      1713266826.\nCompressions:                        1894309319.\nPageins:                               71948463.\nPageouts:                               1993366.\nSwapins:                               47577035.\nSwapouts:                              51847901.\n",
+  "exitCode": 0,
+  "status": "PASS",
+  "logBytes": 681,
+  "endedAt": "2026-11-08T12:29:13.640989+00:00",
+  "diskFreeBytesAfter": 6735831040
+}

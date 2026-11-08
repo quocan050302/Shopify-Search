@@ -1,0 +1,23 @@
+{
+  "taskId": "adapter-probe",
+  "dependencies": [
+    "baseline"
+  ],
+  "inputSha": "f2ab3e34e080ac5558176109f99f0c6bd9e817b8",
+  "startedAt": "2026-11-08T12:35:52.939544+00:00",
+  "arguments": [
+    "/Users/macbook/.nvm/versions/node/v22.22.3/bin/node",
+    "--import",
+    "tsx",
+    "reports/kh02/v19_3_3_4_real_mcp_external_feasibility/evidence/adapter-probe.ts"
+  ],
+  "timeoutSeconds": 55,
+  "diskFreeBytesBefore": 6708137984,
+  "timeout": false,
+  "memoryBefore": "Mach Virtual Memory Statistics: (page size of 16384 bytes)\nPages free:                                2954.\nPages active:                            188873.\nPages inactive:                          187403.\nPages speculative:                          468.\nPages throttled:                              0.\nPages wired down:                        250449.\nPages purgeable:                             24.\n\"Translation faults\":                3777660446.\nPages copy-on-write:                   39293808.\nPages zero filled:                    771587352.\nPages reactivated:                   1115172616.\nPages purged:                          45758647.\nFile-backed pages:                       102900.\nAnonymous pages:                         273844.\nPages stored in compressor:             2122351.\nPages occupied by compressor:            378935.\nDecompressions:                      1718526742.\nCompressions:                        1899984835.\nPageins:                               72092103.\nPageouts:                               1998091.\nSwapins:                               47697536.\nSwapouts:                              52002289.\n",
+  "exitCode": 0,
+  "status": "PASS",
+  "logBytes": 165,
+  "endedAt": "2026-11-08T12:36:08.491345+00:00",
+  "diskFreeBytesAfter": 6711341056
+}

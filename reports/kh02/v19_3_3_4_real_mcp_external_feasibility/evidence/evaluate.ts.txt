@@ -1,0 +1,27 @@
+import fs from 'node:fs';
+import path from 'node:path';
+import {validateAndParseGoogleTrendsCsv} from '../../../../src/services/kh02/demand/googleTrendsCsvValidator';
+import {validateOfficialGoogleTrendsAcquisitionUrl,verifyDurableCsvImportAuthority,getAuthorizedCsvApproverPrincipals} from '../../../../src/services/kh02/demand/durableCsvImportAuthority';
+import {evaluateDemandSourceAuthority,evaluateDemandHistoryEvidence} from '../../../../src/services/kh02/demand/temporalDemandEngine';
+import {discoverProductCandidatesFromAds,selectTopResearchShortlist} from '../../../../src/services/kh02/identity/productCandidateDiscovery';
+import {calculateKH02EvergreenScore,isQualifiedGoogleAdsProductEvidence} from '../../../../src/services/kh02/scoring/evergreenOpportunityScoring';
+import {requalifyHistoricalEvergreenSnapshot} from '../../../../src/services/kh02/persistence/kh02PersistenceService';
+const root=path.resolve('reports/kh02/v19_3_3_4_real_mcp_external_feasibility');
+const now=new Date().toISOString();
+const definitions=[{key:'feeder',term:'refrigerated wet food cat feeder',title:'Automatic Wet Food Cat Feeder with Cooling & Warming',domain:'uahpet.com',pdp:'https://www.uahpet.com/products/uahpet-fresh-food-automatic-pet-feeder'}, {key:'fountain',term:'stainless steel cat water fountain',title:'Stainless Steel Cat Water Fountain',domain:'kittyspout.com',pdp:'https://www.kittyspout.com/products/2-2l-fountain'}, {key:'laundry',term:'pet hair remover for laundry',title:'Pet Hair Remover for Laundry',domain:'uprootclean.com',pdp:null}];
+const exports=definitions.map(d=>{
+ const raw=fs.readFileSync(path.join(root,`evidence/trends-${d.key}-original.csv`),'utf8');
+ const parsed=validateAndParseGoogleTrendsCsv(raw,{expectedKeyword:d.term,expectedRegion:'US',persist:true,importedAt:now});
+ const url=`https://trends.google.com/trends/explore?date=today%2012-m&geo=US&q=${encodeURIComponent(d.term)}`;
+ let urlValid;try{urlValid=validateOfficialGoogleTrendsAcquisitionUrl(url,d.term,'US')}catch(e){urlValid=String(e)}
+ // No productId assignment: family-level query is not proof of one merchant SKU.
+ const observations=parsed.dataPoints.map(p=>({...p,source:'GOOGLE_TRENDS_CSV',date:p.periodStart,observedAt:now,availableAt:now,importedAt:now,evidenceReference:parsed.evidenceReference}));
+ const policy={minimumDataPoints:3,minimumCoveredDays:60,requiredRegion:'US',expectedCadence:'WEEKLY' as const,evaluationScope:'BUSINESS' as const,strictSourceProvenance:true,strictLiveOrigin:true,asOfTimestamp:now,candidateCanonicalName:d.title,searchTermUsed:d.term};
+ const candidate:any={candidateId:`audit-target-${d.key}`,title:d.title,canonicalProductName:d.title,category:'pets',problemStatement:null,targetAudience:'pet owners',thumbnailUrl:null,videoUrl:null,canonicalProductUrl:d.pdp,storeDomain:d.domain,advertiserNames:[],supportingAdIds:[],supportingSourceTypes:[],totalObservationCount:0,distinctAdvertisersCount:0,earliestObservationDate:null,latestObservationDate:null,identityConfidence:'LOW',identityStatus:'UNVERIFIED',sourceObservations:[]};
+ const score=calculateKH02EvergreenScore({candidate,demandSeries:[]});
+ const dates=parsed.dataPoints.map(p=>p.periodStart).sort();
+ return {...d,originalArtifact:`evidence/trends-${d.key}-original.csv`,acquiredAt:now,acquisitionMode:'OFFICIAL_UI_DOWNLOAD_ASSISTED',acquisitionSourceUrl:url,urlValid,parsed,rawCalendarSpanDays:dates.length?Math.floor((Date.parse(dates.at(-1)!)-Date.parse(dates[0]))/86400000):0,zeroValues:parsed.dataPoints.filter(p=>p.demandValue===0).length,nonzeroValues:parsed.dataPoints.filter(p=>p.demandValue>0).length,sourceAuthority:evaluateDemandSourceAuthority(observations,policy),g15:evaluateDemandHistoryEvidence(observations,policy),durableAuthority:verifyDurableCsvImportAuthority({rawCsvSha256:parsed.sha256Checksum,evaluationScope:'BUSINESS'}),authorizedApproverCount:getAuthorizedCsvApproverPrincipals().length,authorityCreation:'BLOCKED_NO_AUTHORIZED_PRINCIPAL_OR_WORKSPACE_PRODUCT_BINDING_OR_BUSINESS_SIGNING_CONFIGURATION',businessRowsPersisted:0,productAttribution:'FAMILY_QUERY_ONLY_NOT_EXCLUSIVE_TO_MERCHANT_SKU',scoreWithNoEligibleBusinessDemand:score};
+});
+const candidates=discoverProductCandidatesFromAds([],'pet products',{sourceMode:'LIVE_PROVIDER'});
+const output={codeSha:'f2ab3e34e080ac5558176109f99f0c6bd9e817b8',executedAt:now,exports,emptyLiveAdDiscovery:candidates,emptyLiveShortlist:selectTopResearchShortlist(candidates,3),emptySnapshotRequalification:requalifyHistoricalEvergreenSnapshot({topThree:[],provisionalCandidates:[]} as any),emptyGoogleEvidenceQualified:isQualifiedGoogleAdsProductEvidence(null),note:'Real CSV bytes; no engineered source observations, approvals, ad identities or merchant SKU demand bindings minted. Candidate objects are labeled audit targets only.'};
+fs.writeFileSync(path.join(root,'evidence/real-csv-evaluation.json'),JSON.stringify(output,null,2)+'\n');console.log(JSON.stringify({exports:exports.map(e=>({key:e.key,valid:e.parsed.valid,errors:e.parsed.errors,points:e.parsed.dataPointsCount,cadence:e.parsed.cadence,g15:e.g15.status,authority:e.sourceAuthority.authority,scoreStatus:e.scoreWithNoEligibleBusinessDemand.scoreStatus})),discovered:candidates.length},null,2));

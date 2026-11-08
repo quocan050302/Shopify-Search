@@ -1,0 +1,50 @@
+{
+  "codeSha": "f2ab3e34e080ac5558176109f99f0c6bd9e817b8",
+  "treeSha": "1b3b1ef23854dd0acede2ec6dae82d88f545ae55",
+  "branch": "feature/kh02-walmart-us-jina-reader-v12.4.3.5.1",
+  "executedAt": "2026-11-08T12:42:46.229179+00:00",
+  "executionContext": "local macOS; existing sparse checkout; no .env/.env.local provider credentials; isolated protocol stores and copied diagnostic SQLite snapshot; $0 paid provider charges",
+  "status": "MCP_PROTOCOL_OPERATIONAL_UPSTREAM_POLICY_BLOCKED",
+  "upstreamQueryBlocker": "Installed unofficial GraphQL collection permission not established; official API is not equivalent to all US commercial public UI ads. No GraphQL search called.",
+  "counters": {
+    "mcpHandshakeSucceeded": true,
+    "actualQueryAttempted": 0,
+    "upstreamQueryCompleted": 0,
+    "rawAdsReturned": 0,
+    "realAdsValidated": 0,
+    "usDeliveryVerified": 0,
+    "productSpecificAds": 0,
+    "canonicalProductsMatched": 0,
+    "recordsPersisted": 0,
+    "candidateEvidenceAccepted": 0
+  },
+  "counterScope": "Current-run MCP collector only. Public UI evidence is separately counted below.",
+  "publicUiQueries": 1,
+  "publicUiSelectedAdsExamined": 1,
+  "publicUiObservation": {
+    "adId": "993496460459817",
+    "sourceUrl": "https://www.facebook.com/ads/library/?id=993496460459817",
+    "advertiserName": "flwr.paws with UahPet",
+    "advertiserPage": "https://www.facebook.com/61579328780946/",
+    "brandPage": "https://www.facebook.com/uahpet/",
+    "displayedActive": true,
+    "displayedStartDate": "2026-10-25",
+    "creativeExcerpt": "Meal time, simplified thanks to @uahpet_official Fresh Food Feeder.",
+    "landingUrl": "https://www.uahpet.com/products/uahpet-fresh-food-automatic-pet-feeder",
+    "productMatch": "PUBLIC_UI_LANDING_PDP_MATCH",
+    "usRequested": true,
+    "usDeliveryVerified": false,
+    "observedAt": "2026-11-08T12:32:00Z",
+    "timestampPrecision": "approximate session minute; evidence screenshot and UI text captured in this run",
+    "upstreamOriginStatus": "OFFICIAL_PUBLIC_UI_OBSERVATION_NOT_MCP_ATTESTATION",
+    "evidence": [
+      "evidence/meta-public-ad.png",
+      "evidence/meta-public-ad-observation.txt"
+    ]
+  },
+  "targetsNotQueried": [
+    "kittyspout.com",
+    "uprootclean.com"
+  ],
+  "targetQueryReason": "Protocol/upstream policy blocker applies to all domains; no repeat blocked attempts."
+}

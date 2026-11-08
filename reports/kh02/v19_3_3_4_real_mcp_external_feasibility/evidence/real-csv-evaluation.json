@@ -1,0 +1,2003 @@
+{
+  "codeSha": "f2ab3e34e080ac5558176109f99f0c6bd9e817b8",
+  "executedAt": "2026-11-08T12:39:02.229Z",
+  "exports": [
+    {
+      "key": "feeder",
+      "term": "refrigerated wet food cat feeder",
+      "title": "Automatic Wet Food Cat Feeder with Cooling & Warming",
+      "domain": "uahpet.com",
+      "pdp": "https://www.uahpet.com/products/uahpet-fresh-food-automatic-pet-feeder",
+      "originalArtifact": "evidence/trends-feeder-original.csv",
+      "acquiredAt": "2026-11-08T12:39:02.229Z",
+      "acquisitionMode": "OFFICIAL_UI_DOWNLOAD_ASSISTED",
+      "acquisitionSourceUrl": "https://trends.google.com/trends/explore?date=today%2012-m&geo=US&q=refrigerated%20wet%20food%20cat%20feeder",
+      "urlValid": "https://trends.google.com/trends/explore?date=today%2012-m&geo=US&q=refrigerated%20wet%20food%20cat%20feeder",
+      "parsed": {
+        "valid": true,
+        "sha256Checksum": "6fdfd217947b224e991b86dd1cce9b9c3f30e0925c8efce55b5e2e19452d57c6",
+        "keyword": "refrigerated wet food cat feeder",
+        "region": "US",
+        "startDate": "2025-11-02T00:00:00.000Z",
+        "endDate": "2026-11-08T00:00:00.000Z",
+        "cadence": "WEEKLY",
+        "dataPointsCount": 54,
+        "dataPoints": [
+          {
+            "periodStart": "2025-11-02T00:00:00.000Z",
+            "periodEnd": "2025-11-02T00:00:00.000Z",
+            "demandValue": 0,
+            "region": "US",
+            "keyword": "refrigerated wet food cat feeder"
+          },
+          {
+            "periodStart": "2025-11-09T00:00:00.000Z",
+            "periodEnd": "2025-11-09T00:00:00.000Z",
+            "demandValue": 0,
+            "region": "US",
+            "keyword": "refrigerated wet food cat feeder"
+          },
+          {
+            "periodStart": "2025-11-16T00:00:00.000Z",
+            "periodEnd": "2025-11-16T00:00:00.000Z",
+            "demandValue": 0,
+            "region": "US",
+            "keyword": "refrigerated wet food cat feeder"
+          },
+          {
+            "periodStart": "2025-11-23T00:00:00.000Z",
+            "periodEnd": "2025-11-23T00:00:00.000Z",
+            "demandValue": 0,
+            "region": "US",
+            "keyword": "refrigerated wet food cat feeder"
+          },
+          {
+            "periodStart": "2025-11-30T00:00:00.000Z",
+            "periodEnd": "2025-11-30T00:00:00.000Z",
+            "demandValue": 0,
+            "region": "US",
+            "keyword": "refrigerated wet food cat feeder"
+          },
+          {
+            "periodStart": "2025-12-07T00:00:00.000Z",
+            "periodEnd": "2025-12-07T00:00:00.000Z",
+            "demandValue": 0,
+            "region": "US",
+            "keyword": "refrigerated wet food cat feeder"
+          },
+          {
+            "periodStart": "2025-12-14T00:00:00.000Z",
+            "periodEnd": "2025-12-14T00:00:00.000Z",
+            "demandValue": 0,
+            "region": "US",
+            "keyword": "refrigerated wet food cat feeder"
+          },
+          {
+            "periodStart": "2025-12-21T00:00:00.000Z",
+            "periodEnd": "2025-12-21T00:00:00.000Z",
+            "demandValue": 0,
+            "region": "US",
+            "keyword": "refrigerated wet food cat feeder"
+          },
+          {
+            "periodStart": "2025-12-28T00:00:00.000Z",
+            "periodEnd": "2025-12-28T00:00:00.000Z",
+            "demandValue": 0,
+            "region": "US",
+            "keyword": "refrigerated wet food cat feeder"
+          },
+          {
+            "periodStart": "2026-01-04T00:00:00.000Z",
+            "periodEnd": "2026-01-04T00:00:00.000Z",
+            "demandValue": 0,
+            "region": "US",
+            "keyword": "refrigerated wet food cat feeder"
+          },
+          {
+            "periodStart": "2026-01-11T00:00:00.000Z",
+            "periodEnd": "2026-01-11T00:00:00.000Z",
+            "demandValue": 0,
+            "region": "US",
+            "keyword": "refrigerated wet food cat feeder"
+          },
+          {
+            "periodStart": "2026-01-18T00:00:00.000Z",
+            "periodEnd": "2026-01-18T00:00:00.000Z",
+            "demandValue": 0,
+            "region": "US",
+            "keyword": "refrigerated wet food cat feeder"
+          },
+          {
+            "periodStart": "2026-01-25T00:00:00.000Z",
+            "periodEnd": "2026-01-25T00:00:00.000Z",
+            "demandValue": 0,
+            "region": "US",
+            "keyword": "refrigerated wet food cat feeder"
+          },
+          {
+            "periodStart": "2026-02-01T00:00:00.000Z",
+            "periodEnd": "2026-02-01T00:00:00.000Z",
+            "demandValue": 0,
+            "region": "US",
+            "keyword": "refrigerated wet food cat feeder"
+          },
+          {
+            "periodStart": "2026-02-08T00:00:00.000Z",
+            "periodEnd": "2026-02-08T00:00:00.000Z",
+            "demandValue": 0,
+            "region": "US",
+            "keyword": "refrigerated wet food cat feeder"
+          },
+          {
+            "periodStart": "2026-02-15T00:00:00.000Z",
+            "periodEnd": "2026-02-15T00:00:00.000Z",
+            "demandValue": 0,
+            "region": "US",
+            "keyword": "refrigerated wet food cat feeder"
+          },
+          {
+            "periodStart": "2026-02-22T00:00:00.000Z",
+            "periodEnd": "2026-02-22T00:00:00.000Z",
+            "demandValue": 0,
+            "region": "US",
+            "keyword": "refrigerated wet food cat feeder"
+          },
+          {
+            "periodStart": "2026-03-01T00:00:00.000Z",
+            "periodEnd": "2026-03-01T00:00:00.000Z",
+            "demandValue": 0,
+            "region": "US",
+            "keyword": "refrigerated wet food cat feeder"
+          },
+          {
+            "periodStart": "2026-03-08T00:00:00.000Z",
+            "periodEnd": "2026-03-08T00:00:00.000Z",
+            "demandValue": 0,
+            "region": "US",
+            "keyword": "refrigerated wet food cat feeder"
+          },
+          {
+            "periodStart": "2026-03-15T00:00:00.000Z",
+            "periodEnd": "2026-03-15T00:00:00.000Z",
+            "demandValue": 0,
+            "region": "US",
+            "keyword": "refrigerated wet food cat feeder"
+          },
+          {
+            "periodStart": "2026-03-22T00:00:00.000Z",
+            "periodEnd": "2026-03-22T00:00:00.000Z",
+            "demandValue": 0,
+            "region": "US",
+            "keyword": "refrigerated wet food cat feeder"
+          },
+          {
+            "periodStart": "2026-03-29T00:00:00.000Z",
+            "periodEnd": "2026-03-29T00:00:00.000Z",
+            "demandValue": 0,
+            "region": "US",
+            "keyword": "refrigerated wet food cat feeder"
+          },
+          {
+            "periodStart": "2026-04-05T00:00:00.000Z",
+            "periodEnd": "2026-04-05T00:00:00.000Z",
+            "demandValue": 54,
+            "region": "US",
+            "keyword": "refrigerated wet food cat feeder"
+          },
+          {
+            "periodStart": "2026-04-12T00:00:00.000Z",
+            "periodEnd": "2026-04-12T00:00:00.000Z",
+            "demandValue": 0,
+            "region": "US",
+            "keyword": "refrigerated wet food cat feeder"
+          },
+          {
+            "periodStart": "2026-04-19T00:00:00.000Z",
+            "periodEnd": "2026-04-19T00:00:00.000Z",
+            "demandValue": 0,
+            "region": "US",
+            "keyword": "refrigerated wet food cat feeder"
+          },
+          {
+            "periodStart": "2026-04-26T00:00:00.000Z",
+            "periodEnd": "2026-04-26T00:00:00.000Z",
+            "demandValue": 0,
+            "region": "US",
+            "keyword": "refrigerated wet food cat feeder"
+          },
+          {
+            "periodStart": "2026-05-03T00:00:00.000Z",
+            "periodEnd": "2026-05-03T00:00:00.000Z",
+            "demandValue": 0,
+            "region": "US",
+            "keyword": "refrigerated wet food cat feeder"
+          },
+          {
+            "periodStart": "2026-05-10T00:00:00.000Z",
+            "periodEnd": "2026-05-10T00:00:00.000Z",
+            "demandValue": 100,
+            "region": "US",
+            "keyword": "refrigerated wet food cat feeder"
+          },
+          {
+            "periodStart": "2026-05-17T00:00:00.000Z",
+            "periodEnd": "2026-05-17T00:00:00.000Z",
+            "demandValue": 74,
+            "region": "US",
+            "keyword": "refrigerated wet food cat feeder"
+          },
+          {
+            "periodStart": "2026-05-24T00:00:00.000Z",
+            "periodEnd": "2026-05-24T00:00:00.000Z",
+            "demandValue": 61,
+            "region": "US",
+            "keyword": "refrigerated wet food cat feeder"
+          },
+          {
+            "periodStart": "2026-05-31T00:00:00.000Z",
+            "periodEnd": "2026-05-31T00:00:00.000Z",
+            "demandValue": 0,
+            "region": "US",
+            "keyword": "refrigerated wet food cat feeder"
+          },
+          {
+            "periodStart": "2026-06-07T00:00:00.000Z",
+            "periodEnd": "2026-06-07T00:00:00.000Z",
+            "demandValue": 47,
+            "region": "US",
+            "keyword": "refrigerated wet food cat feeder"
+          },
+          {
+            "periodStart": "2026-06-14T00:00:00.000Z",
+            "periodEnd": "2026-06-14T00:00:00.000Z",
+            "demandValue": 0,
+            "region": "US",
+            "keyword": "refrigerated wet food cat feeder"
+          },
+          {
+            "periodStart": "2026-06-21T00:00:00.000Z",
+            "periodEnd": "2026-06-21T00:00:00.000Z",
+            "demandValue": 0,
+            "region": "US",
+            "keyword": "refrigerated wet food cat feeder"
+          },
+          {
+            "periodStart": "2026-06-28T00:00:00.000Z",
+            "periodEnd": "2026-06-28T00:00:00.000Z",
+            "demandValue": 0,
+            "region": "US",
+            "keyword": "refrigerated wet food cat feeder"
+          },
+          {
+            "periodStart": "2026-07-05T00:00:00.000Z",
+            "periodEnd": "2026-07-05T00:00:00.000Z",
+            "demandValue": 0,
+            "region": "US",
+            "keyword": "refrigerated wet food cat feeder"
+          },
+          {
+            "periodStart": "2026-07-12T00:00:00.000Z",
+            "periodEnd": "2026-07-12T00:00:00.000Z",
+            "demandValue": 0,
+            "region": "US",
+            "keyword": "refrigerated wet food cat feeder"
+          },
+          {
+            "periodStart": "2026-07-19T00:00:00.000Z",
+            "periodEnd": "2026-07-19T00:00:00.000Z",
+            "demandValue": 0,
+            "region": "US",
+            "keyword": "refrigerated wet food cat feeder"
+          },
+          {
+            "periodStart": "2026-07-26T00:00:00.000Z",
+            "periodEnd": "2026-07-26T00:00:00.000Z",
+            "demandValue": 0,
+            "region": "US",
+            "keyword": "refrigerated wet food cat feeder"
+          },
+          {
+            "periodStart": "2026-08-02T00:00:00.000Z",
+            "periodEnd": "2026-08-02T00:00:00.000Z",
+            "demandValue": 0,
+            "region": "US",
+            "keyword": "refrigerated wet food cat feeder"
+          },
+          {
+            "periodStart": "2026-08-09T00:00:00.000Z",
+            "periodEnd": "2026-08-09T00:00:00.000Z",
+            "demandValue": 0,
+            "region": "US",
+            "keyword": "refrigerated wet food cat feeder"
+          },
+          {
+            "periodStart": "2026-08-16T00:00:00.000Z",
+            "periodEnd": "2026-08-16T00:00:00.000Z",
+            "demandValue": 0,
+            "region": "US",
+            "keyword": "refrigerated wet food cat feeder"
+          },
+          {
+            "periodStart": "2026-08-23T00:00:00.000Z",
+            "periodEnd": "2026-08-23T00:00:00.000Z",
+            "demandValue": 0,
+            "region": "US",
+            "keyword": "refrigerated wet food cat feeder"
+          },
+          {
+            "periodStart": "2026-08-30T00:00:00.000Z",
+            "periodEnd": "2026-08-30T00:00:00.000Z",
+            "demandValue": 0,
+            "region": "US",
+            "keyword": "refrigerated wet food cat feeder"
+          },
+          {
+            "periodStart": "2026-09-06T00:00:00.000Z",
+            "periodEnd": "2026-09-06T00:00:00.000Z",
+            "demandValue": 0,
+            "region": "US",
+            "keyword": "refrigerated wet food cat feeder"
+          },
+          {
+            "periodStart": "2026-09-13T00:00:00.000Z",
+            "periodEnd": "2026-09-13T00:00:00.000Z",
+            "demandValue": 0,
+            "region": "US",
+            "keyword": "refrigerated wet food cat feeder"
+          },
+          {
+            "periodStart": "2026-09-20T00:00:00.000Z",
+            "periodEnd": "2026-09-20T00:00:00.000Z",
+            "demandValue": 0,
+            "region": "US",
+            "keyword": "refrigerated wet food cat feeder"
+          },
+          {
+            "periodStart": "2026-09-27T00:00:00.000Z",
+            "periodEnd": "2026-09-27T00:00:00.000Z",
+            "demandValue": 0,
+            "region": "US",
+            "keyword": "refrigerated wet food cat feeder"
+          },
+          {
+            "periodStart": "2026-10-04T00:00:00.000Z",
+            "periodEnd": "2026-10-04T00:00:00.000Z",
+            "demandValue": 0,
+            "region": "US",
+            "keyword": "refrigerated wet food cat feeder"
+          },
+          {
+            "periodStart": "2026-10-11T00:00:00.000Z",
+            "periodEnd": "2026-10-11T00:00:00.000Z",
+            "demandValue": 0,
+            "region": "US",
+            "keyword": "refrigerated wet food cat feeder"
+          },
+          {
+            "periodStart": "2026-10-18T00:00:00.000Z",
+            "periodEnd": "2026-10-18T00:00:00.000Z",
+            "demandValue": 0,
+            "region": "US",
+            "keyword": "refrigerated wet food cat feeder"
+          },
+          {
+            "periodStart": "2026-10-25T00:00:00.000Z",
+            "periodEnd": "2026-10-25T00:00:00.000Z",
+            "demandValue": 8,
+            "region": "US",
+            "keyword": "refrigerated wet food cat feeder"
+          },
+          {
+            "periodStart": "2026-11-01T00:00:00.000Z",
+            "periodEnd": "2026-11-01T00:00:00.000Z",
+            "demandValue": 3,
+            "region": "US",
+            "keyword": "refrigerated wet food cat feeder"
+          },
+          {
+            "periodStart": "2026-11-08T00:00:00.000Z",
+            "periodEnd": "2026-11-08T00:00:00.000Z",
+            "demandValue": 0,
+            "region": "US",
+            "keyword": "refrigerated wet food cat feeder"
+          }
+        ],
+        "evidenceReference": "csv-import:google-trends-explore:sha256:6fdfd217947b224e991b86dd1cce9b9c3f30e0925c8efce55b5e2e19452d57c6:q=refrigerated_wet_food_cat_feeder:geo=US:start=2025-11-02:end=2026-11-08:imported=2026-11-08T12:39:02.229Z",
+        "errors": []
+      },
+      "rawCalendarSpanDays": 371,
+      "zeroValues": 47,
+      "nonzeroValues": 7,
+      "sourceAuthority": {
+        "authority": "CACHED_UNVERIFIED",
+        "reasons": [
+          "Candidate demand attribution failure (EXCLUDED_UNVERIFIED_ALIAS): Observation keyword 'refrigerated wet food cat feeder' shares family ('pet_feeder') or tokens with candidate 'Automatic Wet Food Cat Feeder with Cooling & Warming' but lacks an explicit verified alias."
+        ],
+        "productAttributionValid": false
+      },
+      "g15": {
+        "status": "UNVERIFIED",
+        "eligibleForEvergreen": false,
+        "dataPointsCount": 54,
+        "distinctObservationDatesCount": 54,
+        "coveredDays": 371,
+        "meanInterest": 6.4,
+        "stdDev": 20.3,
+        "coefficientOfVariation": 3.15,
+        "demandClass": "DECLINING",
+        "sourceAuthority": "CACHED_UNVERIFIED",
+        "temporalCoverageValid": true,
+        "productAttributionValid": false,
+        "demandObservationIds": [
+          "obs_1_2025-11-02",
+          "obs_2_2025-11-09",
+          "obs_3_2025-11-16",
+          "obs_4_2025-11-23",
+          "obs_5_2025-11-30",
+          "obs_6_2025-12-07",
+          "obs_7_2025-12-14",
+          "obs_8_2025-12-21",
+          "obs_9_2025-12-28",
+          "obs_10_2026-01-04",
+          "obs_11_2026-01-11",
+          "obs_12_2026-01-18",
+          "obs_13_2026-01-25",
+          "obs_14_2026-02-01",
+          "obs_15_2026-02-08",
+          "obs_16_2026-02-15",
+          "obs_17_2026-02-22",
+          "obs_18_2026-03-01",
+          "obs_19_2026-03-08",
+          "obs_20_2026-03-15",
+          "obs_21_2026-03-22",
+          "obs_22_2026-03-29",
+          "obs_23_2026-04-05",
+          "obs_24_2026-04-12",
+          "obs_25_2026-04-19",
+          "obs_26_2026-04-26",
+          "obs_27_2026-05-03",
+          "obs_28_2026-05-10",
+          "obs_29_2026-05-17",
+          "obs_30_2026-05-24",
+          "obs_31_2026-05-31",
+          "obs_32_2026-06-07",
+          "obs_33_2026-06-14",
+          "obs_34_2026-06-21",
+          "obs_35_2026-06-28",
+          "obs_36_2026-07-05",
+          "obs_37_2026-07-12",
+          "obs_38_2026-07-19",
+          "obs_39_2026-07-26",
+          "obs_40_2026-08-02",
+          "obs_41_2026-08-09",
+          "obs_42_2026-08-16",
+          "obs_43_2026-08-23",
+          "obs_44_2026-08-30",
+          "obs_45_2026-09-06",
+          "obs_46_2026-09-13",
+          "obs_47_2026-09-20",
+          "obs_48_2026-09-27",
+          "obs_49_2026-10-04",
+          "obs_50_2026-10-11",
+          "obs_51_2026-10-18",
+          "obs_52_2026-10-25",
+          "obs_53_2026-11-01",
+          "obs_54_2026-11-08"
+        ],
+        "evidenceKind": "SEARCH_INTEREST_NOT_SALES",
+        "commercialInterpretationNote": "Reflects relative search interest index (0-100), not verified store orders, revenue, conversion rate, or ROAS.",
+        "calculationVersion": "12.4.3.3",
+        "explanation": "Demand source authority 'CACHED_UNVERIFIED' is not eligible for Verified Evergreen (Candidate demand attribution failure (EXCLUDED_UNVERIFIED_ALIAS): Observation keyword 'refrigerated wet food cat feeder' shares family ('pet_feeder') or tokens with candidate 'Automatic Wet Food Cat Feeder with Cooling & Warming' but lacks an explicit verified alias.).",
+        "missingEvidence": [
+          "Candidate demand attribution failure (EXCLUDED_UNVERIFIED_ALIAS): Observation keyword 'refrigerated wet food cat feeder' shares family ('pet_feeder') or tokens with candidate 'Automatic Wet Food Cat Feeder with Cooling & Warming' but lacks an explicit verified alias."
+        ],
+        "evaluatedAt": "2026-11-08T12:39:02.263Z",
+        "expectedCadence": "WEEKLY",
+        "coverageRatio": 1,
+        "maxGapDays": 7,
+        "qualifiedPeriods": 54,
+        "totalPeriods": 53,
+        "sourceProvenanceStatus": "CACHED_UNVERIFIED"
+      },
+      "durableAuthority": {
+        "verified": false,
+        "sourceOriginVerified": false,
+        "businessEligible": false,
+        "providerOriginVerified": false,
+        "originClassification": "LOCAL_INTEGRITY_ONLY",
+        "code": "AUTHORITY_NOT_FOUND",
+        "reason": "No Official CSV Import Authority record exists in durable ledger for SHA-256 '6fdfd217947b...'."
+      },
+      "authorizedApproverCount": 0,
+      "authorityCreation": "BLOCKED_NO_AUTHORIZED_PRINCIPAL_OR_WORKSPACE_PRODUCT_BINDING_OR_BUSINESS_SIGNING_CONFIGURATION",
+      "businessRowsPersisted": 0,
+      "productAttribution": "FAMILY_QUERY_ONLY_NOT_EXCLUSIVE_TO_MERCHANT_SKU",
+      "scoreWithNoEligibleBusinessDemand": {
+        "candidateId": "audit-target-feeder",
+        "opportunityScore": 16,
+        "evidenceConfidence": 10,
+        "scoreStatus": "PROVISIONAL",
+        "formulaVersion": "12.1.0",
+        "demandClass": "INSUFFICIENT_HISTORY",
+        "pillars": {
+          "demandStability": {
+            "score": null,
+            "maxWeight": 25,
+            "status": "MISSING_DATA",
+            "explanation": "Insufficient historical data (0 points observed, minimum 3 required). Evergreen sustainability cannot be verified."
+          },
+          "problemSolutionFit": {
+            "score": 0,
+            "maxWeight": 20,
+            "status": "FAIL",
+            "explanation": "Functional utility observed across promotional creative hooks."
+          },
+          "multiPlatformValidation": {
+            "score": 0,
+            "maxWeight": 20,
+            "status": "FAIL",
+            "explanation": "Observed across 0 platform source(s): ."
+          },
+          "brandabilityStoreFit": {
+            "score": 15,
+            "maxWeight": 15,
+            "status": "PASS",
+            "explanation": "Well-suited for dedicated pets branded store (uahpet.com)."
+          },
+          "creativeDepth": {
+            "score": 0,
+            "maxWeight": 10,
+            "status": "FAIL",
+            "explanation": "0 distinct creative variation(s) observed."
+          },
+          "competitionSustainability": {
+            "score": 0,
+            "maxWeight": 10,
+            "status": "FAIL",
+            "explanation": "0 independent advertiser(s) actively running campaigns."
+          }
+        },
+        "strengths": [
+          "Identified commercial domain: uahpet.com with branded catalog potential."
+        ],
+        "risks": [],
+        "missingEvidence": [
+          "Insufficient historical data (0 points observed, minimum 3 required). Evergreen sustainability cannot be verified.",
+          "Explicit customer pain point statement is not verified in ad copy.",
+          "No verified video creative available for hook analysis."
+        ],
+        "recommendation": "RESEARCH_MORE",
+        "recommendationRationale": "Moderate score (16/100). Requires additional demand history and creative validation.",
+        "evaluatedAt": "2026-11-08T12:39:02.260Z",
+        "tier": "INSUFFICIENT_EVIDENCE",
+        "demandSourceAuthority": "UNKNOWN_SOURCE",
+        "evergreenVerification": {
+          "candidateId": "audit-target-feeder",
+          "productId": null,
+          "canonicalProductName": "Automatic Wet Food Cat Feeder with Cooling & Warming",
+          "merchantDomain": "uahpet.com",
+          "canonicalProductUrl": "https://www.uahpet.com/products/uahpet-fresh-food-automatic-pet-feeder",
+          "identityVerified": false,
+          "physicalProductVerified": true,
+          "relevanceVerified": true,
+          "demandSourceAuthority": "UNKNOWN_SOURCE",
+          "demandObservationsCount": 0,
+          "distinctDemandDatesCount": 0,
+          "coveredDays": 0,
+          "demandStabilityScore": 0,
+          "demandClass": "INSUFFICIENT_HISTORY",
+          "opportunityScore": 16,
+          "evidenceConfidence": 10,
+          "observationRecordIds": [],
+          "demandObservationIds": [],
+          "verifiedByGate": false,
+          "disqualifiers": [
+            "Product identity is not verified with a canonical /products/ merchant URL and domain.",
+            "Demand source authority 'UNKNOWN_SOURCE' is not authoritative/historical verified.",
+            "Insufficient distinct demand observations (0/3 required).",
+            "Demand coverage (0D) is below mandatory 60D threshold.",
+            "Demand stability score (0/25) is below mandatory 15/25 threshold.",
+            "Demand class 'INSUFFICIENT_HISTORY' is not eligible for Verified Evergreen.",
+            "Opportunity score (16/100) is below 65/100 threshold.",
+            "Evidence confidence (10/100) is below 65/100 threshold.",
+            "Candidate lacks traceable source observation record IDs.",
+            "Candidate lacks >= 3 traceable demand observation IDs."
+          ]
+        },
+        "verificationDimensions": {
+          "identityVerifiedByMerchant": false,
+          "demandVerifiedByHistoricalSource": false,
+          "aiReviewed": false,
+          "multiPlatformValidated": false,
+          "evergreenIndependentlyVerified": false
+        }
+      }
+    },
+    {
+      "key": "fountain",
+      "term": "stainless steel cat water fountain",
+      "title": "Stainless Steel Cat Water Fountain",
+      "domain": "kittyspout.com",
+      "pdp": "https://www.kittyspout.com/products/2-2l-fountain",
+      "originalArtifact": "evidence/trends-fountain-original.csv",
+      "acquiredAt": "2026-11-08T12:39:02.229Z",
+      "acquisitionMode": "OFFICIAL_UI_DOWNLOAD_ASSISTED",
+      "acquisitionSourceUrl": "https://trends.google.com/trends/explore?date=today%2012-m&geo=US&q=stainless%20steel%20cat%20water%20fountain",
+      "urlValid": "https://trends.google.com/trends/explore?date=today%2012-m&geo=US&q=stainless%20steel%20cat%20water%20fountain",
+      "parsed": {
+        "valid": true,
+        "sha256Checksum": "84e5b65e53d0a2270ca32101c7259369d2d2d6d989377014d9b066dbc17d7e8d",
+        "keyword": "stainless steel cat water fountain",
+        "region": "US",
+        "startDate": "2025-11-02T00:00:00.000Z",
+        "endDate": "2026-11-08T00:00:00.000Z",
+        "cadence": "WEEKLY",
+        "dataPointsCount": 54,
+        "dataPoints": [
+          {
+            "periodStart": "2025-11-02T00:00:00.000Z",
+            "periodEnd": "2025-11-02T00:00:00.000Z",
+            "demandValue": 16,
+            "region": "US",
+            "keyword": "stainless steel cat water fountain"
+          },
+          {
+            "periodStart": "2025-11-09T00:00:00.000Z",
+            "periodEnd": "2025-11-09T00:00:00.000Z",
+            "demandValue": 12,
+            "region": "US",
+            "keyword": "stainless steel cat water fountain"
+          },
+          {
+            "periodStart": "2025-11-16T00:00:00.000Z",
+            "periodEnd": "2025-11-16T00:00:00.000Z",
+            "demandValue": 13,
+            "region": "US",
+            "keyword": "stainless steel cat water fountain"
+          },
+          {
+            "periodStart": "2025-11-23T00:00:00.000Z",
+            "periodEnd": "2025-11-23T00:00:00.000Z",
+            "demandValue": 13,
+            "region": "US",
+            "keyword": "stainless steel cat water fountain"
+          },
+          {
+            "periodStart": "2025-11-30T00:00:00.000Z",
+            "periodEnd": "2025-11-30T00:00:00.000Z",
+            "demandValue": 13,
+            "region": "US",
+            "keyword": "stainless steel cat water fountain"
+          },
+          {
+            "periodStart": "2025-12-07T00:00:00.000Z",
+            "periodEnd": "2025-12-07T00:00:00.000Z",
+            "demandValue": 14,
+            "region": "US",
+            "keyword": "stainless steel cat water fountain"
+          },
+          {
+            "periodStart": "2025-12-14T00:00:00.000Z",
+            "periodEnd": "2025-12-14T00:00:00.000Z",
+            "demandValue": 13,
+            "region": "US",
+            "keyword": "stainless steel cat water fountain"
+          },
+          {
+            "periodStart": "2025-12-21T00:00:00.000Z",
+            "periodEnd": "2025-12-21T00:00:00.000Z",
+            "demandValue": 13,
+            "region": "US",
+            "keyword": "stainless steel cat water fountain"
+          },
+          {
+            "periodStart": "2025-12-28T00:00:00.000Z",
+            "periodEnd": "2025-12-28T00:00:00.000Z",
+            "demandValue": 19,
+            "region": "US",
+            "keyword": "stainless steel cat water fountain"
+          },
+          {
+            "periodStart": "2026-01-04T00:00:00.000Z",
+            "periodEnd": "2026-01-04T00:00:00.000Z",
+            "demandValue": 15,
+            "region": "US",
+            "keyword": "stainless steel cat water fountain"
+          },
+          {
+            "periodStart": "2026-01-11T00:00:00.000Z",
+            "periodEnd": "2026-01-11T00:00:00.000Z",
+            "demandValue": 15,
+            "region": "US",
+            "keyword": "stainless steel cat water fountain"
+          },
+          {
+            "periodStart": "2026-01-18T00:00:00.000Z",
+            "periodEnd": "2026-01-18T00:00:00.000Z",
+            "demandValue": 12,
+            "region": "US",
+            "keyword": "stainless steel cat water fountain"
+          },
+          {
+            "periodStart": "2026-01-25T00:00:00.000Z",
+            "periodEnd": "2026-01-25T00:00:00.000Z",
+            "demandValue": 11,
+            "region": "US",
+            "keyword": "stainless steel cat water fountain"
+          },
+          {
+            "periodStart": "2026-02-01T00:00:00.000Z",
+            "periodEnd": "2026-02-01T00:00:00.000Z",
+            "demandValue": 11,
+            "region": "US",
+            "keyword": "stainless steel cat water fountain"
+          },
+          {
+            "periodStart": "2026-02-08T00:00:00.000Z",
+            "periodEnd": "2026-02-08T00:00:00.000Z",
+            "demandValue": 16,
+            "region": "US",
+            "keyword": "stainless steel cat water fountain"
+          },
+          {
+            "periodStart": "2026-02-15T00:00:00.000Z",
+            "periodEnd": "2026-02-15T00:00:00.000Z",
+            "demandValue": 16,
+            "region": "US",
+            "keyword": "stainless steel cat water fountain"
+          },
+          {
+            "periodStart": "2026-02-22T00:00:00.000Z",
+            "periodEnd": "2026-02-22T00:00:00.000Z",
+            "demandValue": 15,
+            "region": "US",
+            "keyword": "stainless steel cat water fountain"
+          },
+          {
+            "periodStart": "2026-03-01T00:00:00.000Z",
+            "periodEnd": "2026-03-01T00:00:00.000Z",
+            "demandValue": 16,
+            "region": "US",
+            "keyword": "stainless steel cat water fountain"
+          },
+          {
+            "periodStart": "2026-03-08T00:00:00.000Z",
+            "periodEnd": "2026-03-08T00:00:00.000Z",
+            "demandValue": 13,
+            "region": "US",
+            "keyword": "stainless steel cat water fountain"
+          },
+          {
+            "periodStart": "2026-03-15T00:00:00.000Z",
+            "periodEnd": "2026-03-15T00:00:00.000Z",
+            "demandValue": 14,
+            "region": "US",
+            "keyword": "stainless steel cat water fountain"
+          },
+          {
+            "periodStart": "2026-03-22T00:00:00.000Z",
+            "periodEnd": "2026-03-22T00:00:00.000Z",
+            "demandValue": 23,
+            "region": "US",
+            "keyword": "stainless steel cat water fountain"
+          },
+          {
+            "periodStart": "2026-03-29T00:00:00.000Z",
+            "periodEnd": "2026-03-29T00:00:00.000Z",
+            "demandValue": 59,
+            "region": "US",
+            "keyword": "stainless steel cat water fountain"
+          },
+          {
+            "periodStart": "2026-04-05T00:00:00.000Z",
+            "periodEnd": "2026-04-05T00:00:00.000Z",
+            "demandValue": 86,
+            "region": "US",
+            "keyword": "stainless steel cat water fountain"
+          },
+          {
+            "periodStart": "2026-04-12T00:00:00.000Z",
+            "periodEnd": "2026-04-12T00:00:00.000Z",
+            "demandValue": 86,
+            "region": "US",
+            "keyword": "stainless steel cat water fountain"
+          },
+          {
+            "periodStart": "2026-04-19T00:00:00.000Z",
+            "periodEnd": "2026-04-19T00:00:00.000Z",
+            "demandValue": 55,
+            "region": "US",
+            "keyword": "stainless steel cat water fountain"
+          },
+          {
+            "periodStart": "2026-04-26T00:00:00.000Z",
+            "periodEnd": "2026-04-26T00:00:00.000Z",
+            "demandValue": 40,
+            "region": "US",
+            "keyword": "stainless steel cat water fountain"
+          },
+          {
+            "periodStart": "2026-05-03T00:00:00.000Z",
+            "periodEnd": "2026-05-03T00:00:00.000Z",
+            "demandValue": 34,
+            "region": "US",
+            "keyword": "stainless steel cat water fountain"
+          },
+          {
+            "periodStart": "2026-05-10T00:00:00.000Z",
+            "periodEnd": "2026-05-10T00:00:00.000Z",
+            "demandValue": 67,
+            "region": "US",
+            "keyword": "stainless steel cat water fountain"
+          },
+          {
+            "periodStart": "2026-05-17T00:00:00.000Z",
+            "periodEnd": "2026-05-17T00:00:00.000Z",
+            "demandValue": 92,
+            "region": "US",
+            "keyword": "stainless steel cat water fountain"
+          },
+          {
+            "periodStart": "2026-05-24T00:00:00.000Z",
+            "periodEnd": "2026-05-24T00:00:00.000Z",
+            "demandValue": 55,
+            "region": "US",
+            "keyword": "stainless steel cat water fountain"
+          },
+          {
+            "periodStart": "2026-05-31T00:00:00.000Z",
+            "periodEnd": "2026-05-31T00:00:00.000Z",
+            "demandValue": 67,
+            "region": "US",
+            "keyword": "stainless steel cat water fountain"
+          },
+          {
+            "periodStart": "2026-06-07T00:00:00.000Z",
+            "periodEnd": "2026-06-07T00:00:00.000Z",
+            "demandValue": 93,
+            "region": "US",
+            "keyword": "stainless steel cat water fountain"
+          },
+          {
+            "periodStart": "2026-06-14T00:00:00.000Z",
+            "periodEnd": "2026-06-14T00:00:00.000Z",
+            "demandValue": 100,
+            "region": "US",
+            "keyword": "stainless steel cat water fountain"
+          },
+          {
+            "periodStart": "2026-06-21T00:00:00.000Z",
+            "periodEnd": "2026-06-21T00:00:00.000Z",
+            "demandValue": 93,
+            "region": "US",
+            "keyword": "stainless steel cat water fountain"
+          },
+          {
+            "periodStart": "2026-06-28T00:00:00.000Z",
+            "periodEnd": "2026-06-28T00:00:00.000Z",
+            "demandValue": 51,
+            "region": "US",
+            "keyword": "stainless steel cat water fountain"
+          },
+          {
+            "periodStart": "2026-07-05T00:00:00.000Z",
+            "periodEnd": "2026-07-05T00:00:00.000Z",
+            "demandValue": 34,
+            "region": "US",
+            "keyword": "stainless steel cat water fountain"
+          },
+          {
+            "periodStart": "2026-07-12T00:00:00.000Z",
+            "periodEnd": "2026-07-12T00:00:00.000Z",
+            "demandValue": 22,
+            "region": "US",
+            "keyword": "stainless steel cat water fountain"
+          },
+          {
+            "periodStart": "2026-07-19T00:00:00.000Z",
+            "periodEnd": "2026-07-19T00:00:00.000Z",
+            "demandValue": 23,
+            "region": "US",
+            "keyword": "stainless steel cat water fountain"
+          },
+          {
+            "periodStart": "2026-07-26T00:00:00.000Z",
+            "periodEnd": "2026-07-26T00:00:00.000Z",
+            "demandValue": 20,
+            "region": "US",
+            "keyword": "stainless steel cat water fountain"
+          },
+          {
+            "periodStart": "2026-08-02T00:00:00.000Z",
+            "periodEnd": "2026-08-02T00:00:00.000Z",
+            "demandValue": 22,
+            "region": "US",
+            "keyword": "stainless steel cat water fountain"
+          },
+          {
+            "periodStart": "2026-08-09T00:00:00.000Z",
+            "periodEnd": "2026-08-09T00:00:00.000Z",
+            "demandValue": 22,
+            "region": "US",
+            "keyword": "stainless steel cat water fountain"
+          },
+          {
+            "periodStart": "2026-08-16T00:00:00.000Z",
+            "periodEnd": "2026-08-16T00:00:00.000Z",
+            "demandValue": 20,
+            "region": "US",
+            "keyword": "stainless steel cat water fountain"
+          },
+          {
+            "periodStart": "2026-08-23T00:00:00.000Z",
+            "periodEnd": "2026-08-23T00:00:00.000Z",
+            "demandValue": 21,
+            "region": "US",
+            "keyword": "stainless steel cat water fountain"
+          },
+          {
+            "periodStart": "2026-08-30T00:00:00.000Z",
+            "periodEnd": "2026-08-30T00:00:00.000Z",
+            "demandValue": 24,
+            "region": "US",
+            "keyword": "stainless steel cat water fountain"
+          },
+          {
+            "periodStart": "2026-09-06T00:00:00.000Z",
+            "periodEnd": "2026-09-06T00:00:00.000Z",
+            "demandValue": 24,
+            "region": "US",
+            "keyword": "stainless steel cat water fountain"
+          },
+          {
+            "periodStart": "2026-09-13T00:00:00.000Z",
+            "periodEnd": "2026-09-13T00:00:00.000Z",
+            "demandValue": 21,
+            "region": "US",
+            "keyword": "stainless steel cat water fountain"
+          },
+          {
+            "periodStart": "2026-09-20T00:00:00.000Z",
+            "periodEnd": "2026-09-20T00:00:00.000Z",
+            "demandValue": 23,
+            "region": "US",
+            "keyword": "stainless steel cat water fountain"
+          },
+          {
+            "periodStart": "2026-09-27T00:00:00.000Z",
+            "periodEnd": "2026-09-27T00:00:00.000Z",
+            "demandValue": 22,
+            "region": "US",
+            "keyword": "stainless steel cat water fountain"
+          },
+          {
+            "periodStart": "2026-10-04T00:00:00.000Z",
+            "periodEnd": "2026-10-04T00:00:00.000Z",
+            "demandValue": 23,
+            "region": "US",
+            "keyword": "stainless steel cat water fountain"
+          },
+          {
+            "periodStart": "2026-10-11T00:00:00.000Z",
+            "periodEnd": "2026-10-11T00:00:00.000Z",
+            "demandValue": 23,
+            "region": "US",
+            "keyword": "stainless steel cat water fountain"
+          },
+          {
+            "periodStart": "2026-10-18T00:00:00.000Z",
+            "periodEnd": "2026-10-18T00:00:00.000Z",
+            "demandValue": 20,
+            "region": "US",
+            "keyword": "stainless steel cat water fountain"
+          },
+          {
+            "periodStart": "2026-10-25T00:00:00.000Z",
+            "periodEnd": "2026-10-25T00:00:00.000Z",
+            "demandValue": 15,
+            "region": "US",
+            "keyword": "stainless steel cat water fountain"
+          },
+          {
+            "periodStart": "2026-11-01T00:00:00.000Z",
+            "periodEnd": "2026-11-01T00:00:00.000Z",
+            "demandValue": 16,
+            "region": "US",
+            "keyword": "stainless steel cat water fountain"
+          },
+          {
+            "periodStart": "2026-11-08T00:00:00.000Z",
+            "periodEnd": "2026-11-08T00:00:00.000Z",
+            "demandValue": 16,
+            "region": "US",
+            "keyword": "stainless steel cat water fountain"
+          }
+        ],
+        "evidenceReference": "csv-import:google-trends-explore:sha256:84e5b65e53d0a2270ca32101c7259369d2d2d6d989377014d9b066dbc17d7e8d:q=stainless_steel_cat_water_fountain:geo=US:start=2025-11-02:end=2026-11-08:imported=2026-11-08T12:39:02.229Z",
+        "errors": []
+      },
+      "rawCalendarSpanDays": 371,
+      "zeroValues": 0,
+      "nonzeroValues": 54,
+      "sourceAuthority": {
+        "authority": "CACHED_UNVERIFIED",
+        "reasons": [
+          "No Official CSV Import Authority record exists in durable ledger for SHA-256 '84e5b65e53d0...'.",
+          "No Official CSV Import Authority record exists in durable ledger for SHA-256 '84e5b65e53d0...'.",
+          "No Official CSV Import Authority record exists in durable ledger for SHA-256 '84e5b65e53d0...'.",
+          "No Official CSV Import Authority record exists in durable ledger for SHA-256 '84e5b65e53d0...'.",
+          "No Official CSV Import Authority record exists in durable ledger for SHA-256 '84e5b65e53d0...'.",
+          "No Official CSV Import Authority record exists in durable ledger for SHA-256 '84e5b65e53d0...'.",
+          "No Official CSV Import Authority record exists in durable ledger for SHA-256 '84e5b65e53d0...'.",
+          "No Official CSV Import Authority record exists in durable ledger for SHA-256 '84e5b65e53d0...'.",
+          "No Official CSV Import Authority record exists in durable ledger for SHA-256 '84e5b65e53d0...'.",
+          "No Official CSV Import Authority record exists in durable ledger for SHA-256 '84e5b65e53d0...'.",
+          "No Official CSV Import Authority record exists in durable ledger for SHA-256 '84e5b65e53d0...'.",
+          "No Official CSV Import Authority record exists in durable ledger for SHA-256 '84e5b65e53d0...'.",
+          "No Official CSV Import Authority record exists in durable ledger for SHA-256 '84e5b65e53d0...'.",
+          "No Official CSV Import Authority record exists in durable ledger for SHA-256 '84e5b65e53d0...'.",
+          "No Official CSV Import Authority record exists in durable ledger for SHA-256 '84e5b65e53d0...'.",
+          "No Official CSV Import Authority record exists in durable ledger for SHA-256 '84e5b65e53d0...'.",
+          "No Official CSV Import Authority record exists in durable ledger for SHA-256 '84e5b65e53d0...'.",
+          "No Official CSV Import Authority record exists in durable ledger for SHA-256 '84e5b65e53d0...'.",
+          "No Official CSV Import Authority record exists in durable ledger for SHA-256 '84e5b65e53d0...'.",
+          "No Official CSV Import Authority record exists in durable ledger for SHA-256 '84e5b65e53d0...'.",
+          "No Official CSV Import Authority record exists in durable ledger for SHA-256 '84e5b65e53d0...'.",
+          "No Official CSV Import Authority record exists in durable ledger for SHA-256 '84e5b65e53d0...'.",
+          "No Official CSV Import Authority record exists in durable ledger for SHA-256 '84e5b65e53d0...'.",
+          "No Official CSV Import Authority record exists in durable ledger for SHA-256 '84e5b65e53d0...'.",
+          "No Official CSV Import Authority record exists in durable ledger for SHA-256 '84e5b65e53d0...'.",
+          "No Official CSV Import Authority record exists in durable ledger for SHA-256 '84e5b65e53d0...'.",
+          "No Official CSV Import Authority record exists in durable ledger for SHA-256 '84e5b65e53d0...'.",
+          "No Official CSV Import Authority record exists in durable ledger for SHA-256 '84e5b65e53d0...'.",
+          "No Official CSV Import Authority record exists in durable ledger for SHA-256 '84e5b65e53d0...'.",
+          "No Official CSV Import Authority record exists in durable ledger for SHA-256 '84e5b65e53d0...'.",
+          "No Official CSV Import Authority record exists in durable ledger for SHA-256 '84e5b65e53d0...'.",
+          "No Official CSV Import Authority record exists in durable ledger for SHA-256 '84e5b65e53d0...'.",
+          "No Official CSV Import Authority record exists in durable ledger for SHA-256 '84e5b65e53d0...'.",
+          "No Official CSV Import Authority record exists in durable ledger for SHA-256 '84e5b65e53d0...'.",
+          "No Official CSV Import Authority record exists in durable ledger for SHA-256 '84e5b65e53d0...'.",
+          "No Official CSV Import Authority record exists in durable ledger for SHA-256 '84e5b65e53d0...'.",
+          "No Official CSV Import Authority record exists in durable ledger for SHA-256 '84e5b65e53d0...'.",
+          "No Official CSV Import Authority record exists in durable ledger for SHA-256 '84e5b65e53d0...'.",
+          "No Official CSV Import Authority record exists in durable ledger for SHA-256 '84e5b65e53d0...'.",
+          "No Official CSV Import Authority record exists in durable ledger for SHA-256 '84e5b65e53d0...'.",
+          "No Official CSV Import Authority record exists in durable ledger for SHA-256 '84e5b65e53d0...'.",
+          "No Official CSV Import Authority record exists in durable ledger for SHA-256 '84e5b65e53d0...'.",
+          "No Official CSV Import Authority record exists in durable ledger for SHA-256 '84e5b65e53d0...'.",
+          "No Official CSV Import Authority record exists in durable ledger for SHA-256 '84e5b65e53d0...'.",
+          "No Official CSV Import Authority record exists in durable ledger for SHA-256 '84e5b65e53d0...'.",
+          "No Official CSV Import Authority record exists in durable ledger for SHA-256 '84e5b65e53d0...'.",
+          "No Official CSV Import Authority record exists in durable ledger for SHA-256 '84e5b65e53d0...'.",
+          "No Official CSV Import Authority record exists in durable ledger for SHA-256 '84e5b65e53d0...'.",
+          "No Official CSV Import Authority record exists in durable ledger for SHA-256 '84e5b65e53d0...'.",
+          "No Official CSV Import Authority record exists in durable ledger for SHA-256 '84e5b65e53d0...'.",
+          "No Official CSV Import Authority record exists in durable ledger for SHA-256 '84e5b65e53d0...'.",
+          "No Official CSV Import Authority record exists in durable ledger for SHA-256 '84e5b65e53d0...'.",
+          "No Official CSV Import Authority record exists in durable ledger for SHA-256 '84e5b65e53d0...'.",
+          "No Official CSV Import Authority record exists in durable ledger for SHA-256 '84e5b65e53d0...'."
+        ],
+        "productAttributionValid": false
+      },
+      "g15": {
+        "status": "UNVERIFIED",
+        "eligibleForEvergreen": false,
+        "dataPointsCount": 54,
+        "distinctObservationDatesCount": 54,
+        "coveredDays": 371,
+        "meanInterest": 31.3,
+        "stdDev": 25.5,
+        "coefficientOfVariation": 0.81,
+        "demandClass": "TREND_DEPENDENT",
+        "sourceAuthority": "CACHED_UNVERIFIED",
+        "temporalCoverageValid": true,
+        "productAttributionValid": false,
+        "demandObservationIds": [
+          "obs_1_2025-11-02",
+          "obs_2_2025-11-09",
+          "obs_3_2025-11-16",
+          "obs_4_2025-11-23",
+          "obs_5_2025-11-30",
+          "obs_6_2025-12-07",
+          "obs_7_2025-12-14",
+          "obs_8_2025-12-21",
+          "obs_9_2025-12-28",
+          "obs_10_2026-01-04",
+          "obs_11_2026-01-11",
+          "obs_12_2026-01-18",
+          "obs_13_2026-01-25",
+          "obs_14_2026-02-01",
+          "obs_15_2026-02-08",
+          "obs_16_2026-02-15",
+          "obs_17_2026-02-22",
+          "obs_18_2026-03-01",
+          "obs_19_2026-03-08",
+          "obs_20_2026-03-15",
+          "obs_21_2026-03-22",
+          "obs_22_2026-03-29",
+          "obs_23_2026-04-05",
+          "obs_24_2026-04-12",
+          "obs_25_2026-04-19",
+          "obs_26_2026-04-26",
+          "obs_27_2026-05-03",
+          "obs_28_2026-05-10",
+          "obs_29_2026-05-17",
+          "obs_30_2026-05-24",
+          "obs_31_2026-05-31",
+          "obs_32_2026-06-07",
+          "obs_33_2026-06-14",
+          "obs_34_2026-06-21",
+          "obs_35_2026-06-28",
+          "obs_36_2026-07-05",
+          "obs_37_2026-07-12",
+          "obs_38_2026-07-19",
+          "obs_39_2026-07-26",
+          "obs_40_2026-08-02",
+          "obs_41_2026-08-09",
+          "obs_42_2026-08-16",
+          "obs_43_2026-08-23",
+          "obs_44_2026-08-30",
+          "obs_45_2026-09-06",
+          "obs_46_2026-09-13",
+          "obs_47_2026-09-20",
+          "obs_48_2026-09-27",
+          "obs_49_2026-10-04",
+          "obs_50_2026-10-11",
+          "obs_51_2026-10-18",
+          "obs_52_2026-10-25",
+          "obs_53_2026-11-01",
+          "obs_54_2026-11-08"
+        ],
+        "evidenceKind": "SEARCH_INTEREST_NOT_SALES",
+        "commercialInterpretationNote": "Reflects relative search interest index (0-100), not verified store orders, revenue, conversion rate, or ROAS.",
+        "calculationVersion": "12.4.3.3",
+        "explanation": "Demand source authority 'CACHED_UNVERIFIED' is not eligible for Verified Evergreen (No Official CSV Import Authority record exists in durable ledger for SHA-256 '84e5b65e53d0...'.).",
+        "missingEvidence": [
+          "No Official CSV Import Authority record exists in durable ledger for SHA-256 '84e5b65e53d0...'."
+        ],
+        "evaluatedAt": "2026-11-08T12:39:02.282Z",
+        "expectedCadence": "WEEKLY",
+        "coverageRatio": 1,
+        "maxGapDays": 7,
+        "qualifiedPeriods": 54,
+        "totalPeriods": 53,
+        "sourceProvenanceStatus": "CACHED_UNVERIFIED"
+      },
+      "durableAuthority": {
+        "verified": false,
+        "sourceOriginVerified": false,
+        "businessEligible": false,
+        "providerOriginVerified": false,
+        "originClassification": "LOCAL_INTEGRITY_ONLY",
+        "code": "AUTHORITY_NOT_FOUND",
+        "reason": "No Official CSV Import Authority record exists in durable ledger for SHA-256 '84e5b65e53d0...'."
+      },
+      "authorizedApproverCount": 0,
+      "authorityCreation": "BLOCKED_NO_AUTHORIZED_PRINCIPAL_OR_WORKSPACE_PRODUCT_BINDING_OR_BUSINESS_SIGNING_CONFIGURATION",
+      "businessRowsPersisted": 0,
+      "productAttribution": "FAMILY_QUERY_ONLY_NOT_EXCLUSIVE_TO_MERCHANT_SKU",
+      "scoreWithNoEligibleBusinessDemand": {
+        "candidateId": "audit-target-fountain",
+        "opportunityScore": 16,
+        "evidenceConfidence": 10,
+        "scoreStatus": "PROVISIONAL",
+        "formulaVersion": "12.1.0",
+        "demandClass": "INSUFFICIENT_HISTORY",
+        "pillars": {
+          "demandStability": {
+            "score": null,
+            "maxWeight": 25,
+            "status": "MISSING_DATA",
+            "explanation": "Insufficient historical data (0 points observed, minimum 3 required). Evergreen sustainability cannot be verified."
+          },
+          "problemSolutionFit": {
+            "score": 0,
+            "maxWeight": 20,
+            "status": "FAIL",
+            "explanation": "Functional utility observed across promotional creative hooks."
+          },
+          "multiPlatformValidation": {
+            "score": 0,
+            "maxWeight": 20,
+            "status": "FAIL",
+            "explanation": "Observed across 0 platform source(s): ."
+          },
+          "brandabilityStoreFit": {
+            "score": 15,
+            "maxWeight": 15,
+            "status": "PASS",
+            "explanation": "Well-suited for dedicated pets branded store (kittyspout.com)."
+          },
+          "creativeDepth": {
+            "score": 0,
+            "maxWeight": 10,
+            "status": "FAIL",
+            "explanation": "0 distinct creative variation(s) observed."
+          },
+          "competitionSustainability": {
+            "score": 0,
+            "maxWeight": 10,
+            "status": "FAIL",
+            "explanation": "0 independent advertiser(s) actively running campaigns."
+          }
+        },
+        "strengths": [
+          "Identified commercial domain: kittyspout.com with branded catalog potential."
+        ],
+        "risks": [],
+        "missingEvidence": [
+          "Insufficient historical data (0 points observed, minimum 3 required). Evergreen sustainability cannot be verified.",
+          "Explicit customer pain point statement is not verified in ad copy.",
+          "No verified video creative available for hook analysis."
+        ],
+        "recommendation": "RESEARCH_MORE",
+        "recommendationRationale": "Moderate score (16/100). Requires additional demand history and creative validation.",
+        "evaluatedAt": "2026-11-08T12:39:02.265Z",
+        "tier": "INSUFFICIENT_EVIDENCE",
+        "demandSourceAuthority": "UNKNOWN_SOURCE",
+        "evergreenVerification": {
+          "candidateId": "audit-target-fountain",
+          "productId": null,
+          "canonicalProductName": "Stainless Steel Cat Water Fountain",
+          "merchantDomain": "kittyspout.com",
+          "canonicalProductUrl": "https://www.kittyspout.com/products/2-2l-fountain",
+          "identityVerified": false,
+          "physicalProductVerified": true,
+          "relevanceVerified": true,
+          "demandSourceAuthority": "UNKNOWN_SOURCE",
+          "demandObservationsCount": 0,
+          "distinctDemandDatesCount": 0,
+          "coveredDays": 0,
+          "demandStabilityScore": 0,
+          "demandClass": "INSUFFICIENT_HISTORY",
+          "opportunityScore": 16,
+          "evidenceConfidence": 10,
+          "observationRecordIds": [],
+          "demandObservationIds": [],
+          "verifiedByGate": false,
+          "disqualifiers": [
+            "Product identity is not verified with a canonical /products/ merchant URL and domain.",
+            "Demand source authority 'UNKNOWN_SOURCE' is not authoritative/historical verified.",
+            "Insufficient distinct demand observations (0/3 required).",
+            "Demand coverage (0D) is below mandatory 60D threshold.",
+            "Demand stability score (0/25) is below mandatory 15/25 threshold.",
+            "Demand class 'INSUFFICIENT_HISTORY' is not eligible for Verified Evergreen.",
+            "Opportunity score (16/100) is below 65/100 threshold.",
+            "Evidence confidence (10/100) is below 65/100 threshold.",
+            "Candidate lacks traceable source observation record IDs.",
+            "Candidate lacks >= 3 traceable demand observation IDs."
+          ]
+        },
+        "verificationDimensions": {
+          "identityVerifiedByMerchant": false,
+          "demandVerifiedByHistoricalSource": false,
+          "aiReviewed": false,
+          "multiPlatformValidated": false,
+          "evergreenIndependentlyVerified": false
+        }
+      }
+    },
+    {
+      "key": "laundry",
+      "term": "pet hair remover for laundry",
+      "title": "Pet Hair Remover for Laundry",
+      "domain": "uprootclean.com",
+      "pdp": null,
+      "originalArtifact": "evidence/trends-laundry-original.csv",
+      "acquiredAt": "2026-11-08T12:39:02.229Z",
+      "acquisitionMode": "OFFICIAL_UI_DOWNLOAD_ASSISTED",
+      "acquisitionSourceUrl": "https://trends.google.com/trends/explore?date=today%2012-m&geo=US&q=pet%20hair%20remover%20for%20laundry",
+      "urlValid": "https://trends.google.com/trends/explore?date=today%2012-m&geo=US&q=pet%20hair%20remover%20for%20laundry",
+      "parsed": {
+        "valid": true,
+        "sha256Checksum": "b770efd4f0f4cceb6160f3e763cd071e01e1cd4421658805a87233812b7320f1",
+        "keyword": "pet hair remover for laundry",
+        "region": "US",
+        "startDate": "2025-11-02T00:00:00.000Z",
+        "endDate": "2026-11-08T00:00:00.000Z",
+        "cadence": "WEEKLY",
+        "dataPointsCount": 54,
+        "dataPoints": [
+          {
+            "periodStart": "2025-11-02T00:00:00.000Z",
+            "periodEnd": "2025-11-02T00:00:00.000Z",
+            "demandValue": 0,
+            "region": "US",
+            "keyword": "pet hair remover for laundry"
+          },
+          {
+            "periodStart": "2025-11-09T00:00:00.000Z",
+            "periodEnd": "2025-11-09T00:00:00.000Z",
+            "demandValue": 0,
+            "region": "US",
+            "keyword": "pet hair remover for laundry"
+          },
+          {
+            "periodStart": "2025-11-16T00:00:00.000Z",
+            "periodEnd": "2025-11-16T00:00:00.000Z",
+            "demandValue": 0,
+            "region": "US",
+            "keyword": "pet hair remover for laundry"
+          },
+          {
+            "periodStart": "2025-11-23T00:00:00.000Z",
+            "periodEnd": "2025-11-23T00:00:00.000Z",
+            "demandValue": 0,
+            "region": "US",
+            "keyword": "pet hair remover for laundry"
+          },
+          {
+            "periodStart": "2025-11-30T00:00:00.000Z",
+            "periodEnd": "2025-11-30T00:00:00.000Z",
+            "demandValue": 0,
+            "region": "US",
+            "keyword": "pet hair remover for laundry"
+          },
+          {
+            "periodStart": "2025-12-07T00:00:00.000Z",
+            "periodEnd": "2025-12-07T00:00:00.000Z",
+            "demandValue": 0,
+            "region": "US",
+            "keyword": "pet hair remover for laundry"
+          },
+          {
+            "periodStart": "2025-12-14T00:00:00.000Z",
+            "periodEnd": "2025-12-14T00:00:00.000Z",
+            "demandValue": 0,
+            "region": "US",
+            "keyword": "pet hair remover for laundry"
+          },
+          {
+            "periodStart": "2025-12-21T00:00:00.000Z",
+            "periodEnd": "2025-12-21T00:00:00.000Z",
+            "demandValue": 0,
+            "region": "US",
+            "keyword": "pet hair remover for laundry"
+          },
+          {
+            "periodStart": "2025-12-28T00:00:00.000Z",
+            "periodEnd": "2025-12-28T00:00:00.000Z",
+            "demandValue": 0,
+            "region": "US",
+            "keyword": "pet hair remover for laundry"
+          },
+          {
+            "periodStart": "2026-01-04T00:00:00.000Z",
+            "periodEnd": "2026-01-04T00:00:00.000Z",
+            "demandValue": 0,
+            "region": "US",
+            "keyword": "pet hair remover for laundry"
+          },
+          {
+            "periodStart": "2026-01-11T00:00:00.000Z",
+            "periodEnd": "2026-01-11T00:00:00.000Z",
+            "demandValue": 0,
+            "region": "US",
+            "keyword": "pet hair remover for laundry"
+          },
+          {
+            "periodStart": "2026-01-18T00:00:00.000Z",
+            "periodEnd": "2026-01-18T00:00:00.000Z",
+            "demandValue": 0,
+            "region": "US",
+            "keyword": "pet hair remover for laundry"
+          },
+          {
+            "periodStart": "2026-01-25T00:00:00.000Z",
+            "periodEnd": "2026-01-25T00:00:00.000Z",
+            "demandValue": 0,
+            "region": "US",
+            "keyword": "pet hair remover for laundry"
+          },
+          {
+            "periodStart": "2026-02-01T00:00:00.000Z",
+            "periodEnd": "2026-02-01T00:00:00.000Z",
+            "demandValue": 0,
+            "region": "US",
+            "keyword": "pet hair remover for laundry"
+          },
+          {
+            "periodStart": "2026-02-08T00:00:00.000Z",
+            "periodEnd": "2026-02-08T00:00:00.000Z",
+            "demandValue": 25,
+            "region": "US",
+            "keyword": "pet hair remover for laundry"
+          },
+          {
+            "periodStart": "2026-02-15T00:00:00.000Z",
+            "periodEnd": "2026-02-15T00:00:00.000Z",
+            "demandValue": 0,
+            "region": "US",
+            "keyword": "pet hair remover for laundry"
+          },
+          {
+            "periodStart": "2026-02-22T00:00:00.000Z",
+            "periodEnd": "2026-02-22T00:00:00.000Z",
+            "demandValue": 24,
+            "region": "US",
+            "keyword": "pet hair remover for laundry"
+          },
+          {
+            "periodStart": "2026-03-01T00:00:00.000Z",
+            "periodEnd": "2026-03-01T00:00:00.000Z",
+            "demandValue": 0,
+            "region": "US",
+            "keyword": "pet hair remover for laundry"
+          },
+          {
+            "periodStart": "2026-03-08T00:00:00.000Z",
+            "periodEnd": "2026-03-08T00:00:00.000Z",
+            "demandValue": 0,
+            "region": "US",
+            "keyword": "pet hair remover for laundry"
+          },
+          {
+            "periodStart": "2026-03-15T00:00:00.000Z",
+            "periodEnd": "2026-03-15T00:00:00.000Z",
+            "demandValue": 0,
+            "region": "US",
+            "keyword": "pet hair remover for laundry"
+          },
+          {
+            "periodStart": "2026-03-22T00:00:00.000Z",
+            "periodEnd": "2026-03-22T00:00:00.000Z",
+            "demandValue": 34,
+            "region": "US",
+            "keyword": "pet hair remover for laundry"
+          },
+          {
+            "periodStart": "2026-03-29T00:00:00.000Z",
+            "periodEnd": "2026-03-29T00:00:00.000Z",
+            "demandValue": 60,
+            "region": "US",
+            "keyword": "pet hair remover for laundry"
+          },
+          {
+            "periodStart": "2026-04-05T00:00:00.000Z",
+            "periodEnd": "2026-04-05T00:00:00.000Z",
+            "demandValue": 100,
+            "region": "US",
+            "keyword": "pet hair remover for laundry"
+          },
+          {
+            "periodStart": "2026-04-12T00:00:00.000Z",
+            "periodEnd": "2026-04-12T00:00:00.000Z",
+            "demandValue": 95,
+            "region": "US",
+            "keyword": "pet hair remover for laundry"
+          },
+          {
+            "periodStart": "2026-04-19T00:00:00.000Z",
+            "periodEnd": "2026-04-19T00:00:00.000Z",
+            "demandValue": 71,
+            "region": "US",
+            "keyword": "pet hair remover for laundry"
+          },
+          {
+            "periodStart": "2026-04-26T00:00:00.000Z",
+            "periodEnd": "2026-04-26T00:00:00.000Z",
+            "demandValue": 45,
+            "region": "US",
+            "keyword": "pet hair remover for laundry"
+          },
+          {
+            "periodStart": "2026-05-03T00:00:00.000Z",
+            "periodEnd": "2026-05-03T00:00:00.000Z",
+            "demandValue": 35,
+            "region": "US",
+            "keyword": "pet hair remover for laundry"
+          },
+          {
+            "periodStart": "2026-05-10T00:00:00.000Z",
+            "periodEnd": "2026-05-10T00:00:00.000Z",
+            "demandValue": 28,
+            "region": "US",
+            "keyword": "pet hair remover for laundry"
+          },
+          {
+            "periodStart": "2026-05-17T00:00:00.000Z",
+            "periodEnd": "2026-05-17T00:00:00.000Z",
+            "demandValue": 59,
+            "region": "US",
+            "keyword": "pet hair remover for laundry"
+          },
+          {
+            "periodStart": "2026-05-24T00:00:00.000Z",
+            "periodEnd": "2026-05-24T00:00:00.000Z",
+            "demandValue": 25,
+            "region": "US",
+            "keyword": "pet hair remover for laundry"
+          },
+          {
+            "periodStart": "2026-05-31T00:00:00.000Z",
+            "periodEnd": "2026-05-31T00:00:00.000Z",
+            "demandValue": 38,
+            "region": "US",
+            "keyword": "pet hair remover for laundry"
+          },
+          {
+            "periodStart": "2026-06-07T00:00:00.000Z",
+            "periodEnd": "2026-06-07T00:00:00.000Z",
+            "demandValue": 39,
+            "region": "US",
+            "keyword": "pet hair remover for laundry"
+          },
+          {
+            "periodStart": "2026-06-14T00:00:00.000Z",
+            "periodEnd": "2026-06-14T00:00:00.000Z",
+            "demandValue": 37,
+            "region": "US",
+            "keyword": "pet hair remover for laundry"
+          },
+          {
+            "periodStart": "2026-06-21T00:00:00.000Z",
+            "periodEnd": "2026-06-21T00:00:00.000Z",
+            "demandValue": 38,
+            "region": "US",
+            "keyword": "pet hair remover for laundry"
+          },
+          {
+            "periodStart": "2026-06-28T00:00:00.000Z",
+            "periodEnd": "2026-06-28T00:00:00.000Z",
+            "demandValue": 0,
+            "region": "US",
+            "keyword": "pet hair remover for laundry"
+          },
+          {
+            "periodStart": "2026-07-05T00:00:00.000Z",
+            "periodEnd": "2026-07-05T00:00:00.000Z",
+            "demandValue": 0,
+            "region": "US",
+            "keyword": "pet hair remover for laundry"
+          },
+          {
+            "periodStart": "2026-07-12T00:00:00.000Z",
+            "periodEnd": "2026-07-12T00:00:00.000Z",
+            "demandValue": 0,
+            "region": "US",
+            "keyword": "pet hair remover for laundry"
+          },
+          {
+            "periodStart": "2026-07-19T00:00:00.000Z",
+            "periodEnd": "2026-07-19T00:00:00.000Z",
+            "demandValue": 0,
+            "region": "US",
+            "keyword": "pet hair remover for laundry"
+          },
+          {
+            "periodStart": "2026-07-26T00:00:00.000Z",
+            "periodEnd": "2026-07-26T00:00:00.000Z",
+            "demandValue": 0,
+            "region": "US",
+            "keyword": "pet hair remover for laundry"
+          },
+          {
+            "periodStart": "2026-08-02T00:00:00.000Z",
+            "periodEnd": "2026-08-02T00:00:00.000Z",
+            "demandValue": 0,
+            "region": "US",
+            "keyword": "pet hair remover for laundry"
+          },
+          {
+            "periodStart": "2026-08-09T00:00:00.000Z",
+            "periodEnd": "2026-08-09T00:00:00.000Z",
+            "demandValue": 0,
+            "region": "US",
+            "keyword": "pet hair remover for laundry"
+          },
+          {
+            "periodStart": "2026-08-16T00:00:00.000Z",
+            "periodEnd": "2026-08-16T00:00:00.000Z",
+            "demandValue": 0,
+            "region": "US",
+            "keyword": "pet hair remover for laundry"
+          },
+          {
+            "periodStart": "2026-08-23T00:00:00.000Z",
+            "periodEnd": "2026-08-23T00:00:00.000Z",
+            "demandValue": 0,
+            "region": "US",
+            "keyword": "pet hair remover for laundry"
+          },
+          {
+            "periodStart": "2026-08-30T00:00:00.000Z",
+            "periodEnd": "2026-08-30T00:00:00.000Z",
+            "demandValue": 0,
+            "region": "US",
+            "keyword": "pet hair remover for laundry"
+          },
+          {
+            "periodStart": "2026-09-06T00:00:00.000Z",
+            "periodEnd": "2026-09-06T00:00:00.000Z",
+            "demandValue": 0,
+            "region": "US",
+            "keyword": "pet hair remover for laundry"
+          },
+          {
+            "periodStart": "2026-09-13T00:00:00.000Z",
+            "periodEnd": "2026-09-13T00:00:00.000Z",
+            "demandValue": 0,
+            "region": "US",
+            "keyword": "pet hair remover for laundry"
+          },
+          {
+            "periodStart": "2026-09-20T00:00:00.000Z",
+            "periodEnd": "2026-09-20T00:00:00.000Z",
+            "demandValue": 0,
+            "region": "US",
+            "keyword": "pet hair remover for laundry"
+          },
+          {
+            "periodStart": "2026-09-27T00:00:00.000Z",
+            "periodEnd": "2026-09-27T00:00:00.000Z",
+            "demandValue": 0,
+            "region": "US",
+            "keyword": "pet hair remover for laundry"
+          },
+          {
+            "periodStart": "2026-10-04T00:00:00.000Z",
+            "periodEnd": "2026-10-04T00:00:00.000Z",
+            "demandValue": 0,
+            "region": "US",
+            "keyword": "pet hair remover for laundry"
+          },
+          {
+            "periodStart": "2026-10-11T00:00:00.000Z",
+            "periodEnd": "2026-10-11T00:00:00.000Z",
+            "demandValue": 0,
+            "region": "US",
+            "keyword": "pet hair remover for laundry"
+          },
+          {
+            "periodStart": "2026-10-18T00:00:00.000Z",
+            "periodEnd": "2026-10-18T00:00:00.000Z",
+            "demandValue": 0,
+            "region": "US",
+            "keyword": "pet hair remover for laundry"
+          },
+          {
+            "periodStart": "2026-10-25T00:00:00.000Z",
+            "periodEnd": "2026-10-25T00:00:00.000Z",
+            "demandValue": 5,
+            "region": "US",
+            "keyword": "pet hair remover for laundry"
+          },
+          {
+            "periodStart": "2026-11-01T00:00:00.000Z",
+            "periodEnd": "2026-11-01T00:00:00.000Z",
+            "demandValue": 8,
+            "region": "US",
+            "keyword": "pet hair remover for laundry"
+          },
+          {
+            "periodStart": "2026-11-08T00:00:00.000Z",
+            "periodEnd": "2026-11-08T00:00:00.000Z",
+            "demandValue": 0,
+            "region": "US",
+            "keyword": "pet hair remover for laundry"
+          }
+        ],
+        "evidenceReference": "csv-import:google-trends-explore:sha256:b770efd4f0f4cceb6160f3e763cd071e01e1cd4421658805a87233812b7320f1:q=pet_hair_remover_for_laundry:geo=US:start=2025-11-02:end=2026-11-08:imported=2026-11-08T12:39:02.229Z",
+        "errors": []
+      },
+      "rawCalendarSpanDays": 371,
+      "zeroValues": 36,
+      "nonzeroValues": 18,
+      "sourceAuthority": {
+        "authority": "CACHED_UNVERIFIED",
+        "reasons": [
+          "No Official CSV Import Authority record exists in durable ledger for SHA-256 'b770efd4f0f4...'.",
+          "No Official CSV Import Authority record exists in durable ledger for SHA-256 'b770efd4f0f4...'.",
+          "No Official CSV Import Authority record exists in durable ledger for SHA-256 'b770efd4f0f4...'.",
+          "No Official CSV Import Authority record exists in durable ledger for SHA-256 'b770efd4f0f4...'.",
+          "No Official CSV Import Authority record exists in durable ledger for SHA-256 'b770efd4f0f4...'.",
+          "No Official CSV Import Authority record exists in durable ledger for SHA-256 'b770efd4f0f4...'.",
+          "No Official CSV Import Authority record exists in durable ledger for SHA-256 'b770efd4f0f4...'.",
+          "No Official CSV Import Authority record exists in durable ledger for SHA-256 'b770efd4f0f4...'.",
+          "No Official CSV Import Authority record exists in durable ledger for SHA-256 'b770efd4f0f4...'.",
+          "No Official CSV Import Authority record exists in durable ledger for SHA-256 'b770efd4f0f4...'.",
+          "No Official CSV Import Authority record exists in durable ledger for SHA-256 'b770efd4f0f4...'.",
+          "No Official CSV Import Authority record exists in durable ledger for SHA-256 'b770efd4f0f4...'.",
+          "No Official CSV Import Authority record exists in durable ledger for SHA-256 'b770efd4f0f4...'.",
+          "No Official CSV Import Authority record exists in durable ledger for SHA-256 'b770efd4f0f4...'.",
+          "No Official CSV Import Authority record exists in durable ledger for SHA-256 'b770efd4f0f4...'.",
+          "No Official CSV Import Authority record exists in durable ledger for SHA-256 'b770efd4f0f4...'.",
+          "No Official CSV Import Authority record exists in durable ledger for SHA-256 'b770efd4f0f4...'.",
+          "No Official CSV Import Authority record exists in durable ledger for SHA-256 'b770efd4f0f4...'.",
+          "No Official CSV Import Authority record exists in durable ledger for SHA-256 'b770efd4f0f4...'.",
+          "No Official CSV Import Authority record exists in durable ledger for SHA-256 'b770efd4f0f4...'.",
+          "No Official CSV Import Authority record exists in durable ledger for SHA-256 'b770efd4f0f4...'.",
+          "No Official CSV Import Authority record exists in durable ledger for SHA-256 'b770efd4f0f4...'.",
+          "No Official CSV Import Authority record exists in durable ledger for SHA-256 'b770efd4f0f4...'.",
+          "No Official CSV Import Authority record exists in durable ledger for SHA-256 'b770efd4f0f4...'.",
+          "No Official CSV Import Authority record exists in durable ledger for SHA-256 'b770efd4f0f4...'.",
+          "No Official CSV Import Authority record exists in durable ledger for SHA-256 'b770efd4f0f4...'.",
+          "No Official CSV Import Authority record exists in durable ledger for SHA-256 'b770efd4f0f4...'.",
+          "No Official CSV Import Authority record exists in durable ledger for SHA-256 'b770efd4f0f4...'.",
+          "No Official CSV Import Authority record exists in durable ledger for SHA-256 'b770efd4f0f4...'.",
+          "No Official CSV Import Authority record exists in durable ledger for SHA-256 'b770efd4f0f4...'.",
+          "No Official CSV Import Authority record exists in durable ledger for SHA-256 'b770efd4f0f4...'.",
+          "No Official CSV Import Authority record exists in durable ledger for SHA-256 'b770efd4f0f4...'.",
+          "No Official CSV Import Authority record exists in durable ledger for SHA-256 'b770efd4f0f4...'.",
+          "No Official CSV Import Authority record exists in durable ledger for SHA-256 'b770efd4f0f4...'.",
+          "No Official CSV Import Authority record exists in durable ledger for SHA-256 'b770efd4f0f4...'.",
+          "No Official CSV Import Authority record exists in durable ledger for SHA-256 'b770efd4f0f4...'.",
+          "No Official CSV Import Authority record exists in durable ledger for SHA-256 'b770efd4f0f4...'.",
+          "No Official CSV Import Authority record exists in durable ledger for SHA-256 'b770efd4f0f4...'.",
+          "No Official CSV Import Authority record exists in durable ledger for SHA-256 'b770efd4f0f4...'.",
+          "No Official CSV Import Authority record exists in durable ledger for SHA-256 'b770efd4f0f4...'.",
+          "No Official CSV Import Authority record exists in durable ledger for SHA-256 'b770efd4f0f4...'.",
+          "No Official CSV Import Authority record exists in durable ledger for SHA-256 'b770efd4f0f4...'.",
+          "No Official CSV Import Authority record exists in durable ledger for SHA-256 'b770efd4f0f4...'.",
+          "No Official CSV Import Authority record exists in durable ledger for SHA-256 'b770efd4f0f4...'.",
+          "No Official CSV Import Authority record exists in durable ledger for SHA-256 'b770efd4f0f4...'.",
+          "No Official CSV Import Authority record exists in durable ledger for SHA-256 'b770efd4f0f4...'.",
+          "No Official CSV Import Authority record exists in durable ledger for SHA-256 'b770efd4f0f4...'.",
+          "No Official CSV Import Authority record exists in durable ledger for SHA-256 'b770efd4f0f4...'.",
+          "No Official CSV Import Authority record exists in durable ledger for SHA-256 'b770efd4f0f4...'.",
+          "No Official CSV Import Authority record exists in durable ledger for SHA-256 'b770efd4f0f4...'.",
+          "No Official CSV Import Authority record exists in durable ledger for SHA-256 'b770efd4f0f4...'.",
+          "No Official CSV Import Authority record exists in durable ledger for SHA-256 'b770efd4f0f4...'.",
+          "No Official CSV Import Authority record exists in durable ledger for SHA-256 'b770efd4f0f4...'.",
+          "No Official CSV Import Authority record exists in durable ledger for SHA-256 'b770efd4f0f4...'."
+        ],
+        "productAttributionValid": false
+      },
+      "g15": {
+        "status": "UNVERIFIED",
+        "eligibleForEvergreen": false,
+        "dataPointsCount": 54,
+        "distinctObservationDatesCount": 54,
+        "coveredDays": 371,
+        "meanInterest": 14.2,
+        "stdDev": 24.8,
+        "coefficientOfVariation": 1.75,
+        "demandClass": "TREND_DEPENDENT",
+        "sourceAuthority": "CACHED_UNVERIFIED",
+        "temporalCoverageValid": true,
+        "productAttributionValid": false,
+        "demandObservationIds": [
+          "obs_1_2025-11-02",
+          "obs_2_2025-11-09",
+          "obs_3_2025-11-16",
+          "obs_4_2025-11-23",
+          "obs_5_2025-11-30",
+          "obs_6_2025-12-07",
+          "obs_7_2025-12-14",
+          "obs_8_2025-12-21",
+          "obs_9_2025-12-28",
+          "obs_10_2026-01-04",
+          "obs_11_2026-01-11",
+          "obs_12_2026-01-18",
+          "obs_13_2026-01-25",
+          "obs_14_2026-02-01",
+          "obs_15_2026-02-08",
+          "obs_16_2026-02-15",
+          "obs_17_2026-02-22",
+          "obs_18_2026-03-01",
+          "obs_19_2026-03-08",
+          "obs_20_2026-03-15",
+          "obs_21_2026-03-22",
+          "obs_22_2026-03-29",
+          "obs_23_2026-04-05",
+          "obs_24_2026-04-12",
+          "obs_25_2026-04-19",
+          "obs_26_2026-04-26",
+          "obs_27_2026-05-03",
+          "obs_28_2026-05-10",
+          "obs_29_2026-05-17",
+          "obs_30_2026-05-24",
+          "obs_31_2026-05-31",
+          "obs_32_2026-06-07",
+          "obs_33_2026-06-14",
+          "obs_34_2026-06-21",
+          "obs_35_2026-06-28",
+          "obs_36_2026-07-05",
+          "obs_37_2026-07-12",
+          "obs_38_2026-07-19",
+          "obs_39_2026-07-26",
+          "obs_40_2026-08-02",
+          "obs_41_2026-08-09",
+          "obs_42_2026-08-16",
+          "obs_43_2026-08-23",
+          "obs_44_2026-08-30",
+          "obs_45_2026-09-06",
+          "obs_46_2026-09-13",
+          "obs_47_2026-09-20",
+          "obs_48_2026-09-27",
+          "obs_49_2026-10-04",
+          "obs_50_2026-10-11",
+          "obs_51_2026-10-18",
+          "obs_52_2026-10-25",
+          "obs_53_2026-11-01",
+          "obs_54_2026-11-08"
+        ],
+        "evidenceKind": "SEARCH_INTEREST_NOT_SALES",
+        "commercialInterpretationNote": "Reflects relative search interest index (0-100), not verified store orders, revenue, conversion rate, or ROAS.",
+        "calculationVersion": "12.4.3.3",
+        "explanation": "Demand source authority 'CACHED_UNVERIFIED' is not eligible for Verified Evergreen (No Official CSV Import Authority record exists in durable ledger for SHA-256 'b770efd4f0f4...'.).",
+        "missingEvidence": [
+          "No Official CSV Import Authority record exists in durable ledger for SHA-256 'b770efd4f0f4...'."
+        ],
+        "evaluatedAt": "2026-11-08T12:39:02.312Z",
+        "expectedCadence": "WEEKLY",
+        "coverageRatio": 1,
+        "maxGapDays": 7,
+        "qualifiedPeriods": 54,
+        "totalPeriods": 53,
+        "sourceProvenanceStatus": "CACHED_UNVERIFIED"
+      },
+      "durableAuthority": {
+        "verified": false,
+        "sourceOriginVerified": false,
+        "businessEligible": false,
+        "providerOriginVerified": false,
+        "originClassification": "LOCAL_INTEGRITY_ONLY",
+        "code": "AUTHORITY_NOT_FOUND",
+        "reason": "No Official CSV Import Authority record exists in durable ledger for SHA-256 'b770efd4f0f4...'."
+      },
+      "authorizedApproverCount": 0,
+      "authorityCreation": "BLOCKED_NO_AUTHORIZED_PRINCIPAL_OR_WORKSPACE_PRODUCT_BINDING_OR_BUSINESS_SIGNING_CONFIGURATION",
+      "businessRowsPersisted": 0,
+      "productAttribution": "FAMILY_QUERY_ONLY_NOT_EXCLUSIVE_TO_MERCHANT_SKU",
+      "scoreWithNoEligibleBusinessDemand": {
+        "candidateId": "audit-target-laundry",
+        "opportunityScore": 16,
+        "evidenceConfidence": 10,
+        "scoreStatus": "PROVISIONAL",
+        "formulaVersion": "12.1.0",
+        "demandClass": "INSUFFICIENT_HISTORY",
+        "pillars": {
+          "demandStability": {
+            "score": null,
+            "maxWeight": 25,
+            "status": "MISSING_DATA",
+            "explanation": "Insufficient historical data (0 points observed, minimum 3 required). Evergreen sustainability cannot be verified."
+          },
+          "problemSolutionFit": {
+            "score": 0,
+            "maxWeight": 20,
+            "status": "FAIL",
+            "explanation": "Functional utility observed across promotional creative hooks."
+          },
+          "multiPlatformValidation": {
+            "score": 0,
+            "maxWeight": 20,
+            "status": "FAIL",
+            "explanation": "Observed across 0 platform source(s): ."
+          },
+          "brandabilityStoreFit": {
+            "score": 15,
+            "maxWeight": 15,
+            "status": "PASS",
+            "explanation": "Well-suited for dedicated pets branded store (uprootclean.com)."
+          },
+          "creativeDepth": {
+            "score": 0,
+            "maxWeight": 10,
+            "status": "FAIL",
+            "explanation": "0 distinct creative variation(s) observed."
+          },
+          "competitionSustainability": {
+            "score": 0,
+            "maxWeight": 10,
+            "status": "FAIL",
+            "explanation": "0 independent advertiser(s) actively running campaigns."
+          }
+        },
+        "strengths": [
+          "Identified commercial domain: uprootclean.com with branded catalog potential."
+        ],
+        "risks": [],
+        "missingEvidence": [
+          "Insufficient historical data (0 points observed, minimum 3 required). Evergreen sustainability cannot be verified.",
+          "Explicit customer pain point statement is not verified in ad copy.",
+          "No verified video creative available for hook analysis."
+        ],
+        "recommendation": "RESEARCH_MORE",
+        "recommendationRationale": "Moderate score (16/100). Requires additional demand history and creative validation.",
+        "evaluatedAt": "2026-11-08T12:39:02.297Z",
+        "tier": "INSUFFICIENT_EVIDENCE",
+        "demandSourceAuthority": "UNKNOWN_SOURCE",
+        "evergreenVerification": {
+          "candidateId": "audit-target-laundry",
+          "productId": null,
+          "canonicalProductName": "Pet Hair Remover for Laundry",
+          "merchantDomain": "uprootclean.com",
+          "canonicalProductUrl": "",
+          "identityVerified": false,
+          "physicalProductVerified": true,
+          "relevanceVerified": true,
+          "demandSourceAuthority": "UNKNOWN_SOURCE",
+          "demandObservationsCount": 0,
+          "distinctDemandDatesCount": 0,
+          "coveredDays": 0,
+          "demandStabilityScore": 0,
+          "demandClass": "INSUFFICIENT_HISTORY",
+          "opportunityScore": 16,
+          "evidenceConfidence": 10,
+          "observationRecordIds": [],
+          "demandObservationIds": [],
+          "verifiedByGate": false,
+          "disqualifiers": [
+            "Product identity is not verified with a canonical /products/ merchant URL and domain.",
+            "Demand source authority 'UNKNOWN_SOURCE' is not authoritative/historical verified.",
+            "Insufficient distinct demand observations (0/3 required).",
+            "Demand coverage (0D) is below mandatory 60D threshold.",
+            "Demand stability score (0/25) is below mandatory 15/25 threshold.",
+            "Demand class 'INSUFFICIENT_HISTORY' is not eligible for Verified Evergreen.",
+            "Opportunity score (16/100) is below 65/100 threshold.",
+            "Evidence confidence (10/100) is below 65/100 threshold.",
+            "Candidate lacks traceable source observation record IDs.",
+            "Candidate lacks >= 3 traceable demand observation IDs."
+          ]
+        },
+        "verificationDimensions": {
+          "identityVerifiedByMerchant": false,
+          "demandVerifiedByHistoricalSource": false,
+          "aiReviewed": false,
+          "multiPlatformValidated": false,
+          "evergreenIndependentlyVerified": false
+        }
+      }
+    }
+  ],
+  "emptyLiveAdDiscovery": [],
+  "emptyLiveShortlist": {
+    "shortlist": [],
+    "requestedCount": 3,
+    "qualifiedCount": 0,
+    "distinctFamiliesCount": 0,
+    "shortfallReason": "Only 0 independently identifiable, niche-relevant product opportunity(s) were supported by available source evidence (requested 3).",
+    "distinctnessSummary": "No distinct products qualified for shortlist",
+    "distinctnessEvaluation": {
+      "isDistinct": true,
+      "isFamilyDiverse": true,
+      "totalCandidatesEvaluated": 0,
+      "distinctCount": 0,
+      "distinctProductCount": 0,
+      "distinctFamilyCount": 0,
+      "distinctListingCount": 0,
+      "independentOpportunityCount": 0,
+      "homogeneousFamilyDetected": false,
+      "dominantFamilyKey": null,
+      "dominantFamilyLabel": null,
+      "duplicateGroupsCount": 0,
+      "uncertainties": [],
+      "pairwiseDecisions": [],
+      "details": []
+    },
+    "opportunityDiversity": {
+      "isDistinct": true,
+      "isFamilyDiverse": true,
+      "distinctCount": 0,
+      "distinctProductCount": 0,
+      "distinctFamilyCount": 0,
+      "distinctListingCount": 0,
+      "independentOpportunityCount": 0,
+      "homogeneousFamilyDetected": false,
+      "dominantFamilyKey": null,
+      "dominantFamilyLabel": null,
+      "duplicateKeys": [],
+      "familyKeys": [],
+      "productKeys": [],
+      "uncertainties": [],
+      "pairwiseDecisions": [],
+      "diversitySummary": "No candidates in shortlist."
+    },
+    "liveVerifiedProductCount": 0,
+    "liveVerifiedTop3": false,
+    "liveVerifiedShortlist": [],
+    "candidateRejectionLedger": []
+  },
+  "emptySnapshotRequalification": {
+    "snapshot": {
+      "topThree": [],
+      "provisionalCandidates": []
+    },
+    "modified": false,
+    "demotedWinners": []
+  },
+  "emptyGoogleEvidenceQualified": false,
+  "note": "Real CSV bytes; no engineered source observations, approvals, ad identities or merchant SKU demand bindings minted. Candidate objects are labeled audit targets only."
+}

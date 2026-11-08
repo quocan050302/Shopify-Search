@@ -1,0 +1,94 @@
+{
+  "codeSha": "f2ab3e34e080ac5558176109f99f0c6bd9e817b8",
+  "treeSha": "1b3b1ef23854dd0acede2ec6dae82d88f545ae55",
+  "branch": "feature/kh02-walmart-us-jina-reader-v12.4.3.5.1",
+  "remoteHead": "f2ab3e34e080ac5558176109f99f0c6bd9e817b8",
+  "retrievedAt": "2026-11-08T12:28:35.019424+00:00",
+  "initialLocalHead": "c5f69173aab4a0df0788962b3dd78019c14f6fb8",
+  "trackedFilesAdvancedBy": "verified ancestor; git read-tree -m -u HEAD remote; compare-and-swap git update-ref; no merge/rebase/reset/branch switch",
+  "status": "?? reports/kh02/g15-g16-live-audit-20261107/",
+  "environmentPresenceOnly": {
+    "META_AD_LIBRARY_ACCESS_TOKEN": false,
+    "META_COLLECTOR_ENABLED": false,
+    "META_COLLECTOR_PYTHON_BIN": false,
+    "GOOGLE_TRANSPARENCY_MCP_COMMAND": false,
+    "GOOGLE_TRANSPARENCY_MCP_URL": false,
+    "GOOGLE_TRENDS_API_KEY": false,
+    "GOOGLE_APPLICATION_CREDENTIALS": false,
+    "BIGQUERY_PROJECT_ID": false,
+    "BIGQUERY_FREE_SANDBOX_VERIFIED": false,
+    "BIGQUERY_INDEPENDENT_BILLING_VERIFIED": false,
+    "HASDATA_API_KEY": false,
+    "JINA_API_KEY": false,
+    "KH02_CSV_AUTHORITY_HMAC_SECRET": false,
+    "KH02_AUTHORIZED_CSV_APPROVER_PRINCIPALS": false,
+    "KH02_AUTHORIZED_APPROVER_PRINCIPALS": false,
+    "KH02_AMAZON_PLAYWRIGHT_MCP_ENABLED": false,
+    "AMAZON_CREATORS_CLIENT_ID": false,
+    "AMAZON_CREATORS_CLIENT_SECRET": false,
+    "KH02_WALMART_US_ENABLED": false,
+    "KH02_WALMART_US_LIVE_ALLOWED": false
+  },
+  "nonSecretPolicyFlags": {},
+  "configuredCodexMcpServers": [
+    {
+      "name": "node_repl",
+      "commandConfigured": true,
+      "urlConfigured": false,
+      "environmentKeyNames": [
+        "BROWSER_USE_AVAILABLE_BACKENDS",
+        "BROWSER_USE_CODEX_APP_BUILD_FLAVOR",
+        "BROWSER_USE_CODEX_APP_VERSION",
+        "BROWSER_USE_TINYSKY_ENABLED",
+        "CODEX_CLI_PATH",
+        "CODEX_HOME",
+        "NODE_REPL_INSTRUCTIONS_USE_CASE_BROWSER",
+        "NODE_REPL_INSTRUCTIONS_USE_CASE_CHROME",
+        "NODE_REPL_INSTRUCTIONS_USE_CASE_COMPUTER_USE",
+        "NODE_REPL_NATIVE_PIPE_CONNECT_TIMEOUT_MS",
+        "NODE_REPL_NODE_MODULE_DIRS",
+        "NODE_REPL_NODE_PATH",
+        "NODE_REPL_TRUSTED_CODE_PATHS",
+        "NODE_REPL_TRUSTED_SERVICES",
+        "SKY_CUA_SERVICE_PATH"
+      ]
+    }
+  ],
+  "runtimeDatabase": {
+    "configuration": "DATABASE_URL absent; resolveDatabaseConfiguration default file:./dev.db",
+    "resolvedDefault": "/Users/macbook/Documents/Codex/2026-10-26/new-chat/work/kh02-g15-g16-audit/dev.db",
+    "exists": false,
+    "productionDatabaseAccess": "NOT_CONFIGURED",
+    "diagnosticSnapshot": "evidence/snapshot.json"
+  },
+  "versions": {
+    "node": "v22.22.3",
+    "npm": "10.9.8",
+    "pnpm": "12.11.2",
+    "python": "Python 3.13.0",
+    "os": "Darwin Macbook-Poppa.local 23.4.0 Darwin Kernel Version 23.4.0: Fri Mar 15 00:10:42 PDT 2024; root:xnu-10063.101.17~1/RELEASE_ARM64_T6000 arm64"
+  },
+  "disk": "Filesystem      Size    Used   Avail Capacity iused ifree %iused  Mounted on\n/dev/disk3s5   460Gi   423Gi   6.3Gi    99%    3.8M   66M    5%   /System/Volumes/Data",
+  "memory": "Mach Virtual Memory Statistics: (page size of 16384 bytes)\nPages free:                                5277.\nPages active:                            159639.\nPages inactive:                          154170.\nPages speculative:                         5306.\nPages throttled:                              0.\nPages wired down:                        276923.\nPages purgeable:                              2.\n\"Translation faults\":                3766644148.\nPages copy-on-write:                   39219279.\nPages zero filled:                    769960247.\nPages reactivated:                   1111544988.\nPages purged:                          45635787.\nFile-backed pages:                       110277.\nAnonymous pages:                         208838.\nPages stored in compressor:             2152004.\nPages occupied by compressor:            407870.\nDecompressions:                      1712910176.\nCompressions:                        1893913397.\nPageins:                               71936222.\nPageouts:                               1992867.\nSwapins:                               47557439.\nSwapouts:                              51847901.",
+  "network": "git fetch origin succeeded",
+  "existingUntrackedUserChangesPreserved": true,
+  "sparseCheckout": {
+    "enabled": true,
+    "paths": [
+      "docs",
+      "prisma",
+      "scripts",
+      "services",
+      "src",
+      "tests"
+    ],
+    "workflowInspectedUsingGitShow": ".github/workflows/kh02-ci.yml"
+  },
+  "nodeExecutionCaveat": {
+    "initialChatShellNode": "v22.22.3",
+    "pythonInheritedPathNode": "v14.17.3",
+    "targetedRegressionInitialFailure": "Unexpected token ??= before test execution",
+    "correctedExecutable": "/Users/macbook/.nvm/versions/node/v22.22.3/bin/node",
+    "noDependencyInstallation": true
+  }
+}

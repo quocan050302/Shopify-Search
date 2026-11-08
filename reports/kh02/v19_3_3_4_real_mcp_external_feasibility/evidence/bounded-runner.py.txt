@@ -1,0 +1,19 @@
+import subprocess,os,signal,datetime,json,pathlib,sys,shutil,time
+r=pathlib.Path('/Users/macbook/Documents/Codex/2026-10-26/new-chat/work/kh02-g15-g16-audit');o=r/'reports/kh02/v19_3_3_4_real_mcp_external_feasibility';task=sys.argv[1];secs=int(sys.argv[2]);args=sys.argv[3:]; start=datetime.datetime.now(datetime.timezone.utc).isoformat();free=shutil.disk_usage(r).free
+record={'taskId':task,'dependencies':['baseline'],'inputSha':subprocess.check_output(['git','rev-parse','HEAD'],cwd=r,text=True).strip(),'startedAt':start,'arguments':args,'timeoutSeconds':secs,'diskFreeBytesBefore':free,'timeout':False,'memoryBefore':subprocess.check_output(['vm_stat'],text=True)}
+if free<2*1024**3:record.update(status='RESOURCE_ABORT',exitCode=None)
+else:
+ env=dict(os.environ);env['PATH']='/Users/macbook/.nvm/versions/node/v22.22.3/bin:'+env.get('PATH','');env.update({'NODE_OPTIONS':'--max-old-space-size=2048','DATABASE_URL': 'file:'+str(pathlib.Path('/Users/macbook/Documents/Codex/2026-11-08/files-pasted-by-the-user-codex/work/audit-snapshot.db'))})
+ with open(o/'logs'/f'{task}.log','w') as f:
+  p=subprocess.Popen(args,cwd=r,env=env,stdout=f,stderr=subprocess.STDOUT,start_new_session=True)
+  try: rc=p.wait(timeout=secs);record.update(exitCode=rc,status='PASS' if rc==0 else 'FAIL')
+  except subprocess.TimeoutExpired:
+   record.update(timeout=True,status='ABORTED',exitCode=None);os.killpg(p.pid,signal.SIGTERM)
+   try:p.wait(timeout=4)
+   except subprocess.TimeoutExpired:os.killpg(p.pid,signal.SIGKILL);p.wait()
+  # Clean only remaining descendants in this task's process group.
+  try:os.killpg(p.pid,signal.SIGTERM)
+  except ProcessLookupError:pass
+ record['logBytes']=(o/'logs'/f'{task}.log').stat().st_size
+record.update(endedAt=datetime.datetime.now(datetime.timezone.utc).isoformat(),diskFreeBytesAfter=shutil.disk_usage(r).free)
+(o/'evidence'/f'{task}.execution.json').write_text(json.dumps(record,indent=2)+'\n');print(json.dumps(record))

@@ -1,0 +1,57 @@
+{
+  "codeSha": "f2ab3e34e080ac5558176109f99f0c6bd9e817b8",
+  "treeSha": "1b3b1ef23854dd0acede2ec6dae82d88f545ae55",
+  "branch": "feature/kh02-walmart-us-jina-reader-v12.4.3.5.1",
+  "executedAt": "2026-11-08T12:42:46.229179+00:00",
+  "executionContext": "local macOS; existing sparse checkout; no .env/.env.local provider credentials; isolated protocol stores and copied diagnostic SQLite snapshot; $0 paid provider charges",
+  "status": "LOCAL_MCP_TOOL_RESULT_VERIFIED / UPSTREAM_NOT_ATTESTED",
+  "localProtocolResult": {
+    "tool": "search_advertiser",
+    "arguments": {
+      "query": ""
+    },
+    "responseEvidenceHash": "90c62b6650a40724cd3c08f0032ad1a5ade09a82eabcb8b659b22fade56e08c2",
+    "mcpInvocationRef": "protocol-google/local-empty-input-only",
+    "localMcpToolResultVerified": true,
+    "upstreamRequestVerified": false,
+    "providerVerified": false,
+    "upstreamOriginStatus": "UPSTREAM_NOT_ATTESTED",
+    "upstreamQueryAttempted": false
+  },
+  "realUpstreamCalls": 0,
+  "creativesReturnedByMcp": 0,
+  "recordsPersisted": 0,
+  "businessEligible": false,
+  "blockedTools": [
+    "search_advertiser(nonempty)",
+    "get_advertiser_ads"
+  ],
+  "blocker": "Both invoke undocumented internal RPC via installed community scraper; no authorized general US competitor API entitlement established.",
+  "publicUiObservation": {
+    "advertiserId": "AR11363703404665765889",
+    "creativeId": "CR13389152531976814593",
+    "advertiserName": "深圳有哈科技有限公司",
+    "payerName": "Sinointeractive Digital Marketing Co., Ltd.",
+    "sourceUrl": "https://adstransparency.google.com/advertiser/AR11363703404665765889/creative/CR13389152531976814593?region=US",
+    "displayedLastShownDate": "2026-11-08",
+    "displayedFormat": "IMAGE",
+    "displayedRegionText": "Hiển thị ở Hoa Kỳ",
+    "regionInterpretation": "Official UI says shown in United States; observational evidence, not authenticated MCP transport attestation.",
+    "landingUrlDecodedFromVisibleLink": "https://www.uahpet.com/products/uah-pet-2025-upgrade-stainless-steel-cordless-pet-water-fountain",
+    "selectedTargetMerchant": "kittyspout.com",
+    "productMatchVerdict": "WRONG_MERCHANT_DOMAIN_FOR_SELECTED_FOUNTAIN; NOT_FEEDER",
+    "localMcpToolResultVerified": false,
+    "upstreamRequestVerified": false,
+    "providerVerified": false,
+    "upstreamOriginStatus": "PUBLIC_UI_OBSERVATION_ONLY",
+    "mcpInvocationRef": null,
+    "evidence": [
+      "evidence/google-public-creative.txt",
+      "evidence/google-public-creative.png"
+    ]
+  },
+  "observedPublicCreativeCount": 1,
+  "selectedCandidateProductMatches": 0,
+  "publicUiDomainQueries": 1,
+  "rawMcpRequestIdsAreNotProviderAttestation": true
+}
