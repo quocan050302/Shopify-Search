@@ -279,34 +279,82 @@ export function validateOfficialGoogleTrendsAcquisitionUrl(
     throw new Error(`INVALID_ACQUISITION_SOURCE_URL: Malformed URL '${trimmed}'.`);
   }
   if (
+    parsedUrl.origin.toLowerCase() !== "https://trends.google.com" ||
     parsedUrl.protocol !== "https:" ||
     parsedUrl.hostname.toLowerCase() !== "trends.google.com" ||
     parsedUrl.username !== "" ||
     parsedUrl.password !== "" ||
     parsedUrl.port !== "" ||
-    !parsedUrl.pathname.startsWith("/trends/")
+    !/^\/trends\/explore(?:\/|$)/i.test(parsedUrl.pathname)
   ) {
     throw new Error(
-      `INVALID_ACQUISITION_SOURCE_URL: URL '${trimmed}' failed strict origin/path validation.`
+      `INVALID_ACQUISITION_SOURCE_URL: URL '${trimmed}' failed strict origin/path validation (requires https://trends.google.com/trends/explore).`
     );
   }
 
-  if (parsedUrl.searchParams.has("geo")) {
-    const urlGeo = normalizeCsvAuthorityGeography(parsedUrl.searchParams.get("geo"));
-    const expGeo = normalizeCsvAuthorityGeography(expectedGeo || "US");
-    if (urlGeo !== expGeo) {
-      throw new Error(
-        `ACQUISITION_GEO_MISMATCH: Acquisition URL geo '${urlGeo}' does not match authority geography '${expGeo}'.`
-      );
-    }
+  const geoValues = parsedUrl.searchParams.getAll("geo");
+  if (geoValues.length === 0) {
+    throw new Error(
+      "ACQUISITION_GEO_REQUIRED: Official Google Trends Explore URL must include a non-empty 'geo' query parameter."
+    );
+  }
+  if (geoValues.length > 1) {
+    throw new Error(
+      "AMBIGUOUS_ACQUISITION_PARAMETERS: Official Google Trends Explore URL contains duplicate 'geo' query parameters."
+    );
+  }
+  const rawGeo = String(geoValues[0] || "").trim();
+  if (!rawGeo) {
+    throw new Error(
+      "ACQUISITION_GEO_REQUIRED: Official Google Trends Explore URL 'geo' query parameter cannot be empty or whitespace."
+    );
+  }
+  if (/%[0-9a-fA-F]{2}/.test(rawGeo) || rawGeo.includes(",")) {
+    throw new Error(
+      `AMBIGUOUS_ACQUISITION_PARAMETERS: Acquisition URL geo '${rawGeo}' contains ambiguous encoding or multiple regions.`
+    );
+  }
+  const urlGeo = normalizeCsvAuthorityGeography(rawGeo);
+  const expGeo = normalizeCsvAuthorityGeography(expectedGeo || "US");
+  if (urlGeo !== expGeo || urlGeo !== "US") {
+    throw new Error(
+      `ACQUISITION_GEO_MISMATCH: Acquisition URL geo '${urlGeo}' does not match authority geography '${expGeo}' (national US required).`
+    );
   }
 
-  if (parsedUrl.searchParams.has("q") && expectedQuery && expectedQuery.trim()) {
-    const urlQ = normalizeCsvAuthorityQuery(parsedUrl.searchParams.get("q"));
+  const qValues = parsedUrl.searchParams.getAll("q");
+  if (qValues.length === 0) {
+    throw new Error(
+      "ACQUISITION_QUERY_REQUIRED: Official Google Trends Explore URL must include a non-empty 'q' query parameter."
+    );
+  }
+  if (qValues.length > 1) {
+    throw new Error(
+      "AMBIGUOUS_ACQUISITION_PARAMETERS: Official Google Trends Explore URL contains duplicate 'q' query parameters."
+    );
+  }
+  const rawQ = String(qValues[0] || "").trim();
+  if (!rawQ) {
+    throw new Error(
+      "ACQUISITION_QUERY_REQUIRED: Official Google Trends Explore URL 'q' query parameter cannot be empty or whitespace."
+    );
+  }
+  if (/%[0-9a-fA-F]{2}/.test(rawQ) || rawQ.includes(",")) {
+    throw new Error(
+      `AMBIGUOUS_ACQUISITION_PARAMETERS: Acquisition URL query '${rawQ}' contains ambiguous double-encoding or multiple comma-separated terms.`
+    );
+  }
+  const urlQ = normalizeCsvAuthorityQuery(rawQ);
+  if (!urlQ) {
+    throw new Error(
+      "ACQUISITION_QUERY_REQUIRED: Normalized acquisition URL query 'q' cannot be empty."
+    );
+  }
+  if (expectedQuery !== undefined && expectedQuery !== null) {
     const expQ = normalizeCsvAuthorityQuery(expectedQuery);
-    if (!urlQ || (urlQ !== expQ && !urlQ.includes(expQ) && !expQ.includes(urlQ))) {
+    if (!expQ || urlQ !== expQ) {
       throw new Error(
-        `ACQUISITION_QUERY_MISMATCH: Acquisition URL query '${urlQ}' does not match authority query '${expQ}'.`
+        `ACQUISITION_QUERY_MISMATCH: Acquisition URL query '${urlQ}' does not exactly match authority query '${expQ}'.`
       );
     }
   }

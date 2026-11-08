@@ -304,8 +304,8 @@ export function verifyEvergreenCandidateIndependently(
     new Set([
       ...(Array.isArray(candidate?.supportingAdIds) ? candidate.supportingAdIds : []),
       ...rawObsList
-        .filter((o: any) => o?.sourceIdOrigin !== "INTERNAL_DERIVED" && o?.evidenceReference !== "Ad:raw")
-        .map((o: any) => o.sourceRecordId || o.evidenceReference)
+        .filter((o: any) => o && typeof o === "object" && o?.sourceIdOrigin !== "INTERNAL_DERIVED" && o?.evidenceReference !== "Ad:raw")
+        .map((o: any) => o?.sourceRecordId || o?.evidenceReference)
         .filter(Boolean),
     ])
   );
@@ -467,6 +467,173 @@ export function applyKH02EligibilityGates(
  * Calculates authoritative V12.1 Evergreen Opportunity Score.
  * Strictly avoids ungrounded point inflation.
  */
+export function isQualifiedGoogleAdsProductEvidence(
+  obs: unknown,
+  candidate?: Partial<DiscoveredProductCandidate> | null
+): boolean {
+  if (!obs || typeof obs !== "object") {
+    return false;
+  }
+  const o = obs as Record<string, any>;
+  const rawSource = String(o.source || "").trim().toUpperCase();
+  if (
+    rawSource !== "GOOGLE" &&
+    rawSource !== "GOOGLE_ADS" &&
+    rawSource !== "GOOGLE_ADS_TRANSPARENCY"
+  ) {
+    return false;
+  }
+
+  const metrics = o.metrics && typeof o.metrics === "object" ? (o.metrics as Record<string, any>) : {};
+
+  // 1. Strict boolean upstream attestation (never accept string "true" or numeric 1)
+  if (o.providerVerified !== undefined && o.providerVerified !== true) {
+    return false;
+  }
+  if (metrics.providerVerified !== undefined && metrics.providerVerified !== true) {
+    return false;
+  }
+  if (o.upstreamRequestVerified !== undefined && o.upstreamRequestVerified !== true) {
+    return false;
+  }
+  if (metrics.upstreamRequestVerified !== undefined && metrics.upstreamRequestVerified !== true) {
+    return false;
+  }
+  const hasProviderVerified = o.providerVerified === true || metrics.providerVerified === true;
+  const hasUpstreamRequestVerified =
+    o.upstreamRequestVerified === true || metrics.upstreamRequestVerified === true;
+  if (!hasProviderVerified || !hasUpstreamRequestVerified) {
+    return false;
+  }
+
+  const upstreamStatus = String(
+    o.upstreamOriginStatus || metrics.upstreamOriginStatus || ""
+  )
+    .trim()
+    .toUpperCase();
+  const provTier = String(o.provenanceTier || metrics.provenanceTier || "")
+    .trim()
+    .toUpperCase();
+  if (
+    upstreamStatus === "UPSTREAM_NOT_ATTESTED" ||
+    upstreamStatus === "UNVERIFIED" ||
+    provTier === "LOCAL_MCP_TOOL_RESULT_VERIFIED" ||
+    provTier === "UNVERIFIED" ||
+    provTier === "NONE"
+  ) {
+    return false;
+  }
+
+  // 2. Reject cached, replay, or fixture observations
+  const provenance = String(o.provenance || "").trim().toUpperCase();
+  const sourceMode = String(o.sourceMode || metrics.sourceMode || "")
+    .trim()
+    .toUpperCase();
+  if (
+    o.isCached === true ||
+    metrics.isCached === true ||
+    provenance === "CACHED_SOURCE" ||
+    provenance === "TEST_FIXTURE" ||
+    provenance === "SYNTHETIC_DEMO" ||
+    provenance === "MOCK" ||
+    provenance === "UNKNOWN" ||
+    sourceMode === "CACHE" ||
+    sourceMode === "CACHED" ||
+    sourceMode === "CACHE_ONLY" ||
+    sourceMode === "FIXTURE" ||
+    sourceMode === "REPLAY"
+  ) {
+    return false;
+  }
+
+  // 3. Reject brand-only, unrelated, or unknown product relevance
+  const rel = String(o.productRelevance || metrics.productRelevance || "")
+    .trim()
+    .toUpperCase();
+  const verdict = String(o.associationVerdict || metrics.associationVerdict || "")
+    .trim()
+    .toUpperCase();
+  if (
+    rel === "BRAND_RELATED" ||
+    rel === "UNRELATED" ||
+    rel === "UNKNOWN" ||
+    rel === "CATEGORY_ONLY" ||
+    verdict === "BRAND_ONLY_MATCH" ||
+    verdict === "REJECTED_UNRELATED_CREATIVE" ||
+    verdict === "REJECTED"
+  ) {
+    return false;
+  }
+
+  // 4. Require verified US market delivery (not FILTER_ONLY / UNVERIFIED / INFERRED / US-CA)
+  const mkt = String(o.verifiedDeliveryMarket || "").trim().toUpperCase();
+  const mktVerif = String(
+    o.marketProvenance?.verificationStatus ||
+      metrics.marketProvenance?.verificationStatus ||
+      ""
+  )
+    .trim()
+    .toUpperCase();
+  if (
+    mkt !== "US" ||
+    mktVerif === "FILTER_ONLY" ||
+    mktVerif === "UNVERIFIED" ||
+    mktVerif === "INFERRED"
+  ) {
+    return false;
+  }
+
+  // 5. Require candidate-specific PDP landingPageUrl matching candidate domain and product path
+  const rawLanding = typeof o.landingPageUrl === "string" ? o.landingPageUrl.trim() : "";
+  if (!rawLanding) {
+    return false;
+  }
+  let parsedLanding: URL;
+  try {
+    parsedLanding = new URL(rawLanding);
+  } catch {
+    return false;
+  }
+  const pathname = parsedLanding.pathname.toLowerCase();
+  if (
+    pathname === "/" ||
+    pathname === "" ||
+    /^\/(?:collections|category|categories|search|pages|blogs|cart|checkout|account)(?:\/|$)/i.test(
+      pathname
+    ) ||
+    !/\/(?:products|dp|gp\/product|p|item)\/[^/?#]+/i.test(pathname)
+  ) {
+    return false;
+  }
+
+  const stripWww = (h: string) => h.trim().toLowerCase().replace(/^www\./, "");
+  const obsHost = stripWww(parsedLanding.hostname);
+  if (candidate?.storeDomain) {
+    const candDomain = stripWww(candidate.storeDomain);
+    if (candDomain && obsHost !== candDomain) {
+      return false;
+    }
+  }
+  if (candidate?.canonicalProductUrl) {
+    try {
+      const parsedCandUrl = new URL(candidate.canonicalProductUrl);
+      const candHost = stripWww(parsedCandUrl.hostname);
+      if (candHost && obsHost !== candHost) {
+        return false;
+      }
+      const candPath = parsedCandUrl.pathname.toLowerCase().replace(/\/+$/, "");
+      const obsPath = pathname.replace(/\/+$/, "");
+      if (candPath && candPath !== "/" && obsPath !== candPath) {
+        return false;
+      }
+    } catch {
+      // ignore malformed candidate canonicalProductUrl if storeDomain matched
+    }
+  }
+
+  return true;
+}
+
 export function calculateKH02EvergreenScore(
   ctx: ProductScoringContext
 ): KH02ScoreResult {
@@ -537,43 +704,23 @@ export function calculateKH02EvergreenScore(
       normalizedSources.push("GOOGLE_ADS");
     } else if (s === "TIKTOK" || s === "TIKTOK_ORGANIC") {
       normalizedSources.push("TIKTOK_ORGANIC");
-    } else if (s) {
-      normalizedSources.push(s);
+    } else if (s === "TIKTOK_ADS") {
+      normalizedSources.push("TIKTOK_ADS");
     }
   }
   const sourceSet = new Set(normalizedSources);
 
-  // If candidate has Google observations and every Google observation is explicitly brand-only / unrelated,
-  // do not award product-level multi-platform validation points for GOOGLE_ADS (Section 10.4 & 11.2).
-  const googleObs = (c.sourceObservations || []).filter((o) => o && o.source === "GOOGLE_ADS");
-  if (googleObs.length > 0) {
-    const hasProductSpecificGoogleObs = googleObs.some((o) => {
-      const rel = (o.metrics as any)?.productRelevance;
-      const verdict = (o as any)?.associationVerdict || (o.metrics as any)?.associationVerdict;
-      const mktVerif = (o.metrics as any)?.marketProvenance?.verificationStatus;
-      if (
-        rel === "BRAND_RELATED" ||
-        rel === "UNRELATED" ||
-        rel === "UNKNOWN" ||
-        verdict === "BRAND_ONLY_MATCH" ||
-        verdict === "REJECTED_UNRELATED_CREATIVE" ||
-        mktVerif === "FILTER_ONLY" ||
-        mktVerif === "UNVERIFIED"
-      ) {
-        return false;
-      }
-      if (
-        o.landingPageUrl === null &&
-        !(o.metrics as any)?.productId &&
-        !(o.metrics as any)?.matchedProductHandle
-      ) {
-        return false;
-      }
-      return true;
-    });
-    if (!hasProductSpecificGoogleObs) {
-      sourceSet.delete("GOOGLE_ADS");
-    }
+  // V19.3.3.3 (P1-B): Treat supportingSourceTypes as discoverability hints only for GOOGLE_ADS.
+  // Require at least one concrete candidate-attributable, upstream-provider-verified
+  // (providerVerified === true && upstreamRequestVerified === true) US PDP Google observation.
+  const safeObservations = Array.isArray(c.sourceObservations) ? c.sourceObservations : [];
+  const googleEvidenceQualified = safeObservations.some((o) =>
+    isQualifiedGoogleAdsProductEvidence(o, c)
+  );
+  if (googleEvidenceQualified) {
+    sourceSet.add("GOOGLE_ADS");
+  } else {
+    sourceSet.delete("GOOGLE_ADS");
   }
 
   const platformCount = sourceSet.size;
@@ -627,13 +774,13 @@ export function calculateKH02EvergreenScore(
   // ── Pillar E: Creative Depth (10 pts) ─────────────────────────────────────
   // Grounded: 0 base points
   let pillarE_Score = 0;
-  const uniqueAds = c.supportingAdIds.length;
+  const uniqueAds = Array.isArray(c.supportingAdIds) ? c.supportingAdIds.length : 0;
 
   if (uniqueAds >= 5) pillarE_Score += 5;
   else if (uniqueAds >= 2) pillarE_Score += 3;
   else if (uniqueAds === 1) pillarE_Score += 1;
 
-  if (c.videoUrl || c.sourceObservations.some((o) => o.media?.mediaType === "VIDEO")) {
+  if (c.videoUrl || safeObservations.some((o) => o && o.media?.mediaType === "VIDEO")) {
     pillarE_Score += 5;
     confidencePoints += 10;
     strengths.push("Video demonstration creative available for product hook evaluation.");

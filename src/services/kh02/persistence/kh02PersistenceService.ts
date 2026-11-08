@@ -945,11 +945,17 @@ export function requalifyHistoricalEvergreenSnapshot(
       return !lineage.sourceOriginVerified || !lineage.businessLineageEligible;
     });
 
+    const hasNullDemandPillar =
+      (item?.score as any)?.pillars &&
+      (item?.score as any)?.pillars?.demandStability &&
+      (item?.score as any)?.pillars?.demandStability?.score === null;
+
     if (
       hasSyntheticMerchantRef ||
       isUnverifiedAuthority ||
       isLocalIntegrityOrFixtureOrigin ||
-      hasUnattestedCsvRef
+      hasUnattestedCsvRef ||
+      hasNullDemandPillar
     ) {
       const reason = hasUnattestedCsvRef || isLocalIntegrityOrFixtureOrigin
         ? "Retroactively demoted in G15 Origin Integrity Closure: historical demand was backed by a LOCAL_INTEGRITY_ONLY or unauthenticated CSV fixture without verified Official CSV Import Authority or live provider lineage."
