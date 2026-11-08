@@ -1,0 +1,25 @@
+Filesystem        Size    Used   Avail Capacity iused ifree %iused  Mounted on
+/dev/disk3s1s1   460Gi   9.5Gi   8.3Gi    54%    404k   87M    0%   /
+Mach Virtual Memory Statistics: (page size of 16384 bytes)
+Pages free:                               10516.
+Pages active:                            169622.
+Pages inactive:                          168459.
+Pages speculative:                          763.
+Pages throttled:                              0.
+Pages wired down:                        280402.
+Pages purgeable:                             10.
+"Translation faults":                3134482485.
+Pages copy-on-write:                   34142556.
+Pages zero filled:                    654482957.
+Pages reactivated:                    913263165.
+Pages purged:                          37351078.
+File-backed pages:                       111354.
+Anonymous pages:                         227490.
+Pages stored in compressor:             2172775.
+Pages occupied by compressor:            379285.
+Decompressions:                      1397341051.
+Compressions:                        1543124186.
+Pageins:                               62213512.
+Pageouts:                               1684843.
+Swapins:                               39572996.
+Swapouts:                              43265844.

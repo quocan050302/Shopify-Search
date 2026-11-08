@@ -1,0 +1,32 @@
+{
+  "gateId": "DEV_HOLDOUT_POINT_IN_TIME_BACKTEST",
+  "patchVersion": "V12.4.3.7.19.3.3.1",
+  "testedCodeCommitSha": "79b248e79c56a0a549cc8d681fd6e67ad61762fc",
+  "testedTreeSha": "afdf6da09961f358e9010fc0d4547ebcb6d56cbc",
+  "command": "npx tsx scripts/kh02/runBacktestV12_4_3_4_2.ts",
+  "logFile": "reports/kh02/v19_3_3_1_csv_trust_google_meta_provenance/logs/D2_dev_holdout_backtest.log",
+  "policyScenarioVerdict": "PASS",
+  "pointInTimeIntegrityVerdict": "PASS",
+  "zeroFutureLeakageVerified": true,
+  "historicalDevBacktest": {
+    "split": "DEV",
+    "asOfTimestamp": "2026-09-15T23:59:59.000Z",
+    "shortlistCandidatesCount": 0,
+    "verifiedEvergreenCount": 0,
+    "verdict": "INSUFFICIENT_HISTORICAL_EVIDENCE"
+  },
+  "historicalHoldoutBacktest": {
+    "split": "HOLDOUT",
+    "asOfTimestamp": "2026-10-31T23:59:59.000Z",
+    "shortlistCandidatesCount": 3,
+    "verifiedEvergreenCount": 0,
+    "verdict": "INSUFFICIENT_HISTORICAL_EVIDENCE"
+  },
+  "overallHistoricalBacktestVerdict": "INSUFFICIENT_HISTORICAL_EVIDENCE",
+  "requalificationPointInTimeEnforcement": {
+    "service": "src/services/kh02/persistence/kh02PersistenceService.ts",
+    "function": "requalifyHistoricalEvergreenSnapshot",
+    "asOfTimestampEnforced": true,
+    "futureImportLeakageBlocked": true
+  }
+}

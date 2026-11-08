@@ -1,0 +1,10 @@
+
+ RUN  v5.0.5 /Users/macbook/Documents/Project_Github/Meta-Ads/Shopify-Search
+
+ ✓ tests/unit/kh02/g15CsvOriginIntegrity.test.ts (36 tests) 474ms
+
+ Test Files  1 passed (1)
+      Tests  36 passed (36)
+   Start at  10:17:51
+   Duration  1.19s (tests 49%, import 23%, transform 14%, setup 13%, worker 1%)
+

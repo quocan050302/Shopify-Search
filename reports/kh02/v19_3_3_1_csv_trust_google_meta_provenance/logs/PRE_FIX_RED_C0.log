@@ -1,0 +1,358 @@
+
+ RUN  v5.0.5 /Users/macbook/Documents/Project_Github/Meta-Ads/Shopify-Search
+
+ ❯ tests/unit/kh02/v19_3_3_1_CsvTrustAndGoogleMetaProvenance.test.ts (34 tests | 17 failed) 332ms
+   ❯ KH-02 V12.4.3.7.19.3.3.1 — P0 CSV Authority Trust Boundary & P1 Google/Meta Provenance (34)
+     ❯ Section 02.7 — P0 CSV Authority Trust Boundary (A01..A16) (16)
+       × A01: registerCsvAuthoritySigningKey({isBusinessTrusted:true}) using arbitrary key cannot grant BUSINESS authority without trusted env issuer & authorized approver 18ms
+       × A02: test-registered key with isBusinessTrusted:true is denied in BUSINESS scope across NODE_ENV=test, development, and production 3ms
+       × A03: test registry key ID equal to real env key ID cannot shadow or substitute the env-managed business issuer 2ms
+       × A04: fake approverPrincipalId with caller enforceApproverAuthority=false is DENIED in BUSINESS scope regardless of NODE_ENV 4ms
+       ✓ A05: known repository fixture hash AND invented non-fixture lookalike CSV without origin review are DENIED in BUSINESS scope 2ms
+       ✓ A06: caller supplying originClassification=AUTHENTICATED_OFFICIAL_EXPORT and reviewStatus=APPROVED alone without trusted issuer & allowlisted approver is DENIED 1ms
+       × A07: signed local CSV with no verified official acquisition source URL / review evidence is DENIED in BUSINESS scope 2ms
+       ✓ A08: tampered ledger signature, digest, immutable record, or underlying CSV file bytes are DENIED 2ms
+       ✓ A09: previously valid record once revoked is monotonically DENIED on fresh readback and cannot be re-persisted 2ms
+       × A10: corrupt ledger, symlinked ledger file, path traversal, and foreign workspace are DENIED fail-closed 2ms
+       × A11: wrong candidate, wrong product, wrong term, non-US geography, or missing observation productId are DENIED 10ms
+       ✓ A12: periodEnd, approvedAt, importedAt, or availableAt after point-in-time asOf cutoff are DENIED 3ms
+       ✓ A13: key rotation, compromised/revoked/unknown/purpose-mismatch key IDs are DENIED fail-closed 2ms
+       ✓ A14: concurrent writer/reader/revoke race maintains monotonic revocation and zero false acceptance 2ms
+       ✓ A15: 60-day fixture time series cannot PASS BUSINESS G15 even if engineering parser passes 5ms
+       ✓ A16: ENGINEERING-scoped test CSV authority satisfies parser and cadence tests in ENGINEERING scope but is NEVER counted as genuine BUSINESS Google export 2ms
+     ❯ Section 03.7 — P1 Google Ads Provenance & Product/Market Truth (G01..G12) (12)
+       ✓ G01: tools/list success with tools/call skipped reports PROTOCOL_ONLY (ENRICHMENT_ONLY), not LIVE_CONTENT 1ms
+       × G02: 6 creative rows with zero invocation receipts in ledger are rejected as UNVERIFIED and cannot qualify as G16 proof 1ms
+       × G03: local invocation receipt without upstream request ID reports LOCAL_MCP_TOOL_RESULT_VERIFIED with providerVerified=false 1ms
+       × G04: response hash mismatch, creative ID mismatch, advertiser ID mismatch, or domain mismatch is DENIED 1ms
+       ✓ G05: storefront root and collection/category URLs are classified as BRAND_RELATED with zero product-specific qualification 1ms
+       × G06: creative with null landingPageUrl and null productId is classified as UNKNOWN (never PRODUCT_SPECIFIC) even when headline matches topic 1ms
+       ✓ G07: requested US filter with null provider-reported market keeps verifiedDeliveryMarket=null and FILTER_ONLY/UNKNOWN market status 1ms
+       × G08: 403/429/CAPTCHA/timeout/bot-wall responses are marked NOT_VERIFIED / BOT_BLOCKED with zero retries 3ms
+       × G09: malformed/truncated JSON or >2MiB response fails closed with bounded memory 2ms
+       ✓ G10: durable DB rows survive reload without losing exact invocation receipts 184ms
+       × G11: legit verified local tool invocation with returned advertiser/creative IDs reports precise local-MCP proof without claiming upstream API-origin proof 1ms
+       × G12: collectGoogleAdvertiserSignals populates providerInvocations and reconciled breakdown counts that agree with invocation records and per-row origins 3ms
+     ❯ Section 04.4 — P1 Meta Provider-to-DB Truth (M01..M06) (6)
+       × M01: diagnostic connected with no live query executed reports transportStatus=PASS, queryExecuted=false, contentStatus=NOT_RUN 7ms
+       × M02: fixture/seed DB rows cannot upgrade provider status or set provenanceVerified=true when no live query executed 1ms
+       ✓ M03: true upstream Meta ad ingestion binds external Ad Library ID, source identity hash, and DB observation record 21ms
+       ✓ M04: 9 Uproot Meta ads collapse into ONE product family and cannot occupy multiple Top 3 slots 38ms
+       ✓ M05: targetMarket US query filter does not fabricate verified US audience delivery when ad targetMarket is UNKNOWN 1ms
+       ✓ M06: failed/timeout MCP client closes child transport cleanly and promotes zero records 2ms
+
+⎯⎯⎯⎯⎯⎯ Failed Tests 17 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/unit/kh02/v19_3_3_1_CsvTrustAndGoogleMetaProvenance.test.ts > KH-02 V12.4.3.7.19.3.3.1 — P0 CSV Authority Trust Boundary & P1 Google/Meta Provenance > Section 02.7 — P0 CSV Authority Trust Boundary (A01..A16) > A01: registerCsvAuthoritySigningKey({isBusinessTrusted:true}) using arbitrary key cannot grant BUSINESS authority without trusted env issuer & authorized approver
+AssertionError: expected false to be true // Object.is equality
+
+- Expected
++ Received
+
+- true
++ false
+
+ ❯ tests/unit/kh02/v19_3_3_1_CsvTrustAndGoogleMetaProvenance.test.ts:196:82
+    194|       });
+    195|
+    196|       expect(threwOnIssue || !verifyRes.verified || !verifyRes.busines…
+       |                                                                                  ^
+    197|       expect(verifyRes.businessEligible).toBe(false);
+    198|     });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/17]⎯
+
+ FAIL  tests/unit/kh02/v19_3_3_1_CsvTrustAndGoogleMetaProvenance.test.ts > KH-02 V12.4.3.7.19.3.3.1 — P0 CSV Authority Trust Boundary & P1 Google/Meta Provenance > Section 02.7 — P0 CSV Authority Trust Boundary (A01..A16) > A02: test-registered key with isBusinessTrusted:true is denied in BUSINESS scope across NODE_ENV=test, development, and production
+AssertionError: expected true to be false // Object.is equality
+
+- Expected
++ Received
+
+- false
++ true
+
+ ❯ tests/unit/kh02/v19_3_3_1_CsvTrustAndGoogleMetaProvenance.test.ts:248:44
+    246|           evaluationScope: "BUSINESS",
+    247|         });
+    248|         expect(verifyRes.businessEligible).toBe(false);
+       |                                            ^
+    249|       }
+    250|     });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/17]⎯
+
+ FAIL  tests/unit/kh02/v19_3_3_1_CsvTrustAndGoogleMetaProvenance.test.ts > KH-02 V12.4.3.7.19.3.3.1 — P0 CSV Authority Trust Boundary & P1 Google/Meta Provenance > Section 02.7 — P0 CSV Authority Trust Boundary (A01..A16) > A03: test registry key ID equal to real env key ID cannot shadow or substitute the env-managed business issuer
+AssertionError: expected 'attacker_shadow_secret_key_material_3…' not to be 'attacker_shadow_secret_key_material_3…' // Object.is equality
+ ❯ tests/unit/kh02/v19_3_3_1_CsvTrustAndGoogleMetaProvenance.test.ts:276:39
+    274|       const businessKey = getCsvAuthoritySigningKey(envBusinessKeyId, …
+    275|       expect(businessKey).not.toBeNull();
+    276|       expect(businessKey?.secret).not.toBe(attackerSecret);
+       |                                       ^
+    277|       expect(shadowRegistrationRejected || businessKey?.secret === env…
+    278|     });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/17]⎯
+
+ FAIL  tests/unit/kh02/v19_3_3_1_CsvTrustAndGoogleMetaProvenance.test.ts > KH-02 V12.4.3.7.19.3.3.1 — P0 CSV Authority Trust Boundary & P1 Google/Meta Provenance > Section 02.7 — P0 CSV Authority Trust Boundary (A01..A16) > A04: fake approverPrincipalId with caller enforceApproverAuthority=false is DENIED in BUSINESS scope regardless of NODE_ENV
+AssertionError: expected [Function] to throw an error
+
+- Expected:
+null
+
++ Received:
+undefined
+
+ ❯ tests/unit/kh02/v19_3_3_1_CsvTrustAndGoogleMetaProvenance.test.ts:312:9
+    310|           enforceApproverAuthority: false,
+    311|         } as any)
+    312|       ).toThrow(/UNAUTHORIZED_APPROVER/i);
+       |         ^
+    313|     });
+    314|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/17]⎯
+
+ FAIL  tests/unit/kh02/v19_3_3_1_CsvTrustAndGoogleMetaProvenance.test.ts > KH-02 V12.4.3.7.19.3.3.1 — P0 CSV Authority Trust Boundary & P1 Google/Meta Provenance > Section 02.7 — P0 CSV Authority Trust Boundary (A01..A16) > A07: signed local CSV with no verified official acquisition source URL / review evidence is DENIED in BUSINESS scope
+AssertionError: expected [Function] to throw an error
+
+- Expected:
+null
+
++ Received:
+undefined
+
+ ❯ tests/unit/kh02/v19_3_3_1_CsvTrustAndGoogleMetaProvenance.test.ts:420:9
+    418|           isTestOnly: false,
+    419|         } as any)
+    420|       ).toThrow(/ACQUISITION_SOURCE_REQUIRED|INVALID_ACQUISITION_SOURC…
+       |         ^
+    421|     });
+    422|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/17]⎯
+
+ FAIL  tests/unit/kh02/v19_3_3_1_CsvTrustAndGoogleMetaProvenance.test.ts > KH-02 V12.4.3.7.19.3.3.1 — P0 CSV Authority Trust Boundary & P1 Google/Meta Provenance > Section 02.7 — P0 CSV Authority Trust Boundary (A01..A16) > A10: corrupt ledger, symlinked ledger file, path traversal, and foreign workspace are DENIED fail-closed
+AssertionError: expected 'LEDGER_HEALTHY' to be 'LEDGER_UNREADABLE' // Object.is equality
+
+Expected: "LEDGER_UNREADABLE"
+Received: "LEDGER_HEALTHY"
+
+ ❯ tests/unit/kh02/v19_3_3_1_CsvTrustAndGoogleMetaProvenance.test.ts:539:36
+    537|
+    538|         const symlinkRead = readCsvAuthorityLedgerUnderLock();
+    539|         expect(symlinkRead.status).toBe("LEDGER_UNREADABLE");
+       |                                    ^
+    540|
+    541|         const verifySymlink = verifyDurableCsvImportAuthority({
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/17]⎯
+
+ FAIL  tests/unit/kh02/v19_3_3_1_CsvTrustAndGoogleMetaProvenance.test.ts > KH-02 V12.4.3.7.19.3.3.1 — P0 CSV Authority Trust Boundary & P1 Google/Meta Provenance > Section 02.7 — P0 CSV Authority Trust Boundary (A01..A16) > A11: wrong candidate, wrong product, wrong term, non-US geography, or missing observation productId are DENIED
+AssertionError: expected 'HISTORICAL_SOURCE_VERIFIED' to be 'CACHED_UNVERIFIED' // Object.is equality
+
+Expected: "CACHED_UNVERIFIED"
+Received: "HISTORICAL_SOURCE_VERIFIED"
+
+ ❯ tests/unit/kh02/v19_3_3_1_CsvTrustAndGoogleMetaProvenance.test.ts:633:44
+    631|         evaluationScope: "BUSINESS",
+    632|       });
+    633|       expect(authEvalMissingPid.authority).toBe("CACHED_UNVERIFIED");
+       |                                            ^
+    634|       expect(authEvalMissingPid.productAttributionValid).toBe(false);
+    635|     });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[7/17]⎯
+
+ FAIL  tests/unit/kh02/v19_3_3_1_CsvTrustAndGoogleMetaProvenance.test.ts > KH-02 V12.4.3.7.19.3.3.1 — P0 CSV Authority Trust Boundary & P1 Google/Meta Provenance > Section 03.7 — P1 Google Ads Provenance & Product/Market Truth (G01..G12) > G02: 6 creative rows with zero invocation receipts in ledger are rejected as UNVERIFIED and cannot qualify as G16 proof
+AssertionError: expected undefined to be false // Object.is equality
+
+- Expected:
+false
+
++ Received:
+undefined
+
+ ❯ tests/unit/kh02/v19_3_3_1_CsvTrustAndGoogleMetaProvenance.test.ts:965:47
+    963|         expect(res.verified).toBe(false);
+    964|         expect(res.lineageMethod).toBe("UNVERIFIED");
+    965|         expect((res as any).providerVerified).toBe(false);
+       |                                               ^
+    966|       }
+    967|     });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[8/17]⎯
+
+ FAIL  tests/unit/kh02/v19_3_3_1_CsvTrustAndGoogleMetaProvenance.test.ts > KH-02 V12.4.3.7.19.3.3.1 — P0 CSV Authority Trust Boundary & P1 Google/Meta Provenance > Section 03.7 — P1 Google Ads Provenance & Product/Market Truth (G01..G12) > G03: local invocation receipt without upstream request ID reports LOCAL_MCP_TOOL_RESULT_VERIFIED with providerVerified=false
+AssertionError: expected undefined to be 'LOCAL_MCP_TOOL_RESULT_VERIFIED' // Object.is equality
+
+- Expected:
+"LOCAL_MCP_TOOL_RESULT_VERIFIED"
+
++ Received:
+undefined
+
+ ❯ tests/unit/kh02/v19_3_3_1_CsvTrustAndGoogleMetaProvenance.test.ts:993:47
+    991|       expect(lineage.lineageMethod).toBe("VERIFIED_LOCAL_INVOCATION_ON…
+    992|       expect(lineage.upstreamProviderRequestId).toBeNull();
+    993|       expect((lineage as any).provenanceTier).toBe("LOCAL_MCP_TOOL_RES…
+       |                                               ^
+    994|       expect((lineage as any).localMcpToolResultVerified).toBe(true);
+    995|       expect((lineage as any).upstreamRequestVerified).toBe(false);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[9/17]⎯
+
+ FAIL  tests/unit/kh02/v19_3_3_1_CsvTrustAndGoogleMetaProvenance.test.ts > KH-02 V12.4.3.7.19.3.3.1 — P0 CSV Authority Trust Boundary & P1 Google/Meta Provenance > Section 03.7 — P1 Google Ads Provenance & Product/Market Truth (G01..G12) > G04: response hash mismatch, creative ID mismatch, advertiser ID mismatch, or domain mismatch is DENIED
+AssertionError: expected true to be false // Object.is equality
+
+- Expected
++ Received
+
+- false
++ true
+
+ ❯ tests/unit/kh02/v19_3_3_1_CsvTrustAndGoogleMetaProvenance.test.ts:1035:36
+    1033|         "run_g04"
+    1034|       );
+    1035|       expect(advMismatch.verified).toBe(false);
+       |                                    ^
+    1036|       expect(advMismatch.rejectionReasons).toContain("ADVERTISER_ID_MI…
+    1037|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[10/17]⎯
+
+ FAIL  tests/unit/kh02/v19_3_3_1_CsvTrustAndGoogleMetaProvenance.test.ts > KH-02 V12.4.3.7.19.3.3.1 — P0 CSV Authority Trust Boundary & P1 Google/Meta Provenance > Section 03.7 — P1 Google Ads Provenance & Product/Market Truth (G01..G12) > G06: creative with null landingPageUrl and null productId is classified as UNKNOWN (never PRODUCT_SPECIFIC) even when headline matches topic
+AssertionError: expected 'PRODUCT_SPECIFIC' to be 'UNKNOWN' // Object.is equality
+
+Expected: "UNKNOWN"
+Received: "PRODUCT_SPECIFIC"
+
+ ❯ tests/unit/kh02/v19_3_3_1_CsvTrustAndGoogleMetaProvenance.test.ts:1102:43
+    1100|
+    1101|       expect(res.ads).toHaveLength(1);
+    1102|       expect(res.ads[0].productRelevance).toBe("UNKNOWN");
+       |                                           ^
+    1103|       expect((res.observations[0].metrics as any).productRelevance).to…
+    1104|     });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[11/17]⎯
+
+ FAIL  tests/unit/kh02/v19_3_3_1_CsvTrustAndGoogleMetaProvenance.test.ts > KH-02 V12.4.3.7.19.3.3.1 — P0 CSV Authority Trust Boundary & P1 Google/Meta Provenance > Section 03.7 — P1 Google Ads Provenance & Product/Market Truth (G01..G12) > G08: 403/429/CAPTCHA/timeout/bot-wall responses are marked NOT_VERIFIED / BOT_BLOCKED with zero retries
+AssertionError: expected 2 to be 1 // Object.is equality
+
+- Expected
++ Received
+
+- 1
++ 2
+
+ ❯ tests/unit/kh02/v19_3_3_1_CsvTrustAndGoogleMetaProvenance.test.ts:1165:24
+    1163|       );
+    1164|
+    1165|       expect(adsCalls).toBe(1); // Zero retries and second domain skip…
+       |                        ^
+    1166|       expect(res.acceptedCount).toBe(0);
+    1167|       expect(res.status).toBe("QUERY_FAILED");
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[12/17]⎯
+
+ FAIL  tests/unit/kh02/v19_3_3_1_CsvTrustAndGoogleMetaProvenance.test.ts > KH-02 V12.4.3.7.19.3.3.1 — P0 CSV Authority Trust Boundary & P1 Google/Meta Provenance > Section 03.7 — P1 Google Ads Provenance & Product/Market Truth (G01..G12) > G09: malformed/truncated JSON or >2MiB response fails closed with bounded memory
+AssertionError: expected [Function] to throw an error
+
+- Expected:
+null
+
++ Received:
+undefined
+
+ ❯ tests/unit/kh02/v19_3_3_1_CsvTrustAndGoogleMetaProvenance.test.ts:1176:9
+    1174|           content: [{ type: "text", text: oversizedPayload }],
+    1175|         })
+    1176|       ).toThrow(/RESPONSE_SIZE_EXCEEDED_2MIB|exceeds maximum allowed s…
+       |         ^
+    1177|
+    1178|       const invOversized = recordActualGoogleMcpInvocation(
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[13/17]⎯
+
+ FAIL  tests/unit/kh02/v19_3_3_1_CsvTrustAndGoogleMetaProvenance.test.ts > KH-02 V12.4.3.7.19.3.3.1 — P0 CSV Authority Trust Boundary & P1 Google/Meta Provenance > Section 03.7 — P1 Google Ads Provenance & Product/Market Truth (G01..G12) > G11: legit verified local tool invocation with returned advertiser/creative IDs reports precise local-MCP proof without claiming upstream API-origin proof
+AssertionError: expected undefined to be 'LOCAL_MCP_TOOL_RESULT_VERIFIED' // Object.is equality
+
+- Expected:
+"LOCAL_MCP_TOOL_RESULT_VERIFIED"
+
++ Received:
+undefined
+
+ ❯ tests/unit/kh02/v19_3_3_1_CsvTrustAndGoogleMetaProvenance.test.ts:1279:47
+    1277|       expect(lineage.verified).toBe(true);
+    1278|       expect(lineage.lineageMethod).toBe("VERIFIED_LOCAL_INVOCATION_ON…
+    1279|       expect((lineage as any).provenanceTier).toBe("LOCAL_MCP_TOOL_RES…
+       |                                               ^
+    1280|       expect((lineage as any).localMcpToolResultVerified).toBe(true);
+    1281|       expect((lineage as any).upstreamRequestVerified).toBe(false);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[14/17]⎯
+
+ FAIL  tests/unit/kh02/v19_3_3_1_CsvTrustAndGoogleMetaProvenance.test.ts > KH-02 V12.4.3.7.19.3.3.1 — P0 CSV Authority Trust Boundary & P1 Google/Meta Provenance > Section 03.7 — P1 Google Ads Provenance & Product/Market Truth (G01..G12) > G12: collectGoogleAdvertiserSignals populates providerInvocations and reconciled breakdown counts that agree with invocation records and per-row origins
+AssertionError: expected false to be true // Object.is equality
+
+- Expected
++ Received
+
+- true
++ false
+
+ ❯ tests/unit/kh02/v19_3_3_1_CsvTrustAndGoogleMetaProvenance.test.ts:1343:63
+    1341|       expect(res.retrievedCount).toBe(6);
+    1342|       expect(res.acceptedCount).toBe(6);
+    1343|       expect(Array.isArray((res as any).providerInvocations)).toBe(tru…
+       |                                                               ^
+    1344|       expect((res as any).providerInvocations).toHaveLength(2);
+    1345|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[15/17]⎯
+
+ FAIL  tests/unit/kh02/v19_3_3_1_CsvTrustAndGoogleMetaProvenance.test.ts > KH-02 V12.4.3.7.19.3.3.1 — P0 CSV Authority Trust Boundary & P1 Google/Meta Provenance > Section 04.4 — P1 Meta Provider-to-DB Truth (M01..M06) > M01: diagnostic connected with no live query executed reports transportStatus=PASS, queryExecuted=false, contentStatus=NOT_RUN
+AssertionError: expected undefined to be 'NOT_RUN' // Object.is equality
+
+- Expected:
+"NOT_RUN"
+
++ Received:
+undefined
+
+ ❯ tests/unit/kh02/v19_3_3_1_CsvTrustAndGoogleMetaProvenance.test.ts:1373:43
+    1371|       expect(diag.upstreamQueryCompleted).toBe(false);
+    1372|       expect(diag.rawAdsReturned).toBe(0);
+    1373|       expect((diag as any).contentStatus).toBe("NOT_RUN");
+       |                                           ^
+    1374|     });
+    1375|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[16/17]⎯
+
+ FAIL  tests/unit/kh02/v19_3_3_1_CsvTrustAndGoogleMetaProvenance.test.ts > KH-02 V12.4.3.7.19.3.3.1 — P0 CSV Authority Trust Boundary & P1 Google/Meta Provenance > Section 04.4 — P1 Meta Provider-to-DB Truth (M01..M06) > M02: fixture/seed DB rows cannot upgrade provider status or set provenanceVerified=true when no live query executed
+AssertionError: expected true to be false // Object.is equality
+
+- Expected
++ Received
+
+- false
++ true
+
+ ❯ tests/unit/kh02/v19_3_3_1_CsvTrustAndGoogleMetaProvenance.test.ts:1382:39
+    1380|       });
+    1381|
+    1382|       expect(diag.provenanceVerified).toBe(false);
+       |                                       ^
+    1383|       expect(diag.queryExecuted).toBe(false);
+    1384|       expect(diag.recordsReturned).toBe(0);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[17/17]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  17 failed | 17 passed (34)
+   Start at  08:25:32
+   Duration  1.01s (tests 36%, import 35%, transform 17%, setup 11%, worker 1%)
+

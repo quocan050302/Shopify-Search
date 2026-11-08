@@ -1,0 +1,74 @@
+{
+  "gateId": "G16_CANDIDATE_TOP3_ELIGIBILITY_AND_REJECTIONS",
+  "patchVersion": "V12.4.3.7.19.3.3.1",
+  "testedCodeCommitSha": "79b248e79c56a0a549cc8d681fd6e67ad61762fc",
+  "testedTreeSha": "afdf6da09961f358e9010fc0d4547ebcb6d56cbc",
+  "g16Top3Eligible": "0/3",
+  "g16BusinessVerdict": "INSUFFICIENT_EVIDENCE",
+  "g16EngineeringGateVerdict": "PASS",
+  "candidateEligibilityTable": [
+    {
+      "candidateRank": 1,
+      "candidateId": "cand_uahpet_feeder",
+      "canonicalProductId": "cmvsy7zqh000jp0orhypwohho",
+      "canonicalTitle": "Automatic Wet Food Cat Feeder with Cooling & Warming",
+      "merchantDomain": "uahpet.com",
+      "productFamilyKey": "automatic_wet_food_cat_feeder",
+      "identityVerifiedByMerchant": true,
+      "usMarketDeliveryVerified": true,
+      "metaAdsActivityObserved": true,
+      "googleTransparencyUsPdpVerifiedCreatives": 0,
+      "tiktokOrganicStatus": "POLICY_DISABLED",
+      "g15LongitudinalDemandDays": 0,
+      "g15SourceAuthority": "CACHED_UNVERIFIED",
+      "g15Status": "INSUFFICIENT_EVIDENCE",
+      "g16Eligible": false,
+      "rejectionReasons": [
+        "G15 longitudinal demand unverified: 6 DB demand rows use 'verified-merchant-demand' pseudo-reference without a verified >=60-day US Google Trends official CSV export + durable authority record.",
+        "Zero upstream US-verified PDP-bound Google Ads Transparency creatives persisted in production DB."
+      ]
+    },
+    {
+      "candidateRank": 2,
+      "candidateId": "cand_pawira_fountain",
+      "canonicalProductId": null,
+      "canonicalTitle": "Pawira Stainless Steel Cat Water Fountain",
+      "merchantDomain": "pawira.com",
+      "productFamilyKey": "stainless_steel_cat_water_fountain",
+      "identityVerifiedByMerchant": true,
+      "usMarketDeliveryVerified": true,
+      "metaAdsActivityObserved": true,
+      "googleTransparencyUsPdpVerifiedCreatives": 0,
+      "tiktokOrganicStatus": "POLICY_DISABLED",
+      "g15LongitudinalDemandDays": 0,
+      "g15SourceAuthority": "CACHED_UNVERIFIED",
+      "g15Status": "INSUFFICIENT_EVIDENCE",
+      "g16Eligible": false,
+      "rejectionReasons": [
+        "G15 longitudinal demand unverified: 0 official >=60-day US Google Trends CSV rows with durable authority record.",
+        "Single-family consolidation enforced: multiple ad variations for Pawira cannot be split into multiple Top 3 slots."
+      ]
+    },
+    {
+      "candidateRank": 3,
+      "candidateId": "cand_furzapper_remover",
+      "canonicalProductId": null,
+      "canonicalTitle": "FurZapper Pet Hair Remover for Laundry",
+      "merchantDomain": "furzapper.com",
+      "productFamilyKey": "pet_hair_remover_laundry",
+      "identityVerifiedByMerchant": true,
+      "usMarketDeliveryVerified": true,
+      "metaAdsActivityObserved": true,
+      "googleTransparencyUsPdpVerifiedCreatives": 0,
+      "tiktokOrganicStatus": "POLICY_DISABLED",
+      "g15LongitudinalDemandDays": 0,
+      "g15SourceAuthority": "CACHED_UNVERIFIED",
+      "g15Status": "INSUFFICIENT_EVIDENCE",
+      "g16Eligible": false,
+      "rejectionReasons": [
+        "G15 longitudinal demand unverified: 0 official >=60-day US Google Trends CSV rows with durable authority record."
+      ]
+    }
+  ],
+  "summary": "0/3 candidates satisfy Gate G16 for verified Evergreen Top 3 release because 0/3 candidates have >=60 calendar days of candidate-attributable US historical demand backed by an official authenticated Google Trends export in BUSINESS scope."
+}

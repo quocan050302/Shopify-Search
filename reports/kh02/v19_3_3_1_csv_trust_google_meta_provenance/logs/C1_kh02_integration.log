@@ -1,0 +1,59 @@
+
+ RUN  v5.0.5 /Users/macbook/Documents/Project_Github/Meta-Ads/Shopify-Search
+
+stdout | tests/integration/kh02BrowserAcceptance.test.ts > SWAI KH-02 V12.1.1 — Chromium Browser E2E Acceptance > launches Chromium, interacts with /products, and captures visual artifacts
+[Chromium E2E] Navigating to: http://127.0.0.1:55525/products
+
+stdout | tests/integration/kh02BrowserAcceptance.test.ts > SWAI KH-02 V12.1.1 — Chromium Browser E2E Acceptance > launches Chromium, interacts with /products, and captures visual artifacts
+[Chromium E2E] Triggering async research for 'Pet Hair Remover'...
+
+stdout | tests/integration/kh02BrowserAcceptance.test.ts > SWAI KH-02 V12.1.1 — Chromium Browser E2E Acceptance > launches Chromium, interacts with /products, and captures visual artifacts
+[Chromium E2E] Testing reload persistence...
+
+ ✓ tests/integration/kh02BrowserAcceptance.test.ts (1 test) 40472ms
+   ✓ SWAI KH-02 V12.1.1 — Chromium Browser E2E Acceptance (1)
+     ✓ launches Chromium, interacts with /products, and captures visual artifacts 40467ms
+ ✓ tests/integration/kh02/v12_4_3_7_18_MultiProcessAtomicImport.test.ts (4 tests) 9487ms
+   ✓ KH-02 V12.4.3.7.18: MultiProcessAtomicImport Integration (4)
+     ✓ MP01: Two real OS child processes compete concurrently inserting separate products (50 points each) 2417ms
+     ✓ MP02: Two real OS child processes compete to insert identical rows for Product A simultaneously 1764ms
+     ✓ MP03: Concurrently running invalid worker rolls back while valid worker completes 50 rows 1387ms
+     ✓ MP04: Sequential rapid spawns verify no lingering SQLite database locks 3916ms
+ ✓ tests/integration/kh02/v12_4_3_7_18_1_OsProcessConflict.test.ts (10 tests) 8289ms
+   ✓ KH-02 V12.4.3.7.18.1: Workstream C — OS Process Conflict & Concurrency (C01 - C10) (10)
+     ✓ C01: two OS processes inserting identical rows -> one inserts, one idempotent skip, exactly 50 total rows 1996ms
+     ✓ C02: same key but differing demand values (30 vs 80) -> exactly one succeeds, other fails 409 2403ms
+     ✓ C08: four distinct product batches concurrently -> all expected rows, no duplicate or lost rows 3051ms
+ ✓ tests/integration/kh02HttpServerE2E.test.ts (6 tests) 5115ms
+   ✓ SWAI KH-02 V12.1 — HTTP Route Handlers Acceptance (6)
+     ✓ GET /api/v1/kh02/providers/status reports live capability and truthful readiness 350ms
+     ✓ POST /api/v1/kh02/research creates a persistent run, executes research, and records snapshot 2925ms
+     ✓ GET /api/v1/kh02/leaderboard restores the latest completed snapshot on reload 959ms
+     ✓ GET /api/v1/kh02/research/runs returns historical runs with workspace scoping 848ms
+ ✓ tests/integration/kh02/geminiWorkerPipeline.test.ts (2 tests) 2170ms
+   ✓ SWAI KH-02 V12.4 — Production Worker Pipeline with Gemini AI Integration (2)
+     ✓ executes complete research orchestrator pipeline and applies AI Product Reality Gate 1768ms
+     ✓ gracefully completes with UNAVAILABLE telemetry when AI fails or key is missing 397ms
+ ✓ tests/integration/kh02WalmartUsJinaIntegrationV12_4_3_5_1.test.ts (6 tests) 1430ms
+   ✓ KH-02 V12.4.3.5.1 — Walmart US Integration, Persistence, Fencing, Worker & API Suite (6)
+     ✓ W38, W39, W40, W41, W51: Orchestrator non-vacuous score non-inflation (>=3 candidates), source independence, and point-in-time backtest anti-leakage 820ms
+ ✓ tests/integration/kh02V12_1_3_Acceptance.test.ts (4 tests) 1103ms
+   ✓ SWAI KH-02 V12.1.3 — Final Integration Acceptance & Deterministic E2E (4)
+     ✓ executes Track A deterministic pipeline: HTTP 202 -> Worker Claim & Execution -> Readback 755ms
+ ✓ tests/integration/kh02/v12_4_3_7_18_ActualSocketRebinding.test.ts (6 tests) 641ms
+ ✓ tests/integration/kh02V12_1_4_2_LongResearch.test.ts (3 tests) 1026ms
+   ✓ SWAI KH-02 V12.1.4.2 — Integration: Long-Running Research & Worker Lifecycle (3)
+     ✓ executes complete async research lifecycle from enqueue to worker claim and terminal snapshot 615ms
+ ✓ tests/integration/kh02ResearchApi.test.ts (5 tests) 323ms
+ ✓ tests/integration/kh02V12_1_Persistence.test.ts (4 tests) 368ms
+ ✓ tests/integration/kh02/v12_4_3_7_18_2_ProviderReceiptWriteBoundary.test.ts (8 tests) 436ms
+ ✓ tests/integration/kh02/v12_4_3_7_18_ResourceAndAbortControls.test.ts (5 tests) 284ms
+ ✓ tests/integration/kh02/v12_4_3_7_18_1_RealTlsPeerCertIsolation.test.ts (5 tests) 301ms
+ ✓ tests/integration/kh02V12_1_4_1_LegacyMigration.test.ts (2 tests) 249ms
+ ✓ tests/integration/kh02/v12_4_3_7_18_2_FinalReleaseGate.test.ts (6 tests) 18ms
+
+ Test Files  16 passed (16)
+      Tests  77 passed (77)
+   Start at  10:27:40
+   Duration  84.33s (tests 88%, import 8%, setup 3%, transform 1%)
+

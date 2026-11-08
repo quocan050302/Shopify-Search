@@ -1,0 +1,135 @@
+{
+  "gateId": "P0_CSV_BUSINESS_FORGERY_NEGATIVES",
+  "patchVersion": "V12.4.3.7.19.3.3.1",
+  "preFixBaselineCommitSha": "b36c2e4b3704d8fc44a5d99a240da5caeda0dd1b",
+  "preFixBaselineTreeSha": "db3e0e15d3a6b8fb834461155504a333cdb07fe0",
+  "testedCodeCommitSha": "79b248e79c56a0a549cc8d681fd6e67ad61762fc",
+  "testedTreeSha": "afdf6da09961f358e9010fc0d4547ebcb6d56cbc",
+  "testFile": "tests/unit/kh02/v19_3_3_1_CsvTrustAndGoogleMetaProvenance.test.ts",
+  "preFixRedSummary": {
+    "logFile": "reports/kh02/v19_3_3_1_csv_trust_google_meta_provenance/logs/PRE_FIX_RED_C0.log",
+    "totalTests": 34,
+    "failedBeforeFix": 17,
+    "passedBeforeFix": 17
+  },
+  "postFixGreenSummary": {
+    "logFile": "reports/kh02/v19_3_3_1_csv_trust_google_meta_provenance/logs/A2_v19_3_3_1_security_suite.log",
+    "totalTests": 34,
+    "failedAfterFix": 0,
+    "passedAfterFix": 34
+  },
+  "adversarialCases": [
+    {
+      "caseId": "A01",
+      "description": "registerCsvAuthoritySigningKey({isBusinessTrusted:true}) using arbitrary key cannot grant BUSINESS authority without trusted env issuer & authorized approver",
+      "preFixOnC0": "FAILED_ACCEPTED_FORGERY",
+      "postFixOnC1": "PASSED_DENIED_FAIL_CLOSED",
+      "expectedRejectionCode": "TEST_ONLY_REJECTED_IN_BUSINESS_SCOPE"
+    },
+    {
+      "caseId": "A02",
+      "description": "isTestOnly=false with TEST_ONLY key is coerced to isTestOnly=true and rejected in BUSINESS scope",
+      "preFixOnC0": "PASSED",
+      "postFixOnC1": "PASSED_DENIED_FAIL_CLOSED",
+      "expectedRejectionCode": "TEST_ONLY_REJECTED_IN_BUSINESS_SCOPE"
+    },
+    {
+      "caseId": "A03",
+      "description": "KH02_AUTHORIZED_CSV_APPROVER_PRINCIPALS unset or empty in BUSINESS scope is DENIED even when NODE_ENV=test and enforceApproverAuthority is omitted",
+      "preFixOnC0": "FAILED_ACCEPTED_WHEN_ALLOWLIST_EMPTY",
+      "postFixOnC1": "PASSED_DENIED_FAIL_CLOSED",
+      "expectedRejectionCode": "APPROVER_AUTHORITY_NOT_CONFIGURED"
+    },
+    {
+      "caseId": "A04",
+      "description": "approverPrincipalId not in KH02_AUTHORIZED_CSV_APPROVER_PRINCIPALS is DENIED in BUSINESS scope across all NODE_ENV values",
+      "preFixOnC0": "FAILED_ACCEPTED_UNAUTHORIZED_APPROVER",
+      "postFixOnC1": "PASSED_DENIED_FAIL_CLOSED",
+      "expectedRejectionCode": "UNAUTHORIZED_APPROVER"
+    },
+    {
+      "caseId": "A05",
+      "description": "known repository fixture CSV SHA-256 and invented lookalike non-fixture CSV on disk are DENIED in BUSINESS scope",
+      "preFixOnC0": "PASSED",
+      "postFixOnC1": "PASSED_DENIED_FAIL_CLOSED",
+      "expectedRejectionCode": "KNOWN_FIXTURE_REJECTED / LOCAL_INTEGRITY_ONLY"
+    },
+    {
+      "caseId": "A06",
+      "description": "caller supplying originClassification=AUTHENTICATED_OFFICIAL_EXPORT and reviewStatus=APPROVED alone without trusted issuer & allowlisted approver is DENIED",
+      "preFixOnC0": "PASSED",
+      "postFixOnC1": "PASSED_DENIED_FAIL_CLOSED",
+      "expectedRejectionCode": "KEY_UNTRUSTED"
+    },
+    {
+      "caseId": "A07",
+      "description": "signed local CSV with invalid/non-Google acquisitionSourceUrl is DENIED in BUSINESS scope",
+      "preFixOnC0": "FAILED_ACCEPTED_INVALID_ACQUISITION_URL",
+      "postFixOnC1": "PASSED_DENIED_FAIL_CLOSED",
+      "expectedRejectionCode": "ACQUISITION_SOURCE_REQUIRED"
+    },
+    {
+      "caseId": "A08",
+      "description": "tampered CSV bytes after signing, tampered payloadDigest, or tampered authoritySignature are DENIED",
+      "preFixOnC0": "PASSED",
+      "postFixOnC1": "PASSED_DENIED_FAIL_CLOSED",
+      "expectedRejectionCode": "CSV_FILE_CHECKSUM_MISMATCH / SIGNATURE_MISMATCH"
+    },
+    {
+      "caseId": "A09",
+      "description": "revoked or compromised signing key, and monotonically revoked authority record cannot be re-admitted",
+      "preFixOnC0": "PASSED",
+      "postFixOnC1": "PASSED_DENIED_FAIL_CLOSED",
+      "expectedRejectionCode": "AUTHORITY_REVOKED"
+    },
+    {
+      "caseId": "A10",
+      "description": "corrupt ledger, symlinked ledger file, path traversal, and foreign workspace are DENIED fail-closed",
+      "preFixOnC0": "FAILED_FOLLOWED_SYMLINKED_LEDGER",
+      "postFixOnC1": "PASSED_DENIED_FAIL_CLOSED",
+      "expectedRejectionCode": "LEDGER_UNREADABLE / LEDGER_CORRUPT"
+    },
+    {
+      "caseId": "A11",
+      "description": "wrong candidate, wrong product, wrong term, non-US geography, or missing observation productId are DENIED without silent targetProductId substitution",
+      "preFixOnC0": "FAILED_SILENTLY_SUBSTITUTED_PRODUCT_ID",
+      "postFixOnC1": "PASSED_DENIED_FAIL_CLOSED",
+      "expectedRejectionCode": "CANDIDATE_MISMATCH / CACHED_UNVERIFIED"
+    },
+    {
+      "caseId": "A12",
+      "description": "future importedAt/availableAt > asOfTimestamp is DENIED for point-in-time evaluation and historical snapshot requalification",
+      "preFixOnC0": "FAILED_SNAPSHOT_REQUALIFICATION_IGNORED_AS_OF_TIMESTAMP",
+      "postFixOnC1": "PASSED_DENIED_FAIL_CLOSED",
+      "expectedRejectionCode": "FUTURE_IMPORT_LEAKAGE"
+    },
+    {
+      "caseId": "A13",
+      "description": "short window (<60 days), <3 points, or irregular cadence is DENIED for G15 even if authority record is signed",
+      "preFixOnC0": "PASSED",
+      "postFixOnC1": "PASSED_DENIED_FAIL_CLOSED",
+      "expectedRejectionCode": "INSUFFICIENT_COVERED_DAYS"
+    },
+    {
+      "caseId": "A14",
+      "description": "caller attempting to shadow env business key via registerCsvAuthoritySigningKey or register in NODE_ENV=production is DENIED",
+      "preFixOnC0": "FAILED_ALLOWED_KEY_SHADOWING_AND_PROD_REGISTRATION",
+      "postFixOnC1": "PASSED_DENIED_FAIL_CLOSED",
+      "expectedRejectionCode": "KEY_SHADOWING_FORBIDDEN / PRODUCTION_TEST_KEY_REGISTRATION_FORBIDDEN"
+    },
+    {
+      "caseId": "A15",
+      "description": "ENGINEERING scope positive path works with TEST_ONLY key while remaining strictly barred from BUSINESS scope",
+      "preFixOnC0": "PASSED",
+      "postFixOnC1": "PASSED",
+      "expectedRejectionCode": "TEST_ONLY_REJECTED_IN_BUSINESS_SCOPE"
+    },
+    {
+      "caseId": "A16",
+      "description": "positive controlled BUSINESS path succeeds ONLY when env-configured business key + allowlisted approver + official acquisition URL + >=60d US CSV are all valid, while providerOriginVerified remains false",
+      "preFixOnC0": "PASSED",
+      "postFixOnC1": "PASSED",
+      "expectedRejectionCode": "VALID_APPROVED_AUTHORITY (providerOriginVerified=false)"
+    }
+  ]
+}

@@ -1,0 +1,42 @@
+{
+  "gateId": "ASYNC_DAG_DISK_RAM_TIMEOUT_PROOF",
+  "patchVersion": "V12.4.3.7.19.3.3.1",
+  "testedCodeCommitSha": "79b248e79c56a0a549cc8d681fd6e67ad61762fc",
+  "testedTreeSha": "afdf6da09961f358e9010fc0d4547ebcb6d56cbc",
+  "dagExecutionDiscipline": {
+    "overlappingHeavyCommands": 0,
+    "sequentialWaveOrdering": [
+      "Wave A (A1_typecheck -> A2_v19_3_3_1_security_suite -> A3_g15_csv_origin_integrity -> A4_meta_google_production_flow)",
+      "Wave B (B1_kh02_unit_all --maxWorkers=2)",
+      "Wave C (C1_kh02_integration --no-file-parallelism)",
+      "Wave D (D1_kh01_regression -> D2_dev_holdout_backtest -> D3_db_readback -> D4_free_mcp_smoke)"
+    ],
+    "hungOrTimedOutProcesses": 0,
+    "zombieChildProcessesAfterRun": 0,
+    "tempFilesCleaned": true
+  },
+  "resourceTelemetry": {
+    "waveB_unit_maxWorkers_2": {
+      "durationSeconds": 252.09,
+      "diskFreePre": "8.4Gi (54% capacity)",
+      "diskFreePost": "8.3Gi (54% capacity)",
+      "vmPagesActivePre": 173289,
+      "vmPagesActivePost": 171663,
+      "vmPagesFreePre": 2189,
+      "vmPagesFreePost": 31540,
+      "preLog": "reports/kh02/v19_3_3_1_csv_trust_google_meta_provenance/logs/B1_resource_pre.txt",
+      "postLog": "reports/kh02/v19_3_3_1_csv_trust_google_meta_provenance/logs/B1_resource_post.txt"
+    },
+    "waveC_integration_serial": {
+      "durationSeconds": 84.33,
+      "diskFreePre": "8.3Gi (54% capacity)",
+      "diskFreePost": "8.3Gi (54% capacity)",
+      "vmPagesActivePre": 190281,
+      "vmPagesActivePost": 169622,
+      "vmPagesFreePre": 4391,
+      "vmPagesFreePost": 10516,
+      "preLog": "reports/kh02/v19_3_3_1_csv_trust_google_meta_provenance/logs/C1_resource_pre.txt",
+      "postLog": "reports/kh02/v19_3_3_1_csv_trust_google_meta_provenance/logs/C1_resource_post.txt"
+    }
+  }
+}

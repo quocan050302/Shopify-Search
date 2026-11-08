@@ -1,0 +1,147 @@
+{
+  "gateId": "REGRESSION_COMMANDS_RAW_COUNTS_EXACT_SHA",
+  "patchVersion": "V12.4.3.7.19.3.3.1",
+  "preFixBaselineCommitSha": "b36c2e4b3704d8fc44a5d99a240da5caeda0dd1b",
+  "preFixBaselineTreeSha": "db3e0e15d3a6b8fb834461155504a333cdb07fe0",
+  "testedCodeCommitSha": "79b248e79c56a0a549cc8d681fd6e67ad61762fc",
+  "testedTreeSha": "afdf6da09961f358e9010fc0d4547ebcb6d56cbc",
+  "worktreeCleanDuringExecution": true,
+  "waves": [
+    {
+      "waveId": "PRE_FIX_RED",
+      "executedAgainstCommitSha": "b36c2e4b3704d8fc44a5d99a240da5caeda0dd1b",
+      "command": "npx vitest run tests/unit/kh02/v19_3_3_1_CsvTrustAndGoogleMetaProvenance.test.ts --no-file-parallelism",
+      "exitCode": 1,
+      "testFilesTotal": 1,
+      "testFilesFailed": 1,
+      "testsTotal": 34,
+      "testsPassed": 17,
+      "testsFailed": 17,
+      "logFile": "reports/kh02/v19_3_3_1_csv_trust_google_meta_provenance/logs/PRE_FIX_RED_C0.log"
+    },
+    {
+      "waveId": "A1_typecheck",
+      "executedAgainstCommitSha": "79b248e79c56a0a549cc8d681fd6e67ad61762fc",
+      "command": "npx tsc --noEmit",
+      "exitCode": 0,
+      "durationSeconds": 9.4,
+      "logFile": "reports/kh02/v19_3_3_1_csv_trust_google_meta_provenance/logs/A1_typecheck.log"
+    },
+    {
+      "waveId": "A2_v19_3_3_1_security_suite",
+      "executedAgainstCommitSha": "79b248e79c56a0a549cc8d681fd6e67ad61762fc",
+      "command": "npx vitest run tests/unit/kh02/v19_3_3_1_CsvTrustAndGoogleMetaProvenance.test.ts --no-file-parallelism",
+      "exitCode": 0,
+      "testFilesTotal": 1,
+      "testFilesPassed": 1,
+      "testFilesFailed": 0,
+      "testsTotal": 34,
+      "testsPassed": 34,
+      "testsFailed": 0,
+      "durationSeconds": 1.97,
+      "logFile": "reports/kh02/v19_3_3_1_csv_trust_google_meta_provenance/logs/A2_v19_3_3_1_security_suite.log"
+    },
+    {
+      "waveId": "A3_g15_csv_origin_integrity",
+      "executedAgainstCommitSha": "79b248e79c56a0a549cc8d681fd6e67ad61762fc",
+      "command": "npx vitest run tests/unit/kh02/g15CsvOriginIntegrity.test.ts --no-file-parallelism",
+      "exitCode": 0,
+      "testFilesTotal": 1,
+      "testFilesPassed": 1,
+      "testFilesFailed": 0,
+      "testsTotal": 36,
+      "testsPassed": 36,
+      "testsFailed": 0,
+      "durationSeconds": 1.19,
+      "logFile": "reports/kh02/v19_3_3_1_csv_trust_google_meta_provenance/logs/A3_g15_csv_origin_integrity.log"
+    },
+    {
+      "waveId": "A4_meta_google_production_flow",
+      "executedAgainstCommitSha": "79b248e79c56a0a549cc8d681fd6e67ad61762fc",
+      "command": "npx vitest run tests/unit/kh02/metaGoogleProductionFlowClosure.test.ts --no-file-parallelism",
+      "exitCode": 0,
+      "testFilesTotal": 1,
+      "testFilesPassed": 1,
+      "testFilesFailed": 0,
+      "testsTotal": 14,
+      "testsPassed": 14,
+      "testsFailed": 0,
+      "durationSeconds": 3.23,
+      "logFile": "reports/kh02/v19_3_3_1_csv_trust_google_meta_provenance/logs/A4_meta_google_production_flow.log"
+    },
+    {
+      "waveId": "B1_kh02_unit_all",
+      "executedAgainstCommitSha": "79b248e79c56a0a549cc8d681fd6e67ad61762fc",
+      "command": "npm run kh02:test:unit -- --maxWorkers=2",
+      "exitCode": 0,
+      "testFilesTotal": 107,
+      "testFilesPassed": 107,
+      "testFilesFailed": 0,
+      "testsTotal": 2526,
+      "testsPassed": 2526,
+      "testsFailed": 0,
+      "durationSeconds": 252.09,
+      "logFile": "reports/kh02/v19_3_3_1_csv_trust_google_meta_provenance/logs/B1_kh02_unit_all.log"
+    },
+    {
+      "waveId": "C1_kh02_integration",
+      "executedAgainstCommitSha": "79b248e79c56a0a549cc8d681fd6e67ad61762fc",
+      "command": "npx vitest run tests/integration/kh02 --no-file-parallelism",
+      "exitCode": 0,
+      "testFilesTotal": 16,
+      "testFilesPassed": 16,
+      "testFilesFailed": 0,
+      "testsTotal": 77,
+      "testsPassed": 77,
+      "testsFailed": 0,
+      "durationSeconds": 84.33,
+      "logFile": "reports/kh02/v19_3_3_1_csv_trust_google_meta_provenance/logs/C1_kh02_integration.log"
+    },
+    {
+      "waveId": "D1_kh01_regression",
+      "executedAgainstCommitSha": "79b248e79c56a0a549cc8d681fd6e67ad61762fc",
+      "command": "npm run kh01:verify",
+      "exitCode": 0,
+      "testFilesTotal": 5,
+      "testFilesPassed": 5,
+      "testFilesFailed": 0,
+      "testsTotal": 69,
+      "testsPassed": 69,
+      "testsFailed": 0,
+      "durationSeconds": 4.1,
+      "logFile": "reports/kh02/v19_3_3_1_csv_trust_google_meta_provenance/logs/D1_kh01_regression.log"
+    },
+    {
+      "waveId": "D2_dev_holdout_backtest",
+      "executedAgainstCommitSha": "79b248e79c56a0a549cc8d681fd6e67ad61762fc",
+      "command": "npx tsx scripts/kh02/runBacktestV12_4_3_4_2.ts",
+      "exitCode": 0,
+      "durationSeconds": 1.8,
+      "logFile": "reports/kh02/v19_3_3_1_csv_trust_google_meta_provenance/logs/D2_dev_holdout_backtest.log"
+    },
+    {
+      "waveId": "D3_db_readback",
+      "executedAgainstCommitSha": "79b248e79c56a0a549cc8d681fd6e67ad61762fc",
+      "command": "npx tsx scripts/kh02/runCandidateDbReadback.ts",
+      "exitCode": 0,
+      "durationSeconds": 2.4,
+      "logFile": "reports/kh02/v19_3_3_1_csv_trust_google_meta_provenance/logs/D3_db_readback.log"
+    },
+    {
+      "waveId": "D4_free_mcp_smoke",
+      "executedAgainstCommitSha": "79b248e79c56a0a549cc8d681fd6e67ad61762fc",
+      "command": "VITEST=1 npx tsx scripts/kh02/runThreeSourceFreeMcpSmoke.ts",
+      "exitCode": 0,
+      "durationSeconds": 3.1,
+      "logFile": "reports/kh02/v19_3_3_1_csv_trust_google_meta_provenance/logs/D4_free_mcp_smoke.log"
+    }
+  ],
+  "aggregateSummary": {
+    "distinctTestFilesExecuted": 128,
+    "distinctTestsExecuted": 2672,
+    "distinctTestsPassed": 2672,
+    "distinctTestsFailed": 0,
+    "skippedTests": 0,
+    "todoTests": 0
+  }
+}

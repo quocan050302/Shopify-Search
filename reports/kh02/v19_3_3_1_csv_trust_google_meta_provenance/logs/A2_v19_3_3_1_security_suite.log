@@ -1,0 +1,13 @@
+
+ RUN  v5.0.5 /Users/macbook/Documents/Project_Github/Meta-Ads/Shopify-Search
+
+ ✓ tests/unit/kh02/v19_3_3_1_CsvTrustAndGoogleMetaProvenance.test.ts (34 tests) 896ms
+   ✓ KH-02 V12.4.3.7.19.3.3.1 — P0 CSV Authority Trust Boundary & P1 Google/Meta Provenance (34)
+     ✓ Section 03.7 — P1 Google Ads Provenance & Product/Market Truth (G01..G12) (12)
+       ✓ G10: durable DB rows survive reload without losing exact invocation receipts 436ms
+
+ Test Files  1 passed (1)
+      Tests  34 passed (34)
+   Start at  10:17:48
+   Duration  1.97s (tests 50%, import 33%, transform 9%, setup 7%, worker 1%)
+

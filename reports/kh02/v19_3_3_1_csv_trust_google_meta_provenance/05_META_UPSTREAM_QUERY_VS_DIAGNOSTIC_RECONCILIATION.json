@@ -1,0 +1,61 @@
+{
+  "gateId": "P1_META_UPSTREAM_QUERY_VS_DIAGNOSTIC_RECONCILIATION",
+  "patchVersion": "V12.4.3.7.19.3.3.1",
+  "testedCodeCommitSha": "79b248e79c56a0a549cc8d681fd6e67ad61762fc",
+  "testedTreeSha": "afdf6da09961f358e9010fc0d4547ebcb6d56cbc",
+  "rootCauseClosed": {
+    "file": "src/services/kh02/providers/metaResearchAdapter.ts",
+    "function": "diagnoseMetaLiveCollector",
+    "defectOnC0": "diagnoseMetaLiveCollector set provenanceVerified = Boolean(actualQueryAttempted && upstreamQueryCompleted), which evaluated to true even when rawAdsReturned === 0 (zero upstream ads observed). It also lacked explicit transportStatus and contentStatus fields.",
+    "fixInC1": "provenanceVerified is now strictly Boolean(actualQueryAttempted && upstreamQueryCompleted && rawAdsReturned > 0). Added explicit transportStatus (SKIPPED_DIAGNOSTIC_ONLY | QUERY_ATTEMPTED_EMPTY_OR_BLOCKED | QUERY_COMPLETED_WITH_ADS | COLLECTOR_DISABLED | PYTHON_RUNTIME_MISSING) and contentStatus (NO_QUERY_EXECUTED | ZERO_ADS_RETURNED | UPSTREAM_ADS_OBSERVED)."
+  },
+  "reconciledDiagnosticStates": [
+    {
+      "caseId": "M01",
+      "mode": "performLiveQuery=false (diagnostic-only)",
+      "actualQueryAttempted": false,
+      "upstreamQueryCompleted": false,
+      "rawAdsReturned": 0,
+      "provenanceVerified": false,
+      "transportStatus": "SKIPPED_DIAGNOSTIC_ONLY",
+      "contentStatus": "NO_QUERY_EXECUTED"
+    },
+    {
+      "caseId": "M02",
+      "mode": "performLiveQuery=true with 0 upstream ads returned",
+      "actualQueryAttempted": true,
+      "upstreamQueryCompleted": true,
+      "rawAdsReturned": 0,
+      "provenanceVerified": false,
+      "transportStatus": "QUERY_ATTEMPTED_EMPTY_OR_BLOCKED",
+      "contentStatus": "ZERO_ADS_RETURNED"
+    },
+    {
+      "caseId": "M03",
+      "mode": "resolveMetaMarketProvenance US market verification",
+      "queryCountryOnlyWithoutRawLocations": {
+        "usMarketVerified": false,
+        "marketVerificationSource": "UNVERIFIED_MISSING_TARGET_LOCATIONS"
+      },
+      "explicitUsRawTargetLocations": {
+        "usMarketVerified": true,
+        "marketVerificationSource": "COUNTRY_ARRAY_EXPLICIT_US"
+      }
+    },
+    {
+      "caseId": "M04",
+      "mode": "ingestDiscoveredAds Prisma DB persistence",
+      "verifiedBehavior": "Persists Product, Ad (externalAdId, platform=META, region=US, targetLocationsJson, landingPageUrl), and AdMetricSnapshot in SQLite without fabricated demand rows."
+    },
+    {
+      "caseId": "M05",
+      "mode": "Product family consolidation & G16 Top 3 diversity",
+      "verifiedBehavior": "Multiple Meta ads for the same merchant/product family consolidate into 1 canonical family and cannot be split into 3 fake Top 3 cards (shortlist.length = 1, g16ShortlistVerified = false)."
+    },
+    {
+      "caseId": "M06",
+      "mode": "Meta ad longevity vs G15 demand gate",
+      "verifiedBehavior": "Meta ad creative longevity is classified as ad-activity signal only and is rejected by evaluateDemandSourceAuthority / evaluateDemandHistoryEvidence for G15 longitudinal demand verification."
+    }
+  ]
+}

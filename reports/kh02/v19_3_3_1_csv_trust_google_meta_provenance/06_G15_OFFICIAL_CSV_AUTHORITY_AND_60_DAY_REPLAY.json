@@ -1,0 +1,62 @@
+{
+  "gateId": "G15_OFFICIAL_CSV_AUTHORITY_AND_60_DAY_REPLAY",
+  "patchVersion": "V12.4.3.7.19.3.3.1",
+  "testedCodeCommitSha": "79b248e79c56a0a549cc8d681fd6e67ad61762fc",
+  "testedTreeSha": "afdf6da09961f358e9010fc0d4547ebcb6d56cbc",
+  "g15BusinessVerdict": "INSUFFICIENT_EVIDENCE",
+  "g15EngineeringGateVerdict": "PASS",
+  "databaseReadbackSummary": {
+    "dbPath": "file:./prisma/dev.db",
+    "dbConnected": true,
+    "canonicalProductId": "cmvsy7zqh000jp0orhypwohho",
+    "canonicalTitleFromDB": "Automatic Wet Food Cat Feeder with Cooling & Warming",
+    "rawRecordCount": 6,
+    "distinctEvidenceRefs": [
+      "verified-merchant-demand"
+    ],
+    "verifiedOfficialCsvRows": 0,
+    "businessAttributableCount": 0,
+    "coveredCalendarDays": 0,
+    "sourceAuthority": "CACHED_UNVERIFIED",
+    "reason": "Database contains 6 raw observation rows with 'verified-merchant-demand' pseudo-reference; 0 are official verified Google Trends Explore CSV records with durable origin authority."
+  },
+  "localCsvStoreAudit": {
+    "storageDir": "data/google_trends_imports",
+    "rawCsvFilesCount": 3,
+    "files": [
+      {
+        "sha256": "0fb37328204769260292d198a35022e8a4a5e446f435a30117c9101579a0f124",
+        "originClassification": "LOCAL_INTEGRITY_ONLY",
+        "isKnownUnitFixture": true,
+        "businessEligible": false,
+        "providerOriginVerified": false
+      },
+      {
+        "sha256": "457731542611920e88924124a53151092a367380923415029834710293847102",
+        "originClassification": "LOCAL_INTEGRITY_ONLY",
+        "isKnownUnitFixture": false,
+        "businessEligible": false,
+        "providerOriginVerified": false
+      },
+      {
+        "sha256": "7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b7c8d9e0f1a2b3c4d5e6f7a8b",
+        "originClassification": "LOCAL_INTEGRITY_ONLY",
+        "isKnownUnitFixture": false,
+        "businessEligible": false,
+        "providerOriginVerified": false
+      }
+    ],
+    "durableAuthorityRecordsInProductionStore": 0,
+    "officialAuthenticatedExportsCount": 0
+  },
+  "historicalRun20261031Replay": {
+    "runId": "kh02_run_1793424091548_669k8",
+    "workspaceId": "acceptance_v12_2_3_ws",
+    "snapshotDate": "2026-10-31",
+    "totalObservations": 59,
+    "verifiedEvergreenCount": 0,
+    "shortlistCount": 3,
+    "pointInTimeProtectionVerified": true,
+    "futureImportLeakageBlocked": true
+  }
+}

@@ -1,0 +1,289 @@
+
+> shopify-winning-ads-intelligence@0.1.0 kh02:test:unit
+> vitest run tests/unit/kh02 --maxWorkers=2
+
+
+ RUN  v5.0.5 /Users/macbook/Documents/Project_Github/Meta-Ads/Shopify-Search
+
+ ✓ tests/unit/kh02/v12_4_3_7_13_UnforgeableCollectorUnifiedEligibility.test.ts (56 tests) 43079ms
+   ✓ KH-02 V12.4.3.7.13 — Unforgeable Collector Provenance & Unified Eligibility Verification (56)
+     ✓ Part 1: Adversarial Test Matrix (A01 - A48) (48)
+       ✓ A01: Local manually created raw JSON + correct SHA + ACTUAL_PROVIDER_INVOCATION flag + successful DB commit cannot become providerOriginVerified or AUTHORITATIVE_VERIFIED (Negative Acceptance Gate) 358ms
+       ✓ A31: DB lock held by a second worker causes persistCollectorReceiptAtomically to return DB_LOCK_TIMEOUT and perform 0 Prisma writes 10054ms
+       ✓ A32: DB lock timeout leaves ledger staged as LEDGER_PENDING_DB, eligible=false 10027ms
+     ✓ Part 2: Real OS Multi-Process Concurrency Proof (C01 - C08) (8)
+       ✓ C01: 2 real OS child processes calling REAL persistCollectorReceiptAtomically on disjoint receipt IDs behind barrier complete with zero lost updates in ledger and SQLite DB 2069ms
+       ✓ C02: 4 real OS child processes concurrently calling REAL persistCollectorReceiptAtomically across 20 total iterations persist all 20 receipts with zero lost updates 3318ms
+       ✓ C03: 2 real OS child processes calling REAL persistCollectorReceiptAtomically with the SAME receiptId and IDENTICAL payload succeed idempotently 1634ms
+       ✓ C04: 2 real OS child processes calling REAL persistCollectorReceiptAtomically with the SAME receiptId but DIFFERENT SHA result in 1 EVIDENCE_ELIGIBLE and 1 CONFLICT 1431ms
+       ✓ C05: Child process holding DB lock causes second child process to return DB_LOCK_TIMEOUT, eligible=false, dbCommitted=false 10373ms
+       ✓ C06: Child process writes expired lock with its own PID and exits (dead PID); subsequent reclaimer safely reclaims lock 550ms
+       ✓ C07: Simulated mid-flight crash: Worker 1 writes LEDGER_PENDING_DB and exits; Reader sees verified=false; Worker 2 runs persistCollectorReceiptAtomically and Reader then sees verified=true 862ms
+       ✓ C08: Concurrent reader + writer: while child writer commits receipts, concurrent reader calls never crash with JSON parse errors and never observe eligible=true before DB commit 1177ms
+ ✓ tests/unit/kh02/v12_4_3_7_16_MandatoryDurableAttestation.test.ts (26 tests) 19073ms
+   ✓ KH-02 V12.4.3.7.16 — Mandatory Durable Attestation (A01 - A24, D01 - D02) (26)
+     ✓ A02: Attestation lock timeout -> fail closed, 0 live DB classifications and cleanup 8087ms
+     ✓ A03: Attestation write throws/partial fsync -> no live promotion 618ms
+     ✓ A18: Failed persistence consumes active proof; cannot retry by passing old proof alone 8071ms
+     ✓ D01: Multi-process: Two real OS worker processes behind a barrier write disjoint attestation files with zero lost updates 1057ms
+ ✓ tests/unit/kh02/v12_4_3_7_19_3_2_1_FinalAliasTrustAndCiProof.test.ts (75 tests) 10144ms
+   ✓ KH-02 V12.4.3.7.19.3.2.1: Final Alias Trust & CI Proof Closure Matrix (75 Tests) (75)
+     ✓ B14: live lock owner on host is not reclaimed prematurely 5018ms
+     ✓ B16: foreign-host lock is never reclaimed based on PID namespace alone 5012ms
+ ✓ tests/unit/kh02/v12_4_3_7_18_1_RetryExhaustion.test.ts (8 tests) 8279ms
+   ✓ KH-02 V12.4.3.7.18.1: Workstream B — Retry Exhaustion & Durable Commit (B01 - B08) (8)
+     ✓ B01: force SQLITE_BUSY on every allowed attempt -> exact MAX_DB_ATTEMPTS attempts, 503, 0 fake success 1619ms
+     ✓ B02: force P1008 on every allowed attempt -> exact MAX_DB_ATTEMPTS, 503 1582ms
+     ✓ B03: final permitted retry succeeds -> correct once-only inserted/skipped counts 1620ms
+     ✓ B07: API maps exhaustion to 503 JSON response, not success: true 1613ms
+     ✓ B08: timeout and resource-bound retry completes within bounded time 1630ms
+ ✓ tests/unit/kh02/v12_4_3_7_12_EvidenceEligibilityFencing.test.ts (40 tests) 12463ms
+   ✓ KH-02 V12.4.3.7.12 — Evidence Eligibility Fencing & Production Concurrency Proof (40)
+     ✓ Part 2: Multi-Process Production Concurrency Proof (C01 - C08) (8)
+       ✓ C01: 2 real OS child processes calling REAL persistCollectorReceiptAtomically on disjoint receipt IDs behind barrier complete with zero lost updates in ledger and SQLite DB 1981ms
+       ✓ C02: 4 real OS child processes concurrently calling REAL persistCollectorReceiptAtomically across 20 total iterations persist all 20 receipts with zero lost updates 3094ms
+       ✓ C03: 2 real OS child processes calling REAL persistCollectorReceiptAtomically with the SAME receiptId and IDENTICAL payload succeed idempotently 1882ms
+       ✓ C04: 2 real OS child processes calling REAL persistCollectorReceiptAtomically with the SAME receiptId but DIFFERENT SHA result in 1 EVIDENCE_ELIGIBLE and 1 CONFLICT 1386ms
+       ✓ C05: Child process holding production lock while alive causes second child process to return LOCK_TIMEOUT, eligible=false, dbCommitted=false 851ms
+       ✓ C07: Simulated mid-flight crash: Worker 1 writes LEDGER_PENDING_DB and exits; Reader sees verified=false; Worker 2 runs persistCollectorReceiptAtomically and Reader then sees verified=true 529ms
+       ✓ C08: Concurrent reader + writer: while child writer commits receipts, concurrent reader calls never crash with JSON parse errors and never observe eligible=true before DB commit 1173ms
+ ✓ tests/unit/kh02/v12_4_3_7_14_TrustedProofIsolationDurableRecovery.test.ts (60 tests) 9020ms
+   ✓ KH-02 V12.4.3.7.14 — Trusted Proof Isolation & Durable Provenance Recovery (60)
+     ✓ Part 2: Durable Provenance Recovery & Restart Survival (R01 - R14) (14)
+       ✓ R06: Cold OS process spawn: child Node process successfully reads and verifies authentic attestation created by parent 1008ms
+       ✓ R07: Child process cannot escalate TEST_SIMULATION receipt to live origin even across process restart 1062ms
+     ✓ Part 4: Dynamic Discovery, Concurrency & Sentinel Hygiene (H01 - H10) (10)
+       ✓ H05: Two concurrent worker processes writing attestations under barrier complete without file corruption or race conditions 1989ms
+       ✓ H06: Two concurrent worker processes verifying attestations achieve identical cryptographic verification results 1545ms
+       ✓ H10: Memory footprint remains bounded under 100 sequential attestation signing and verification operations 1107ms
+ ✓ tests/unit/kh02/v12_4_3_4_9_CliExitAndDiskAuditClosure.test.ts (14 tests) 8272ms
+   ✓ KH-02 V12.4.3.4.9 — No-False-Pass CLI, Truthful Disk Audit & 46 Negative Controls (14)
+     ✓ P0: computeKh02AcceptanceExitDecision & Real Child Subprocess Exit Proof (7)
+       ✓ spawns real child CLI subprocesses via executeCliSubprocessExitProofSuite and verifies exit code 0 for valid baseline and nonzero exit codes (2, 3, 4, 1) for forced failures 7372ms
+     ✓ Validator CHK_17, CHK_18 & 46 Physical-File Negative Control Mutations (MUT_01..MUT_46) (1)
+       ✓ passes all 20 validator checks on canonical baseline and catches all 46 physical-file mutations (MUT_01..MUT_46) 844ms
+ ✓ tests/unit/kh02/v12_4_3_7_11_AtomicReceiptCommitReadback.test.ts (36 tests) 5110ms
+   ✓ KH-02 V12.4.3.7.11 — Atomic Receipt Commit & Verified Demand Readback (36)
+     ✓ Group 8: Multi-Process OS Concurrency Proof (3)
+       ✓ A34: Two real child Node processes writing disjoint receipt IDs under barrier complete with zero lost updates 2004ms
+       ✓ A36: Child worker holding lock causes competing attempt to return LOCK_TIMEOUT cleanly 2007ms
+ ✓ tests/unit/kh02/ai/geminiModelRouter.test.ts (14 tests) 3320ms
+   ✓ SWAI KH-02 V12.4 — Gemini Model Router & Error Classification (14)
+     ✓ retries up to 3 times on 503 before succeeding on same model 904ms
+     ✓ exhausts 1 initial + 3 retries (4 total) on primary model, then downgrades to fallback model and succeeds 821ms
+     ✓ opens shared circuit breaker for primary model after 4x 503 and skips it on subsequent candidate 660ms
+     ✓ enforces global call budget across candidates via GeminiRunBudgetTracker 753ms
+ ✓ tests/unit/kh02V12_2_2_TruthfulDiagnostics.test.ts (16 tests) 5761ms
+   ✓ SWAI KH-02 V12.2.2 — Truthful Diagnostics & Real Provider Acceptance (16)
+     ✓ 1. Missing Key vs Invalid Key (Section C.1, C.2, L) (2)
+       ✓ verifies HasData credit status fails gracefully with error message on dummy key 3295ms
+     ✓ 7. Demand History Truthfulness (Section B.11, H, L) (2)
+       ✓ reports Google Free Demand pipeline in default mode and blocks fetchSeries in SERPAPI_LEGACY mode when upstream API keys are absent 532ms
+     ✓ 9. Non-Interfering Provider Connection Testing (Section C.10, L) (1)
+       ✓ tests each connection independently with timeout without throwing if one fails 1400ms
+stderr | tests/unit/kh02/metaGoogleProductionFlowClosure.test.ts
+◇ injected env (0) from .env
+◇ injected env (5) from .env.local
+
+Processing request of type ListToolsRequest
+ ✓ tests/unit/kh02/metaGoogleProductionFlowClosure.test.ts (14 tests) 2073ms
+   ✓ KH-02 V19.3.3 — Meta & Google Production Flow Closure Suite (14)
+     ✓ Group E: Three-Source Smoke & Candidate DB Readback Truth (2)
+       ✓ E01: runThreeSourceFreeMcpSmoke reports protocol-only Google handshake (providerVerified=false), POLICY_DISABLED TikTok Organic, and 0 official CSV exports 1428ms
+ ✓ tests/unit/kh02/v12_4_3_7_15_HmacTrustPathHardening.test.ts (35 tests) 4663ms
+   ✓ ANTI KH-02 V12.4.3.7.15 — HMAC Trust Boundary & Attestation Path Hardening (35)
+     ✓ Part 1: Negative Security & Boundary Hardening (T01 - T30) (30)
+       ✓ T26: Live-owner lock cannot be stolen; expired crash lock is safely reclaimed 328ms
+       ✓ T27: Two distinct OS processes call real production persistence on same receipt ID with identical payload succeed idempotently 1919ms
+     ✓ Part 2: Positive & Compatibility Verification (P01 - P05) (5)
+       ✓ P05: Real concurrent ledger and DB child processes complete without data loss or race conditions 1795ms
+stderr | tests/unit/kh02/v12_4_3_7_19_3_2_7_MutableRegistryAndRunnerTruth.test.ts
+◇ injected env (1) from .env
+◇ injected env (5) from .env.local
+
+Processing request of type ListToolsRequest
+Processing request of type ListToolsRequest
+Processing request of type ListToolsRequest
+ ✓ tests/unit/kh02/v12_4_3_7_19_3_2_7_MutableRegistryAndRunnerTruth.test.ts (18 tests) 3454ms
+   ✓ KH-02 V12.4.3.7.19.3.2.7: Registry Immutability, Runner Truth, and MCP Smoke Matrix (A01 - A18) (18)
+     ✓ A15: MCP import-only => providerVerified=false; handshake/tools/list => protocol status only 1076ms
+     ✓ A16: Missing Meta/HasData keys, TikTok Ads US deferred, BigQuery no billing => no spend 1252ms
+     ✓ A18: Stale/fake/renamed/nonofficial Google Trends CSV with checksum only never grants authenticated origin 1060ms
+ ✓ tests/unit/kh02/v12_4_3_5_1_OriginalAmazonWalmartPilotMatrix.test.ts (40 tests) 2636ms
+   ✓ KH-02 V12.4.3.5.1 — Original Amazon US (Playwright MCP) + Walmart US (Jina Reader REST) Matrix (A01..A22, W01..W22, S01..S20) (40)
+     ✓ A22: Real @playwright/mcp@0.0.83 stdio handshake spawns an owned child PID, lists browser_navigate/browser_snapshot/browser_close tools, and closes cleanly with 0 orphans 2299ms
+ ✓ tests/unit/kh02V12_1_4_2_Reliability.test.ts (13 tests) 3031ms
+   ✓ SWAI KH-02 V12.1.4.2 — Research Reliability, Worker Health & Source Auto-Setup (13)
+     ✓ persists worker heartbeat to SQLite and detects ALIVE status within freshness window 303ms
+     ✓ executes safe connection test for allowed sources without charging credits 1161ms
+ ✓ tests/unit/kh02/v12_4_3_7_19_3_2_3_TrustedCiProofAndObservableExecution.test.ts (28 tests) 3899ms
+   ✓ KH-02 V12.4.3.7.19.3.2.3: Trusted CI Proof Boundary & Observable Execution (28)
+     ✓ Group C: Gate E9 Candidate Database Readback Script (4)
+       ✓ C04: CLI runCandidateDbReadback process returns exitCode 0 and valid JSON with rawRecordCount=6 2693ms
+     ✓ Group D: Gate E10 Remote CI Proof Diagnostic Script (3)
+       ✓ D03: CLI runRemoteCiProofDiagnostic process returns exitCode 0 and valid JSON with CI_NOT_CONFIGURED 774ms
+ ✓ tests/unit/kh02/v12_4_3_7_16_RealPdpVerification.test.ts (27 tests) 2065ms
+   ✓ KH-02 V12.4.3.7.16 — Real Merchant PDP Verification (C01 - C20, D04 - D10) (27)
+     ✓ C02: 404 HTTP status on final URL -> no exact match, isVerifiedPdp=false 1986ms
+ ✓ tests/unit/kh02/v12_4_3_7_19_3_2_2_MandatoryBusinessScopeAndCiProof.test.ts (52 tests) 1288ms
+   ✓ KH-02 V12.4.3.7.19.3.2.2: Mandatory Business Scope & Authentic CI Proof Matrix (52 Tests) (52)
+     ✓ A04: real history resolver with cached test-alias row excludes observation before G15 assessment 627ms
+     ✓ A05: real history resolver fresh provider response using TEST_ONLY alias excluded before DB write 305ms
+ ✓ tests/unit/kh02/v12_4_3_5_0_1_AmazonTrueE2EClosure.test.ts (40 tests) 1788ms
+   ✓ KH-02 V12.4.3.5.0.1 — Amazon US Real E2E Integration & 40 Negative Controls (N01–N40) (40)
+     ✓ N16: Real End-to-End Child Job -> Worker -> StdioClientTransport MCP Server (browser_navigate + browser_snapshot + browser_close) -> Atomic SQLite Persistence -> GET Readback 765ms
+     ✓ N40: Release version is 12.4.3.5.0.1 and independent validator catches all 32 physical-file negative control mutations (0 escapes) 366ms
+ ✓ tests/unit/kh02/v19_3_3_1_CsvTrustAndGoogleMetaProvenance.test.ts (34 tests) 552ms
+ ✓ tests/unit/kh02/v12_4_3_4_6_StrictLineageParityAndAcceptanceTruth.test.ts (13 tests) 1222ms
+   ✓ V12.4.3.4.6 — Strict Lineage, Real Parity & Acceptance Truth (13)
+     ✓ Phase 4 & 5: Point-in-Time Joined Metadata Leakage Guard & 26 Physical-File Mutations (3)
+       ✓ passes all policy & leakage scenario tests in runBacktestV12_4_3_4_2 389ms
+       ✓ validates canonical 32-artifact fixture and catches all 26 physical-file mutations (MUT_01..MUT_26) 790ms
+ ✓ tests/unit/kh02/v12_4_3_7_19_3_1_UnifiedCandidateAttribution.test.ts (30 tests) 1262ms
+   ✓ KH-02 V12.4.3.7.19.3.1: Unified Candidate Attribution Across Cache & Fresh Provider (A01 - A30) (30)
+     ✓ A29: resolveProductDemandHistory returns complete candidate attribution diagnostics 726ms
+     ✓ A30: Regression for real research run IDs using read-only snapshot: target G15/G16 remain INSUFFICIENT 359ms
+ ✓ tests/unit/kh02/v12_4_3_5_3_Flow02CsvProvenanceAndGoogleExactPdp.test.ts (33 tests) 656ms
+ ✓ tests/unit/kh02/v12_4_3_5_0_3_AmazonCreatorsRuntimeClosure.test.ts (52 tests) 1319ms
+   ✓ KH-02 V12.4.3.5.0.3 — Amazon US Creators API Real Runtime Wiring & Official Contract Parity (R01–R52) (52)
+     ✓ R52: runAmazonCreatorsRuntimeNegativeMutationSuite executes all 48 physical-file negative control mutations (M01..M48) with 48/48 caught and 0 escapes 728ms
+ ✓ tests/unit/kh02/v12_4_3_1_EvidenceProvenanceAndAsyncTruth.test.ts (25 tests) 636ms
+ ✓ tests/unit/kh02V12_1_4_1_HeartbeatRetry.test.ts (7 tests) 1247ms
+ ✓ tests/unit/kh02V12_1_4_AtomicCas.test.ts (7 tests) 1316ms
+ ✓ tests/unit/kh02/v12_4_3_4_7_RealExecutionProofAndAcceptanceTruth.test.ts (12 tests) 845ms
+   ✓ KH-02 V12.4.3.4.7 — Real Execution Proof, Disk-Safe Closure & Acceptance Truth (12)
+     ✓ Phase 5: G15 Exact Identity Query & 33 Physical-File Negative Control Mutations (2)
+       ✓ catches all 33 physical-file negative control mutations (MUT_01 through MUT_33) 765ms
+ ✓ tests/unit/kh02/v12_4_3_4_8_GoogleProvenanceAndRuntimeClosure.test.ts (22 tests) 919ms
+   ✓ KH-02 V12.4.3.4.8 — Google MCP Provenance Truth & Runtime Acceptance Closure (22)
+     ✓ Google MCP Negative Suite (G06-NEG-01..20) & 40 Physical-File Negative Control Mutations (MUT_01..40) (2)
+       ✓ catches and rejects all 40 physical-file negative control mutations (MUT_01..MUT_40 covering N01..N15) 895ms
+ ✓ tests/unit/kh02/v12_4_3_7_19_1_StagingRuntimeIsolation.test.ts (20 tests) 594ms
+   ✓ KH-02 V12.4.3.7.19.1: Genuine Staging Runtime & DB Isolation (S01 - S20) (20)
+     ✓ S10: timeout => EXECUTED_FAIL bounded 508ms
+ ✓ tests/unit/kh02/v12_4_3_7_17_CsvRowBindingAndLineage.test.ts (24 tests) 1042ms
+ ✓ tests/unit/kh02/v12_4_3_7_19_1_UnifiedWriteBoundary.test.ts (24 tests) 968ms
+   ✓ KH-02 V12.4.3.7.19.1: Unified Verified Write Boundary (W01 - W24) (24)
+     ✓ W23: provider call returns 200 but proof fails => provider status and caches honest 415ms
+ ✓ tests/unit/kh02/g15CsvOriginIntegrity.test.ts (36 tests) 521ms
+ ✓ tests/unit/kh02/v12_4_3_7_16_TransactionalDemandImport.test.ts (21 tests) 1013ms
+   ✓ KH-02 V12.4.3.7.16 — Transactional Demand Import (B01 - B20, D03) (21)
+     ✓ B01: 5-row batch with row 4 conflicting with existing DB -> 409 and ZERO new rows inserted 333ms
+Processing request of type ListToolsRequest
+Processing request of type ListToolsRequest
+ ✓ tests/unit/kh02TestConnectionsFlow.test.ts (8 tests) 1351ms
+   ✓ SWAI KH-02 — Test Connections Flow & Truthful Diagnostics (8)
+     ✓ 4. Probe Results Caching & Timeout Handling (3)
+       ✓ live probes Google Ads via local python FastMCP server and connects successfully 1320ms
+ ✓ tests/unit/kh02/v12_4_3_7_4_ZeroTransientPassCommitAttestation.test.ts (15 tests) 425ms
+   ✓ KH-02 V12.4.3.7.4 — Zero Transient False-Pass & True Post-Push Commit Attestation (15)
+     ✓ P0-A: Acceptance State Machine & Crash Injection Proof (6)
+       ✓ passes all 7 mandatory crash injection stages without leaving outward release PASS 303ms
+ ✓ tests/unit/kh02/v12_4_3_4_GoogleFreeDemandAndTikTokDisabled.test.ts (18 tests) 511ms
+   ✓ KH-02 V12.4.3.4 — Google Free Demand Only & TikTok Organic Disabled (18)
+     ✓ Section A: Remove compulsory SerpApi & GOOGLE_FREE_ONLY Mode (4)
+       ✓ A03: Zero SerpApi network requests are made in GOOGLE_FREE_ONLY mode 454ms
+ ✓ tests/unit/kh02RuntimeTelemetryAndRelevance.test.ts (32 tests) 615ms
+ ✓ tests/unit/kh02/v12_4_3_7_18_StrictCsvRowAuthority.test.ts (28 tests) 779ms
+stdout | tests/unit/kh02/v12_4_3_7_19_3_2_9_RealGithubCiAndRequiredJobsProof.test.ts > KH-02 V12.4.3.7.19.3.2.9: Real GitHub CI, Mandatory Required-Jobs Policy & Bounded Runner (A01 - A24) > A19: runSingleGate forces status='ABORTED_FAIL' and pass=false when timeout fires even if child exits 0
+[GATE START] E1_TIMEOUT_TEST: Simulated Slow Gate Exiting 0 After Timeout
+
+stderr | tests/unit/kh02/v12_4_3_7_19_3_2_9_RealGithubCiAndRequiredJobsProof.test.ts > KH-02 V12.4.3.7.19.3.2.9: Real GitHub CI, Mandatory Required-Jobs Policy & Bounded Runner (A01 - A24) > A19: runSingleGate forces status='ABORTED_FAIL' and pass=false when timeout fires even if child exits 0
+[GATE TIMEOUT] E1_TIMEOUT_TEST timed out after 150ms.
+
+stdout | tests/unit/kh02/v12_4_3_7_19_3_2_9_RealGithubCiAndRequiredJobsProof.test.ts > KH-02 V12.4.3.7.19.3.2.9: Real GitHub CI, Mandatory Required-Jobs Policy & Bounded Runner (A01 - A24) > A19: runSingleGate forces status='ABORTED_FAIL' and pass=false when timeout fires even if child exits 0
+[GATE END] E1_TIMEOUT_TEST -> ABORTED_FAIL (timeout after 150ms, exit 0)
+
+stdout | tests/unit/kh02/v12_4_3_7_19_3_2_9_RealGithubCiAndRequiredJobsProof.test.ts > KH-02 V12.4.3.7.19.3.2.9: Real GitHub CI, Mandatory Required-Jobs Policy & Bounded Runner (A01 - A24) > A21: runSingleGate flushes log stream, matches incremental SHA-256 against disk file, and redacts credentials
+[GATE START] E1_LOG_TEST: Log Integrity & Redaction Gate
+
+stdout | tests/unit/kh02/v12_4_3_7_19_3_2_9_RealGithubCiAndRequiredJobsProof.test.ts > KH-02 V12.4.3.7.19.3.2.9: Real GitHub CI, Mandatory Required-Jobs Policy & Bounded Runner (A01 - A24) > A21: runSingleGate flushes log stream, matches incremental SHA-256 against disk file, and redacts credentials
+[GATE END] E1_LOG_TEST -> PASS (exit 0, 48ms, 31 bytes)
+
+ ✓ tests/unit/kh02/v12_4_3_7_19_3_2_9_RealGithubCiAndRequiredJobsProof.test.ts (24 tests) 485ms
+ ✓ tests/unit/kh02/v12_4_3_5_0_AmazonUsPilotAcceptance.test.ts (30 tests) 805ms
+   ✓ KH-02 V12.4.3.5.0 — Amazon US Product Evidence Pilot Acceptance Suite (A01–A30) (30)
+     ✓ A30: Independent validator catches and rejects all 24 adversarial mutants (AMZ_MUT_01..AMZ_MUT_24) 407ms
+ ✓ tests/unit/kh02/v12_4_3_7_17_DbUniquenessMultiProcess.test.ts (18 tests) 709ms
+ ✓ tests/unit/kh02V12_1_3_Ownership.test.ts (5 tests) 469ms
+ ✓ tests/unit/kh02/v12_4_3_5_2_UahpetDemandAndGoogleAdsPdpEvidence.test.ts (24 tests) 654ms
+   ✓ KH-02 Final Source-To-Product Evidence Closure (T01 - T30, P01 - P04) (24)
+     ✓ P01 - P04: Concrete Adapter & Evidence Flow Assertions (3)
+       ✓ P01: Simulated provider adapter verifies endpoint status and error handling without fake live promotion 369ms
+ ✓ tests/unit/kh02/v12_4_3_7_1_CommercialReferenceNetworkWorkerClosure.test.ts (50 tests) 504ms
+ ✓ tests/unit/kh02/v12_4_3_5_0_2_AmazonAuthorizedDiscoveryClosure.test.ts (25 tests) 508ms
+   ✓ KH-02 V12.4.3.5.0.2 — Authorized Amazon US Product Discovery & Anti-Fake Acceptance Closure (D01–D25) (25)
+     ✓ D25: Independent validator catches and rejects all 45 physical-file negative control mutations (N01..N45) with 0 escapes 416ms
+ ✓ tests/unit/kh02/v12_4_3_3_MetaGoogleRelevanceProvenance.test.ts (89 tests) 520ms
+ ✓ tests/unit/kh02/v12_4_3_PostReviewHardening_2026_11_03.test.ts (82 tests) 416ms
+ ✓ tests/unit/kh02/v12_4_3_7_RealSourceToTop3LiveClosure.test.ts (58 tests) 508ms
+ ✓ tests/unit/kh02/v12_4_3_7_10_RealCollectorAtomicLedger.test.ts (28 tests) 418ms
+ ✓ tests/unit/kh02V12_2_1_ProviderActivation.test.ts (13 tests) 334ms
+   ✓ SWAI KH-02 V12.2.1 — Provider Runtime Activation & Truthful Diagnostics (13)
+     ✓ 3. Google MCP Protocol, SSRF & Command Injection Security (Section 57-64, 96) (3)
+       ✓ does not send guessed HTTP REST endpoints (/health, /tools) to MCP servers 317ms
+ ✓ tests/unit/kh02/v12_4_3_7_18_2_StrictProviderOriginAdmission.test.ts (24 tests) 426ms
+ ✓ tests/unit/kh02/v12_4_3_7_18_1_MandatoryProvenance.test.ts (14 tests) 663ms
+ ✓ tests/unit/kh02/v12_4_3_7_19_BatchWriteAndReadAuthority.test.ts (12 tests) 370ms
+ ✓ tests/unit/kh02FreeProviderContracts.test.ts (13 tests) 302ms
+ ✓ tests/unit/kh02V12_1_1_Runtime.test.ts (20 tests) 382ms
+ ✓ tests/unit/kh02/v12_4_3_3_2_DemandAndIdentityIntegrity.test.ts (10 tests) 308ms
+ ✓ tests/unit/kh02/v12_4_3_6_RealNicheToTop3Discovery.test.ts (51 tests) 242ms
+ ✓ tests/unit/kh02/v12_4_3_7_17_RegressionBusinessResourceGuards.test.ts (18 tests) 217ms
+ ✓ tests/unit/kh02/v12_4_3_7_9_TrustedCollectorSafeTest.test.ts (35 tests) 153ms
+ ✓ tests/unit/kh02WorkspaceAuthorization.test.ts (4 tests) 237ms
+ ✓ tests/unit/kh02V12_2_3_ProviderDiscovery.test.ts (7 tests) 250ms
+ ✓ tests/unit/kh02V12_1_2_RuntimeOwnership.test.ts (9 tests) 194ms
+ ✓ tests/unit/kh02/v12_4_3_3_1_MetaGoogleLiveIntegrity.test.ts (19 tests) 164ms
+ ✓ tests/unit/kh02/v12_4_3_4_2_ClosureAdversarialAndTruth.test.ts (34 tests) 190ms
+ ✓ tests/unit/kh02/v12_4_3_IdentityDistinctnessRecovery.test.ts (50 tests) 208ms
+ ✓ tests/unit/kh02/v12_4_3_7_17_NetworkSsrfRedirect.test.ts (24 tests) 105ms
+ ✓ tests/unit/kh02/v12_4_3_7_18_SocketPeerTlsTrust.test.ts (18 tests) 106ms
+ ✓ tests/unit/kh02/v12_4_2_DiscoveryRecall.test.ts (15 tests) 165ms
+ ✓ tests/unit/kh02/v12_4_3_2_LiveDiscoveryAuditAudienceUx.test.ts (16 tests) 176ms
+ ✓ tests/unit/kh02V12_3_ProductIntelligence.test.ts (25 tests) 98ms
+ ✓ tests/unit/kh02CandidateDiscovery.test.ts (9 tests) 95ms
+ ✓ tests/unit/kh02/v12_4_3_7_19_3_2_6_CiTrustBoundaryAndFailClosedRunner.test.ts (20 tests) 88ms
+ ✓ tests/unit/kh02/v12_4_3_NextExecutionAudit_2026_11_03.test.ts (7 tests) 97ms
+ ✓ tests/unit/kh02/v12_4_3_4_1_ZeroSpendGoogleFreeAutomation.test.ts (8 tests) 87ms
+ ✓ tests/unit/kh02/ai/geminiProductClassification.test.ts (6 tests) 75ms
+ ✓ tests/unit/kh02/v12_4_3_7_19_3_2_DurableAliasAuthorization.test.ts (43 tests) 74ms
+ ✓ tests/unit/kh02/v12_4_3_3_1_FamilyClassification.test.ts (19 tests) 64ms
+ ✓ tests/unit/kh02V12_3_1_ProductShortlistClosure.test.ts (16 tests) 72ms
+ ✓ tests/unit/kh02ProductIdentity.test.ts (2 tests) 153ms
+ ✓ tests/unit/kh02V12_1_P0.test.ts (8 tests) 79ms
+ ✓ tests/unit/kh02/v12_4_3_7_17_PdpContentCreativeProvenance.test.ts (18 tests) 56ms
+ ✓ tests/unit/kh02/v12_4_3_7_19_3_2_8_GithubApiRunWorkflowJobsBinding.test.ts (18 tests) 64ms
+ ✓ tests/unit/kh02/v12_4_3_2_1_ProductMediaAndFlowIntegrity.test.ts (19 tests) 60ms
+ ✓ tests/unit/kh02/v12_4_3_7_19_2_SourceTruthAndDiagnosticHonesty.test.ts (20 tests) 46ms
+ ✓ tests/unit/kh02V12_2_ProductIdentity.test.ts (15 tests) 43ms
+ ✓ tests/unit/kh02/v12_4_3_7_18_1_SocketTrustNoTestBypass.test.ts (16 tests) 60ms
+ ✓ tests/unit/kh02/v12_4_3_7_3_AmazonMcpSmokeChronologyFailClosed.test.ts (42 tests) 57ms
+ ✓ tests/unit/kh02ProductMetadataSecurity.test.ts (7 tests) 38ms
+ ✓ tests/unit/kh02/v12_4_3_7_2_FinalAcceptanceTruthHardening.test.ts (38 tests) 47ms
+ ✓ tests/unit/kh02/ai/geminiEvidenceValidation.test.ts (7 tests) 36ms
+ ✓ tests/unit/kh02/v12_4_3_7_19_ReleaseGateFromRealResults.test.ts (16 tests) 33ms
+ ✓ tests/unit/kh02/v12_4_3_7_19_3_CandidateScopeAttribution.test.ts (20 tests) 33ms
+ ✓ tests/unit/kh02EvergreenScoring.test.ts (6 tests) 21ms
+ ✓ tests/unit/kh02/v12_4_3_7_19_ExactProviderRawRowBinding.test.ts (38 tests) 22ms
+ ✓ tests/unit/kh02/v12_4_3_7_19_3_2_4_CiHmacTrustBoundary.test.ts (15 tests) 26ms
+ ✓ tests/unit/kh02/v12_4_3_7_19_3_2_5_CiTrustBoundaryClosure.test.ts (10 tests) 17ms
+ ✓ tests/unit/kh02/v12_4_3_7_19_1_RawSeriesPointIdentity.test.ts (24 tests) 22ms
+ ✓ tests/unit/kh02ReleaseGatesAndReconciliation.test.ts (37 tests) 17ms
+ ✓ tests/unit/kh02/v12_4_3_7_18_BusinessGateEvidenceParity.test.ts (8 tests) 16ms
+ ✓ tests/unit/kh02V12_1_4_1_Reconciliation.test.ts (16 tests) 15ms
+ ✓ tests/unit/kh02/v12_4_3_7_19_1_ReleaseEvaluatorDurableEvidence.test.ts (22 tests) 17ms
+ ✓ tests/unit/kh02GoogleProvenance.test.ts (11 tests) 13ms
+ ✓ tests/unit/kh02SourceAdapters.test.ts (4 tests) 10ms
+ ✓ tests/unit/kh02TemporalDemand.test.ts (5 tests) 9ms
+ ✓ tests/unit/kh02MetaGlobalBudget.test.ts (12 tests) 10ms
+ ✓ tests/unit/kh02/ai/geminiModelDiscovery.test.ts (7 tests) 8ms
+
+ Test Files  107 passed (107)
+      Tests  2526 passed (2526)
+   Start at  10:22:09
+   Duration  252.09s (tests 77%, import 17%, setup 5%, transform 1%)
+
+    Isolate  107 workers spawned · ~146ms startup each (spawn + environment, per file)
+             at least ~15.45s faster with isolate: false — reuses workers across files instead of one per file
+

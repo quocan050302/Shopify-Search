@@ -1,0 +1,18 @@
+
+ RUN  v5.0.5 /Users/macbook/Documents/Project_Github/Meta-Ads/Shopify-Search
+
+stderr | tests/unit/kh02/metaGoogleProductionFlowClosure.test.ts
+◇ injected env (0) from .env
+◇ injected env (5) from .env.local
+
+Processing request of type ListToolsRequest
+ ✓ tests/unit/kh02/metaGoogleProductionFlowClosure.test.ts (14 tests) 2136ms
+   ✓ KH-02 V19.3.3 — Meta & Google Production Flow Closure Suite (14)
+     ✓ Group E: Three-Source Smoke & Candidate DB Readback Truth (2)
+       ✓ E01: runThreeSourceFreeMcpSmoke reports protocol-only Google handshake (providerVerified=false), POLICY_DISABLED TikTok Organic, and 0 official CSV exports 1462ms
+
+ Test Files  1 passed (1)
+      Tests  14 passed (14)
+   Start at  10:17:53
+   Duration  3.23s (tests 69%, import 20%, transform 8%, setup 3%)
+

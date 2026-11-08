@@ -1,0 +1,128 @@
+{
+  "gateId": "P1_GOOGLE_INVOCATION_CREATIVE_MERCHANT_US_MARKET_LEDGER",
+  "patchVersion": "V12.4.3.7.19.3.3.1",
+  "testedCodeCommitSha": "79b248e79c56a0a549cc8d681fd6e67ad61762fc",
+  "testedTreeSha": "afdf6da09961f358e9010fc0d4547ebcb6d56cbc",
+  "liveMcpProtocolCapabilities": {
+    "sourceId": "S2",
+    "transport": "STDIO_FASTMCP",
+    "commandPath": "services/google-transparency/.venv/bin/python",
+    "serverScript": "scripts/googleTransparencyServer.py",
+    "handshakeOk": true,
+    "toolsFound": [
+      "search_advertiser",
+      "get_advertiser_ads"
+    ],
+    "toolCallAttemptedInZeroCostSmoke": false,
+    "providerContentObserved": false,
+    "providerVerified": false,
+    "upstreamRequestVerified": false,
+    "costUsd": 0
+  },
+  "provenanceTierContract": {
+    "HANDSHAKE_ONLY": {
+      "providerVerified": false,
+      "localMcpToolResultVerified": false,
+      "upstreamRequestVerified": false,
+      "description": "FastMCP initialize + tools/list completed; no tool call executed."
+    },
+    "LOCAL_MCP_RESULT_ATTESTED": {
+      "providerVerified": false,
+      "localMcpToolResultVerified": true,
+      "upstreamRequestVerified": false,
+      "description": "Actual in-process client.callTool receipt verified (SHA-256, advertiser ID/domain, creative ID), but payload lacks direct Google Transparency RPC envelope metadata."
+    },
+    "UPSTREAM_GOOGLE_RPC_ATTESTED": {
+      "providerVerified": true,
+      "localMcpToolResultVerified": true,
+      "upstreamRequestVerified": true,
+      "description": "Actual in-process client.callTool receipt verified AND raw payload contains verifiable Google Transparency RPC metadata (GetAdvertiserById / SearchCreatives + AR... + CR...)."
+    }
+  },
+  "adversarialVerificationCases": [
+    {
+      "caseId": "G01",
+      "scenario": "FastMCP protocol handshake + tools/list without callTool",
+      "preFixOnC0": "PASSED",
+      "postFixOnC1": "PASSED",
+      "verifiedBehavior": "status=PROTOCOL_HANDSHAKE_VERIFIED, providerContentObserved=false, providerVerified=false"
+    },
+    {
+      "caseId": "G02",
+      "scenario": "Crafted creative carrying fake googleMcpInvocationId not in private invocation ledger",
+      "preFixOnC0": "PASSED",
+      "postFixOnC1": "PASSED",
+      "verifiedBehavior": "verifyGoogleInvocationLineage returns verified=false, code=RECEIPT_NOT_FOUND, provenanceTier=UNVERIFIED"
+    },
+    {
+      "caseId": "G03",
+      "scenario": "Invocation receipt from advertiser A reused on creative claiming advertiser B or domain B",
+      "preFixOnC0": "FAILED_ACCEPTED_CROSS_ADVERTISER_RECEIPT",
+      "postFixOnC1": "PASSED_REJECTED_ADVERTISER_MISMATCH",
+      "verifiedBehavior": "verifyGoogleInvocationLineage returns verified=false, code=ADVERTISER_ID_MISMATCH / ADVERTISER_DOMAIN_MISMATCH"
+    },
+    {
+      "caseId": "G04",
+      "scenario": "Synthetic MCP server returning JSON without upstream Google RPC metadata vs with RPC metadata",
+      "preFixOnC0": "FAILED_TREATED_LOCAL_MCP_JSON_AS_UPSTREAM_VERIFIED",
+      "postFixOnC1": "PASSED_SEPARATED_LOCAL_MCP_VS_UPSTREAM_RPC",
+      "verifiedBehavior": "Without RPC metadata: provenanceTier=LOCAL_MCP_RESULT_ATTESTED, providerVerified=false, localMcpToolResultVerified=true; With RPC metadata: provenanceTier=UPSTREAM_GOOGLE_RPC_ATTESTED, providerVerified=true, upstreamRequestVerified=true"
+    },
+    {
+      "caseId": "G05",
+      "scenario": "Creative with creativeId + advertiserId + US region but destinationUrl=null and no explicit productId",
+      "preFixOnC0": "FAILED_ASSIGNED_PRODUCT_CANDIDATE_AND_GENERATED_PRODUCT_OBSERVATION",
+      "postFixOnC1": "PASSED_CLASSIFIED_UNKNOWN_AND_ADVERTISER_LEVEL_ONLY",
+      "verifiedBehavior": "productRelevance=UNKNOWN, pdpVerified=false, observations count=0, advertiserObservations count=1"
+    },
+    {
+      "caseId": "G06",
+      "scenario": "Non-US creative (CA/GB/empty region) even when query requested US",
+      "preFixOnC0": "PASSED",
+      "postFixOnC1": "PASSED",
+      "verifiedBehavior": "usTargetVerified=false, verifiedUsCount=0"
+    },
+    {
+      "caseId": "G07",
+      "scenario": "Persisting Google observation to Prisma SourceObservation and reading back",
+      "preFixOnC0": "PASSED",
+      "postFixOnC1": "PASSED",
+      "verifiedBehavior": "sourceType=GOOGLE_TRANSPARENCY_CREATIVE, region=US, rawMetricsJson preserves invocationId and rawResponseSha256"
+    },
+    {
+      "caseId": "G08",
+      "scenario": "collectGoogleAdvertiserSignals multi-candidate enrichment count reconciliation",
+      "preFixOnC0": "FAILED_MISSING_RECONCILED_COUNTS_AND_INVOCATIONS",
+      "postFixOnC1": "PASSED_EXACT_RECONCILIATION",
+      "verifiedBehavior": "providerInvocations attached; reconciledCounts tracks rawCreativesCount >= normalizedCount >= usVerifiedCount >= pdpBoundCount >= candidateAttributableCount"
+    },
+    {
+      "caseId": "G09",
+      "scenario": "Malformed JSON, oversized >2 MiB response, bot-wall / HTTP 429 block",
+      "preFixOnC0": "FAILED_ACCEPTED_OVERSIZED_PAYLOAD_AND_MISCLASSIFIED_BOT_WALL",
+      "postFixOnC1": "PASSED_REJECTED_RESPONSE_TOO_LARGE_AND_CLASSIFIED_BLOCKED",
+      "verifiedBehavior": "decodeCallToolResult & recordActualGoogleMcpInvocation reject >2 MiB with RESPONSE_TOO_LARGE; bot-wall maps to LIVE_BLOCKED"
+    },
+    {
+      "caseId": "G10",
+      "scenario": "Candidate with 0 US-verified PDP-bound Google creatives cannot claim Google cross-channel bonus",
+      "preFixOnC0": "PASSED",
+      "postFixOnC1": "PASSED",
+      "verifiedBehavior": "verifiedUsCount=0, observations.length=0"
+    },
+    {
+      "caseId": "G11",
+      "scenario": "Google creative observation alone cannot satisfy G15 >=60-day longitudinal demand gate",
+      "preFixOnC0": "PASSED",
+      "postFixOnC1": "PASSED",
+      "verifiedBehavior": "evaluateDemandHistoryEvidence returns status !== VERIFIED, eligibleForEvergreen=false"
+    },
+    {
+      "caseId": "G12",
+      "scenario": "Tampered rawResponseSha256 or creativeId not in receipt creativeIds is rejected",
+      "preFixOnC0": "PASSED",
+      "postFixOnC1": "PASSED",
+      "verifiedBehavior": "verifyGoogleInvocationLineage returns SHA256_MISMATCH / CREATIVE_NOT_IN_INVOCATION"
+    }
+  ]
+}

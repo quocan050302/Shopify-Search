@@ -1,0 +1,61 @@
+{
+  "gateId": "EXTERNAL_PROVIDER_PROBE_COST_AND_STATES",
+  "patchVersion": "V12.4.3.7.19.3.3.1",
+  "testedCodeCommitSha": "79b248e79c56a0a549cc8d681fd6e67ad61762fc",
+  "testedTreeSha": "afdf6da09961f358e9010fc0d4547ebcb6d56cbc",
+  "paidApiSpendUsd": 0,
+  "paidApiCallsMade": 0,
+  "logFile": "reports/kh02/v19_3_3_1_csv_trust_google_meta_provenance/logs/D4_free_mcp_smoke.log",
+  "sources": {
+    "S1_META_ADS_COLLECTOR": {
+      "status": "AVAILABLE_NO_PAID_KEY_REQUIRED",
+      "transport": "STDIO_MCP_PUBLIC_AD_LIBRARY",
+      "costUsd": 0,
+      "handshakeOk": true,
+      "collectorVersion": "1.7.0",
+      "actualQueryAttempted": false,
+      "providerContentObserved": false,
+      "providerVerified": false,
+      "note": "Protocol/runtime diagnostic only in zero-spend smoke; when live query is run and returns 0 ads, provenanceVerified remains false and contentStatus is ZERO_ADS_RETURNED."
+    },
+    "S2_GOOGLE_ADS_TRANSPARENCY_MCP": {
+      "status": "PROTOCOL_HANDSHAKE_VERIFIED",
+      "transport": "STDIO_FASTMCP",
+      "costUsd": 0,
+      "handshakeOk": true,
+      "toolsFound": [
+        "search_advertiser",
+        "get_advertiser_ads"
+      ],
+      "toolCallAttempted": false,
+      "providerContentObserved": false,
+      "providerVerified": false,
+      "upstreamRequestVerified": false,
+      "note": "FastMCP stdio handshake and tool listing verified; live tool call not counted as providerVerified unless upstream Google Transparency RPC envelope metadata is present."
+    },
+    "S3_TIKTOK_ORGANIC_HASDATA": {
+      "status": "NOT_RUN_EXTERNAL_DEPENDENCY",
+      "policyStatus": "POLICY_DISABLED",
+      "costUsd": 0,
+      "providerVerified": false
+    },
+    "S4_TIKTOK_COMMERCIAL_ADS_US": {
+      "status": "DEFERRED_DO_NOT_TEST",
+      "costUsd": 0,
+      "providerVerified": false
+    },
+    "S5_GOOGLE_CLOUD_BIGQUERY": {
+      "status": "NOT_CONFIGURED_NO_BILLING",
+      "costUsd": 0,
+      "providerVerified": false
+    },
+    "S6_GOOGLE_TRENDS_EXPLORE_OFFICIAL_CSV": {
+      "status": "NOT_AVAILABLE_NO_OFFICIAL_EXPORT",
+      "costUsd": 0,
+      "rawFilesFound": 3,
+      "localIntegrityOnlyFilesFound": 3,
+      "officialLongitudinalExportsFound": 0,
+      "providerVerified": false
+    }
+  }
+}
