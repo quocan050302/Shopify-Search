@@ -1103,6 +1103,7 @@ export default function ProductsPage() {
           </div>
 
           <div className="flex items-center gap-2 flex-wrap">
+            <Link href="/products/trends" className="text-xs px-3 py-2 rounded-lg border border-slate-700 text-slate-200 hover:bg-slate-800">Google Trends CSV</Link>
             {/* Runtime Version & Parity Pill */}
             <button
               type="button"
